@@ -2,41 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Legislative Dashboard Design System - Professional Government Interface */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Background & Text */
+    --background: 210 25% 98%;
+    --foreground: 220 15% 15%;
 
+    /* Card System */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 15% 15%;
 
+    /* Interactive Elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 15% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Government Primary - Deep Blue */
+    --primary: 214 78% 35%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 214 78% 30%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Light Government Blue */
+    --secondary: 214 25% 95%;
+    --secondary-foreground: 214 78% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted Elements */
+    --muted: 214 15% 96%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Action Blue */
+    --accent: 210 90% 48%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Risk System Colors */
+    --risk-high: 0 75% 55%;
+    --risk-high-foreground: 0 0% 98%;
+    --risk-medium: 35 85% 55%;
+    --risk-medium-foreground: 35 85% 15%;
+    --risk-low: 142 60% 45%;
+    --risk-low-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Alert States */
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --warning: 35 85% 55%;
+    --warning-foreground: 35 85% 15%;
+    --success: 142 60% 45%;
+    --success-foreground: 0 0% 98%;
 
-    --radius: 0.5rem;
+    /* Borders & Inputs */
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 214 78% 35%;
+
+    /* Political Party Colors */
+    --party-liberal: 214 78% 35%;
+    --party-labor: 0 75% 55%;
+    --party-greens: 142 60% 45%;
+    --party-crossbench: 280 15% 60%;
+
+    --radius: 0.375rem;
 
     --sidebar-background: 0 0% 98%;
 
