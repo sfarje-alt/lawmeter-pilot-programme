@@ -112,13 +112,8 @@ export function AlertActDrawer({
 
           {alert.authorised_by && (
             <div>
-              <p className="text-sm text-muted-foreground">Regulator (AOO-verify)</p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="font-medium">{alert.authorised_by.name}</p>
-                <Badge variant="outline" className="text-warning border-warning">
-                  Pending Verify
-                </Badge>
-              </div>
+              <p className="text-sm text-muted-foreground">Authorized By</p>
+              <p className="font-medium mt-1">{alert.authorised_by.name}</p>
             </div>
           )}
 
