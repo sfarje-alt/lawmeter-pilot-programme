@@ -1,0 +1,281 @@
+import { Alert, BillItem } from "@/types/legislation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  LineChart,
+  Line,
+} from "recharts";
+import { parseDate } from "@/lib/dateUtils";
+
+interface ChartsPanelProps {
+  data: Alert[] | BillItem[];
+  type: "acts" | "bills";
+}
+
+const COLORS = {
+  high: "hsl(var(--risk-high))",
+  medium: "hsl(var(--risk-medium))",
+  low: "hsl(var(--risk-low))",
+};
+
+export function ChartsPanel({ data, type }: ChartsPanelProps) {
+  if (type === "acts") {
+    const alerts = data as Alert[];
+
+    // Risk distribution
+    const riskData = [
+      {
+        name: "High",
+        value: alerts.filter((a) => a.AI_triage?.risk_level === "high").length,
+      },
+      {
+        name: "Medium",
+        value: alerts.filter((a) => a.AI_triage?.risk_level === "medium").length,
+      },
+      {
+        name: "Low",
+        value: alerts.filter((a) => a.AI_triage?.risk_level === "low").length,
+      },
+    ].filter((d) => d.value > 0);
+
+    // Alerts by portfolio (top 10)
+    const portfolioCounts: Record<string, number> = {};
+    alerts.forEach((a) => {
+      if (a.csv_portfolio) {
+        portfolioCounts[a.csv_portfolio] = (portfolioCounts[a.csv_portfolio] || 0) + 1;
+      }
+    });
+    const portfolioData = Object.entries(portfolioCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Timeline (weekly aggregation)
+    const weekCounts: Record<string, number> = {};
+    alerts.forEach((a) => {
+      const date = parseDate(a.effective_date) || parseDate(a.registered_date);
+      if (date) {
+        const weekStart = new Date(date);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        const key = weekStart.toISOString().split("T")[0];
+        weekCounts[key] = (weekCounts[key] || 0) + 1;
+      }
+    });
+    const timelineData = Object.entries(weekCounts)
+      .map(([date, count]) => ({ date: new Date(date).toLocaleDateString("en-AU", { month: "short", day: "numeric" }), count }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Doc view mix
+    const docViewData = [
+      {
+        name: "Compilation/Principal",
+        value: alerts.filter((a) => a.doc_view === "Compilation/Principal").length,
+      },
+      {
+        name: "Amending/As Made",
+        value: alerts.filter((a) => a.doc_view === "Amending/As Made").length,
+      },
+    ].filter((d) => d.value > 0);
+
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Risk Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={riskData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {riskData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Alerts by Portfolio (Top 10)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={portfolioData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="count" fill="hsl(var(--primary))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Timeline (Weekly)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={timelineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" name="Alerts" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Document View Mix</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={docViewData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {docViewData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--accent))"} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Bills charts
+  const bills = data as BillItem[];
+
+  // Bills by status
+  const statusCounts: Record<string, number> = {};
+  bills.forEach((b) => {
+    statusCounts[b.status] = (statusCounts[b.status] || 0) + 1;
+  });
+  const statusData = Object.entries(statusCounts).map(([name, count]) => ({ name, count }));
+
+  // Bills by chamber
+  const chamberData = [
+    { name: "House", value: bills.filter((b) => b.chamber === "House").length },
+    { name: "Senate", value: bills.filter((b) => b.chamber === "Senate").length },
+  ];
+
+  // Risk distribution
+  const riskData = [
+    { name: "High", value: bills.filter((b) => b.risk_level === "high").length },
+    { name: "Medium", value: bills.filter((b) => b.risk_level === "medium").length },
+    { name: "Low", value: bills.filter((b) => b.risk_level === "low").length },
+  ].filter((d) => d.value > 0);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Bills by Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={statusData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} tick={{ fontSize: 10 }} />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="hsl(var(--primary))" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Bills by Chamber</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={chamberData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={(entry) => `${entry.name}: ${entry.value}`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chamberData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--accent))"} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Risk Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={riskData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={(entry) => `${entry.name}: ${entry.value}`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {riskData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
