@@ -104,9 +104,6 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
               </a>
             </Button>
           )}
-          {alert.has_pdf && alert.pdf_files && alert.pdf_files.length > 0 && (
-            <Badge variant="outline">PDF Available</Badge>
-          )}
           <Button variant="default" size="sm" onClick={onOpenDrawer}>
             Details
           </Button>
