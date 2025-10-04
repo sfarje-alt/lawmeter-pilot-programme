@@ -52,7 +52,7 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
             </Button>
           </div>
         </div>
-        <h3 className="text-lg font-semibold mt-2">{title}</h3>
+        <h3 className="text-lg font-semibold mt-2">Key Implications from {title}</h3>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2">
