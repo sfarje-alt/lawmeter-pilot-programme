@@ -109,7 +109,7 @@ export interface StarredAlert {
 }
 
 export interface FilterState {
-  timeWindow: "1w" | "2w" | "3w" | "4w";
+  timeWindow: "1w" | "2w" | "4w" | "8w" | "12w" | "6m" | "1y" | "all";
   portfolios: string[];
   regulators: string[];
   types: string[];

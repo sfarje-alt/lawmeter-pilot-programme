@@ -23,7 +23,7 @@ export default function LawMeterDashboard() {
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [filters, setFilters] = useState<FilterState>({
-    timeWindow: "4w",
+    timeWindow: "all",
     portfolios: [],
     regulators: [],
     types: [],

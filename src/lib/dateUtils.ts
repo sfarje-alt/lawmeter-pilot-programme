@@ -27,13 +27,21 @@ export function formatDate(dateStr: string | undefined | null): string {
 }
 
 // Check if date is within time window
-export function isWithinTimeWindow(date: Date, window: "1w" | "2w" | "3w" | "4w"): boolean {
-  const now = new Date();
-  const weekMap = { "1w": 1, "2w": 2, "3w": 3, "4w": 4 };
-  const weeks = weekMap[window];
+export function isWithinTimeWindow(date: Date, window: "1w" | "2w" | "4w" | "8w" | "12w" | "6m" | "1y" | "all"): boolean {
+  if (window === "all") return true;
   
+  const now = new Date();
   const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() - (weeks * 7));
+  
+  if (window === "6m") {
+    cutoff.setMonth(cutoff.getMonth() - 6);
+  } else if (window === "1y") {
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+  } else {
+    const weekMap = { "1w": 1, "2w": 2, "4w": 4, "8w": 8, "12w": 12 };
+    const weeks = weekMap[window];
+    cutoff.setDate(cutoff.getDate() - (weeks * 7));
+  }
   
   return date >= cutoff && date <= now;
 }

@@ -51,7 +51,7 @@ export function FilterBar({
 
   const clearFilters = () => {
     onFiltersChange({
-      timeWindow: "1w",
+      timeWindow: "all",
       portfolios: [],
       regulators: [],
       types: [],
@@ -83,14 +83,18 @@ export function FilterBar({
 
         <div className="flex flex-wrap gap-2">
           <Select value={filters.timeWindow} onValueChange={(v) => updateFilter("timeWindow", v as FilterState["timeWindow"])}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[160px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1w">Last 1 Week</SelectItem>
-              <SelectItem value="2w">Last 2 Weeks</SelectItem>
-              <SelectItem value="3w">Last 3 Weeks</SelectItem>
-              <SelectItem value="4w">Last 4 Weeks</SelectItem>
+              <SelectItem value="all">All time</SelectItem>
+              <SelectItem value="1w">Last 1 week</SelectItem>
+              <SelectItem value="2w">Last 2 weeks</SelectItem>
+              <SelectItem value="4w">Last 4 weeks</SelectItem>
+              <SelectItem value="8w">Last 8 weeks</SelectItem>
+              <SelectItem value="12w">Last 12 weeks</SelectItem>
+              <SelectItem value="6m">Last 6 months</SelectItem>
+              <SelectItem value="1y">Last 1 year</SelectItem>
             </SelectContent>
           </Select>
 

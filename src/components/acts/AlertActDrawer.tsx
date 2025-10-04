@@ -6,6 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +16,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { AlertTriangle, Copy, ChevronDown, Trash2 } from "lucide-react";
+import { AlertTriangle, Copy, ChevronDown, Trash2, Tag } from "lucide-react";
 import { formatDate, isUpcomingDeadline } from "@/lib/dateUtils";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -140,6 +141,25 @@ export function AlertActDrawer({
             </div>
           )}
 
+          {/* Portfolio Keyword Matches */}
+          {alert.portfolio_matches && alert.portfolio_matches.length > 0 && alert.csv_portfolio && (
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold mb-2">
+                <Tag className="h-4 w-4" />
+                Portfolio Keywords Detected ({alert.csv_portfolio})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {alert.portfolio_matches
+                  .filter(match => match.portfolio === alert.csv_portfolio)
+                  .map((match, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">
+                      {match.pattern}
+                    </Badge>
+                  ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleCopyLink}>
               <Copy className="h-3 w-3 mr-2" />
@@ -150,6 +170,25 @@ export function AlertActDrawer({
               Copy Summary
             </Button>
           </div>
+
+          {/* Full Text */}
+          {alert.text && (
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  Full Legislative Text
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <ScrollArea className="h-[400px] rounded-md border">
+                  <div className="p-4">
+                    <pre className="text-xs whitespace-pre-wrap font-mono">{alert.text}</pre>
+                  </div>
+                </ScrollArea>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           <Collapsible>
             <CollapsibleTrigger asChild>
