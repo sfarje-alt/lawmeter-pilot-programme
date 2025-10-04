@@ -2,19 +2,20 @@ import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Clock, BarChart3, Star, Users, Calendar, AlertTriangle } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, Rss, AlertTriangle } from "lucide-react";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
 import { FilterState, Alert, BillItem } from "@/types/legislation";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { ChartsPanel } from "@/components/shared/ChartsPanel";
+import { FeedView } from "@/components/shared/FeedView";
 import { AlertActCard } from "@/components/acts/AlertActCard";
 import { AlertActDrawer } from "@/components/acts/AlertActDrawer";
 import { BillCard } from "@/components/bills/BillCard";
 import { BillDrawer } from "@/components/bills/BillDrawer";
 import { ContactForm } from "@/components/ContactForm";
-import { isUpcomingDeadline, getOneYearAgo, parseDate } from "@/lib/dateUtils";
+import { isUpcomingDeadline } from "@/lib/dateUtils";
 
 export default function LawMeterDashboard() {
   const { alerts, loading } = useLegislationData();
@@ -99,9 +100,10 @@ export default function LawMeterDashboard() {
 
       <div className="container mx-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="acts"><FileText className="h-4 w-4 mr-2" />Acts</TabsTrigger>
-            <TabsTrigger value="bills"><FileText className="h-4 w-4 mr-2" />Bills (Mock)</TabsTrigger>
+            <TabsTrigger value="bills"><FileText className="h-4 w-4 mr-2" />Bills</TabsTrigger>
+            <TabsTrigger value="feed"><Rss className="h-4 w-4 mr-2" />Feed</TabsTrigger>
             <TabsTrigger value="starred"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
             <TabsTrigger value="contact"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
@@ -159,6 +161,18 @@ export default function LawMeterDashboard() {
             </div>
           </TabsContent>
 
+          <TabsContent value="feed" className="mt-6">
+            <FeedView
+              alerts={filteredAlerts}
+              bills={filteredBills}
+              type={activeTab === "bills" ? "bills" : "acts"}
+              isStarred={starredHooks.isStarred}
+              onToggleStar={starredHooks.toggleStar}
+              onOpenAlertDrawer={setSelectedAlert}
+              onOpenBillDrawer={setSelectedBill}
+            />
+          </TabsContent>
+
           <TabsContent value="starred" className="space-y-6 mt-6">
             <h3 className="text-lg font-semibold">Starred Alerts & Bills</h3>
             {starredHooks.starred.length === 0 ? (
@@ -180,7 +194,10 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
-            <ChartsPanel data={activeTab === "bills" ? filteredBills : filteredAlerts} type={activeTab === "bills" ? "bills" : "acts"} />
+            <ChartsPanel 
+              data={activeTab === "feed" ? (filteredAlerts.length > 0 ? filteredAlerts : filteredBills) : activeTab === "bills" ? filteredBills : filteredAlerts} 
+              type={activeTab === "bills" || (activeTab === "feed" && filteredBills.length > 0 && filteredAlerts.length === 0) ? "bills" : "acts"} 
+            />
           </TabsContent>
 
           <TabsContent value="contact" className="mt-6">

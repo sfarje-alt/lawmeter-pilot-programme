@@ -1,7 +1,7 @@
-import { LegislativeDashboard } from "@/components/LegislativeDashboard";
+import LawMeterDashboard from "./LawMeterDashboard";
 
 const Index = () => {
-  return <LegislativeDashboard />;
+  return <LawMeterDashboard />;
 };
 
 export default Index;
