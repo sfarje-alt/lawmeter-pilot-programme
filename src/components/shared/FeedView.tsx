@@ -1,17 +1,16 @@
-import { Alert, BillItem, FilterState } from "@/types/legislation";
+import { Alert, BillItem } from "@/types/legislation";
 import { AlertActCard } from "@/components/acts/AlertActCard";
 import { BillCard } from "@/components/bills/BillCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Grid, List } from "lucide-react";
+import { AlertTriangle, Grid, List, FileText, Receipt } from "lucide-react";
 import { useState } from "react";
 import { getOneYearAgo, parseDate } from "@/lib/dateUtils";
 
 interface FeedViewProps {
   alerts: Alert[];
   bills: BillItem[];
-  type: "acts" | "bills";
   isStarred: (scope: "ACTS" | "BILLS", key: string) => boolean;
   onToggleStar: (scope: "ACTS" | "BILLS", key: string) => void;
   onOpenAlertDrawer: (alert: Alert) => void;
@@ -21,13 +20,13 @@ interface FeedViewProps {
 export function FeedView({
   alerts,
   bills,
-  type,
   isStarred,
   onToggleStar,
   onOpenAlertDrawer,
   onOpenBillDrawer,
 }: FeedViewProps) {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [feedType, setFeedType] = useState<"acts" | "bills">("acts");
 
   // Filter to show only items from the last year
   const oneYearAgo = getOneYearAgo();
@@ -42,7 +41,8 @@ export function FeedView({
     return date >= oneYearAgo;
   });
 
-  const itemsToShow = type === "acts" ? filteredAlerts : filteredBills;
+  const itemsToShow = feedType === "acts" ? filteredAlerts : filteredBills;
+  const itemCount = itemsToShow.length;
 
   return (
     <div className="space-y-6">
@@ -60,11 +60,28 @@ export function FeedView({
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-lg font-semibold">
-          {type === "acts" ? "Acts & Instruments Feed" : "Bills Feed"} (1 Year History)
+          {feedType === "acts" ? "Acts & Instruments Feed" : "Bills Feed"} (1 Year History)
         </h3>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant={feedType === "acts" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFeedType("acts")}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Acts
+          </Button>
+          <Button
+            variant={feedType === "bills" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFeedType("bills")}
+          >
+            <Receipt className="h-4 w-4 mr-2" />
+            Bills
+          </Button>
+          <div className="border-l mx-2"></div>
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
             size="sm"
@@ -83,20 +100,20 @@ export function FeedView({
       </div>
 
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Showing {itemsToShow.length} items from the last year</span>
-        {type === "acts" && (
+        <span>Showing {itemCount} items from the last year</span>
+        {feedType === "acts" && (
           <Badge variant="outline">
             {filteredAlerts.filter((a) => isStarred("ACTS", a.title_id)).length} starred
           </Badge>
         )}
-        {type === "bills" && (
+        {feedType === "bills" && (
           <Badge variant="outline">
             {filteredBills.filter((b) => isStarred("BILLS", b.id)).length} starred
           </Badge>
         )}
       </div>
 
-      {itemsToShow.length === 0 ? (
+      {itemCount === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">No items found in the last year</p>
@@ -110,7 +127,7 @@ export function FeedView({
               : "space-y-4"
           }
         >
-          {type === "acts"
+          {feedType === "acts"
             ? filteredAlerts.map((alert) => (
                 <AlertActCard
                   key={alert.title_id}

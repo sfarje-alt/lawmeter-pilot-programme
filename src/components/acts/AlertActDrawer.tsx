@@ -233,9 +233,19 @@ export function AlertActDrawer({
                     <div key={comment.id} className="bg-muted/50 rounded-lg p-3">
                       <div className="flex justify-between items-start mb-1">
                         <p className="font-medium text-sm">{comment.userName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(comment.createdAt).toLocaleDateString()}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(comment.createdAt).toLocaleDateString()}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => onDeleteComment(comment.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                       <p className="text-sm">{comment.body}</p>
                     </div>

@@ -75,8 +75,13 @@ export function useStarredAlerts() {
       const alertComments = prev[key] || [];
       const comment = alertComments.find((c) => c.id === commentId);
       
-      // Only allow deletion if it's a private comment by the same user
-      if (!comment || comment.visibility === "TEAM" || comment.userId !== currentUserId) {
+      // Allow deletion of private comments by owner or any team comment
+      if (!comment) {
+        return prev;
+      }
+      
+      // Private comments can only be deleted by owner
+      if (comment.visibility === "PRIVATE" && comment.userId !== currentUserId) {
         return prev;
       }
 
