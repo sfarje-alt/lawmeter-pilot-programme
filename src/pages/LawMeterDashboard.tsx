@@ -163,7 +163,7 @@ export default function LawMeterDashboard() {
             <FeedView
               alerts={filteredAlerts}
               bills={filteredBills}
-              type={activeTab === "bills" ? "bills" : "acts"}
+              type="bills"
               isStarred={starredHooks.isStarred}
               onToggleStar={starredHooks.toggleStar}
               onOpenAlertDrawer={setSelectedAlert}

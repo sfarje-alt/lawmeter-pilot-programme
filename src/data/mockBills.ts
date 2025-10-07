@@ -1,6 +1,6 @@
 import { BillItem } from "@/types/legislation";
 
-export const mockBills: BillItem[] = [
+export const baseBills: BillItem[] = [
   {
     id: "bill-001",
     title: "Environment Protection and Biodiversity Conservation Amendment (Nature Positive) Bill 2024",
@@ -281,4 +281,140 @@ export const mockBills: BillItem[] = [
     risk_score: 70,
     motherActLink: "https://www.legislation.gov.au/C2021A00076/latest"
   }
+];
+
+function daysAgoISO(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+const statusCycle: BillItem["status"][] = [
+  "Introduced",
+  "Second Reading",
+  "Committee",
+  "Consideration in Detail",
+  "Passed House",
+  "Passed Senate",
+  "Royal Assent Pending",
+];
+
+const parties = ["Labor", "Liberal", "Greens", "Independent", "Nationals"];
+const chambers: BillItem["chamber"][] = ["House", "Senate"];
+
+const portfolioTopics: { portfolio: string; topics: string[] }[] = [
+  { portfolio: "Health, Disability and Ageing", topics: [
+    "Hospital Staffing Requirements", "Medical Devices Safety", "Aged Care Quality Standards", "Mental Health Services Expansion",
+    "Infection Control and Notifiable Diseases", "Patient Safety and Accreditation", "Electronic Health Record Security",
+    "Telehealth and Remote Care", "Pathology and Diagnostics Reporting", "Oncology and Cancer Care Standards"
+  ]},
+  { portfolio: "Attorney-General's", topics: [
+    "Privacy and Data Protection", "Cybersecurity and Encryption", "Anti-Discrimination Reforms", "Corporate Governance and Compliance",
+    "Intellectual Property and Patents", "Liability and Insurance Reform"
+  ]},
+  { portfolio: "Employment and Workplace Relations", topics: [
+    "Safe Staffing and Rostering", "WHS Psychosocial Hazards", "Industrial Relations and Awards", "Fair Work Enforcement"
+  ]},
+  { portfolio: "Treasury", topics: [
+    "GST and Taxation", "Medicare Levy Adjustments", "Anti-Money Laundering", "Procurement and Tender Rules"
+  ]},
+  { portfolio: "Home Affairs", topics: [
+    "Migration and Skilled Visas", "Border and Biosecurity", "International Travel and Quarantine"
+  ]},
+  { portfolio: "Industry, Science and Resources", topics: [
+    "Clinical Research and Trials", "Biotech and Medical Devices", "Artificial Intelligence in Health"
+  ]},
+  { portfolio: "Environment, Climate, Energy and Water", topics: [
+    "Clinical Waste Management", "Water Safety and Quality", "Carbon Emissions and Energy Efficiency"
+  ]},
+  { portfolio: "Social Services", topics: [
+    "NDIS Provider Obligations", "Disability Service Standards", "Aged Care Support Measures"
+  ]},
+  { portfolio: "Veterans’ Affairs", topics: [
+    "Veterans' Health and Rehabilitation", "PTSD Support Services"
+  ]},
+  { portfolio: "Agriculture, Fisheries and Forestry", topics: [
+    "Food Safety and Imported Food", "Veterinary Medicines and APVMA"
+  ]},
+  { portfolio: "Education", topics: [
+    "Medical and Nursing Education", "Clinical Placement Accreditation"
+  ]},
+  { portfolio: "Infrastructure, Transport, Regional Development and Local Government", topics: [
+    "Hospital Construction Standards", "Medical Supply Chain Logistics"
+  ]},
+  { portfolio: "Finance", topics: [
+    "Commonwealth Grants Rules and Guidelines", "Public Hospital Funding Transparency"
+  ]},
+  { portfolio: "Foreign Affairs and Trade", topics: [
+    "Free Trade Agreements and Medical Goods", "International Health Regulations"
+  ]},
+  { portfolio: "Communications", topics: [
+    "Digital Health Interoperability", "Data Retention and Metadata"
+  ]},
+];
+
+function riskLevelFromScore(score: number): BillItem["risk_level"] {
+  if (score >= 80) return "high";
+  if (score >= 60) return "medium";
+  return "low";
+}
+
+function makeStageLocation(chamber: BillItem["chamber"], status: BillItem["status"]): string {
+  switch (status) {
+    case "Introduced":
+      return `${chamber} — First Reading`;
+    case "Second Reading":
+      return `${chamber} — Second Reading Debate`;
+    case "Committee":
+      return `${chamber} — Committee Stage`;
+    case "Consideration in Detail":
+      return `${chamber} — Consideration in Detail`;
+    case "Passed House":
+      return `Passed House — Awaiting Senate Introduction`;
+    case "Passed Senate":
+      return `Passed Senate — Awaiting House Consideration`;
+    case "Royal Assent Pending":
+      return `Both Houses — Royal Assent Pending`;
+  }
+}
+
+function generateBill(index: number): BillItem {
+  const p = portfolioTopics[index % portfolioTopics.length];
+  const topic = p.topics[index % p.topics.length];
+  const chamber = chambers[index % chambers.length];
+  const status = statusCycle[index % statusCycle.length];
+  const daysAgo = ((index * 3) % 180) + 1; // 1 to 180 days ago
+  const score = 55 + ((index * 7) % 41); // 55-95
+  const level = riskLevelFromScore(score);
+  const party = parties[index % parties.length];
+  const year = new Date().getFullYear();
+
+  return {
+    id: `bill-${(index + 10).toString().padStart(3, "0")}`,
+    title: `${topic} Bill ${year}`,
+    portfolio: p.portfolio,
+    party,
+    mps: [
+      { name: party === "Labor" ? "Government MP" : party === "Liberal" ? "Opposition MP" : "Crossbench MP", role: chamber === "House" ? "Member of the House" : "Senator" }
+    ],
+    chamber,
+    status,
+    stageLocation: makeStageLocation(chamber, status),
+    lastActionDate: daysAgoISO(daysAgo),
+    summary: `Proposes reforms relating to ${topic.toLowerCase()} impacting providers such as hospitals, clinics, and disability services. Includes compliance, reporting, and accreditation changes relevant to Macquarie Hospital Group in Sydney.`,
+    bullets: [
+      `Introduces new requirements for ${topic.toLowerCase()}`,
+      `Enhances compliance and audit obligations for ${p.portfolio.toLowerCase()}`,
+      `Aligns with national standards and regulator expectations`
+    ],
+    risk_level: level,
+    risk_score: score,
+  };
+}
+
+const generatedBills: BillItem[] = Array.from({ length: 60 }, (_, i) => generateBill(i + 1));
+
+export const mockBills: BillItem[] = [
+  ...baseBills,
+  ...generatedBills,
 ];
