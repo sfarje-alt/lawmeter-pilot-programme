@@ -38,7 +38,6 @@ export default function LawMeterDashboard() {
 
   // Extract unique values for filters
   const portfolios = useMemo(() => [...new Set(alerts.map(a => a.csv_portfolio).filter(Boolean))], [alerts]);
-  const regulators = useMemo(() => [...new Set(alerts.map(a => a.authorised_by?.name).filter(Boolean))], [alerts]);
   const types = useMemo(() => {
     const collections = alerts.map(a => a.csv_collection).filter(Boolean);
     const docViews = alerts.map(a => a.doc_view).filter(Boolean);
@@ -113,7 +112,6 @@ export default function LawMeterDashboard() {
             filters={filters}
             onFiltersChange={setFilters}
             portfolios={portfolios}
-            regulators={regulators}
             types={types}
             parties={parties}
             showPartyFilters={activeTab === "bills"}

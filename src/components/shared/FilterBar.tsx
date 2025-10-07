@@ -22,7 +22,6 @@ interface FilterBarProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   portfolios: string[];
-  regulators: string[];
   types: string[];
   parties?: string[];
   showPartyFilters?: boolean;
@@ -32,7 +31,6 @@ export function FilterBar({
   filters,
   onFiltersChange,
   portfolios,
-  regulators,
   types,
   parties = [],
   showPartyFilters = false,
@@ -41,7 +39,7 @@ export function FilterBar({
     onFiltersChange({ ...filters, [key]: value });
   };
 
-  const toggleMultiSelect = (key: "portfolios" | "regulators" | "types" | "parties", value: string) => {
+  const toggleMultiSelect = (key: "portfolios" | "types" | "parties", value: string) => {
     const current = filters[key] as string[];
     const updated = current.includes(value)
       ? current.filter((v) => v !== value)
@@ -64,7 +62,6 @@ export function FilterBar({
 
   const hasActiveFilters =
     filters.portfolios.length > 0 ||
-    filters.regulators.length > 0 ||
     filters.types.length > 0 ||
     filters.parties.length > 0 ||
     filters.riskScoreRange[0] !== 0 ||
@@ -120,35 +117,6 @@ export function FilterBar({
                     />
                     <label className="text-sm cursor-pointer flex-1">
                       {portfolio}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Regulators
-                {filters.regulators.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
-                    {filters.regulators.length}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {regulators.map((regulator) => (
-                  <div key={regulator} className="flex items-center gap-2">
-                    <Checkbox
-                      checked={filters.regulators.includes(regulator)}
-                      onCheckedChange={() => toggleMultiSelect("regulators", regulator)}
-                    />
-                    <label className="text-sm cursor-pointer flex-1">
-                      {regulator}
                     </label>
                   </div>
                 ))}
@@ -285,15 +253,6 @@ export function FilterBar({
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => toggleMultiSelect("portfolios", p)}
-              />
-            </Badge>
-          ))}
-          {filters.regulators.map((r) => (
-            <Badge key={r} variant="secondary" className="gap-1">
-              {r}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => toggleMultiSelect("regulators", r)}
               />
             </Badge>
           ))}
