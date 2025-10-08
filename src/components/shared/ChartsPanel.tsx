@@ -17,6 +17,10 @@ import {
 } from "recharts";
 import { parseDate } from "@/lib/dateUtils";
 import { TextualTrendsChart } from "@/components/analytics/TextualTrendsChart";
+import { SentimentAnalysisChart } from "@/components/analytics/SentimentAnalysisChart";
+import { TopicClustersChart } from "@/components/analytics/TopicClustersChart";
+import { EntityMentionsChart } from "@/components/analytics/EntityMentionsChart";
+import { SemanticSimilarityMatrix } from "@/components/analytics/SemanticSimilarityMatrix";
 import { PeopleOfInterestChart } from "@/components/analytics/PeopleOfInterestChart";
 import { ComplianceDeadlineCalendar } from "@/components/analytics/ComplianceDeadlineCalendar";
 import { ImpactUrgencyMatrix } from "@/components/analytics/ImpactUrgencyMatrix";
@@ -187,9 +191,13 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
         </div>
         
         <div className="space-y-6">
+          <TextualTrendsChart data={alerts} type="acts" />
+          <SentimentAnalysisChart data={alerts} type="acts" />
+          <TopicClustersChart data={alerts} type="acts" />
+          <EntityMentionsChart data={alerts} type="acts" />
+          <SemanticSimilarityMatrix data={alerts} type="acts" />
           <ImpactUrgencyMatrix data={alerts} type="acts" />
           <ComplianceDeadlineCalendar alerts={alerts} />
-          <TextualTrendsChart data={alerts} type="acts" />
         </div>
       </>
     );
@@ -357,10 +365,14 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       </div>
       
       <div className="space-y-6">
+        <TextualTrendsChart data={bills} type="bills" />
+        <SentimentAnalysisChart data={bills} type="bills" />
+        <TopicClustersChart data={bills} type="bills" />
+        <EntityMentionsChart data={bills} type="bills" />
+        <SemanticSimilarityMatrix data={bills} type="bills" />
         <ImpactUrgencyMatrix data={bills} type="bills" />
         <BillsProgressFunnel bills={bills} />
         <PeopleOfInterestChart bills={bills} />
-        <TextualTrendsChart data={bills} type="bills" />
       </div>
     </>
   );
