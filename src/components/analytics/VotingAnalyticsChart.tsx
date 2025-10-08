@@ -123,7 +123,10 @@ export function VotingAnalyticsChart({ bills }: VotingAnalyticsChartProps) {
               <BarChart data={partyVotingData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="party" />
-                <YAxis />
+                <YAxis 
+                  allowDecimals={false}
+                  domain={[0, (dataMax: number) => Math.ceil(dataMax / 2) * 2]}
+                />
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="For" fill="hsl(var(--success))" />

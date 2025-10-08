@@ -139,7 +139,11 @@ export function StakeholderAnalysisChart({ bills }: StakeholderAnalysisChartProp
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={stakeholderTypeData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis type="number" />
+                  <XAxis 
+                    type="number"
+                    allowDecimals={false}
+                    domain={[0, (dataMax: number) => Math.ceil(dataMax / 2) * 2]}
+                  />
                   <YAxis dataKey="type" type="category" width={100} tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Bar dataKey="Support" stackId="a" fill="hsl(var(--success))" />

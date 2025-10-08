@@ -101,7 +101,12 @@ export function EntityMentionsChart({ data, type }: EntityMentionsChartProps) {
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={entities} layout="vertical" margin={{ left: 100, right: 20 }}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-            <XAxis type="number" />
+            <XAxis 
+              type="number" 
+              allowDecimals={false}
+              domain={[0, (dataMax: number) => Math.ceil(dataMax / 2) * 2]}
+              ticks={Array.from({ length: Math.ceil(Math.max(...entities.map(e => e.count)) / 2) + 1 }, (_, i) => i * 2)}
+            />
             <YAxis dataKey="entity" type="category" width={90} />
             <Tooltip
               content={({ active, payload }) => {

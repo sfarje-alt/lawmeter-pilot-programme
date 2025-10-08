@@ -80,7 +80,12 @@ export function PeopleOfInterestChart({ bills }: PeopleOfInterestChartProps) {
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={mpData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" domain={[0, 'dataMax']} allowDecimals={false} />
+              <XAxis 
+                type="number" 
+                domain={[0, (dataMax: number) => Math.ceil(dataMax / 2) * 2]} 
+                allowDecimals={false}
+                ticks={Array.from({ length: Math.ceil(Math.max(...mpData.map(d => d.count)) / 2) + 1 }, (_, i) => i * 2)}
+              />
               <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11 }} />
               <Tooltip 
                 content={({ active, payload }) => {
