@@ -159,166 +159,209 @@ export function SocialListeningDemo() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Social Listening - Healthcare Access Bill 2024</CardTitle>
-          <CardDescription>
-            Monitoring media outlets, NGOs, and stakeholders driving legislation
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 border border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,transparent)]"></div>
+        <div className="relative p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Users className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold">Social Listening</h2>
+          </div>
+          <p className="text-muted-foreground">
+            Real-time monitoring of media outlets, NGOs, and stakeholders driving the Healthcare Access Bill 2024
+          </p>
+        </div>
+      </div>
 
       <Tabs defaultValue="newspapers" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="newspapers">
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50 backdrop-blur-sm">
+          <TabsTrigger 
+            value="newspapers" 
+            className="data-[state=active]:bg-background data-[state=active]:shadow-md rounded-lg transition-all"
+          >
             <Newspaper className="w-4 h-4 mr-2" />
-            Newspapers
+            <span className="font-medium">Newspapers</span>
           </TabsTrigger>
-          <TabsTrigger value="ngos">
+          <TabsTrigger 
+            value="ngos"
+            className="data-[state=active]:bg-background data-[state=active]:shadow-md rounded-lg transition-all"
+          >
             <Users className="w-4 h-4 mr-2" />
-            NGOs
+            <span className="font-medium">NGOs</span>
           </TabsTrigger>
-          <TabsTrigger value="stakeholders">
+          <TabsTrigger 
+            value="stakeholders"
+            className="data-[state=active]:bg-background data-[state=active]:shadow-md rounded-lg transition-all"
+          >
             <Building2 className="w-4 h-4 mr-2" />
-            Stakeholders
+            <span className="font-medium">Stakeholders</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Newspapers Tab */}
-        <TabsContent value="newspapers" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Media Coverage</CardTitle>
-              <CardDescription>
-                Sentiment analysis from major Australian newspapers
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <TabsContent value="newspapers" className="space-y-4 mt-6">
+          <div className="rounded-xl bg-gradient-to-br from-background to-muted/30 p-6 border shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Newspaper className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Media Coverage</h3>
+                <p className="text-sm text-muted-foreground">Sentiment analysis from major Australian newspapers</p>
+              </div>
+            </div>
+            <div className="space-y-4">
               {newspaperCoverage.map((article, index) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-lg border-l-4 ${getSentimentColor(article.sentiment)}`}
+                  className={`group relative p-5 rounded-xl border-l-4 ${getSentimentColor(article.sentiment)} backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline">{article.source}</Badge>
-                        <span className="text-xs text-muted-foreground">{article.date}</span>
-                        <Badge variant="secondary" className="text-xs">{article.reach}</Badge>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
+                  <div className="relative">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <Badge variant="outline" className="font-semibold">{article.source}</Badge>
+                          <Badge variant="secondary" className="text-xs">{article.reach}</Badge>
+                          <span className="text-xs text-muted-foreground">{article.date}</span>
+                        </div>
+                        <h4 className="font-bold text-lg mb-2 leading-tight">{article.headline}</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{article.excerpt}</p>
                       </div>
-                      <h4 className="font-semibold mb-2">{article.headline}</h4>
-                      <p className="text-sm text-muted-foreground">{article.excerpt}</p>
-                    </div>
-                    <div className="ml-4 flex items-center gap-2">
-                      {getSentimentIcon(article.sentiment)}
-                      <span className="text-sm font-medium">
-                        {article.score > 0 ? '+' : ''}{article.score.toFixed(2)}
-                      </span>
+                      <div className="ml-4 flex flex-col items-center gap-1 bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
+                        {getSentimentIcon(article.sentiment)}
+                        <span className="text-sm font-bold">
+                          {article.score > 0 ? '+' : ''}{article.score.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* NGOs Tab */}
-        <TabsContent value="ngos" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>NGO Positions</CardTitle>
-              <CardDescription>
-                Statements and positions from non-governmental organizations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <TabsContent value="ngos" className="space-y-4 mt-6">
+          <div className="rounded-xl bg-gradient-to-br from-background to-muted/30 p-6 border shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">NGO Positions</h3>
+                <p className="text-sm text-muted-foreground">Statements and positions from non-governmental organizations</p>
+              </div>
+            </div>
+            <div className="space-y-4">
               {ngoStatements.map((ngo, index) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-lg border-l-4 ${getSentimentColor(ngo.sentiment)}`}
+                  className={`group relative p-5 rounded-xl border-l-4 ${getSentimentColor(ngo.sentiment)} backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-semibold">{ngo.organization}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">{ngo.type}</Badge>
-                        <Badge className={`text-xs ${getInfluenceBadge(ngo.influence)}`}>
-                          {ngo.influence} Influence
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{ngo.followers} followers</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
+                  <div className="relative">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-lg mb-2">{ngo.organization}</h4>
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                          <Badge variant="outline" className="text-xs">{ngo.type}</Badge>
+                          <Badge className={`text-xs ${getInfluenceBadge(ngo.influence)}`}>
+                            {ngo.influence} Influence
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">{ngo.followers} followers</Badge>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex flex-col items-center gap-1 bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
+                        {getSentimentIcon(ngo.sentiment)}
+                        <span className="text-sm font-bold">
+                          {ngo.score > 0 ? '+' : ''}{ngo.score.toFixed(2)}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getSentimentIcon(ngo.sentiment)}
-                      <span className="text-sm font-medium">
-                        {ngo.score > 0 ? '+' : ''}{ngo.score.toFixed(2)}
-                      </span>
+                    <div className="mb-3 flex items-center gap-2">
+                      <Badge variant={ngo.position.includes("Support") ? "default" : "destructive"} className="font-medium">
+                        {ngo.position}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{ngo.date}</span>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-4 border-l-2 border-primary/20">
+                      <p className="text-sm leading-relaxed italic">"{ngo.statement}"</p>
                     </div>
                   </div>
-                  <div className="mb-2">
-                    <Badge variant={ngo.position.includes("Support") ? "default" : "destructive"}>
-                      {ngo.position}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground ml-2">{ngo.date}</span>
-                  </div>
-                  <p className="text-sm leading-relaxed italic">"{ngo.statement}"</p>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Stakeholders Tab */}
-        <TabsContent value="stakeholders" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Stakeholders Driving Legislation</CardTitle>
-              <CardDescription>
-                Organizations actively pushing for the creation or modification of the law
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <TabsContent value="stakeholders" className="space-y-4 mt-6">
+          <div className="rounded-xl bg-gradient-to-br from-background to-muted/30 p-6 border shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Building2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Stakeholders Driving Legislation</h3>
+                <p className="text-sm text-muted-foreground">Organizations actively pushing for the creation or modification of the law</p>
+              </div>
+            </div>
+            <div className="space-y-4">
               {stakeholderPush.map((stakeholder, index) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-lg border-l-4 ${getSentimentColor(stakeholder.sentiment)}`}
+                  className={`group relative p-6 rounded-xl border-l-4 ${getSentimentColor(stakeholder.sentiment)} backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-lg">{stakeholder.stakeholder}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">{stakeholder.type}</Badge>
-                        <span className="text-xs text-muted-foreground">{stakeholder.date}</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
+                  <div className="relative">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-xl mb-2">{stakeholder.stakeholder}</h4>
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                          <Badge variant="outline" className="font-medium">{stakeholder.type}</Badge>
+                          <span className="text-xs text-muted-foreground">{stakeholder.date}</span>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex flex-col items-center gap-1 bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
+                        {getSentimentIcon(stakeholder.sentiment)}
+                        <span className="text-sm font-bold">
+                          {stakeholder.score > 0 ? '+' : ''}{stakeholder.score.toFixed(2)}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getSentimentIcon(stakeholder.sentiment)}
-                      <span className="text-sm font-medium">
-                        {stakeholder.score > 0 ? '+' : ''}{stakeholder.score.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <Badge variant="default" className="mb-3">
-                    {stakeholder.action}
-                  </Badge>
-                  
-                  <p className="text-sm mb-3 leading-relaxed">{stakeholder.description}</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 pt-3 border-t">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-muted-foreground">Impact:</span>
-                      <span className="text-xs">{stakeholder.impact}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-muted-foreground">Coalition:</span>
-                      <span className="text-xs">{stakeholder.coalition}</span>
+                    
+                    <Badge variant="default" className="mb-4 font-medium">
+                      {stakeholder.action}
+                    </Badge>
+                    
+                    <p className="text-sm mb-4 leading-relaxed bg-muted/30 rounded-lg p-4 border-l-2 border-primary/20">
+                      {stakeholder.description}
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t">
+                      <div className="flex items-start gap-3 bg-background/50 rounded-lg p-3">
+                        <div className="w-1 h-full bg-primary rounded-full"></div>
+                        <div>
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Impact</span>
+                          <p className="text-sm mt-1">{stakeholder.impact}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 bg-background/50 rounded-lg p-3">
+                        <div className="w-1 h-full bg-accent rounded-full"></div>
+                        <div>
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Coalition</span>
+                          <p className="text-sm mt-1">{stakeholder.coalition}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
