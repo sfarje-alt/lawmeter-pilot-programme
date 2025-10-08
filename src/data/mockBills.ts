@@ -11,7 +11,10 @@ export const baseBills: BillItem[] = [
         name: "Tanya Plibersek",
         role: "Minister for Environment and Water",
         email: "tanya.plibersek.mp@aph.gov.au",
-        phone: "(02) 6277 7640"
+        phone: "(02) 6277 7640",
+        party: "Labor",
+        votingPosition: "support",
+        constituency: "Sydney"
       }
     ],
     chamber: "House",
@@ -27,7 +30,50 @@ export const baseBills: BillItem[] = [
     ],
     risk_level: "high",
     risk_score: 85,
-    motherActLink: "https://www.legislation.gov.au/C2004A00485/latest"
+    motherActLink: "https://www.legislation.gov.au/C2004A00485/latest",
+    votingRecords: [
+      {
+        date: "2024-08-15",
+        stage: "Second Reading",
+        votesFor: 78,
+        votesAgainst: 68,
+        abstentions: 5,
+        passed: true,
+        mpVotes: [
+          { mpName: "Tanya Plibersek", party: "Labor", vote: "for" },
+          { mpName: "Sussan Ley", party: "Liberal", vote: "against" },
+          { mpName: "Adam Bandt", party: "Greens", vote: "for" }
+        ]
+      },
+      {
+        date: "2024-09-20",
+        stage: "Committee Stage",
+        votesFor: 82,
+        votesAgainst: 64,
+        abstentions: 5,
+        passed: true
+      }
+    ],
+    stakeholders: [
+      {
+        name: "Australian Conservation Foundation",
+        organization: "Environmental NGO",
+        position: "support",
+        statement: "This bill represents a significant step forward in protecting Australia's unique biodiversity."
+      },
+      {
+        name: "Business Council of Australia",
+        organization: "Industry Group",
+        position: "oppose",
+        statement: "Concerned about increased regulatory burden and delays in project approvals."
+      },
+      {
+        name: "Farmers Federation",
+        organization: "Agricultural Industry",
+        position: "neutral",
+        statement: "Seeking amendments to ensure practical implementation for rural landholders."
+      }
+    ]
   },
   {
     id: "bill-002",
@@ -39,7 +85,19 @@ export const baseBills: BillItem[] = [
         name: "Mark Dreyfus",
         role: "Attorney-General",
         email: "mark.dreyfus.mp@aph.gov.au",
-        phone: "(02) 6277 7300"
+        phone: "(02) 6277 7300",
+        party: "Labor",
+        votingPosition: "support",
+        constituency: "Isaacs"
+      },
+      {
+        name: "Michaelia Cash",
+        role: "Shadow Attorney-General",
+        email: "michaelia.cash.mp@aph.gov.au",
+        phone: "(02) 6277 3800",
+        party: "Liberal",
+        votingPosition: "oppose",
+        constituency: "Western Australia"
       }
     ],
     chamber: "Senate",
@@ -55,7 +113,48 @@ export const baseBills: BillItem[] = [
     ],
     risk_level: "high",
     risk_score: 90,
-    motherActLink: "https://www.legislation.gov.au/C2004A03712/latest"
+    motherActLink: "https://www.legislation.gov.au/C2004A03712/latest",
+    votingRecords: [
+      {
+        date: "2024-09-10",
+        stage: "First Reading",
+        votesFor: 42,
+        votesAgainst: 32,
+        abstentions: 2,
+        passed: true,
+        mpVotes: [
+          { mpName: "Mark Dreyfus", party: "Labor", vote: "for" },
+          { mpName: "Michaelia Cash", party: "Liberal", vote: "against" },
+          { mpName: "David Pocock", party: "Independent", vote: "for" }
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "Tech Council of Australia",
+        organization: "Technology Industry",
+        position: "oppose",
+        statement: "Penalties are disproportionate and will stifle innovation in the digital economy."
+      },
+      {
+        name: "Consumer Policy Research Centre",
+        organization: "Consumer Rights",
+        position: "support",
+        statement: "Long overdue reforms that will finally give Australians real privacy protections."
+      },
+      {
+        name: "Australian Privacy Foundation",
+        organization: "Privacy Advocacy",
+        position: "support",
+        statement: "Strong support for enhanced privacy rights, though some provisions need strengthening."
+      },
+      {
+        name: "Banking Association",
+        organization: "Financial Services",
+        position: "neutral",
+        statement: "Support privacy goals but seeking clarity on implementation timelines."
+      }
+    ]
   },
   {
     id: "bill-003",
