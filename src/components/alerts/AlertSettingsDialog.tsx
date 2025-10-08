@@ -6,15 +6,13 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Bell } from "lucide-react";
+import { Mail, Bell, Plus, X } from "lucide-react";
 
 interface AlertSettings {
   emailEnabled: boolean;
-  email: string;
+  emails: string[];
   frequency: "instant" | "daily" | "weekly";
   riskThreshold: "low" | "medium" | "high";
-  maxAlertsPerEmail: number;
-  portfolioKeywordsOnly: boolean;
 }
 
 interface AlertSettingsDialogProps {
@@ -26,12 +24,11 @@ export function AlertSettingsDialog({ open, onOpenChange }: AlertSettingsDialogP
   const { toast } = useToast();
   const [settings, setSettings] = useState<AlertSettings>({
     emailEnabled: false,
-    email: "",
+    emails: [],
     frequency: "daily",
     riskThreshold: "medium",
-    maxAlertsPerEmail: 5,
-    portfolioKeywordsOnly: true,
   });
+  const [newEmail, setNewEmail] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem("alertSettings");
@@ -40,11 +37,61 @@ export function AlertSettingsDialog({ open, onOpenChange }: AlertSettingsDialogP
     }
   }, [open]);
 
-  const handleSave = () => {
-    if (settings.emailEnabled && !settings.email) {
+  const handleAddEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!newEmail.trim()) {
       toast({
         title: "Email required",
-        description: "Please enter your email address to enable alerts.",
+        description: "Please enter an email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!emailRegex.test(newEmail)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (settings.emails.includes(newEmail)) {
+      toast({
+        title: "Duplicate email",
+        description: "This email is already in the list.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (settings.emails.length >= 5) {
+      toast({
+        title: "Maximum reached",
+        description: "You can only add up to 5 email addresses.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSettings(prev => ({ ...prev, emails: [...prev.emails, newEmail] }));
+    setNewEmail("");
+  };
+
+  const handleRemoveEmail = (emailToRemove: string) => {
+    setSettings(prev => ({
+      ...prev,
+      emails: prev.emails.filter(email => email !== emailToRemove)
+    }));
+  };
+
+  const handleSave = () => {
+    if (settings.emailEnabled && settings.emails.length === 0) {
+      toast({
+        title: "Email required",
+        description: "Please add at least one email address to enable alerts.",
         variant: "destructive",
       });
       return;
@@ -88,22 +135,56 @@ export function AlertSettingsDialog({ open, onOpenChange }: AlertSettingsDialogP
             />
           </div>
 
-          {/* Email Address */}
+          {/* Email Addresses List */}
           <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
+            <Label className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
-              Email Address
+              Email Addresses (Max 5)
             </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="your.email@example.com"
-              value={settings.email}
-              onChange={(e) =>
-                setSettings((prev) => ({ ...prev, email: e.target.value }))
-              }
-              disabled={!settings.emailEnabled}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="email@example.com"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddEmail()}
+                disabled={!settings.emailEnabled || settings.emails.length >= 5}
+              />
+              <Button
+                type="button"
+                onClick={handleAddEmail}
+                disabled={!settings.emailEnabled || settings.emails.length >= 5}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add
+              </Button>
+            </div>
+            
+            {settings.emails.length > 0 && (
+              <div className="space-y-2 mt-3">
+                {settings.emails.map((email, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2"
+                  >
+                    <span className="text-sm">{email}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveEmail(email)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  {settings.emails.length} of 5 email addresses added
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Frequency */}
@@ -149,45 +230,6 @@ export function AlertSettingsDialog({ open, onOpenChange }: AlertSettingsDialogP
             <p className="text-sm text-muted-foreground">
               Only receive alerts for items at or above this risk level
             </p>
-          </div>
-
-          {/* Max Alerts Per Email */}
-          <div className="space-y-2">
-            <Label htmlFor="maxAlerts">Maximum Alerts per Email</Label>
-            <Input
-              id="maxAlerts"
-              type="number"
-              min={1}
-              max={20}
-              value={settings.maxAlertsPerEmail}
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  maxAlertsPerEmail: parseInt(e.target.value) || 5,
-                }))
-              }
-              disabled={!settings.emailEnabled}
-            />
-            <p className="text-sm text-muted-foreground">
-              Limit the number of alerts included in each email (1-20)
-            </p>
-          </div>
-
-          {/* Portfolio Keywords Only */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base">Portfolio Keywords Only</Label>
-              <p className="text-sm text-muted-foreground">
-                Only receive alerts that match your portfolio keywords
-              </p>
-            </div>
-            <Switch
-              checked={settings.portfolioKeywordsOnly}
-              onCheckedChange={(checked) =>
-                setSettings((prev) => ({ ...prev, portfolioKeywordsOnly: checked }))
-              }
-              disabled={!settings.emailEnabled}
-            />
           </div>
         </div>
 
