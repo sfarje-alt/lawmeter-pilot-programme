@@ -18,6 +18,9 @@ import {
 import { parseDate } from "@/lib/dateUtils";
 import { TextualTrendsChart } from "@/components/analytics/TextualTrendsChart";
 import { PeopleOfInterestChart } from "@/components/analytics/PeopleOfInterestChart";
+import { ComplianceDeadlineCalendar } from "@/components/analytics/ComplianceDeadlineCalendar";
+import { ImpactUrgencyMatrix } from "@/components/analytics/ImpactUrgencyMatrix";
+import { BillsProgressFunnel } from "@/components/analytics/BillsProgressFunnel";
 
 interface ChartsPanelProps {
   data: Alert[] | BillItem[];
@@ -183,7 +186,11 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
           </Card>
         </div>
         
-        <TextualTrendsChart data={alerts} type="acts" />
+        <div className="space-y-6">
+          <ImpactUrgencyMatrix data={alerts} type="acts" />
+          <ComplianceDeadlineCalendar alerts={alerts} />
+          <TextualTrendsChart data={alerts} type="acts" />
+        </div>
       </>
     );
   }
@@ -349,9 +356,10 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
         </Card>
       </div>
       
-      <PeopleOfInterestChart bills={bills} />
-      
-      <div className="mt-6">
+      <div className="space-y-6">
+        <ImpactUrgencyMatrix data={bills} type="bills" />
+        <BillsProgressFunnel bills={bills} />
+        <PeopleOfInterestChart bills={bills} />
         <TextualTrendsChart data={bills} type="bills" />
       </div>
     </>
