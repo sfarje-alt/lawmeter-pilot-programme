@@ -25,6 +25,8 @@ import { PeopleOfInterestChart } from "@/components/analytics/PeopleOfInterestCh
 import { ComplianceDeadlineCalendar } from "@/components/analytics/ComplianceDeadlineCalendar";
 import { ImpactUrgencyMatrix } from "@/components/analytics/ImpactUrgencyMatrix";
 import { BillsProgressFunnel } from "@/components/analytics/BillsProgressFunnel";
+import { VotingAnalyticsChart } from "@/components/analytics/VotingAnalyticsChart";
+import { StakeholderAnalysisChart } from "@/components/analytics/StakeholderAnalysisChart";
 
 interface ChartsPanelProps {
   data: Alert[] | BillItem[];
@@ -365,6 +367,8 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       </div>
       
       <div className="space-y-6">
+        <VotingAnalyticsChart bills={bills} />
+        <StakeholderAnalysisChart bills={bills} />
         <TextualTrendsChart data={bills} type="bills" />
         <SentimentAnalysisChart data={bills} type="bills" />
         <TopicClustersChart data={bills} type="bills" />
