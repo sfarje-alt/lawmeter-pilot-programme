@@ -1,19 +1,33 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, FileText, BarChart3, Star, Calendar, Bell, Filter, Search, AlertTriangle, Receipt, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BookOpen, FileText, BarChart3, Star, Calendar, Bell, Filter, Search, AlertTriangle, Receipt, Users, Home } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Documentation() {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <BookOpen className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold">User Documentation</h1>
-              <p className="text-sm text-muted-foreground">Complete guide to using LawMeter Dashboard</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <BookOpen className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold">User Documentation</h1>
+                <p className="text-sm text-muted-foreground">Complete guide to using LawMeter Dashboard</p>
+              </div>
             </div>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/")}
+              className="gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </Button>
           </div>
         </div>
       </header>
