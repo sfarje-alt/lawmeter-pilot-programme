@@ -3,102 +3,101 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileSearch, ExternalLink, Calendar, DollarSign, Building2, AlertCircle } from "lucide-react";
-import { parseDate } from "@/lib/dateUtils";
+import { FileSearch, ExternalLink, AlertCircle } from "lucide-react";
 
 interface Tender {
-  id: string;
+  atmId: string;
   title: string;
   agency: string;
   category: string;
-  value: number;
-  publishDate: string;
-  closeDate: string;
-  status: "open" | "closed" | "awarded";
   description: string;
+  closeDateTime: string;
+  lastUpdated: string;
+  status: "open" | "closed";
   relevanceScore: number;
   portfolioMatches: string[];
+  fullDetailsUrl: string;
 }
 
-// Mock tenders data relevant to healthcare
+// Mock tenders data relevant to healthcare from AusTender
 const mockTenders: Tender[] = [
   {
-    id: "ATM2025-001234",
+    atmId: "DHAC-2025-1234",
     title: "Supply of Medical Equipment and Devices for Public Hospitals",
     agency: "Department of Health and Aged Care",
     category: "Medical Equipment",
-    value: 15000000,
-    publishDate: "2025-09-15",
-    closeDate: "2025-11-30",
-    status: "open",
     description: "Provision of medical equipment including diagnostic devices, surgical instruments, and monitoring equipment for public hospital networks across Australia.",
+    closeDateTime: "2025-11-30T17:00:00",
+    lastUpdated: "2025-10-05T14:30:00",
+    status: "open",
     relevanceScore: 95,
-    portfolioMatches: ["hospital", "medical device", "surgical", "diagnostic"]
+    portfolioMatches: ["hospital", "medical device", "surgical", "diagnostic"],
+    fullDetailsUrl: "https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=DHAC-2025-1234"
   },
   {
-    id: "ATM2025-001189",
+    atmId: "DHAC-2025-1189",
     title: "Healthcare IT Systems Integration and Support",
     agency: "Department of Health and Aged Care",
     category: "IT Services",
-    value: 8500000,
-    publishDate: "2025-09-20",
-    closeDate: "2025-12-15",
-    status: "open",
     description: "Integration of electronic health record systems and ongoing IT support for healthcare facilities.",
+    closeDateTime: "2025-12-15T17:00:00",
+    lastUpdated: "2025-09-28T11:20:00",
+    status: "open",
     relevanceScore: 88,
-    portfolioMatches: ["electronic health record", "EHR", "health IT", "hospital"]
+    portfolioMatches: ["electronic health record", "EHR", "health IT", "hospital"],
+    fullDetailsUrl: "https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=DHAC-2025-1189"
   },
   {
-    id: "ATM2025-001145",
+    atmId: "DHAC-2025-1145",
     title: "Mental Health Services Expansion Program",
     agency: "Department of Health and Aged Care",
     category: "Healthcare Services",
-    value: 12000000,
-    publishDate: "2025-08-30",
-    closeDate: "2025-11-15",
-    status: "open",
     description: "Delivery of expanded mental health services including crisis support, consultation services, and facility upgrades.",
+    closeDateTime: "2025-11-15T17:00:00",
+    lastUpdated: "2025-09-30T09:45:00",
+    status: "open",
     relevanceScore: 92,
-    portfolioMatches: ["mental health", "psychiatric", "hospital", "health service"]
+    portfolioMatches: ["mental health", "psychiatric", "hospital", "health service"],
+    fullDetailsUrl: "https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=DHAC-2025-1145"
   },
   {
-    id: "ATM2025-001098",
+    atmId: "TGA-2025-1098",
     title: "Pharmaceutical Supply Chain Management",
     agency: "Therapeutic Goods Administration",
     category: "Pharmaceutical Services",
-    value: 6000000,
-    publishDate: "2025-08-15",
-    closeDate: "2025-10-30",
-    status: "open",
     description: "Management and optimization of pharmaceutical supply chains for healthcare facilities.",
+    closeDateTime: "2025-10-30T17:00:00",
+    lastUpdated: "2025-09-22T16:10:00",
+    status: "open",
     relevanceScore: 85,
-    portfolioMatches: ["pharmaceutical", "pharmacy", "medicine", "TGA"]
+    portfolioMatches: ["pharmaceutical", "pharmacy", "medicine", "TGA"],
+    fullDetailsUrl: "https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=TGA-2025-1098"
   },
   {
-    id: "ATM2025-001052",
+    atmId: "DHAC-2025-1052",
     title: "Aged Care Facility Upgrades and Equipment",
     agency: "Department of Health and Aged Care",
     category: "Aged Care",
-    value: 10000000,
-    publishDate: "2025-07-28",
-    closeDate: "2025-10-20",
-    status: "open",
     description: "Facility upgrades and equipment procurement for aged care facilities to meet new quality standards.",
+    closeDateTime: "2025-10-20T17:00:00",
+    lastUpdated: "2025-09-18T13:55:00",
+    status: "open",
     relevanceScore: 90,
-    portfolioMatches: ["aged care", "residential care", "nursing home", "care plan"]
+    portfolioMatches: ["aged care", "residential care", "nursing home", "care plan"],
+    fullDetailsUrl: "https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=DHAC-2025-1052"
   },
   {
-    id: "ATM2025-000987",
+    atmId: "ACSC-2025-0987",
     title: "Cybersecurity Assessment for Health Data Systems",
     agency: "Australian Cyber Security Centre",
     category: "Cybersecurity",
-    value: 3500000,
-    publishDate: "2025-07-10",
-    closeDate: "2025-10-15",
-    status: "closed",
     description: "Comprehensive cybersecurity assessment and remediation for healthcare data systems.",
+    closeDateTime: "2025-10-15T17:00:00",
+    lastUpdated: "2025-09-10T10:30:00",
+    status: "closed",
     relevanceScore: 82,
-    portfolioMatches: ["cybersecurity", "data protection", "privacy", "health IT"]
+    portfolioMatches: ["cybersecurity", "data protection", "privacy", "health IT"],
+    fullDetailsUrl: "https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=ACSC-2025-0987"
   },
 ];
 
@@ -113,14 +112,24 @@ export function TendersSection() {
   );
 
   const openTenders = filteredTenders.filter(t => t.status === "open");
-  const totalValue = openTenders.reduce((sum, t) => sum + t.value, 0);
 
-  const isClosingSoon = (closeDate: string) => {
-    const close = parseDate(closeDate);
-    if (!close) return false;
+  const isClosingSoon = (closeDateTime: string) => {
+    const close = new Date(closeDateTime);
     const now = new Date();
     const daysUntilClose = Math.ceil((close.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilClose <= 30 && daysUntilClose > 0;
+  };
+
+  const formatDateTime = (dateTime: string) => {
+    const date = new Date(dateTime);
+    return date.toLocaleString("en-AU", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }) + " (ACT Local Time)";
   };
 
   return (
@@ -149,11 +158,11 @@ export function TendersSection() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Total Value (Open)</CardTitle>
+            <CardTitle className="text-sm">High Relevance</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(totalValue / 1000000).toFixed(1)}M
+              {openTenders.filter(t => t.relevanceScore >= 90).length}
             </div>
           </CardContent>
         </Card>
@@ -163,7 +172,7 @@ export function TendersSection() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">
-              {openTenders.filter(t => isClosingSoon(t.closeDate)).length}
+              {openTenders.filter(t => isClosingSoon(t.closeDateTime)).length}
             </div>
           </CardContent>
         </Card>
@@ -183,7 +192,7 @@ export function TendersSection() {
 
       <div className="space-y-4">
         {filteredTenders.map(tender => (
-          <Card key={tender.id} className={`hover:shadow-md transition-shadow ${tender.status === "open" ? "" : "opacity-60"}`}>
+          <Card key={tender.atmId} className={`hover:shadow-md transition-shadow ${tender.status === "open" ? "" : "opacity-60"}`}>
             <CardContent className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -193,9 +202,9 @@ export function TendersSection() {
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold text-lg">{tender.title}</h3>
                         <Badge variant={tender.status === "open" ? "default" : "secondary"}>
-                          {tender.status}
+                          {tender.status.toUpperCase()}
                         </Badge>
-                        {isClosingSoon(tender.closeDate) && tender.status === "open" && (
+                        {isClosingSoon(tender.closeDateTime) && tender.status === "open" && (
                           <Badge variant="outline" className="border-warning text-warning">
                             Closing Soon
                           </Badge>
@@ -203,25 +212,36 @@ export function TendersSection() {
                       </div>
                       <p className="text-sm text-muted-foreground mb-3">{tender.description}</p>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <div className="space-y-2 mb-3">
+                        <div className="flex items-start gap-2 text-sm">
+                          <span className="font-semibold min-w-[140px]">ATM ID:</span>
+                          <span className="text-primary font-medium">{tender.atmId}</span>
+                        </div>
+                        <div className="flex items-start gap-2 text-sm">
+                          <span className="font-semibold min-w-[140px]">Close Date & Time:</span>
+                          <span className="text-muted-foreground">{formatDateTime(tender.closeDateTime)}</span>
+                        </div>
+                        <div className="flex items-start gap-2 text-sm">
+                          <span className="font-semibold min-w-[140px]">Agency:</span>
                           <span className="text-muted-foreground">{tender.agency}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">${(tender.value / 1000000).toFixed(1)}M</span>
+                        <div className="flex items-start gap-2 text-sm">
+                          <span className="font-semibold min-w-[140px]">Category:</span>
+                          <span className="text-muted-foreground">{tender.category}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            Close: {new Date(tender.closeDate).toLocaleDateString("en-AU")}
-                          </span>
+                        <div className="flex items-start gap-2 text-sm">
+                          <span className="font-semibold min-w-[140px]">Description:</span>
+                          <span className="text-muted-foreground">{tender.description}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-start gap-2 text-sm">
+                          <span className="font-semibold min-w-[140px]">Relevance:</span>
                           <Badge variant="outline" className="text-xs">
                             {tender.relevanceScore}% match
                           </Badge>
+                        </div>
+                        <div className="flex items-start gap-2 text-sm">
+                          <span className="font-semibold min-w-[140px]">Last Updated:</span>
+                          <span className="text-muted-foreground text-xs">{formatDateTime(tender.lastUpdated)}</span>
                         </div>
                       </div>
 
@@ -234,13 +254,12 @@ export function TendersSection() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={`https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=${tender.id}`} target="_blank" rel="noopener noreferrer">
-                            View on AusTender
+                        <Button size="sm" asChild>
+                          <a href={tender.fullDetailsUrl} target="_blank" rel="noopener noreferrer">
+                            Full Details
                             <ExternalLink className="h-3 w-3 ml-1" />
                           </a>
                         </Button>
-                        <span className="text-xs text-muted-foreground">ID: {tender.id}</span>
                       </div>
                     </div>
                   </div>
