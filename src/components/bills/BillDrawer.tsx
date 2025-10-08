@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VotingStakeholderTracker } from "./VotingStakeholderTracker";
 import { Copy, Trash2, Mail, Phone } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -171,6 +172,16 @@ export function BillDrawer({
             <Copy className="h-3 w-3 mr-2" />
             Copy Summary
           </Button>
+
+          {/* Voting & Stakeholder Section */}
+          <div>
+            <h4 className="font-semibold mb-3">Voting & Stakeholder Tracking</h4>
+            <VotingStakeholderTracker 
+              votingRecords={bill.votingRecords}
+              mps={bill.mps}
+              stakeholders={bill.stakeholders}
+            />
+          </div>
 
           <div>
             <h4 className="font-semibold mb-3">Comments</h4>

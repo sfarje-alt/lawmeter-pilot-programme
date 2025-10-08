@@ -66,6 +66,23 @@ export interface MP {
   role?: string;
   email?: string;
   phone?: string;
+  party?: string;
+  votingPosition?: "support" | "oppose" | "abstain" | "unknown";
+  constituency?: string;
+}
+
+export interface VotingRecord {
+  date: string;
+  stage: string;
+  votesFor: number;
+  votesAgainst: number;
+  abstentions: number;
+  passed: boolean;
+  mpVotes?: Array<{
+    mpName: string;
+    party: string;
+    vote: "for" | "against" | "abstain";
+  }>;
 }
 
 export interface BillItem {
@@ -91,6 +108,13 @@ export interface BillItem {
   risk_score: number;
   motherActLink?: string;
   amendmentActLink?: string;
+  votingRecords?: VotingRecord[];
+  stakeholders?: Array<{
+    name: string;
+    organization?: string;
+    position: "support" | "oppose" | "neutral";
+    statement?: string;
+  }>;
 }
 
 export interface Comment {
