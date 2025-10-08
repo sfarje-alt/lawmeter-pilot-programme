@@ -161,9 +161,9 @@ export function SocialListeningDemo() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Escucha Social - Healthcare Access Bill 2024</CardTitle>
+          <CardTitle>Social Listening - Healthcare Access Bill 2024</CardTitle>
           <CardDescription>
-            Monitoreo de medios, ONGs, y stakeholders que impulsan la legislación
+            Monitoring media outlets, NGOs, and stakeholders driving legislation
           </CardDescription>
         </CardHeader>
       </Card>
@@ -172,11 +172,11 @@ export function SocialListeningDemo() {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="newspapers">
             <Newspaper className="w-4 h-4 mr-2" />
-            Periódicos
+            Newspapers
           </TabsTrigger>
           <TabsTrigger value="ngos">
             <Users className="w-4 h-4 mr-2" />
-            ONGs
+            NGOs
           </TabsTrigger>
           <TabsTrigger value="stakeholders">
             <Building2 className="w-4 h-4 mr-2" />
@@ -188,9 +188,9 @@ export function SocialListeningDemo() {
         <TabsContent value="newspapers" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Cobertura de Medios</CardTitle>
+              <CardTitle>Media Coverage</CardTitle>
               <CardDescription>
-                Análisis de sentimiento de principales periódicos australianos
+                Sentiment analysis from major Australian newspapers
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -226,9 +226,9 @@ export function SocialListeningDemo() {
         <TabsContent value="ngos" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Posiciones de ONGs</CardTitle>
+              <CardTitle>NGO Positions</CardTitle>
               <CardDescription>
-                Declaraciones y posiciones de organizaciones no gubernamentales
+                Statements and positions from non-governmental organizations
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -272,9 +272,9 @@ export function SocialListeningDemo() {
         <TabsContent value="stakeholders" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Stakeholders Impulsando Legislación</CardTitle>
+              <CardTitle>Stakeholders Driving Legislation</CardTitle>
               <CardDescription>
-                Organizaciones activamente empujando la creación o modificación de la ley
+                Organizations actively pushing for the creation or modification of the law
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
