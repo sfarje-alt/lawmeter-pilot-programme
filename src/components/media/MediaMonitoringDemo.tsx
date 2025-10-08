@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, TrendingDown, Minus, Newspaper, Video, Quote } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Video, Quote } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export function MediaMonitoringDemo() {
@@ -46,40 +46,6 @@ export function MediaMonitoringDemo() {
     }
   ];
 
-  const mediaReferences = [
-    {
-      source: "The Australian",
-      headline: "Healthcare Bill Promises Universal Access, Critics Question Costs",
-      sentiment: "neutral" as const,
-      score: 0.05,
-      date: "2024-07-25",
-      excerpt: "The proposed Healthcare Access Bill has sparked debate in Parliament, with government touting unprecedented access while opposition raises fiscal concerns..."
-    },
-    {
-      source: "ABC News",
-      headline: "Government's Healthcare Overhaul Receives Mixed Reception",
-      sentiment: "neutral" as const,
-      score: -0.15,
-      date: "2024-07-24",
-      excerpt: "Healthcare reform takes center stage as the Minister defends the $2.4 billion investment against criticism from opposition benches..."
-    },
-    {
-      source: "Sydney Morning Herald",
-      headline: "Rural Health Groups Welcome Telehealth Expansion Plans",
-      sentiment: "positive" as const,
-      score: 0.68,
-      date: "2024-07-24",
-      excerpt: "Regional healthcare advocates have praised the telehealth provisions in the new bill, though call for stronger implementation guarantees..."
-    },
-    {
-      source: "Guardian Australia",
-      headline: "Mental Health Advocates Slam 'Inadequate' Healthcare Bill",
-      sentiment: "negative" as const,
-      score: -0.79,
-      date: "2024-07-23",
-      excerpt: "Mental health organizations have criticized the Healthcare Access Bill for lacking specific mental health funding and infrastructure commitments..."
-    }
-  ];
 
   const getSentimentIcon = (sentiment: "positive" | "negative" | "neutral") => {
     switch (sentiment) {
@@ -147,9 +113,8 @@ export function MediaMonitoringDemo() {
       </Card>
 
       <Tabs defaultValue="transcript" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="transcript">Transcript & Analysis</TabsTrigger>
-          <TabsTrigger value="media">Media Coverage</TabsTrigger>
           <TabsTrigger value="sentiment">Sentiment Summary</TabsTrigger>
         </TabsList>
 
@@ -184,46 +149,6 @@ export function MediaMonitoringDemo() {
                     <Quote className="w-4 h-4 inline mr-1 opacity-50" />
                     {segment.text}
                   </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Media Coverage Tab */}
-        <TabsContent value="media" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Newspaper className="w-5 h-5" />
-                Media Coverage Analysis
-              </CardTitle>
-              <CardDescription>
-                News articles and public sentiment from major Australian media outlets
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mediaReferences.map((article, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-lg border-l-4 ${getSentimentColor(article.sentiment)}`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline">{article.source}</Badge>
-                        <span className="text-xs text-muted-foreground">{article.date}</span>
-                      </div>
-                      <h4 className="font-semibold mb-2">{article.headline}</h4>
-                      <p className="text-sm text-muted-foreground">{article.excerpt}</p>
-                    </div>
-                    <div className="ml-4 flex items-center gap-2">
-                      {getSentimentIcon(article.sentiment)}
-                      <span className="text-sm font-medium">
-                        {article.score > 0 ? '+' : ''}{article.score.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               ))}
             </CardContent>

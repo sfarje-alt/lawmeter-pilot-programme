@@ -20,6 +20,7 @@ import { LegislativeCalendar } from "@/components/calendar/LegislativeCalendar";
 import { ContactForm } from "@/components/ContactForm";
 import { TendersSection } from "@/components/tenders/TendersSection";
 import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
+import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
 
 export default function LawMeterDashboard() {
@@ -120,10 +121,11 @@ export default function LawMeterDashboard() {
 
       <div className="container mx-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-8 mb-6">
+          <TabsList className="grid w-full grid-cols-9 mb-6">
             <TabsTrigger value="acts"><FileText className="h-4 w-4 mr-2" />Acts</TabsTrigger>
             <TabsTrigger value="bills"><FileText className="h-4 w-4 mr-2" />Bills</TabsTrigger>
             <TabsTrigger value="media"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
+            <TabsTrigger value="social"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
             <TabsTrigger value="starred"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
             <TabsTrigger value="calendar"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
@@ -229,6 +231,10 @@ export default function LawMeterDashboard() {
 
           <TabsContent value="media" className="mt-6">
             <MediaMonitoringDemo />
+          </TabsContent>
+
+          <TabsContent value="social" className="mt-6">
+            <SocialListeningDemo />
           </TabsContent>
 
           <TabsContent value="contact" className="mt-6">
