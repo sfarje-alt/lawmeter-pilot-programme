@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
@@ -24,6 +25,7 @@ import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
 
 export default function LawMeterDashboard() {
+  const navigate = useNavigate();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("acts");
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
@@ -102,6 +104,14 @@ export default function LawMeterDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/documentation")}
+                className="gap-2"
+              >
+                <BookOpen className="w-4 h-4" />
+                Documentation
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setSettingsOpen(true)}
