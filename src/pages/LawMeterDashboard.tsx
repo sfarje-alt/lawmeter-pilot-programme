@@ -117,6 +117,7 @@ export default function LawMeterDashboard() {
             types={types}
             parties={parties}
             showPartyFilters={activeTab === "bills"}
+            showRiskScore={activeTab !== "tenders"}
           />
 
           <TabsContent value="acts" className="space-y-6 mt-6">

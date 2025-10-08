@@ -25,6 +25,7 @@ interface FilterBarProps {
   types: string[];
   parties?: string[];
   showPartyFilters?: boolean;
+  showRiskScore?: boolean;
 }
 
 export function FilterBar({
@@ -34,6 +35,7 @@ export function FilterBar({
   types,
   parties = [],
   showPartyFilters = false,
+  showRiskScore = true,
 }: FilterBarProps) {
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -184,58 +186,60 @@ export function FilterBar({
             </Popover>
           )}
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Risk Score
-                {(filters.riskScoreRange[0] !== 0 || filters.riskScoreRange[1] !== 100) && (
-                  <Badge variant="secondary" className="ml-1">
-                    {filters.riskScoreRange[0]}-{filters.riskScoreRange[1]}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm mb-2">
-                    Range: {filters.riskScoreRange[0]} - {filters.riskScoreRange[1]}
-                  </p>
-                  <Slider
-                    value={filters.riskScoreRange}
-                    onValueChange={(value) => updateFilter("riskScoreRange", value as [number, number])}
-                    min={0}
-                    max={100}
-                    step={1}
-                  />
+          {showRiskScore && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  Risk Score
+                  {(filters.riskScoreRange[0] !== 0 || filters.riskScoreRange[1] !== 100) && (
+                    <Badge variant="secondary" className="ml-1">
+                      {filters.riskScoreRange[0]}-{filters.riskScoreRange[1]}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm mb-2">
+                      Range: {filters.riskScoreRange[0]} - {filters.riskScoreRange[1]}
+                    </p>
+                    <Slider
+                      value={filters.riskScoreRange}
+                      onValueChange={(value) => updateFilter("riskScoreRange", value as [number, number])}
+                      min={0}
+                      max={100}
+                      step={1}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateFilter("riskScoreRange", [1, 39])}
+                    >
+                      Low (1-39)
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateFilter("riskScoreRange", [40, 79])}
+                    >
+                      Medium (40-79)
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateFilter("riskScoreRange", [80, 100])}
+                    >
+                      High (80-100)
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateFilter("riskScoreRange", [1, 39])}
-                  >
-                    Low (1-39)
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateFilter("riskScoreRange", [40, 79])}
-                  >
-                    Medium (40-79)
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateFilter("riskScoreRange", [80, 100])}
-                  >
-                    High (80-100)
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+          )}
 
           {hasActiveFilters && (
             <Button variant="ghost" size="icon" onClick={clearFilters}>
