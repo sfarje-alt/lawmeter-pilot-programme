@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileSearch, ExternalLink, AlertCircle } from "lucide-react";
 
 interface Tender {
@@ -116,13 +117,21 @@ const mockTenders: Tender[] = [
 
 export function TendersSection() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [relevanceFilter, setRelevanceFilter] = useState<"all" | "high" | "medium" | "low">("all");
 
-  const filteredTenders = mockTenders.filter(tender =>
-    tender.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tender.agency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tender.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tender.portfolioMatches.some(match => match.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredTenders = mockTenders.filter(tender => {
+    const matchesSearch = tender.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tender.agency.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tender.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tender.portfolioMatches.some(match => match.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesRelevance = relevanceFilter === "all" ||
+      (relevanceFilter === "high" && tender.relevanceScore >= 90) ||
+      (relevanceFilter === "medium" && tender.relevanceScore >= 70 && tender.relevanceScore < 90) ||
+      (relevanceFilter === "low" && tender.relevanceScore < 70);
+    
+    return matchesSearch && matchesRelevance;
+  });
 
   const openTenders = filteredTenders.filter(t => t.status === "open");
 
@@ -191,7 +200,7 @@ export function TendersSection() {
         </Card>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
         <div className="relative flex-1">
           <FileSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -201,6 +210,17 @@ export function TendersSection() {
             className="pl-10"
           />
         </div>
+        <Select value={relevanceFilter} onValueChange={(value: "all" | "high" | "medium" | "low") => setRelevanceFilter(value)}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Relevance" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Relevance</SelectItem>
+            <SelectItem value="high">High (90%+)</SelectItem>
+            <SelectItem value="medium">Medium (70-89%)</SelectItem>
+            <SelectItem value="low">Low (&lt;70%)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-4">
