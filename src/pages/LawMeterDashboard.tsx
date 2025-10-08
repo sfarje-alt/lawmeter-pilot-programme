@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings } from "lucide-react";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
@@ -14,6 +15,7 @@ import { AlertActCard } from "@/components/acts/AlertActCard";
 import { AlertActDrawer } from "@/components/acts/AlertActDrawer";
 import { BillCard } from "@/components/bills/BillCard";
 import { BillDrawer } from "@/components/bills/BillDrawer";
+import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { ContactForm } from "@/components/ContactForm";
 import { TendersSection } from "@/components/tenders/TendersSection";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
@@ -23,6 +25,7 @@ export default function LawMeterDashboard() {
   const [activeTab, setActiveTab] = useState("acts");
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     timeWindow: "all",
     portfolios: [],
@@ -95,10 +98,20 @@ export default function LawMeterDashboard() {
                 <p className="text-sm text-muted-foreground">Australian Legislative Monitoring</p>
               </div>
             </div>
-            <Badge variant="outline" className="bg-success/10">
-              <Clock className="h-3 w-3 mr-1" />
-              Updated: Just now
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setSettingsOpen(true)}
+                className="gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Alert Settings
+              </Button>
+              <Badge variant="outline" className="bg-success/10">
+                <Clock className="h-3 w-3 mr-1" />
+                Updated: Just now
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
@@ -225,6 +238,11 @@ export default function LawMeterDashboard() {
         comments={selectedBill ? starredHooks.getComments("BILLS", selectedBill.id) : []}
         onAddComment={(vis, body) => selectedBill && starredHooks.addComment("BILLS", selectedBill.id, vis, body)}
         onDeleteComment={(id) => selectedBill && starredHooks.deleteComment("BILLS", selectedBill.id, id)}
+      />
+
+      <AlertSettingsDialog 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen} 
       />
     </div>
   );
