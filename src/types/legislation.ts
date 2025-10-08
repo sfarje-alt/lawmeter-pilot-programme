@@ -117,4 +117,9 @@ export interface FilterState {
   parties: string[];
   mpSearch: string;
   searchText: string;
+  riskLevels: ("low" | "medium" | "high")[];
+  urgencyLevels: ("low" | "medium" | "high")[];
+  hasDeadline: boolean | null;
+  sortBy: "date" | "risk" | "relevance" | "deadline";
+  sortOrder: "asc" | "desc";
 }

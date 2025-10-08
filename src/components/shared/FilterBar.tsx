@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Filter, X } from "lucide-react";
+import { Filter, X, ArrowUpDown, Calendar } from "lucide-react";
 
 interface FilterBarProps {
   filters: FilterState;
@@ -41,7 +41,7 @@ export function FilterBar({
     onFiltersChange({ ...filters, [key]: value });
   };
 
-  const toggleMultiSelect = (key: "portfolios" | "types" | "parties", value: string) => {
+  const toggleMultiSelect = (key: "portfolios" | "types" | "parties" | "riskLevels" | "urgencyLevels", value: string) => {
     const current = filters[key] as string[];
     const updated = current.includes(value)
       ? current.filter((v) => v !== value)
@@ -59,6 +59,11 @@ export function FilterBar({
       parties: [],
       mpSearch: "",
       searchText: "",
+      riskLevels: [],
+      urgencyLevels: [],
+      hasDeadline: null,
+      sortBy: "date",
+      sortOrder: "desc",
     });
   };
 
@@ -66,6 +71,9 @@ export function FilterBar({
     filters.portfolios.length > 0 ||
     filters.types.length > 0 ||
     filters.parties.length > 0 ||
+    filters.riskLevels.length > 0 ||
+    filters.urgencyLevels.length > 0 ||
+    filters.hasDeadline !== null ||
     filters.riskScoreRange[0] !== 0 ||
     filters.riskScoreRange[1] !== 100 ||
     filters.searchText !== "";
@@ -241,6 +249,119 @@ export function FilterBar({
             </Popover>
           )}
 
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Risk Level
+                {filters.riskLevels.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                    {filters.riskLevels.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60">
+              <div className="space-y-2">
+                {["low", "medium", "high"].map((level) => (
+                  <div key={level} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={filters.riskLevels.includes(level as any)}
+                      onCheckedChange={() => toggleMultiSelect("riskLevels", level)}
+                    />
+                    <label className="text-sm cursor-pointer flex-1 capitalize">
+                      {level}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Urgency
+                {filters.urgencyLevels.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                    {filters.urgencyLevels.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60">
+              <div className="space-y-2">
+                {["low", "medium", "high"].map((level) => (
+                  <div key={level} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={filters.urgencyLevels.includes(level as any)}
+                      onCheckedChange={() => toggleMultiSelect("urgencyLevels", level)}
+                    />
+                    <label className="text-sm cursor-pointer flex-1 capitalize">
+                      {level}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                Deadline
+                {filters.hasDeadline !== null && (
+                  <Badge variant="secondary" className="ml-1">
+                    {filters.hasDeadline ? "Yes" : "No"}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60">
+              <div className="space-y-2">
+                <Button
+                  variant={filters.hasDeadline === true ? "default" : "outline"}
+                  size="sm"
+                  className="w-full"
+                  onClick={() => updateFilter("hasDeadline", filters.hasDeadline === true ? null : true)}
+                >
+                  Has Deadline
+                </Button>
+                <Button
+                  variant={filters.hasDeadline === false ? "default" : "outline"}
+                  size="sm"
+                  className="w-full"
+                  onClick={() => updateFilter("hasDeadline", filters.hasDeadline === false ? null : false)}
+                >
+                  No Deadline
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Select value={filters.sortBy} onValueChange={(v) => updateFilter("sortBy", v as FilterState["sortBy"])}>
+            <SelectTrigger className="w-[160px]">
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Sort by Date</SelectItem>
+              <SelectItem value="risk">Sort by Risk</SelectItem>
+              <SelectItem value="relevance">Sort by Relevance</SelectItem>
+              <SelectItem value="deadline">Sort by Deadline</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => updateFilter("sortOrder", filters.sortOrder === "asc" ? "desc" : "asc")}
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+
           {hasActiveFilters && (
             <Button variant="ghost" size="icon" onClick={clearFilters}>
               <X className="h-4 w-4" />
@@ -275,6 +396,24 @@ export function FilterBar({
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => toggleMultiSelect("parties", p)}
+              />
+            </Badge>
+          ))}
+          {filters.riskLevels.map((r) => (
+            <Badge key={r} variant="secondary" className="gap-1">
+              Risk: {r}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => toggleMultiSelect("riskLevels", r)}
+              />
+            </Badge>
+          ))}
+          {filters.urgencyLevels.map((u) => (
+            <Badge key={u} variant="secondary" className="gap-1">
+              Urgency: {u}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => toggleMultiSelect("urgencyLevels", u)}
               />
             </Badge>
           ))}

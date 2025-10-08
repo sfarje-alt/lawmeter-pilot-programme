@@ -32,6 +32,11 @@ export default function LawMeterDashboard() {
     parties: [],
     mpSearch: "",
     searchText: "",
+    riskLevels: [],
+    urgencyLevels: [],
+    hasDeadline: null,
+    sortBy: "date",
+    sortOrder: "desc",
   });
 
   const starredHooks = useStarredAlerts();

@@ -39,7 +39,7 @@ export function useLegislationData() {
 
 export function useFilteredAlerts(alerts: Alert[], filters: FilterState) {
   return useMemo(() => {
-    return alerts.filter((alert) => {
+    let filtered = alerts.filter((alert) => {
       // Time window filter
       const effectiveDate = parseDate(alert.effective_date) || parseDate(alert.registered_date);
       if (effectiveDate && !isWithinTimeWindow(effectiveDate, filters.timeWindow)) {
@@ -74,6 +74,24 @@ export function useFilteredAlerts(alerts: Alert[], filters: FilterState) {
         return false;
       }
 
+      // Risk level filter
+      if (filters.riskLevels.length > 0 && !filters.riskLevels.includes(alert.AI_triage?.risk_level)) {
+        return false;
+      }
+
+      // Urgency level filter (based on portfolio_priority)
+      if (filters.urgencyLevels.length > 0 && !filters.urgencyLevels.includes(alert.AI_triage?.portfolio_priority)) {
+        return false;
+      }
+
+      // Deadline filter
+      if (filters.hasDeadline !== null) {
+        const hasDeadline = !!alert.AI_triage?.deadline_detected;
+        if (hasDeadline !== filters.hasDeadline) {
+          return false;
+        }
+      }
+
       // Search text filter
       if (filters.searchText) {
         const searchLower = filters.searchText.toLowerCase();
@@ -90,5 +108,43 @@ export function useFilteredAlerts(alerts: Alert[], filters: FilterState) {
 
       return true;
     });
+
+    // Sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+
+      switch (filters.sortBy) {
+        case "date":
+          const dateA = parseDate(a.effective_date) || parseDate(a.registered_date) || new Date(0);
+          const dateB = parseDate(b.effective_date) || parseDate(b.registered_date) || new Date(0);
+          comparison = dateA.getTime() - dateB.getTime();
+          break;
+        
+        case "risk":
+          const riskA = a.AI_triage?.risk_score_hint || 0;
+          const riskB = b.AI_triage?.risk_score_hint || 0;
+          comparison = riskA - riskB;
+          break;
+        
+        case "relevance":
+          const relevanceA = a.AI_triage?.score || 0;
+          const relevanceB = b.AI_triage?.score || 0;
+          comparison = relevanceA - relevanceB;
+          break;
+        
+        case "deadline":
+          const deadlineA = a.AI_triage?.deadline_detected ? parseDate(a.AI_triage.deadline_detected) : null;
+          const deadlineB = b.AI_triage?.deadline_detected ? parseDate(b.AI_triage.deadline_detected) : null;
+          if (!deadlineA && !deadlineB) comparison = 0;
+          else if (!deadlineA) comparison = 1;
+          else if (!deadlineB) comparison = -1;
+          else comparison = deadlineA.getTime() - deadlineB.getTime();
+          break;
+      }
+
+      return filters.sortOrder === "asc" ? comparison : -comparison;
+    });
+
+    return filtered;
   }, [alerts, filters]);
 }
