@@ -22,6 +22,19 @@ interface Tender {
 // Mock tenders data relevant to healthcare from AusTender
 const mockTenders: Tender[] = [
   {
+    atmId: "JHC/RFP/2025/1",
+    title: "Australian Defence Contracted Health System",
+    agency: "Department of Defence - DSRG",
+    category: "Comprehensive health services",
+    description: "Request for Proposal for the Australian Defence Contracted Health System",
+    closeDateTime: "2025-10-10T16:00:00",
+    lastUpdated: "2025-10-03T11:39:00",
+    status: "open",
+    relevanceScore: 93,
+    portfolioMatches: ["health service", "hospital", "health system", "contracted health"],
+    fullDetailsUrl: "https://www.tenders.gov.au/?event=public.ATM.show&ATMUUID=JHC/RFP/2025/1"
+  },
+  {
     atmId: "DHAC-2025-1234",
     title: "Supply of Medical Equipment and Devices for Public Hospitals",
     agency: "Department of Health and Aged Care",
