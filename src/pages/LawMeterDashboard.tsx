@@ -97,13 +97,13 @@ export default function LawMeterDashboard() {
       <header className="border-b shadow-sm sticky top-0 z-10" style={{ backgroundColor: 'hsl(225, 47%, 9%)', borderColor: 'hsl(225, 47%, 15%)' }}>
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-12">
+            <div className="flex items-center gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-white">Macquarie Hospital Group Dashboard</h1>
                 <p className="text-sm text-gray-300">Regulatory Monitoring</p>
               </div>
-              <div className="border-l border-white/20 h-12 ml-4"></div>
-              <div className="flex flex-col items-start gap-1 ml-4">
+              <div className="border-l border-white/20 h-12"></div>
+              <div className="flex flex-col items-start gap-1">
                 <p className="text-xs text-gray-400">Powered by</p>
                 <img src={lawmeterLogo} alt="LawMeter" className="h-10" />
               </div>
