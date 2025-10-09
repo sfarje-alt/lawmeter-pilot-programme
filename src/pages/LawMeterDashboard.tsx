@@ -98,14 +98,14 @@ export default function LawMeterDashboard() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              <div>
+                <h1 className="text-2xl font-bold text-white">Macquarie Hospital Group Dashboard</h1>
+                <p className="text-sm text-gray-300">Regulatory Monitoring</p>
+              </div>
+              <div className="border-l border-white/20 h-12"></div>
               <div className="flex flex-col items-start gap-1">
                 <p className="text-xs text-gray-400">Powered by</p>
                 <img src={lawmeterLogo} alt="LawMeter" className="h-10" />
-              </div>
-              <div className="border-l border-white/20 h-12"></div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Macquarie Hospital Group Dashboard</h1>
-                <p className="text-sm text-gray-300">Australian Legislative Monitoring</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
