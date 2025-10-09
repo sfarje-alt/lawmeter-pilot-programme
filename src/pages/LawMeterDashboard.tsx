@@ -94,21 +94,21 @@ export default function LawMeterDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card shadow-sm sticky top-0 z-10">
+      <header className="border-b shadow-sm sticky top-0 z-10" style={{ backgroundColor: 'hsl(225, 47%, 9%)', borderColor: 'hsl(225, 47%, 15%)' }}>
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img src={lawmeterLogo} alt="LawMeter" className="h-12" />
               <div>
-                <h1 className="text-2xl font-bold">LawMeter Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Australian Legislative Monitoring</p>
+                <h1 className="text-2xl font-bold text-white">LawMeter Dashboard</h1>
+                <p className="text-sm text-gray-300">Australian Legislative Monitoring</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/documentation")}
-                className="gap-2"
+                className="gap-2 border-white/20 text-white hover:bg-white/10"
               >
                 <BookOpen className="w-4 h-4" />
                 Documentation
@@ -116,12 +116,12 @@ export default function LawMeterDashboard() {
               <Button 
                 variant="outline" 
                 onClick={() => setSettingsOpen(true)}
-                className="gap-2"
+                className="gap-2 border-white/20 text-white hover:bg-white/10"
               >
                 <Settings className="w-4 h-4" />
                 Alert Settings
               </Button>
-              <Badge variant="outline" className="bg-success/10">
+              <Badge variant="outline" className="bg-success/10 border-white/20 text-white">
                 <Clock className="h-3 w-3 mr-1" />
                 Updated: Just now
               </Badge>

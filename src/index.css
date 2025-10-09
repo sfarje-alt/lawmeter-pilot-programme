@@ -62,6 +62,10 @@
     --party-greens: 142 60% 45%;
     --party-crossbench: 280 15% 60%;
 
+    /* Brand Colors */
+    --brand-navy: 225 47% 9%;
+    --brand-navy-foreground: 0 0% 98%;
+
     --radius: 0.375rem;
 
     --sidebar-background: 0 0% 98%;
