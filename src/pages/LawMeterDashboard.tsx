@@ -96,18 +96,25 @@ export default function LawMeterDashboard() {
     <div className="min-h-screen bg-background">
       <header className="border-b shadow-sm sticky top-0 z-10" style={{ backgroundColor: 'hsl(225, 47%, 9%)', borderColor: 'hsl(225, 47%, 15%)' }}>
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-8">
+            {/* Left side - Title */}
+            <div className="flex items-center gap-6">
               <div>
-                <h1 className="text-2xl font-bold text-white">Macquarie Hospital Group Dashboard</h1>
-                <p className="text-sm text-gray-300">Regulatory Monitoring</p>
+                <h1 className="text-2xl font-bold text-white leading-tight">Macquarie Hospital Group Dashboard</h1>
+                <p className="text-sm text-gray-300 mt-0.5">Regulatory Monitoring</p>
               </div>
-              <div className="border-l border-white/20 h-12"></div>
-              <div className="flex flex-col items-start gap-1">
-                <p className="text-xs text-gray-400">Powered by</p>
-                <img src={lawmeterLogo} alt="LawMeter" className="h-10" />
+              
+              {/* Separator */}
+              <div className="border-l border-white/20 h-14"></div>
+              
+              {/* Powered by */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 whitespace-nowrap">Powered by</span>
+                <img src={lawmeterLogo} alt="LawMeter" className="h-8" />
               </div>
             </div>
+
+            {/* Right side - Buttons and Badge */}
             <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
