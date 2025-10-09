@@ -100,7 +100,7 @@ export default function LawMeterDashboard() {
             <div className="flex items-center space-x-4">
               <img src={lawmeterLogo} alt="LawMeter" className="h-12" />
               <div>
-                <h1 className="text-2xl font-bold text-white">LawMeter Dashboard</h1>
+                <h1 className="text-2xl font-bold text-white">Macquarie Hospital Group Dashboard</h1>
                 <p className="text-sm text-gray-300">Australian Legislative Monitoring</p>
               </div>
             </div>
