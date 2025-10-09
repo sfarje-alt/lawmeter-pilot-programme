@@ -98,7 +98,7 @@ export default function LawMeterDashboard() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <FileText className="h-8 w-8 text-primary" />
+              <img src={lawmeterLogo} alt="LawMeter" className="h-12" />
               <div>
                 <h1 className="text-2xl font-bold">LawMeter Dashboard</h1>
                 <p className="text-sm text-muted-foreground">Australian Legislative Monitoring</p>
