@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import lawmeterLogo from "@/assets/lawmeter-logo.png";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
@@ -275,6 +276,18 @@ export default function LawMeterDashboard() {
         open={settingsOpen} 
         onOpenChange={setSettingsOpen} 
       />
+
+      <footer className="border-t bg-card mt-12">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex items-center justify-center">
+            <img 
+              src={lawmeterLogo} 
+              alt="Powered by LawMeter - Legal Tech" 
+              className="h-20 opacity-90 hover:opacity-100 transition-opacity"
+            />
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
