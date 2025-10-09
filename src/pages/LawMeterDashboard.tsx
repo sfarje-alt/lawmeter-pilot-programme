@@ -279,11 +279,12 @@ export default function LawMeterDashboard() {
 
       <footer className="border-t bg-card mt-12">
         <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-3">
+            <p className="text-sm text-muted-foreground">Powered by</p>
             <img 
               src={lawmeterLogo} 
-              alt="Powered by LawMeter - Legal Tech" 
-              className="h-20 opacity-90 hover:opacity-100 transition-opacity"
+              alt="LawMeter - Legal Tech" 
+              className="h-16 opacity-90 hover:opacity-100 transition-opacity"
             />
           </div>
         </div>
