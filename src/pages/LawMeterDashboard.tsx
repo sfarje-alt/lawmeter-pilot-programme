@@ -108,7 +108,7 @@ export default function LawMeterDashboard() {
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/documentation")}
-                className="gap-2 bg-white/95 text-brand-navy border-0 hover:bg-white/95"
+                className="gap-2 bg-white/95 text-brand-navy border-0 hover:bg-white/95 hover:text-brand-navy transition-none"
               >
                 <BookOpen className="w-4 h-4" />
                 Documentation
@@ -116,7 +116,7 @@ export default function LawMeterDashboard() {
               <Button 
                 variant="outline" 
                 onClick={() => setSettingsOpen(true)}
-                className="gap-2 bg-white/95 text-brand-navy border-0 hover:bg-white/95"
+                className="gap-2 bg-white/95 text-brand-navy border-0 hover:bg-white/95 hover:text-brand-navy transition-none"
               >
                 <Settings className="w-4 h-4" />
                 Alert Settings
