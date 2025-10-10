@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import lawmeterLogo from "@/assets/lawmeter-logo.png";
+import lawmeterLogo from "@/assets/lawmeter-logo-white.png";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
@@ -94,22 +94,22 @@ export default function LawMeterDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b shadow-sm sticky top-0 z-10" style={{ backgroundColor: 'hsl(225, 47%, 9%)', borderColor: 'hsl(225, 47%, 15%)' }}>
+      <header className="border-b shadow-sm sticky top-0 z-10 bg-white">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between gap-8">
             {/* Left side - Title */}
             <div className="flex items-center gap-6">
               <div>
-                <h1 className="text-2xl font-bold text-white leading-tight">Macquarie Hospital Group Dashboard</h1>
-                <p className="text-sm text-gray-300 mt-0.5">Regulatory Monitoring</p>
+                <h1 className="text-2xl font-bold text-foreground leading-tight">Macquarie Hospital Group Dashboard</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Regulatory Monitoring</p>
               </div>
               
               {/* Separator */}
-              <div className="border-l border-white/20 h-14"></div>
+              <div className="border-l border-border h-14"></div>
               
               {/* Powered by */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 whitespace-nowrap">Powered by</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Powered by</span>
                 <img src={lawmeterLogo} alt="LawMeter" className="h-8" />
               </div>
             </div>
@@ -119,7 +119,7 @@ export default function LawMeterDashboard() {
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/documentation")}
-                className="gap-2 bg-white/95 text-brand-navy border-0 hover:bg-white/95 hover:text-brand-navy transition-none"
+                className="gap-2"
               >
                 <BookOpen className="w-4 h-4" />
                 Documentation
@@ -127,12 +127,12 @@ export default function LawMeterDashboard() {
               <Button 
                 variant="outline" 
                 onClick={() => setSettingsOpen(true)}
-                className="gap-2 bg-white/95 text-brand-navy border-0 hover:bg-white/95 hover:text-brand-navy transition-none"
+                className="gap-2"
               >
                 <Settings className="w-4 h-4" />
                 Alert Settings
               </Button>
-              <Badge variant="outline" className="bg-success/10 border-white/20 text-white">
+              <Badge variant="outline" className="bg-success/10">
                 <Clock className="h-3 w-3 mr-1" />
                 Updated: Just now
               </Badge>
