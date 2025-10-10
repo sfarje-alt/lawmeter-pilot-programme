@@ -110,7 +110,7 @@ export default function LawMeterDashboard() {
               {/* Powered by */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">Powered by</span>
-                <img src={lawmeterLogo} alt="LawMeter" className="h-12" />
+                <img src={lawmeterLogo} alt="LawMeter" className="h-16" />
               </div>
             </div>
 
