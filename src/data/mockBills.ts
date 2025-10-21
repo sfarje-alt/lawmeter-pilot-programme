@@ -481,9 +481,35 @@ function generateBill(index: number): BillItem {
   const p = portfolioTopics[index % portfolioTopics.length];
   const topic = p.topics[index % p.topics.length];
   const chamber = chambers[index % chambers.length];
-  const status = statusCycle[index % statusCycle.length];
-  const daysAgo = ((index * 3) % 180) + 1; // 1 to 180 days ago
-  const score = 55 + ((index * 7) % 41); // 55-95
+  
+  // Create a better distribution across all quadrants
+  let status: BillItem["status"];
+  let score: number;
+  
+  // Distribute across urgency levels (based on status)
+  const urgencyGroup = index % 3;
+  if (urgencyGroup === 0) {
+    // High urgency - late stage bills
+    status = index % 2 === 0 ? "Royal Assent Pending" : "Passed Senate";
+  } else if (urgencyGroup === 1) {
+    // Medium urgency - middle stage bills
+    status = index % 2 === 0 ? "Second Reading" : "Committee";
+  } else {
+    // Low urgency - early stage bills
+    status = index % 2 === 0 ? "Introduced" : "Consideration in Detail";
+  }
+  
+  // Distribute across risk levels (impact)
+  const impactGroup = index % 3;
+  if (impactGroup === 0) {
+    score = 80 + (index % 16); // High risk: 80-95
+  } else if (impactGroup === 1) {
+    score = 60 + (index % 20); // Medium risk: 60-79
+  } else {
+    score = 40 + (index % 20); // Low risk: 40-59
+  }
+  
+  const daysAgo = ((index * 3) % 180) + 1;
   const level = riskLevelFromScore(score);
   const party = parties[index % parties.length];
   const year = new Date().getFullYear();
@@ -500,7 +526,7 @@ function generateBill(index: number): BillItem {
     status,
     stageLocation: makeStageLocation(chamber, status),
     lastActionDate: daysAgoISO(daysAgo),
-    summary: `Proposes reforms relating to ${topic.toLowerCase()} impacting providers such as hospitals, clinics, and disability services. Includes compliance, reporting, and accreditation changes relevant to Macquarie Hospital Group in Sydney.`,
+    summary: `Proposes reforms relating to ${topic.toLowerCase()} impacting organizations across multiple sectors. Includes compliance, reporting, and operational changes.`,
     bullets: [
       `Introduces new requirements for ${topic.toLowerCase()}`,
       `Enhances compliance and audit obligations for ${p.portfolio.toLowerCase()}`,
@@ -511,7 +537,7 @@ function generateBill(index: number): BillItem {
   };
 }
 
-const generatedBills: BillItem[] = Array.from({ length: 60 }, (_, i) => generateBill(i + 1));
+const generatedBills: BillItem[] = Array.from({ length: 90 }, (_, i) => generateBill(i + 1));
 
 export const mockBills: BillItem[] = [
   ...baseBills,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Alert, FilterState } from "@/types/legislation";
 import { parseDate, isWithinTimeWindow, isWithinDateRange } from "@/lib/dateUtils";
+import { generateMatrixAlerts } from "@/data/generateMatrixAlerts";
 
 export function useLegislationData() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -23,7 +24,11 @@ export function useLegislationData() {
             !item.csv_collection?.toLowerCase().includes("bill")
         );
         
-        setAlerts(filtered);
+        // Add generated matrix alerts for demo
+        const matrixAlerts = generateMatrixAlerts();
+        const combined = [...matrixAlerts, ...filtered];
+        
+        setAlerts(combined);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
