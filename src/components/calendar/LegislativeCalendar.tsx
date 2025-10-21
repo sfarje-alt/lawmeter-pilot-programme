@@ -198,7 +198,7 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5" />
@@ -217,23 +217,25 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
             </Tabs>
           </div>
         </CardHeader>
-        <CardContent className="flex justify-center">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            className={cn("rounded-md border pointer-events-auto text-lg scale-125")}
-            modifiers={{
-              hasEvents: datesWithEvents,
-            }}
-            modifiersStyles={{
-              hasEvents: {
-                fontWeight: "bold",
-                textDecoration: "underline",
-                color: "hsl(var(--primary))",
-              },
-            }}
-          />
+        <CardContent className="flex justify-center p-8">
+          <div className="w-full max-w-2xl">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className={cn("rounded-md border pointer-events-auto w-full [&_td]:h-14 [&_th]:h-10 [&_button]:h-12 [&_button]:w-12 [&_button]:text-base [&_th]:text-base")}
+              modifiers={{
+                hasEvents: datesWithEvents,
+              }}
+              modifiersStyles={{
+                hasEvents: {
+                  fontWeight: "bold",
+                  textDecoration: "underline",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -249,15 +251,17 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[500px] pr-4">
             {selectedDateEvents.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No events on this date</p>
+                <p>No events in this {calendarView === "daily" ? "date" : calendarView === "weekly" ? "week" : "month"}</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {selectedDateEvents.map((event, index) => (
+                {selectedDateEvents
+                  .sort((a, b) => a.date.getTime() - b.date.getTime())
+                  .map((event, index) => (
                   <div
                     key={index}
                     className={cn(
@@ -291,7 +295,7 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
                         )}
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
-                          {format(event.date, "h:mm a")}
+                          {format(event.date, "MMM d, yyyy 'at' h:mm a")}
                         </div>
                       </div>
                     </div>
