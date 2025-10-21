@@ -12,7 +12,6 @@ import { mockBills } from "@/data/mockBills";
 import { FilterState, Alert, BillItem } from "@/types/legislation";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { ChartsPanel } from "@/components/shared/ChartsPanel";
-import { TextualTrendsChart } from "@/components/analytics/TextualTrendsChart";
 import { AlertActCard } from "@/components/acts/AlertActCard";
 import { AlertActDrawer } from "@/components/acts/AlertActDrawer";
 import { BillCard } from "@/components/bills/BillCard";
@@ -173,8 +172,6 @@ export default function LawMeterDashboard() {
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Portfolios</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.portfolios}</div></CardContent></Card>
             </div>
             
-            <TextualTrendsChart data={filteredAlerts} type="acts" />
-            
             <div className="space-y-4">
               {filteredAlerts.map(alert => (
                 <AlertActCard
@@ -197,8 +194,6 @@ export default function LawMeterDashboard() {
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">House</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{billsKPIs.house}</div></CardContent></Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Senate</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{billsKPIs.senate}</div></CardContent></Card>
             </div>
-            
-            <TextualTrendsChart data={filteredBills} type="bills" />
             
             <div className="space-y-4">
               {filteredBills.map(bill => (

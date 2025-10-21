@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Grid, List, FileText, Receipt } from "lucide-react";
 import { useState } from "react";
 import { getOneYearAgo, parseDate } from "@/lib/dateUtils";
-import { TextualTrendsChart } from "@/components/analytics/TextualTrendsChart";
 
 interface FeedViewProps {
   alerts: Alert[];
@@ -47,8 +46,6 @@ export function FeedView({
 
   return (
     <div className="space-y-6">
-      <TextualTrendsChart data={itemsToShow} type={feedType} />
-      
       <div className="bg-warning/10 border border-warning rounded-lg p-4">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
