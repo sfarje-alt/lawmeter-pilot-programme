@@ -65,7 +65,7 @@ export function FilterBar({
       riskLevels: [],
       urgencyLevels: [],
       hasDeadline: null,
-      sortBy: "date",
+      sortBy: "registered",
       sortOrder: "desc",
     });
   };
@@ -367,7 +367,8 @@ export function FilterBar({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="date">Sort by Date</SelectItem>
+              <SelectItem value="registered">Sort by Registered Date</SelectItem>
+              <SelectItem value="effective">Sort by Effective Date</SelectItem>
               <SelectItem value="risk">Sort by Risk</SelectItem>
               <SelectItem value="relevance">Sort by Relevance</SelectItem>
               <SelectItem value="deadline">Sort by Deadline</SelectItem>

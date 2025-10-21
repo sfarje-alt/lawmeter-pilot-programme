@@ -144,6 +144,6 @@ export interface FilterState {
   riskLevels: ("low" | "medium" | "high")[];
   urgencyLevels: ("low" | "medium" | "high")[];
   hasDeadline: boolean | null;
-  sortBy: "date" | "risk" | "relevance" | "deadline";
+  sortBy: "registered" | "effective" | "date" | "risk" | "relevance" | "deadline";
   sortOrder: "asc" | "desc";
 }

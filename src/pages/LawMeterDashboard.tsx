@@ -3,7 +3,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import lawmeterLogo from "@/assets/lawmeter-logo-white.png";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
@@ -31,7 +38,9 @@ export default function LawMeterDashboard() {
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
+  
+  // Independent state for Acts
+  const [actsFilters, setActsFilters] = useState<FilterState>({
     timeWindow: "all",
     portfolios: [],
     regulators: [],
@@ -43,12 +52,35 @@ export default function LawMeterDashboard() {
     riskLevels: [],
     urgencyLevels: [],
     hasDeadline: null,
-    sortBy: "date",
+    sortBy: "registered",
     sortOrder: "desc",
   });
+  const [actsViewMode, setActsViewMode] = useState<"list" | "grid">("list");
+  const [actsPage, setActsPage] = useState(1);
+  const [actsPerPage, setActsPerPage] = useState(25);
+  
+  // Independent state for Bills
+  const [billsFilters, setBillsFilters] = useState<FilterState>({
+    timeWindow: "all",
+    portfolios: [],
+    regulators: [],
+    types: [],
+    riskScoreRange: [0, 100],
+    parties: [],
+    mpSearch: "",
+    searchText: "",
+    riskLevels: [],
+    urgencyLevels: [],
+    hasDeadline: null,
+    sortBy: "registered",
+    sortOrder: "desc",
+  });
+  const [billsViewMode, setBillsViewMode] = useState<"list" | "grid">("list");
+  const [billsPage, setBillsPage] = useState(1);
+  const [billsPerPage, setBillsPerPage] = useState(25);
 
   const starredHooks = useStarredAlerts();
-  const filteredAlerts = useFilteredAlerts(alerts, filters);
+  const filteredAlerts = useFilteredAlerts(alerts, actsFilters);
 
   // Extract unique values for filters
   const portfolios = useMemo(() => [...new Set(alerts.map(a => a.csv_portfolio).filter(Boolean))], [alerts]);
@@ -69,16 +101,25 @@ export default function LawMeterDashboard() {
 
   // Filter bills
   const filteredBills = mockBills.filter(bill => {
-    if (filters.portfolios.length > 0 && bill.portfolio && !filters.portfolios.includes(bill.portfolio)) return false;
-    if (filters.parties.length > 0 && bill.party && !filters.parties.includes(bill.party)) return false;
-    if (bill.risk_score < filters.riskScoreRange[0] || bill.risk_score > filters.riskScoreRange[1]) return false;
-    if (filters.searchText) {
-      const search = filters.searchText.toLowerCase();
+    if (billsFilters.portfolios.length > 0 && bill.portfolio && !billsFilters.portfolios.includes(bill.portfolio)) return false;
+    if (billsFilters.parties.length > 0 && bill.party && !billsFilters.parties.includes(bill.party)) return false;
+    if (bill.risk_score < billsFilters.riskScoreRange[0] || bill.risk_score > billsFilters.riskScoreRange[1]) return false;
+    if (billsFilters.riskLevels.length > 0 && !billsFilters.riskLevels.includes(bill.risk_level)) return false;
+    if (billsFilters.searchText) {
+      const search = billsFilters.searchText.toLowerCase();
       if (!bill.title.toLowerCase().includes(search) && 
           !bill.summary.toLowerCase().includes(search) &&
           !bill.bullets.some(b => b.toLowerCase().includes(search))) return false;
     }
     return true;
+  }).sort((a, b) => {
+    if (billsFilters.sortBy === "risk") {
+      return billsFilters.sortOrder === "desc" ? b.risk_score - a.risk_score : a.risk_score - b.risk_score;
+    }
+    // Default sort by last action date (registered)
+    const dateA = new Date(a.lastActionDate).getTime();
+    const dateB = new Date(b.lastActionDate).getTime();
+    return billsFilters.sortOrder === "desc" ? dateB - dateA : dateA - dateB;
   });
 
   const billsKPIs = {
@@ -86,6 +127,20 @@ export default function LawMeterDashboard() {
     house: filteredBills.filter(b => b.chamber === "House").length,
     senate: filteredBills.filter(b => b.chamber === "Senate").length,
   };
+
+  // Pagination
+  const paginatedAlerts = useMemo(() => {
+    const startIndex = (actsPage - 1) * actsPerPage;
+    return filteredAlerts.slice(startIndex, startIndex + actsPerPage);
+  }, [filteredAlerts, actsPage, actsPerPage]);
+
+  const paginatedBills = useMemo(() => {
+    const startIndex = (billsPage - 1) * billsPerPage;
+    return filteredBills.slice(startIndex, startIndex + billsPerPage);
+  }, [filteredBills, billsPage, billsPerPage]);
+
+  const totalActsPages = Math.ceil(filteredAlerts.length / actsPerPage);
+  const totalBillsPages = Math.ceil(filteredBills.length / billsPerPage);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading legislation data...</div>;
@@ -154,15 +209,28 @@ export default function LawMeterDashboard() {
             <TabsTrigger value="contact"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
           </TabsList>
 
-          <FilterBar
-            filters={filters}
-            onFiltersChange={setFilters}
-            portfolios={portfolios}
-            types={types}
-            parties={parties}
-            showPartyFilters={activeTab === "bills"}
-            showRiskScore={activeTab !== "tenders"}
-          />
+          {activeTab === "acts" && (
+            <FilterBar
+              filters={actsFilters}
+              onFiltersChange={setActsFilters}
+              portfolios={portfolios}
+              types={types}
+              showPartyFilters={false}
+              showRiskScore={true}
+            />
+          )}
+          
+          {activeTab === "bills" && (
+            <FilterBar
+              filters={billsFilters}
+              onFiltersChange={setBillsFilters}
+              portfolios={portfolios}
+              types={types}
+              parties={parties}
+              showPartyFilters={true}
+              showRiskScore={true}
+            />
+          )}
 
           <TabsContent value="acts" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -172,8 +240,43 @@ export default function LawMeterDashboard() {
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Portfolios</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.portfolios}</div></CardContent></Card>
             </div>
             
-            <div className="space-y-4">
-              {filteredAlerts.map(alert => (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Showing {((actsPage - 1) * actsPerPage) + 1}-{Math.min(actsPage * actsPerPage, filteredAlerts.length)} of {filteredAlerts.length}
+                </span>
+                <Select value={String(actsPerPage)} onValueChange={(v) => { setActsPerPage(Number(v)); setActsPage(1); }}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={actsViewMode === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setActsViewMode("list")}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={actsViewMode === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setActsViewMode("grid")}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className={actsViewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
+              {paginatedAlerts.map(alert => (
                 <AlertActCard
                   key={alert.title_id}
                   alert={alert}
@@ -183,6 +286,28 @@ export default function LawMeterDashboard() {
                 />
               ))}
             </div>
+
+            {totalActsPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setActsPage(p => Math.max(1, p - 1))}
+                  disabled={actsPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {actsPage} of {totalActsPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setActsPage(p => Math.min(totalActsPages, p + 1))}
+                  disabled={actsPage === totalActsPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="bills" className="space-y-6 mt-6">
@@ -195,8 +320,43 @@ export default function LawMeterDashboard() {
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Senate</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{billsKPIs.senate}</div></CardContent></Card>
             </div>
             
-            <div className="space-y-4">
-              {filteredBills.map(bill => (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Showing {((billsPage - 1) * billsPerPage) + 1}-{Math.min(billsPage * billsPerPage, filteredBills.length)} of {filteredBills.length}
+                </span>
+                <Select value={String(billsPerPage)} onValueChange={(v) => { setBillsPerPage(Number(v)); setBillsPage(1); }}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={billsViewMode === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setBillsViewMode("list")}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={billsViewMode === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setBillsViewMode("grid")}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className={billsViewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
+              {paginatedBills.map(bill => (
                 <BillCard
                   key={bill.id}
                   bill={bill}
@@ -206,6 +366,28 @@ export default function LawMeterDashboard() {
                 />
               ))}
             </div>
+
+            {totalBillsPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setBillsPage(p => Math.max(1, p - 1))}
+                  disabled={billsPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {billsPage} of {totalBillsPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setBillsPage(p => Math.min(totalBillsPages, p + 1))}
+                  disabled={billsPage === totalBillsPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="starred" className="space-y-6 mt-6">

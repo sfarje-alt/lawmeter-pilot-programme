@@ -2,7 +2,8 @@ import { Alert } from "@/types/legislation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ExternalLink, FileText } from "lucide-react";
+import { Star, ExternalLink, FileText, Calendar } from "lucide-react";
+import { getPortfolioColor } from "@/lib/portfolioColors";
 import { formatDate } from "@/lib/dateUtils";
 
 interface AlertActCardProps {
@@ -22,7 +23,10 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
     }
   };
 
-  const title = alert.AI_triage?.alert_title || alert.title || alert.csv_name || "Untitled";
+  const effectiveDate = alert.effective_date;
+  const registeredDate = alert.registered_date;
+
+  const displayTitle = alert.AI_triage?.alert_title || alert.title || alert.csv_name || "Untitled";
   const summary = alert.AI_triage?.summary || "No summary available";
   const bullets = alert.AI_triage?.alert_bullets || [];
 
@@ -37,11 +41,13 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
             {alert.AI_triage?.risk_score_hint !== undefined && (
               <Badge variant="outline">{alert.AI_triage.risk_score_hint}/100</Badge>
             )}
+            {alert.csv_portfolio && (
+              <Badge className={getPortfolioColor(alert.csv_portfolio)}>
+                {alert.csv_portfolio}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {formatDate(alert.effective_date)}
-            </span>
             <Button
               variant="ghost"
               size="icon"
@@ -52,13 +58,24 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
             </Button>
           </div>
         </div>
-        <h3 className="text-lg font-semibold mt-2">Key Implications from {title}</h3>
+        <h3 className="text-lg font-semibold mt-2">{displayTitle}</h3>
+        
+        <div className="flex items-center gap-4 mt-2 text-sm">
+          {effectiveDate && (
+            <div className="flex items-center gap-1.5 text-foreground font-medium">
+              <Calendar className="h-4 w-4" />
+              <span>Effective: {formatDate(effectiveDate)}</span>
+            </div>
+          )}
+          {registeredDate && (
+            <span className="text-muted-foreground">
+              Registered: {formatDate(registeredDate)}
+            </span>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2">
-          {alert.csv_portfolio && (
-            <Badge variant="secondary">{alert.csv_portfolio}</Badge>
-          )}
           {alert.doc_view && (
             <Badge variant="outline">{alert.doc_view}</Badge>
           )}

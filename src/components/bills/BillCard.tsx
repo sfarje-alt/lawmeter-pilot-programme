@@ -2,7 +2,8 @@ import { BillItem } from "@/types/legislation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ExternalLink, FileText } from "lucide-react";
+import { Star, ExternalLink, FileText, Calendar } from "lucide-react";
+import { getPortfolioColor } from "@/lib/portfolioColors";
 
 interface BillCardProps {
   bill: BillItem;
@@ -30,15 +31,13 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
               {bill.risk_level.toUpperCase()} RISK
             </Badge>
             <Badge variant="outline">{bill.risk_score}/100</Badge>
+            {bill.portfolio && (
+              <Badge className={getPortfolioColor(bill.portfolio)}>
+                {bill.portfolio}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {new Date(bill.lastActionDate).toLocaleDateString("en-AU", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </span>
             <Button
               variant="ghost"
               size="icon"
@@ -50,13 +49,21 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
           </div>
         </div>
         <h3 className="text-lg font-semibold mt-2">{bill.title}</h3>
+        
+        <div className="flex items-center gap-1.5 mt-2 text-sm text-foreground font-medium">
+          <Calendar className="h-4 w-4" />
+          <span>Last Action: {new Date(bill.lastActionDate).toLocaleDateString("en-AU", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}</span>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2">
           {bill.party && <Badge variant="secondary">{bill.party}</Badge>}
           <Badge variant="outline">{bill.chamber}</Badge>
           <Badge variant="outline">{bill.status}</Badge>
-          {bill.portfolio && <Badge variant="outline">{bill.portfolio}</Badge>}
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-3">{bill.summary}</p>

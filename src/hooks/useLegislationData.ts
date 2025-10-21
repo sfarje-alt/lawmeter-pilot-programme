@@ -119,10 +119,17 @@ export function useFilteredAlerts(alerts: Alert[], filters: FilterState) {
       let comparison = 0;
 
       switch (filters.sortBy) {
+        case "registered":
         case "date":
-          const dateA = parseDate(a.effective_date) || parseDate(a.registered_date) || new Date(0);
-          const dateB = parseDate(b.effective_date) || parseDate(b.registered_date) || new Date(0);
-          comparison = dateA.getTime() - dateB.getTime();
+          const regDateA = parseDate(a.registered_date) || new Date(0);
+          const regDateB = parseDate(b.registered_date) || new Date(0);
+          comparison = regDateA.getTime() - regDateB.getTime();
+          break;
+        
+        case "effective":
+          const effDateA = parseDate(a.effective_date) || new Date(0);
+          const effDateB = parseDate(b.effective_date) || new Date(0);
+          comparison = effDateA.getTime() - effDateB.getTime();
           break;
         
         case "risk":
