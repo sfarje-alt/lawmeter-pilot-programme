@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { FilterState } from "@/types/legislation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Filter, X, ArrowUpDown, Calendar } from "lucide-react";
+import { Filter, X, ArrowUpDown, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 
 interface FilterBarProps {
   filters: FilterState;
@@ -37,6 +38,8 @@ export function FilterBar({
   showPartyFilters = false,
   showRiskScore = true,
 }: FilterBarProps) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFiltersChange({ ...filters, [key]: value });
   };
@@ -88,6 +91,23 @@ export function FilterBar({
           className="flex-1"
         />
 
+        <Button 
+          variant="outline" 
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="gap-2"
+        >
+          <Filter className="h-4 w-4" />
+          Advanced Search
+          {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {hasActiveFilters && (
+            <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
+              !
+            </Badge>
+          )}
+        </Button>
+      </div>
+
+      {showAdvanced && (
         <div className="flex flex-wrap gap-2">
           <Select value={filters.timeWindow} onValueChange={(v) => updateFilter("timeWindow", v as FilterState["timeWindow"])}>
             <SelectTrigger className="w-[160px]">
@@ -368,7 +388,7 @@ export function FilterBar({
             </Button>
           )}
         </div>
-      </div>
+      )}
 
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2">
