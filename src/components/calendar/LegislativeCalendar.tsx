@@ -225,10 +225,12 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
               onSelect={(date) => date && setSelectedDate(date)}
               className={cn("rounded-md border pointer-events-auto w-full")}
               classNames={{
-                caption_label: "text-xl font-semibold",
-                head_cell: "text-muted-foreground rounded-md w-16 font-medium text-base",
-                cell: "h-16 w-16 text-center text-base p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                day: cn(buttonVariants({ variant: "ghost" }), "h-14 w-14 p-0 font-semibold text-xl aria-selected:opacity-100"),
+                caption_label: "text-2xl font-semibold",
+                head_cell: "text-muted-foreground rounded-md w-16 font-medium text-lg",
+                row: "flex w-full mt-3",
+                cell: "h-16 w-16 p-0 text-center align-middle",
+                day: cn(buttonVariants({ variant: "ghost" }), "h-16 w-16 p-0 font-semibold text-2xl flex items-center justify-center aria-selected:opacity-100"),
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary rounded-md",
               }}
               modifiers={{
                 hasEvents: datesWithEvents,
