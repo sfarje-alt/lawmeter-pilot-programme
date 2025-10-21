@@ -7,7 +7,7 @@ import { Alert, BillItem } from "@/types/legislation";
 import { Calendar as CalendarIcon, Clock, AlertTriangle, FileText } from "lucide-react";
 import { format, isSameDay, parseISO, addDays, addWeeks, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface LegislativeCalendarProps {
@@ -223,7 +223,13 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
-              className={cn("rounded-md border pointer-events-auto w-full [&_td]:h-14 [&_th]:h-10 [&_button]:h-12 [&_button]:w-12 [&_button]:text-base [&_th]:text-base")}
+              className={cn("rounded-md border pointer-events-auto w-full")}
+              classNames={{
+                caption_label: "text-xl font-semibold",
+                head_cell: "text-muted-foreground rounded-md w-16 font-medium text-base",
+                cell: "h-16 w-16 text-center text-base p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                day: cn(buttonVariants({ variant: "ghost" }), "h-14 w-14 p-0 font-semibold text-xl aria-selected:opacity-100"),
+              }}
               modifiers={{
                 hasEvents: datesWithEvents,
               }}
