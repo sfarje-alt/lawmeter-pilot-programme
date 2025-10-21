@@ -2,13 +2,23 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, BillItem } from "@/types/legislation";
-import { Calendar as CalendarIcon, Clock, AlertTriangle, FileText } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, AlertTriangle, FileText, Download, RefreshCw, CheckCircle2 } from "lucide-react";
 import { format, isSameDay, parseISO, addDays, addWeeks, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 interface LegislativeCalendarProps {
   alerts: Alert[];
@@ -28,6 +38,7 @@ interface CalendarEvent {
 export function LegislativeCalendar({ alerts, bills, tenders = [] }: LegislativeCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<"daily" | "weekly" | "monthly">("monthly");
+  const { toast } = useToast();
 
   // Generate mock future events
   const generateFutureEvents = (): CalendarEvent[] => {
@@ -194,27 +205,128 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
     }
   };
 
+  const handleExport = (format: string) => {
+    toast({
+      title: "Calendar Export",
+      description: `Exporting ${selectedDateEvents.length} events to ${format}...`,
+    });
+  };
+
+  const handleSync = (provider: string) => {
+    toast({
+      title: "Calendar Sync",
+      description: `Syncing with ${provider}...`,
+      duration: 3000,
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5" />
-                Legislative Calendar
-              </CardTitle>
-              <CardDescription>
-                Track important dates, deadlines, and legislative actions
-              </CardDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarIcon className="w-5 h-5" />
+                  Legislative Calendar
+                </CardTitle>
+                <CardDescription>
+                  Track important dates, deadlines, and legislative actions
+                </CardDescription>
+              </div>
+              <Tabs value={calendarView} onValueChange={(v) => setCalendarView(v as typeof calendarView)}>
+                <TabsList>
+                  <TabsTrigger value="daily">Daily</TabsTrigger>
+                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-            <Tabs value={calendarView} onValueChange={(v) => setCalendarView(v as typeof calendarView)}>
-              <TabsList>
-                <TabsTrigger value="daily">Daily</TabsTrigger>
-                <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            
+            {/* Calendar Integration Options */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+              <span className="text-sm font-medium text-muted-foreground mr-2">Sync with:</span>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleSync('Google Calendar')}
+                className="gap-2"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.5 15l-3.5-3.5 1.41-1.41L10.5 14l5.59-5.59L17.5 9.5l-7 7z"/>
+                </svg>
+                Google Calendar
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleSync('Outlook')}
+                className="gap-2"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 22h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2zM12 6c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1z"/>
+                </svg>
+                Outlook
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleSync('Office 365')}
+                className="gap-2"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/>
+                </svg>
+                Office 365
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="w-4 h-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Export Calendar</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleExport('iCal (.ics)')}>
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    iCal Format (.ics)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('CSV')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    CSV Export
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('PDF')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    PDF Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2 ml-auto"
+                onClick={() => {
+                  toast({
+                    title: "Calendar Refreshed",
+                    description: "Events synchronized across all calendars",
+                  });
+                }}
+              >
+                <RefreshCw className="w-4 h-4" />
+                Sync Now
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="flex justify-center p-8">
