@@ -99,7 +99,7 @@ export function ContactForm() {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    Sebastian Ganz
+                    Sergei Ganz
                   </h2>
                   <h3 className="text-lg text-gray-700 dark:text-gray-300 mb-4">
                     30 Minute Meeting
