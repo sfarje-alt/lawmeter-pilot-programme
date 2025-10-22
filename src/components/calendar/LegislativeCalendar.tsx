@@ -37,7 +37,7 @@ interface CalendarEvent {
 
 export function LegislativeCalendar({ alerts, bills, tenders = [] }: LegislativeCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [calendarView, setCalendarView] = useState<"daily" | "weekly" | "monthly">("monthly");
+  const [calendarView, setCalendarView] = useState<"daily" | "weekly" | "monthly">("weekly");
   const { toast } = useToast();
 
   // Generate mock future events
@@ -171,6 +171,20 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
 
   // Get dates with events for calendar highlighting
   const datesWithEvents = events.map((e) => e.date);
+
+  // Get highest risk level for each date
+  const getDateRiskLevel = (date: Date): "high" | "medium" | "low" | null => {
+    const dateEvents = events.filter(e => isSameDay(e.date, date));
+    if (dateEvents.length === 0) return null;
+    
+    if (dateEvents.some(e => e.riskLevel === "high")) return "high";
+    if (dateEvents.some(e => e.riskLevel === "medium")) return "medium";
+    return "low";
+  };
+
+  const highRiskDates = events.filter(e => e.riskLevel === "high").map(e => e.date);
+  const mediumRiskDates = events.filter(e => e.riskLevel === "medium").map(e => e.date);
+  const lowRiskDates = events.filter(e => e.riskLevel === "low").map(e => e.date);
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -345,14 +359,14 @@ export function LegislativeCalendar({ alerts, bills, tenders = [] }: Legislative
                 day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary rounded-md",
               }}
               modifiers={{
-                hasEvents: datesWithEvents,
+                highRisk: highRiskDates,
+                mediumRisk: mediumRiskDates,
+                lowRisk: lowRiskDates,
               }}
-              modifiersStyles={{
-                hasEvents: {
-                  fontWeight: "bold",
-                  textDecoration: "underline",
-                  color: "hsl(var(--primary))",
-                },
+              modifiersClassNames={{
+                highRisk: "bg-risk-high/20 border-2 border-risk-high text-risk-high font-bold hover:bg-risk-high/30",
+                mediumRisk: "bg-risk-medium/20 border-2 border-risk-medium text-risk-medium font-bold hover:bg-risk-medium/30",
+                lowRisk: "bg-risk-low/20 border-2 border-risk-low text-risk-low font-bold hover:bg-risk-low/30",
               }}
             />
           </div>
