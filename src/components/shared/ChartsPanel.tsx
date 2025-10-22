@@ -120,9 +120,9 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
   const getDefaultOrder = () => {
     if (type === "acts") {
       return [
-        "impact-urgency", // Full-width at top
+        "portfolio-top10", // Full-width at top
+        "impact-urgency",
         "risk-distribution",
-        "portfolio-top10",
         "timeline-weekly",
         "doc-view-mix",
         "textual-trends",
@@ -134,11 +134,11 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       ];
     } else {
       return [
-        "impact-urgency", // Full-width at top
+        "portfolio-top10", // Full-width at top
+        "impact-urgency",
         "bills-status",
         "bills-chamber",
         "risk-distribution",
-        "portfolio-top10",
         "timeline-weekly",
         "voting-analytics",
         "stakeholder-analysis",
