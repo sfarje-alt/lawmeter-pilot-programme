@@ -572,9 +572,12 @@ function generateBill(index: number): BillItem {
   const party = parties[index % parties.length];
   const year = new Date().getFullYear();
 
-  // Determine if this is an amendment bill
-  const isAmendment = index % 2 === 0; // Half of bills are amendments
-  const billTitle = isAmendment ? `${topic} Amendment Bill ${year}` : `${topic} Bill ${year}`;
+  // Determine if this is an amendment bill - add variation to prevent duplicates
+  const isAmendment = index % 2 === 0;
+  const billVariant = Math.floor(index / (p.topics.length * 2)) + 1; // Creates series like (No. 1), (No. 2), etc.
+  const billTitle = isAmendment 
+    ? `${topic} Amendment Bill ${year}${billVariant > 1 ? ` (No. ${billVariant})` : ''}`
+    : `${topic} Bill ${year}${billVariant > 1 ? ` (No. ${billVariant})` : ''}`;
 
   // Select MP from party
   const partyMPs = mpNamesByParty[party as keyof typeof mpNamesByParty];
