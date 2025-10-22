@@ -217,6 +217,9 @@ export default function LawMeterDashboard() {
               types={types}
               showPartyFilters={false}
               showRiskScore={true}
+              searchData={alerts}
+              searchType="acts"
+              onSelectSearchItem={(item) => setSelectedAlert(item as Alert)}
             />
           )}
           
@@ -229,6 +232,9 @@ export default function LawMeterDashboard() {
               parties={parties}
               showPartyFilters={true}
               showRiskScore={true}
+              searchData={mockBills}
+              searchType="bills"
+              onSelectSearchItem={(item) => setSelectedBill(item as BillItem)}
             />
           )}
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FilterState } from "@/types/legislation";
+import { FilterState, Alert, BillItem } from "@/types/legislation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SearchWithSuggestions } from "./SearchWithSuggestions";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,9 @@ interface FilterBarProps {
   parties?: string[];
   showPartyFilters?: boolean;
   showRiskScore?: boolean;
+  searchData?: Alert[] | BillItem[];
+  searchType?: "acts" | "bills";
+  onSelectSearchItem?: (item: Alert | BillItem) => void;
 }
 
 export function FilterBar({
@@ -37,6 +41,9 @@ export function FilterBar({
   parties = [],
   showPartyFilters = false,
   showRiskScore = true,
+  searchData = [],
+  searchType = "acts",
+  onSelectSearchItem,
 }: FilterBarProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   
@@ -84,14 +91,16 @@ export function FilterBar({
   return (
     <div className="space-y-4">
       <div className="flex flex-col lg:flex-row gap-4">
-        <Input
-          placeholder="Search legislation, bills, acts..."
+        <SearchWithSuggestions
+          placeholder={searchType === "acts" ? "Search acts, legislation..." : "Search bills..."}
           value={filters.searchText}
-          onChange={(e) => updateFilter("searchText", e.target.value)}
-          className="flex-1"
+          onChange={(value) => updateFilter("searchText", value)}
+          data={searchData}
+          type={searchType}
+          onSelectItem={onSelectSearchItem}
         />
 
-        <Button 
+        <Button
           variant="outline" 
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="gap-2"
