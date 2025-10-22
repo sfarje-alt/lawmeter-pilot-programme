@@ -685,7 +685,16 @@ const totalUniqueBills = portfolioTopics.reduce((sum, p) => sum + (p.topics.leng
 
 const generatedBills: BillItem[] = Array.from({ length: totalUniqueBills }, (_, i) => generateBill(i + 1));
 
-export const mockBills: BillItem[] = [
+// Merge and remove duplicates by normalized title
+const combinedBills: BillItem[] = [
   ...baseBills,
   ...generatedBills,
 ];
+
+const seenTitles = new Set<string>();
+export const mockBills: BillItem[] = combinedBills.filter((bill) => {
+  const key = bill.title.trim().replace(/\s+/g, " ").toLowerCase();
+  if (seenTitles.has(key)) return false;
+  seenTitles.add(key);
+  return true;
+});
