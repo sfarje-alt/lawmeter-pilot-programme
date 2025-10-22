@@ -520,7 +520,13 @@ function generateBill(index: number): BillItem {
     portfolio: p.portfolio,
     party,
     mps: [
-      { name: party === "Labor" ? "Government MP" : party === "Liberal" ? "Opposition MP" : "Crossbench MP", role: chamber === "House" ? "Member of the House" : "Senator" }
+      { 
+        name: party === "Labor" ? "Government MP" : party === "Liberal" ? "Opposition MP" : "Crossbench MP", 
+        role: chamber === "House" ? "Member of the House" : "Senator",
+        email: `${party.toLowerCase()}.mp${index}@aph.gov.au`,
+        phone: `(02) ${6277 + (index % 10)} ${7000 + (index % 1000)}`,
+        party,
+      }
     ],
     chamber,
     status,
