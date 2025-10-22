@@ -401,6 +401,64 @@ const statusCycle: BillItem["status"][] = [
 const parties = ["Labor", "Liberal", "Greens", "Independent", "Nationals"];
 const chambers: BillItem["chamber"][] = ["House", "Senate"];
 
+const mpNamesByParty = {
+  Labor: [
+    { name: "Anthony Albanese", constituency: "Grayndler" },
+    { name: "Richard Marles", constituency: "Corio" },
+    { name: "Penny Wong", constituency: "South Australia" },
+    { name: "Jim Chalmers", constituency: "Rankin" },
+    { name: "Katy Gallagher", constituency: "ACT" },
+    { name: "Clare O'Neil", constituency: "Hotham" },
+    { name: "Tanya Plibersek", constituency: "Sydney" },
+    { name: "Mark Dreyfus", constituency: "Isaacs" },
+    { name: "Tony Burke", constituency: "Watson" },
+    { name: "Mark Butler", constituency: "Hindmarsh" },
+  ],
+  Liberal: [
+    { name: "Peter Dutton", constituency: "Dickson" },
+    { name: "Sussan Ley", constituency: "Farrer" },
+    { name: "Michaelia Cash", constituency: "Western Australia" },
+    { name: "Paul Fletcher", constituency: "Bradfield" },
+    { name: "Simon Birmingham", constituency: "South Australia" },
+    { name: "Jane Hume", constituency: "Victoria" },
+    { name: "Angus Taylor", constituency: "Hume" },
+    { name: "Dan Tehan", constituency: "Wannon" },
+  ],
+  Greens: [
+    { name: "Adam Bandt", constituency: "Melbourne" },
+    { name: "Sarah Hanson-Young", constituency: "South Australia" },
+    { name: "Larissa Waters", constituency: "Queensland" },
+    { name: "Mehreen Faruqi", constituency: "New South Wales" },
+    { name: "Nick McKim", constituency: "Tasmania" },
+  ],
+  Independent: [
+    { name: "David Pocock", constituency: "ACT" },
+    { name: "Jacqui Lambie", constituency: "Tasmania" },
+    { name: "Zali Steggall", constituency: "Warringah" },
+    { name: "Allegra Spender", constituency: "Wentworth" },
+    { name: "Kylea Tink", constituency: "North Sydney" },
+  ],
+  Nationals: [
+    { name: "David Littleproud", constituency: "Maranoa" },
+    { name: "Bridget McKenzie", constituency: "Victoria" },
+    { name: "Perin Davey", constituency: "New South Wales" },
+    { name: "Matt Canavan", constituency: "Queensland" },
+  ]
+};
+
+const stakeholderOrgs = [
+  { name: "Australian Medical Association", type: "Professional Body", positions: ["support", "oppose", "neutral"] },
+  { name: "Business Council of Australia", type: "Industry Group", positions: ["oppose", "neutral"] },
+  { name: "Australian Council of Trade Unions", type: "Union", positions: ["support", "neutral"] },
+  { name: "Australian Conservation Foundation", type: "Environmental NGO", positions: ["support", "neutral"] },
+  { name: "Tech Council of Australia", type: "Technology Industry", positions: ["oppose", "neutral"] },
+  { name: "Consumer Policy Research Centre", type: "Consumer Rights", positions: ["support"] },
+  { name: "Australian Privacy Foundation", type: "Privacy Advocacy", positions: ["support", "oppose"] },
+  { name: "Banking Association", type: "Financial Services", positions: ["neutral", "oppose"] },
+  { name: "Australian Chamber of Commerce", type: "Business", positions: ["oppose", "neutral"] },
+  { name: "Australian Healthcare Association", type: "Healthcare", positions: ["support", "neutral"] },
+];
+
 const portfolioTopics: { portfolio: string; topics: string[] }[] = [
   { portfolio: "Health, Disability and Ageing", topics: [
     "Hospital Staffing Requirements", "Medical Devices Safety", "Aged Care Quality Standards", "Mental Health Services Expansion",
@@ -514,6 +572,73 @@ function generateBill(index: number): BillItem {
   const party = parties[index % parties.length];
   const year = new Date().getFullYear();
 
+  // Select MP from party
+  const partyMPs = mpNamesByParty[party as keyof typeof mpNamesByParty];
+  const selectedMP = partyMPs[index % partyMPs.length];
+  
+  // Generate voting records
+  const votingRecords: BillItem["votingRecords"] = [
+    {
+      date: daysAgoISO(daysAgo + 30),
+      stage: "Second Reading",
+      votesFor: 70 + (index % 20),
+      votesAgainst: 60 + (index % 15),
+      abstentions: index % 5,
+      passed: true,
+      mpVotes: [
+        { mpName: selectedMP.name, party, vote: "for" },
+        { mpName: mpNamesByParty.Liberal[index % mpNamesByParty.Liberal.length].name, party: "Liberal", vote: party === "Liberal" ? "for" : "against" },
+        { mpName: mpNamesByParty.Greens[index % mpNamesByParty.Greens.length].name, party: "Greens", vote: index % 2 === 0 ? "for" : "against" },
+      ]
+    }
+  ];
+
+  // Add committee stage voting if applicable
+  if (["Committee", "Consideration in Detail", "Passed House", "Passed Senate", "Royal Assent Pending"].includes(status)) {
+    votingRecords.push({
+      date: daysAgoISO(daysAgo + 10),
+      stage: "Committee Stage",
+      votesFor: 75 + (index % 15),
+      votesAgainst: 55 + (index % 20),
+      abstentions: index % 4,
+      passed: true,
+    });
+  }
+
+  // Generate stakeholders
+  const numStakeholders = 3 + (index % 2);
+  const stakeholders: BillItem["stakeholders"] = [];
+  
+  for (let i = 0; i < numStakeholders; i++) {
+    const org = stakeholderOrgs[(index + i) % stakeholderOrgs.length];
+    const position = org.positions[(index + i) % org.positions.length] as "support" | "oppose" | "neutral";
+    
+    const statements = {
+      support: [
+        `This bill represents significant progress in ${topic.toLowerCase()} reform.`,
+        `We strongly support these measures and their positive impact on the sector.`,
+        `Long overdue reforms that will benefit all stakeholders.`,
+      ],
+      oppose: [
+        `These changes impose unnecessary regulatory burden on ${p.portfolio.toLowerCase()}.`,
+        `Concerned about implementation costs and practical challenges.`,
+        `The bill requires significant amendments before we can support it.`,
+      ],
+      neutral: [
+        `Seeking clarification on implementation timelines and compliance requirements.`,
+        `Support the intent but concerned about specific provisions.`,
+        `We're engaging constructively to ensure practical outcomes.`,
+      ]
+    };
+    
+    stakeholders.push({
+      name: org.name,
+      organization: org.type,
+      position,
+      statement: statements[position][(index + i) % statements[position].length]
+    });
+  }
+
   return {
     id: `bill-${(index + 10).toString().padStart(3, "0")}`,
     title: `${topic} Bill ${year}`,
@@ -521,11 +646,12 @@ function generateBill(index: number): BillItem {
     party,
     mps: [
       { 
-        name: party === "Labor" ? "Government MP" : party === "Liberal" ? "Opposition MP" : "Crossbench MP", 
-        role: chamber === "House" ? "Member of the House" : "Senator",
-        email: `${party.toLowerCase()}.mp${index}@aph.gov.au`,
+        name: selectedMP.name, 
+        role: chamber === "House" ? "Member of Parliament" : "Senator",
+        email: `${selectedMP.name.toLowerCase().replace(/\s+/g, '.')}.mp@aph.gov.au`,
         phone: `(02) ${6277 + (index % 10)} ${7000 + (index % 1000)}`,
         party,
+        constituency: selectedMP.constituency,
       }
     ],
     chamber,
@@ -540,6 +666,8 @@ function generateBill(index: number): BillItem {
     ],
     risk_level: level,
     risk_score: score,
+    votingRecords,
+    stakeholders,
   };
 }
 
