@@ -22,6 +22,18 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
     }
   };
 
+  const statusStages = [
+    "Introduced",
+    "Second Reading",
+    "Committee",
+    "Consideration in Detail",
+    "Passed House",
+    "Passed Senate",
+    "Royal Assent Pending"
+  ];
+
+  const currentStageIndex = statusStages.indexOf(bill.status);
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -64,6 +76,40 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
           {bill.party && <Badge variant="secondary">{bill.party}</Badge>}
           <Badge variant="outline">{bill.chamber}</Badge>
           <Badge variant="outline">{bill.status}</Badge>
+        </div>
+
+        {/* Status Timeline */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground">Progress Timeline</p>
+          <div className="flex items-center gap-1">
+            {statusStages.map((stage, index) => {
+              const isComplete = index < currentStageIndex;
+              const isCurrent = index === currentStageIndex;
+              const isPending = index > currentStageIndex;
+              
+              return (
+                <div key={stage} className="flex items-center flex-1">
+                  <div
+                    className={`h-2 flex-1 rounded-full transition-colors ${
+                      isComplete
+                        ? "bg-success"
+                        : isCurrent
+                        ? "bg-primary animate-pulse"
+                        : "bg-muted"
+                    }`}
+                    title={stage}
+                  />
+                  {index < statusStages.length - 1 && (
+                    <div className="w-0.5 h-2 bg-border mx-0.5" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Introduced</span>
+            <span>Royal Assent</span>
+          </div>
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-3">{bill.summary}</p>
