@@ -23,17 +23,17 @@ const portfolios = [
   "Industry, Science and Resources"
 ];
 
-const topics = [
-  { name: "Digital Security Framework", portfolio: "Attorney-General's" },
-  { name: "Workplace Safety Standards", portfolio: "Employment and Workplace Relations" },
-  { name: "Environmental Compliance", portfolio: "Environment, Climate, Energy and Water" },
-  { name: "Taxation Reform", portfolio: "Treasury" },
-  { name: "Quality Assurance Standards", portfolio: "Health, Disability and Ageing" },
-  { name: "Data Protection Requirements", portfolio: "Attorney-General's" },
-  { name: "Service Provider Obligations", portfolio: "Social Services" },
-  { name: "Innovation and Research", portfolio: "Industry, Science and Resources" },
-  { name: "Financial Reporting", portfolio: "Treasury" },
-  { name: "Operational Standards", portfolio: "Health, Disability and Ageing" },
+const actNames = [
+  { name: "Digital Security Act 2024", portfolio: "Attorney-General's", type: "Act" },
+  { name: "Workplace Safety Standards Act 2024", portfolio: "Employment and Workplace Relations", type: "Legislative Instrument" },
+  { name: "Environmental Compliance Regulations 2024", portfolio: "Environment, Climate, Energy and Water", type: "Notifiable Instrument" },
+  { name: "Taxation Reform Act 2024", portfolio: "Treasury", type: "Compilation/Principal" },
+  { name: "Quality Assurance Standards Act 2024", portfolio: "Health, Disability and Ageing", type: "As Made/ Amending" },
+  { name: "Data Protection Act 2024", portfolio: "Attorney-General's", type: "Act" },
+  { name: "Service Provider Obligations Act 2024", portfolio: "Social Services", type: "Legislative Instrument" },
+  { name: "Innovation and Research Standards 2024", portfolio: "Industry, Science and Resources", type: "Notifiable Instrument" },
+  { name: "Financial Reporting Regulations 2024", portfolio: "Treasury", type: "Compilation/Principal" },
+  { name: "Operational Standards Act 2024", portfolio: "Health, Disability and Ageing", type: "As Made/ Amending" },
 ];
 
 // Generate alerts for all quadrants
@@ -43,21 +43,21 @@ export function generateMatrixAlerts(): Alert[] {
 
   // High Impact, High Urgency (10 alerts)
   for (let i = 0; i < 10; i++) {
-    const topic = topics[i % topics.length];
+    const act = actNames[i % actNames.length];
     alerts.push({
-      title: `${topic.name} Amendment Act 2025`,
+      title: `${act.name}`,
       detail_link: `/C2025A0${id}/latest`,
       title_id: `C2025A0${id}`,
       registered_date: pastDate(Math.floor(Math.random() * 30)),
       effective_date: futureDate(5 + i),
-      collection_code: "act",
-      csv_collection: "act",
+      collection_code: act.type,
+      csv_collection: act.type,
       link: `https://www.legislation.gov.au/C2025A0${id}/latest/text`,
       authorised_by: {
-        name: `${topic.name} Act 2024`,
+        name: `${act.name}`,
         link: `https://www.legislation.gov.au/C2024A00${100 + i}/latest`
       },
-      csv_portfolio: topic.portfolio,
+      csv_portfolio: act.portfolio,
       scraped_at: new Date().toISOString(),
       source: "legislation.gov.au",
       search_source: "matrix_demo",
@@ -79,8 +79,8 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "high",
         legal_stage: "enacted",
         change_type: ["compliance", "operational"],
-        summary: `Critical changes to ${topic.name.toLowerCase()} requiring immediate action. Introduces mandatory compliance measures with tight implementation timeframes.`,
-        alert_title: `Urgent: ${topic.name} Amendment Act 2025`,
+        summary: `Critical changes to ${act.name} requiring immediate action. Introduces mandatory compliance measures with tight implementation timeframes.`,
+        alert_title: `Urgent: ${act.name}`,
         alert_bullets: [
           `Mandatory compliance deadline within ${10 + i * 2} days`,
           `Significant operational changes required`,
@@ -93,7 +93,7 @@ export function generateMatrixAlerts(): Alert[] {
         recommended_action: "ALERT_NOW"
       },
       portfolio_matches: [
-        { portfolio: topic.portfolio, pattern: topic.name.toLowerCase().split(' ')[0] }
+        { portfolio: act.portfolio, pattern: act.name.toLowerCase().split(' ')[0] }
       ]
     });
     id++;
@@ -101,21 +101,21 @@ export function generateMatrixAlerts(): Alert[] {
 
   // High Impact, Low Urgency (10 alerts)
   for (let i = 0; i < 10; i++) {
-    const topic = topics[i % topics.length];
+    const act = actNames[i % actNames.length];
     alerts.push({
-      title: `${topic.name} Strategic Review Bill 2025`,
+      title: `${act.name}`,
       detail_link: `/C2025B0${id}/latest`,
       title_id: `C2025B0${id}`,
       registered_date: pastDate(Math.floor(Math.random() * 60)),
       effective_date: futureDate(150 + i * 10),
-      collection_code: "bill",
-      csv_collection: "bill",
+      collection_code: act.type,
+      csv_collection: act.type,
       link: `https://www.legislation.gov.au/C2025B0${id}/latest/text`,
       authorised_by: {
-        name: `${topic.name} Act 2023`,
+        name: `${act.name}`,
         link: `https://www.legislation.gov.au/C2023A00${200 + i}/latest`
       },
-      csv_portfolio: topic.portfolio,
+      csv_portfolio: act.portfolio,
       scraped_at: new Date().toISOString(),
       source: "legislation.gov.au",
       search_source: "matrix_demo",
@@ -137,8 +137,8 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "high",
         legal_stage: "proposal",
         change_type: ["strategic", "planning"],
-        summary: `Major strategic changes to ${topic.name.toLowerCase()} with extended implementation timeline. High importance but adequate time for preparation.`,
-        alert_title: `Important: ${topic.name} Strategic Review`,
+        summary: `Major strategic changes to ${act.name} with extended implementation timeline. High importance but adequate time for preparation.`,
+        alert_title: `Important: ${act.name}`,
         alert_bullets: [
           `Substantial changes planned for 2026`,
           `Extended consultation period available`,
@@ -151,7 +151,7 @@ export function generateMatrixAlerts(): Alert[] {
         recommended_action: "ALERT_NOW"
       },
       portfolio_matches: [
-        { portfolio: topic.portfolio, pattern: "review" }
+        { portfolio: act.portfolio, pattern: "review" }
       ]
     });
     id++;
@@ -159,21 +159,21 @@ export function generateMatrixAlerts(): Alert[] {
 
   // Low/Medium Impact, High Urgency (10 alerts)
   for (let i = 0; i < 10; i++) {
-    const topic = topics[i % topics.length];
+    const act = actNames[i % actNames.length];
     alerts.push({
-      title: `${topic.name} Minor Amendment Regulation 2025`,
+      title: `${act.name}`,
       detail_link: `/F2025L0${id}/latest`,
       title_id: `F2025L0${id}`,
       registered_date: pastDate(Math.floor(Math.random() * 20)),
       effective_date: futureDate(8 + i),
-      collection_code: "regulation",
-      csv_collection: "regulation",
+      collection_code: act.type,
+      csv_collection: act.type,
       link: `https://www.legislation.gov.au/F2025L0${id}/latest/text`,
       authorised_by: {
-        name: `${topic.name} Act 2022`,
+        name: `${act.name}`,
         link: `https://www.legislation.gov.au/C2022A00${300 + i}/latest`
       },
-      csv_portfolio: topic.portfolio,
+      csv_portfolio: act.portfolio,
       scraped_at: new Date().toISOString(),
       source: "legislation.gov.au",
       search_source: "matrix_demo",
@@ -195,8 +195,8 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "medium",
         legal_stage: "enacted",
         change_type: ["administrative", "procedural"],
-        summary: `Minor administrative changes to ${topic.name.toLowerCase()} procedures with near-term implementation. Limited operational impact but requires prompt attention.`,
-        alert_title: `Action Required: ${topic.name} Updates`,
+        summary: `Minor administrative changes to ${act.name} procedures with near-term implementation. Limited operational impact but requires prompt attention.`,
+        alert_title: `Action Required: ${act.name}`,
         alert_bullets: [
           `Administrative procedure updates required`,
           `Short implementation timeframe`,
@@ -209,7 +209,7 @@ export function generateMatrixAlerts(): Alert[] {
         recommended_action: "ALERT_NOW"
       },
       portfolio_matches: [
-        { portfolio: topic.portfolio, pattern: "regulation" }
+        { portfolio: act.portfolio, pattern: "regulation" }
       ]
     });
     id++;
@@ -217,21 +217,21 @@ export function generateMatrixAlerts(): Alert[] {
 
   // Low/Medium Impact, Low Urgency (10 alerts)
   for (let i = 0; i < 10; i++) {
-    const topic = topics[i % topics.length];
+    const act = actNames[i % actNames.length];
     alerts.push({
-      title: `${topic.name} Information Notice 2025`,
+      title: `${act.name}`,
       detail_link: `/C2025N0${id}/latest`,
       title_id: `C2025N0${id}`,
       registered_date: pastDate(Math.floor(Math.random() * 90)),
       effective_date: futureDate(200 + i * 15),
-      collection_code: "notice",
-      csv_collection: "notice",
+      collection_code: act.type,
+      csv_collection: act.type,
       link: `https://www.legislation.gov.au/C2025N0${id}/latest/text`,
       authorised_by: {
-        name: `${topic.name} Act 2021`,
+        name: `${act.name}`,
         link: `https://www.legislation.gov.au/C2021A00${400 + i}/latest`
       },
-      csv_portfolio: topic.portfolio,
+      csv_portfolio: act.portfolio,
       scraped_at: new Date().toISOString(),
       source: "legislation.gov.au",
       search_source: "matrix_demo",
@@ -253,8 +253,8 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "low",
         legal_stage: "guidance",
         change_type: ["informational", "guidance"],
-        summary: `Informational guidance on ${topic.name.toLowerCase()} best practices. Low urgency with minimal operational impact.`,
-        alert_title: `For Information: ${topic.name} Guidance`,
+        summary: `Informational guidance on ${act.name} best practices. Low urgency with minimal operational impact.`,
+        alert_title: `For Information: ${act.name}`,
         alert_bullets: [
           `Best practice guidance provided`,
           `Extended review period available`,
@@ -267,7 +267,7 @@ export function generateMatrixAlerts(): Alert[] {
         recommended_action: "ALERT_NOW"
       },
       portfolio_matches: [
-        { portfolio: topic.portfolio, pattern: "guidance" }
+        { portfolio: act.portfolio, pattern: "guidance" }
       ]
     });
     id++;
