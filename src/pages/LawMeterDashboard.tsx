@@ -38,6 +38,7 @@ export default function LawMeterDashboard() {
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [starredFilter, setStarredFilter] = useState<"all" | "acts" | "bills">("all");
   
   // Independent state for Acts
   const [actsFilters, setActsFilters] = useState<FilterState>({
@@ -397,21 +398,40 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           <TabsContent value="starred" className="space-y-6 mt-6">
-            <h3 className="text-lg font-semibold">Starred Alerts & Bills</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Starred Items</h3>
+              <Select 
+                value={starredFilter} 
+                onValueChange={(value: "all" | "acts" | "bills") => setStarredFilter(value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Items</SelectItem>
+                  <SelectItem value="acts">Acts Only</SelectItem>
+                  <SelectItem value="bills">Bills Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {starredHooks.starred.length === 0 ? (
               <Card><CardContent className="py-12 text-center"><Star className="h-12 w-12 mx-auto text-muted-foreground mb-4" /><p>No starred items yet</p></CardContent></Card>
             ) : (
               <div className="space-y-4">
-                {starredHooks.starred.filter(s => s.startsWith("ACTS:")).map(key => {
+                {(starredFilter === "all" || starredFilter === "acts") && starredHooks.starred.filter(s => s.startsWith("ACTS:")).map(key => {
                   const id = key.replace("ACTS:", "");
                   const alert = alerts.find(a => a.title_id === id);
                   return alert ? <AlertActCard key={id} alert={alert} isStarred onToggleStar={() => starredHooks.toggleStar("ACTS", id)} onOpenDrawer={() => setSelectedAlert(alert)} /> : null;
                 })}
-                {starredHooks.starred.filter(s => s.startsWith("BILLS:")).map(key => {
+                {(starredFilter === "all" || starredFilter === "bills") && starredHooks.starred.filter(s => s.startsWith("BILLS:")).map(key => {
                   const id = key.replace("BILLS:", "");
                   const bill = mockBills.find(b => b.id === id);
                   return bill ? <BillCard key={id} bill={bill} isStarred onToggleStar={() => starredHooks.toggleStar("BILLS", id)} onOpenDrawer={() => setSelectedBill(bill)} /> : null;
                 })}
+                {((starredFilter === "acts" && !starredHooks.starred.some(s => s.startsWith("ACTS:"))) ||
+                  (starredFilter === "bills" && !starredHooks.starred.some(s => s.startsWith("BILLS:")))) && (
+                  <Card><CardContent className="py-12 text-center"><Star className="h-12 w-12 mx-auto text-muted-foreground mb-4" /><p>No starred {starredFilter} yet</p></CardContent></Card>
+                )}
               </div>
             )}
           </TabsContent>

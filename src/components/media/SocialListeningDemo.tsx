@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, TrendingDown, Minus, Newspaper, Users, Building2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Newspaper, Users, Building2, Info } from "lucide-react";
 
 export function SocialListeningDemo() {
   const newspaperCoverage = [
@@ -173,6 +173,45 @@ export function SocialListeningDemo() {
           </p>
         </div>
       </div>
+
+      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+        <CardHeader>
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Info className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <CardTitle className="text-lg mb-2">Understanding Sentiment Scores</CardTitle>
+              <CardDescription className="space-y-2">
+                <p>Sentiment scores range from <strong>-1.0</strong> (most negative) to <strong>+1.0</strong> (most positive), with <strong>0.0</strong> representing neutral sentiment.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-success/10 border border-success/20">
+                    <TrendingUp className="w-4 h-4 text-success flex-shrink-0" />
+                    <div className="text-xs">
+                      <div className="font-semibold text-success">Positive</div>
+                      <div className="text-muted-foreground">+0.3 to +1.0</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border border-muted">
+                    <Minus className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <div className="text-xs">
+                      <div className="font-semibold">Neutral</div>
+                      <div className="text-muted-foreground">-0.3 to +0.3</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <TrendingDown className="w-4 h-4 text-destructive flex-shrink-0" />
+                    <div className="text-xs">
+                      <div className="font-semibold text-destructive">Negative</div>
+                      <div className="text-muted-foreground">-1.0 to -0.3</div>
+                    </div>
+                  </div>
+                </div>
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       <Tabs defaultValue="newspapers" className="w-full">
         <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50 backdrop-blur-sm">
