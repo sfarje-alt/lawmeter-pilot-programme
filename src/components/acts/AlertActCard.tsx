@@ -26,7 +26,7 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
   const effectiveDate = alert.effective_date;
   const registeredDate = alert.registered_date;
 
-  const displayTitle = alert.title || alert.csv_name || alert.AI_triage?.alert_title || "Untitled";
+  const displayTitle = alert.AI_triage?.alert_title || alert.title || alert.csv_name || "Untitled";
   const summary = alert.AI_triage?.summary || "No summary available";
   const bullets = alert.AI_triage?.alert_bullets || [];
 
