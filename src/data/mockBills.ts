@@ -572,6 +572,10 @@ function generateBill(index: number): BillItem {
   const party = parties[index % parties.length];
   const year = new Date().getFullYear();
 
+  // Determine if this is an amendment bill
+  const isAmendment = index % 2 === 0; // Half of bills are amendments
+  const billTitle = isAmendment ? `${topic} Amendment Bill ${year}` : `${topic} Bill ${year}`;
+
   // Select MP from party
   const partyMPs = mpNamesByParty[party as keyof typeof mpNamesByParty];
   const selectedMP = partyMPs[index % partyMPs.length];
@@ -641,7 +645,7 @@ function generateBill(index: number): BillItem {
 
   return {
     id: `bill-${(index + 10).toString().padStart(3, "0")}`,
-    title: `${topic} Bill ${year}`,
+    title: billTitle,
     portfolio: p.portfolio,
     party,
     mps: [
@@ -658,9 +662,9 @@ function generateBill(index: number): BillItem {
     status,
     stageLocation: makeStageLocation(chamber, status),
     lastActionDate: daysAgoISO(daysAgo),
-    summary: `Proposes reforms relating to ${topic.toLowerCase()} impacting organizations across multiple sectors. Includes compliance, reporting, and operational changes.`,
+    summary: `Proposes ${isAmendment ? 'amendments' : 'reforms'} relating to ${topic.toLowerCase()} impacting organizations across multiple sectors. Includes compliance, reporting, and operational changes.`,
     bullets: [
-      `Introduces new requirements for ${topic.toLowerCase()}`,
+      `${isAmendment ? 'Amends existing legislation' : 'Introduces new requirements'} for ${topic.toLowerCase()}`,
       `Enhances compliance and audit obligations for ${p.portfolio.toLowerCase()}`,
       `Aligns with national standards and regulator expectations`
     ],
@@ -668,6 +672,9 @@ function generateBill(index: number): BillItem {
     risk_score: score,
     votingRecords,
     stakeholders,
+    ...(isAmendment && { 
+      motherActLink: `https://www.legislation.gov.au/C${year - 10}A${String(index).padStart(5, '0')}/latest`
+    }),
   };
 }
 
