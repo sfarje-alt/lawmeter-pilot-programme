@@ -120,6 +120,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
   const getDefaultOrder = () => {
     if (type === "acts") {
       return [
+        "impact-urgency", // Full-width at top
         "risk-distribution",
         "portfolio-top10",
         "timeline-weekly",
@@ -129,11 +130,11 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
         "topic-clusters",
         "entity-mentions",
         "semantic-similarity",
-        "impact-urgency",
         "compliance-deadline",
       ];
     } else {
       return [
+        "impact-urgency", // Full-width at top
         "bills-status",
         "bills-chamber",
         "risk-distribution",
@@ -146,7 +147,6 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
         "topic-clusters",
         "entity-mentions",
         "semantic-similarity",
-        "impact-urgency",
         "bills-progress",
         "people-of-interest",
       ];
@@ -342,9 +342,10 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       "compliance-deadline": <ComplianceDeadlineCalendar alerts={alerts} />,
     };
 
-    // Split grid and full-width charts
-    const gridCharts = chartOrder.slice(0, 4);
-    const fullWidthCharts = chartOrder.slice(4);
+    // Split: first chart full-width, then grid, then remaining full-width
+    const topChart = chartOrder.slice(0, 1);
+    const gridCharts = chartOrder.slice(1, 5);
+    const bottomCharts = chartOrder.slice(5);
 
     return (
       <>
@@ -353,6 +354,18 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
+          {/* Top full-width chart (Impact vs Urgency) */}
+          <SortableContext items={topChart} strategy={verticalListSortingStrategy}>
+            <div className="mb-6">
+              {topChart.map((chartId) => (
+                <DraggableChart key={chartId} id={chartId}>
+                  {chartComponents[chartId]}
+                </DraggableChart>
+              ))}
+            </div>
+          </SortableContext>
+
+          {/* Grid charts */}
           <SortableContext items={gridCharts} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {gridCharts.map((chartId) => (
@@ -363,9 +376,10 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
             </div>
           </SortableContext>
 
-          <SortableContext items={fullWidthCharts} strategy={verticalListSortingStrategy}>
+          {/* Bottom full-width charts */}
+          <SortableContext items={bottomCharts} strategy={verticalListSortingStrategy}>
             <div className="space-y-6">
-              {fullWidthCharts.map((chartId) => (
+              {bottomCharts.map((chartId) => (
                 <DraggableChart key={chartId} id={chartId}>
                   {chartComponents[chartId]}
                 </DraggableChart>
@@ -552,9 +566,10 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
     "people-of-interest": <PeopleOfInterestChart bills={bills} />,
   };
 
-  // Grid charts (first 5, with timeline spanning 2 cols)
-  const gridCharts = chartOrder.slice(0, 5);
-  const fullWidthCharts = chartOrder.slice(5);
+  // Split: first chart full-width, then grid (4 charts including timeline spanning 2 cols), then remaining full-width
+  const topChart = chartOrder.slice(0, 1);
+  const gridCharts = chartOrder.slice(1, 6); // 5 charts: 4 regular + 1 timeline (2-col span)
+  const bottomCharts = chartOrder.slice(6);
 
   return (
     <>
@@ -563,6 +578,18 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
+        {/* Top full-width chart (Impact vs Urgency) */}
+        <SortableContext items={topChart} strategy={verticalListSortingStrategy}>
+          <div className="mb-6">
+            {topChart.map((chartId) => (
+              <DraggableChart key={chartId} id={chartId}>
+                {chartComponents[chartId]}
+              </DraggableChart>
+            ))}
+          </div>
+        </SortableContext>
+
+        {/* Grid charts */}
         <SortableContext items={gridCharts} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {gridCharts.map((chartId) => (
@@ -573,9 +600,10 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
           </div>
         </SortableContext>
 
-        <SortableContext items={fullWidthCharts} strategy={verticalListSortingStrategy}>
+        {/* Bottom full-width charts */}
+        <SortableContext items={bottomCharts} strategy={verticalListSortingStrategy}>
           <div className="space-y-6">
-            {fullWidthCharts.map((chartId) => (
+            {bottomCharts.map((chartId) => (
               <DraggableChart key={chartId} id={chartId}>
                 {chartComponents[chartId]}
               </DraggableChart>
