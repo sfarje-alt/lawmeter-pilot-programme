@@ -28,12 +28,12 @@ const actNames = [
   { name: "Workplace Safety Standards Act 2024", portfolio: "Employment and Workplace Relations", type: "Legislative Instrument" },
   { name: "Environmental Compliance Regulations 2024", portfolio: "Environment, Climate, Energy and Water", type: "Notifiable Instrument" },
   { name: "Taxation Reform Act 2024", portfolio: "Treasury", type: "Compilation/Principal" },
-  { name: "Quality Assurance Standards Act 2024", portfolio: "Health, Disability and Ageing", type: "As Made/ Amending" },
+  { name: "Quality Assurance Standards Act 2024", portfolio: "Health, Disability and Ageing", type: "As Made / Amending" },
   { name: "Data Protection Act 2024", portfolio: "Attorney-General's", type: "Act" },
   { name: "Service Provider Obligations Act 2024", portfolio: "Social Services", type: "Legislative Instrument" },
   { name: "Innovation and Research Standards 2024", portfolio: "Industry, Science and Resources", type: "Notifiable Instrument" },
   { name: "Financial Reporting Regulations 2024", portfolio: "Treasury", type: "Compilation/Principal" },
-  { name: "Operational Standards Act 2024", portfolio: "Health, Disability and Ageing", type: "As Made/ Amending" },
+  { name: "Operational Standards Act 2024", portfolio: "Health, Disability and Ageing", type: "As Made / Amending" },
 ];
 
 // Generate alerts for all quadrants
