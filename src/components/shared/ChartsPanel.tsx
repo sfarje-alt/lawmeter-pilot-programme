@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Alert, BillItem } from "@/types/legislation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,6 +28,26 @@ import { ImpactUrgencyMatrix } from "@/components/analytics/ImpactUrgencyMatrix"
 import { BillsProgressFunnel } from "@/components/analytics/BillsProgressFunnel";
 import { VotingAnalyticsChart } from "@/components/analytics/VotingAnalyticsChart";
 import { StakeholderAnalysisChart } from "@/components/analytics/StakeholderAnalysisChart";
+import { GripVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface ChartsPanelProps {
   data: Alert[] | BillItem[];
@@ -39,7 +60,127 @@ const COLORS = {
   low: "hsl(var(--risk-low))",
 };
 
+interface DraggableChartProps {
+  id: string;
+  children: React.ReactNode;
+  isGrid?: boolean;
+}
+
+function DraggableChart({ id, children, isGrid }: DraggableChartProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "relative group",
+        isDragging && "opacity-50 z-50",
+        !isDragging && "transition-all duration-200"
+      )}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className={cn(
+          "absolute top-3 right-3 z-10 p-1.5 rounded-md bg-muted/80 backdrop-blur-sm cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity",
+          isDragging && "cursor-grabbing opacity-100"
+        )}
+      >
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export function ChartsPanel({ data, type }: ChartsPanelProps) {
+  const storageKey = `charts-order-${type}`;
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Define default chart order
+  const getDefaultOrder = () => {
+    if (type === "acts") {
+      return [
+        "risk-distribution",
+        "portfolio-top10",
+        "timeline-weekly",
+        "doc-view-mix",
+        "textual-trends",
+        "sentiment-analysis",
+        "topic-clusters",
+        "entity-mentions",
+        "semantic-similarity",
+        "impact-urgency",
+        "compliance-deadline",
+      ];
+    } else {
+      return [
+        "bills-status",
+        "bills-chamber",
+        "risk-distribution",
+        "portfolio-top10",
+        "timeline-weekly",
+        "voting-analytics",
+        "stakeholder-analysis",
+        "textual-trends",
+        "sentiment-analysis",
+        "topic-clusters",
+        "entity-mentions",
+        "semantic-similarity",
+        "impact-urgency",
+        "bills-progress",
+        "people-of-interest",
+      ];
+    }
+  };
+
+  const [chartOrder, setChartOrder] = useState<string[]>(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return getDefaultOrder();
+      }
+    }
+    return getDefaultOrder();
+  });
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(chartOrder));
+  }, [chartOrder, storageKey]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setChartOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   if (type === "acts") {
     const alerts = data as Alert[];
 
@@ -98,109 +239,140 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       },
     ].filter((d) => d.value > 0);
 
+    const chartComponents: Record<string, React.ReactNode> = {
+      "risk-distribution": (
+        <Card>
+          <CardHeader>
+            <CardTitle>Risk Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={riskData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {riskData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      ),
+      "portfolio-top10": (
+        <Card>
+          <CardHeader>
+            <CardTitle>Alerts by Portfolio (Top 10)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={portfolioData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" domain={[0, 'dataMax']} allowDecimals={false} />
+                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      ),
+      "timeline-weekly": (
+        <Card>
+          <CardHeader>
+            <CardTitle>Timeline (Weekly)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={timelineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[0, 'dataMax']} allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} name="Alerts" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      ),
+      "doc-view-mix": (
+        <Card>
+          <CardHeader>
+            <CardTitle>Document View Mix</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={docViewData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {docViewData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--accent))"} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      ),
+      "textual-trends": <TextualTrendsChart data={alerts} type="acts" />,
+      "sentiment-analysis": <SentimentAnalysisChart data={alerts} type="acts" />,
+      "topic-clusters": <TopicClustersChart data={alerts} type="acts" />,
+      "entity-mentions": <EntityMentionsChart data={alerts} type="acts" />,
+      "semantic-similarity": <SemanticSimilarityMatrix data={alerts} type="acts" />,
+      "impact-urgency": <ImpactUrgencyMatrix data={alerts} type="acts" />,
+      "compliance-deadline": <ComplianceDeadlineCalendar alerts={alerts} />,
+    };
+
+    // Split grid and full-width charts
+    const gridCharts = chartOrder.slice(0, 4);
+    const fullWidthCharts = chartOrder.slice(4);
 
     return (
       <>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Risk Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={riskData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => `${entry.name}: ${entry.value}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {riskData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={gridCharts} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {gridCharts.map((chartId) => (
+                <DraggableChart key={chartId} id={chartId} isGrid>
+                  {chartComponents[chartId]}
+                </DraggableChart>
+              ))}
+            </div>
+          </SortableContext>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Alerts by Portfolio (Top 10)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={portfolioData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 'dataMax']} allowDecimals={false} />
-                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Timeline (Weekly)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={timelineData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis domain={[0, 'dataMax']} allowDecimals={false} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} name="Alerts" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Document View Mix</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={docViewData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => `${entry.name}: ${entry.value}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {docViewData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--accent))"} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="space-y-6">
-          <TextualTrendsChart data={alerts} type="acts" />
-          <SentimentAnalysisChart data={alerts} type="acts" />
-          <TopicClustersChart data={alerts} type="acts" />
-          <EntityMentionsChart data={alerts} type="acts" />
-          <SemanticSimilarityMatrix data={alerts} type="acts" />
-          <ImpactUrgencyMatrix data={alerts} type="acts" />
-          <ComplianceDeadlineCalendar alerts={alerts} />
-        </div>
+          <SortableContext items={fullWidthCharts} strategy={verticalListSortingStrategy}>
+            <div className="space-y-6">
+              {fullWidthCharts.map((chartId) => (
+                <DraggableChart key={chartId} id={chartId}>
+                  {chartComponents[chartId]}
+                </DraggableChart>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </>
     );
   }
@@ -256,128 +428,161 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+  const chartComponents: Record<string, React.ReactNode> = {
+    "bills-status": (
+      <Card>
+        <CardHeader>
+          <CardTitle>Bills by Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={statusData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} tick={{ fontSize: 10 }} />
+              <YAxis domain={[0, 'dataMax']} allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    ),
+    "bills-chamber": (
+      <Card>
+        <CardHeader>
+          <CardTitle>Bills by Chamber</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={chamberData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={(entry) => `${entry.name}: ${entry.value}`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chamberData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--accent))"} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    ),
+    "risk-distribution": (
+      <Card>
+        <CardHeader>
+          <CardTitle>Risk Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={riskData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={(entry) => `${entry.name}: ${entry.value}`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {riskData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    ),
+    "portfolio-top10": (
+      <Card>
+        <CardHeader>
+          <CardTitle>Bills by Portfolio (Top 10)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={portfolioData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" domain={[0, 'dataMax']} allowDecimals={false} />
+              <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    ),
+    "timeline-weekly": (
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle>Timeline (Weekly)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={timelineData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis domain={[0, 'dataMax']} allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} name="Bills" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    ),
+    "voting-analytics": <VotingAnalyticsChart bills={bills} />,
+    "stakeholder-analysis": <StakeholderAnalysisChart bills={bills} />,
+    "textual-trends": <TextualTrendsChart data={bills} type="bills" />,
+    "sentiment-analysis": <SentimentAnalysisChart data={bills} type="bills" />,
+    "topic-clusters": <TopicClustersChart data={bills} type="bills" />,
+    "entity-mentions": <EntityMentionsChart data={bills} type="bills" />,
+    "semantic-similarity": <SemanticSimilarityMatrix data={bills} type="bills" />,
+    "impact-urgency": <ImpactUrgencyMatrix data={bills} type="bills" />,
+    "bills-progress": <BillsProgressFunnel bills={bills} />,
+    "people-of-interest": <PeopleOfInterestChart bills={bills} />,
+  };
+
+  // Grid charts (first 5, with timeline spanning 2 cols)
+  const gridCharts = chartOrder.slice(0, 5);
+  const fullWidthCharts = chartOrder.slice(5);
+
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Bills by Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={statusData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} tick={{ fontSize: 10 }} />
-                <YAxis domain={[0, 'dataMax']} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={gridCharts} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {gridCharts.map((chartId) => (
+              <DraggableChart key={chartId} id={chartId} isGrid>
+                {chartComponents[chartId]}
+              </DraggableChart>
+            ))}
+          </div>
+        </SortableContext>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Bills by Chamber</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={chamberData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.name}: ${entry.value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {chamberData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--accent))"} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Risk Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={riskData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.name}: ${entry.value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {riskData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Bills by Portfolio (Top 10)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={portfolioData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" domain={[0, 'dataMax']} allowDecimals={false} />
-                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Timeline (Weekly)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis domain={[0, 'dataMax']} allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} name="Bills" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="space-y-6">
-        <VotingAnalyticsChart bills={bills} />
-        <StakeholderAnalysisChart bills={bills} />
-        <TextualTrendsChart data={bills} type="bills" />
-        <SentimentAnalysisChart data={bills} type="bills" />
-        <TopicClustersChart data={bills} type="bills" />
-        <EntityMentionsChart data={bills} type="bills" />
-        <SemanticSimilarityMatrix data={bills} type="bills" />
-        <ImpactUrgencyMatrix data={bills} type="bills" />
-        <BillsProgressFunnel bills={bills} />
-        <PeopleOfInterestChart bills={bills} />
-      </div>
+        <SortableContext items={fullWidthCharts} strategy={verticalListSortingStrategy}>
+          <div className="space-y-6">
+            {fullWidthCharts.map((chartId) => (
+              <DraggableChart key={chartId} id={chartId}>
+                {chartComponents[chartId]}
+              </DraggableChart>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </>
   );
 }
