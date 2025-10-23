@@ -72,6 +72,7 @@ export function FilterBar({
       riskLevels: [],
       urgencyLevels: [],
       hasDeadline: null,
+      chambers: [],
       sortBy: "registered",
       sortOrder: "desc",
     });

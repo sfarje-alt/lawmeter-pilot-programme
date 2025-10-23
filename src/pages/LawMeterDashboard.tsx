@@ -53,6 +53,7 @@ export default function LawMeterDashboard() {
     riskLevels: [],
     urgencyLevels: [],
     hasDeadline: null,
+    chambers: [],
     sortBy: "registered",
     sortOrder: "desc",
   });
@@ -73,6 +74,7 @@ export default function LawMeterDashboard() {
     riskLevels: [],
     urgencyLevels: [],
     hasDeadline: null,
+    chambers: [],
     sortBy: "registered",
     sortOrder: "desc",
   });
@@ -96,6 +98,8 @@ export default function LawMeterDashboard() {
   const actsKPIs = {
     total: filteredAlerts.length,
     highRisk: filteredAlerts.filter(a => a.AI_triage?.risk_level === "high").length,
+    mediumRisk: filteredAlerts.filter(a => a.AI_triage?.risk_level === "medium").length,
+    lowRisk: filteredAlerts.filter(a => a.AI_triage?.risk_level === "low").length,
     upcomingDeadlines: filteredAlerts.filter(a => isUpcomingDeadline(a.AI_triage?.deadline_detected)).length,
     portfolios: new Set(filteredAlerts.map(a => a.csv_portfolio)).size,
   };
@@ -106,6 +110,7 @@ export default function LawMeterDashboard() {
     if (billsFilters.parties.length > 0 && bill.party && !billsFilters.parties.includes(bill.party)) return false;
     if (bill.risk_score < billsFilters.riskScoreRange[0] || bill.risk_score > billsFilters.riskScoreRange[1]) return false;
     if (billsFilters.riskLevels.length > 0 && !billsFilters.riskLevels.includes(bill.risk_level)) return false;
+    if (billsFilters.chambers.length > 0 && !billsFilters.chambers.includes(bill.chamber)) return false;
     if (billsFilters.searchText) {
       const search = billsFilters.searchText.toLowerCase();
       if (!bill.title.toLowerCase().includes(search) && 
@@ -125,6 +130,9 @@ export default function LawMeterDashboard() {
 
   const billsKPIs = {
     total: filteredBills.length,
+    highRisk: filteredBills.filter(b => b.risk_level === "high").length,
+    mediumRisk: filteredBills.filter(b => b.risk_level === "medium").length,
+    lowRisk: filteredBills.filter(b => b.risk_level === "low").length,
     house: filteredBills.filter(b => b.chamber === "House").length,
     senate: filteredBills.filter(b => b.chamber === "Senate").length,
   };
@@ -240,10 +248,53 @@ export default function LawMeterDashboard() {
           )}
 
           <TabsContent value="acts" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total Alerts</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.total}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-risk-high">{actsKPIs.highRisk}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Deadlines (30d)</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-warning">{actsKPIs.upcomingDeadlines}</div></CardContent></Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("high") ? "ring-2 ring-risk-high" : ""}`}
+                onClick={() => {
+                  setActsFilters(prev => ({
+                    ...prev,
+                    riskLevels: prev.riskLevels.includes("high") 
+                      ? prev.riskLevels.filter(r => r !== "high")
+                      : [...prev.riskLevels, "high"]
+                  }));
+                  setActsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-risk-high">{actsKPIs.highRisk}</div></CardContent>
+              </Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("medium") ? "ring-2 ring-risk-medium" : ""}`}
+                onClick={() => {
+                  setActsFilters(prev => ({
+                    ...prev,
+                    riskLevels: prev.riskLevels.includes("medium") 
+                      ? prev.riskLevels.filter(r => r !== "medium")
+                      : [...prev.riskLevels, "medium"]
+                  }));
+                  setActsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-risk-medium">{actsKPIs.mediumRisk}</div></CardContent>
+              </Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("low") ? "ring-2 ring-risk-low" : ""}`}
+                onClick={() => {
+                  setActsFilters(prev => ({
+                    ...prev,
+                    riskLevels: prev.riskLevels.includes("low") 
+                      ? prev.riskLevels.filter(r => r !== "low")
+                      : [...prev.riskLevels, "low"]
+                  }));
+                  setActsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-risk-low">{actsKPIs.lowRisk}</div></CardContent>
+              </Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Portfolios</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.portfolios}</div></CardContent></Card>
             </div>
             
@@ -321,10 +372,84 @@ export default function LawMeterDashboard() {
             <div className="bg-warning/10 border border-warning rounded-lg p-4 mb-4">
               <div className="flex gap-2"><AlertTriangle className="h-5 w-5 text-warning" /><div><p className="font-semibold">Mock Data</p><p className="text-sm">Bills are fictitious for demonstration purposes.</p></div></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total Bills</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{billsKPIs.total}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">House</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{billsKPIs.house}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Senate</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{billsKPIs.senate}</div></CardContent></Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.riskLevels.includes("high") ? "ring-2 ring-risk-high" : ""}`}
+                onClick={() => {
+                  setBillsFilters(prev => ({
+                    ...prev,
+                    riskLevels: prev.riskLevels.includes("high") 
+                      ? prev.riskLevels.filter(r => r !== "high")
+                      : [...prev.riskLevels, "high"]
+                  }));
+                  setBillsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-risk-high">{billsKPIs.highRisk}</div></CardContent>
+              </Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.riskLevels.includes("medium") ? "ring-2 ring-risk-medium" : ""}`}
+                onClick={() => {
+                  setBillsFilters(prev => ({
+                    ...prev,
+                    riskLevels: prev.riskLevels.includes("medium") 
+                      ? prev.riskLevels.filter(r => r !== "medium")
+                      : [...prev.riskLevels, "medium"]
+                  }));
+                  setBillsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-risk-medium">{billsKPIs.mediumRisk}</div></CardContent>
+              </Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.riskLevels.includes("low") ? "ring-2 ring-risk-low" : ""}`}
+                onClick={() => {
+                  setBillsFilters(prev => ({
+                    ...prev,
+                    riskLevels: prev.riskLevels.includes("low") 
+                      ? prev.riskLevels.filter(r => r !== "low")
+                      : [...prev.riskLevels, "low"]
+                  }));
+                  setBillsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-risk-low">{billsKPIs.lowRisk}</div></CardContent>
+              </Card>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.chambers.includes("House") ? "ring-2 ring-primary" : ""}`}
+                onClick={() => {
+                  setBillsFilters(prev => ({
+                    ...prev,
+                    chambers: prev.chambers.includes("House") 
+                      ? prev.chambers.filter(c => c !== "House")
+                      : [...prev.chambers, "House"]
+                  }));
+                  setBillsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">House</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{billsKPIs.house}</div></CardContent>
+              </Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.chambers.includes("Senate") ? "ring-2 ring-primary" : ""}`}
+                onClick={() => {
+                  setBillsFilters(prev => ({
+                    ...prev,
+                    chambers: prev.chambers.includes("Senate") 
+                      ? prev.chambers.filter(c => c !== "Senate")
+                      : [...prev.chambers, "Senate"]
+                  }));
+                  setBillsPage(1);
+                }}
+              >
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Senate</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{billsKPIs.senate}</div></CardContent>
+              </Card>
             </div>
             
             <div className="flex items-center justify-between">
