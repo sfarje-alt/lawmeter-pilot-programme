@@ -79,7 +79,7 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "high",
         legal_stage: "enacted",
         change_type: ["compliance", "operational"],
-        summary: `Critical changes to ${act.name} requiring immediate action. Introduces mandatory compliance measures with tight implementation timeframes.`,
+        summary: `Introduced amendments to Section ${12 + i} of ${act.name}: ${i % 3 === 0 ? 'new mandatory reporting requirements and compliance thresholds' : i % 3 === 1 ? 'revised operational standards and safety protocols' : 'updated enforcement mechanisms and penalty structures'}. Critical changes requiring immediate action with tight implementation timeframes.`,
         alert_title: `Urgent: ${act.name}`,
         alert_bullets: [
           `Mandatory compliance deadline within ${10 + i * 2} days`,
@@ -137,7 +137,7 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "high",
         legal_stage: "proposal",
         change_type: ["strategic", "planning"],
-        summary: `Major strategic changes to ${act.name} with extended implementation timeline. High importance but adequate time for preparation.`,
+        summary: `Introduced substantial modifications to Part ${3 + i} of ${act.name}: ${i % 3 === 0 ? 'expanded definitions and scope of application' : i % 3 === 1 ? 'restructured governance and oversight requirements' : 'new strategic planning and risk management obligations'}. Major strategic changes with extended implementation timeline allowing adequate preparation time.`,
         alert_title: `Important: ${act.name}`,
         alert_bullets: [
           `Substantial changes planned for 2026`,
@@ -195,7 +195,7 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "medium",
         legal_stage: "enacted",
         change_type: ["administrative", "procedural"],
-        summary: `Minor administrative changes to ${act.name} procedures with near-term implementation. Limited operational impact but requires prompt attention.`,
+        summary: `Introduced procedural amendments to Schedule ${2 + i} of ${act.name}: ${i % 3 === 0 ? 'updated notification and documentation requirements' : i % 3 === 1 ? 'revised submission timelines and formats' : 'modified record-keeping and archival obligations'}. Minor administrative changes with near-term implementation requiring prompt attention.`,
         alert_title: `Action Required: ${act.name}`,
         alert_bullets: [
           `Administrative procedure updates required`,
@@ -253,7 +253,7 @@ export function generateMatrixAlerts(): Alert[] {
         portfolio_priority: "low",
         legal_stage: "guidance",
         change_type: ["informational", "guidance"],
-        summary: `Informational guidance on ${act.name} best practices. Low urgency with minimal operational impact.`,
+        summary: `Introduced clarifications to Regulation ${5 + i}.${1 + i} of ${act.name}: ${i % 3 === 0 ? 'updated interpretation guidance and examples' : i % 3 === 1 ? 'refined best practice standards and recommendations' : 'enhanced voluntary compliance frameworks and benchmarks'}. Informational guidance with low urgency and minimal operational impact.`,
         alert_title: `For Information: ${act.name}`,
         alert_bullets: [
           `Best practice guidance provided`,
