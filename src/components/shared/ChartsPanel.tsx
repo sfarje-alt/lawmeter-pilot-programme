@@ -120,12 +120,12 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
   const getDefaultOrder = () => {
     if (type === "acts") {
       return [
-        "portfolio-top10", // Full-width at top
-        "impact-urgency",
+        "textual-trends", // Keyword trends at top
+        "impact-urgency", // Matrix below
+        "portfolio-top10",
         "risk-distribution",
         "timeline-weekly",
         "doc-view-mix",
-        "textual-trends",
         "sentiment-analysis",
         "topic-clusters",
         "entity-mentions",
@@ -134,15 +134,15 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       ];
     } else {
       return [
-        "portfolio-top10", // Full-width at top
-        "impact-urgency",
+        "textual-trends", // Keyword trends at top
+        "impact-urgency", // Matrix below
+        "portfolio-top10",
         "bills-status",
         "bills-chamber",
         "risk-distribution",
         "timeline-weekly",
         "voting-analytics",
         "stakeholder-analysis",
-        "textual-trends",
         "sentiment-analysis",
         "topic-clusters",
         "entity-mentions",
@@ -353,7 +353,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          {/* Top two full-width charts (Portfolio Keywords + Impact vs Urgency) */}
+          {/* Top two full-width charts (Keyword Trends + Impact vs Urgency Matrix) */}
           <SortableContext items={topCharts} strategy={verticalListSortingStrategy}>
             <div className="space-y-6 mb-6">
               {topCharts.map((chartId) => (
@@ -565,7 +565,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        {/* Top two full-width charts (Portfolio Keywords + Impact vs Urgency) */}
+        {/* Top two full-width charts (Keyword Trends + Impact vs Urgency Matrix) */}
         <SortableContext items={topCharts} strategy={verticalListSortingStrategy}>
           <div className="space-y-6 mb-6">
             {topCharts.map((chartId) => (
