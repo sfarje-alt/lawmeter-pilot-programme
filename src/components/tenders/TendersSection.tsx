@@ -242,7 +242,10 @@ export function TendersSection() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold text-lg">{tender.title}</h3>
-                        <Badge variant={tender.status === "open" ? "default" : "secondary"}>
+                        <Badge 
+                          variant={tender.status === "open" ? "default" : "secondary"}
+                          className={tender.status === "open" ? "bg-green-600 hover:bg-green-700 text-white border-green-600" : ""}
+                        >
                           {tender.status.toUpperCase()}
                         </Badge>
                         {isClosingSoon(tender.closeDateTime) && tender.status === "open" && (
