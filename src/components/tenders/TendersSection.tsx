@@ -12,6 +12,7 @@ interface Tender {
   agency: string;
   category: string;
   description: string;
+  aiSummary: string;
   closeDateTime: string;
   lastUpdated: string;
   status: "open" | "closed";
@@ -28,6 +29,7 @@ const mockTenders: Tender[] = [
     agency: "Department of Defence - DSRG",
     category: "Comprehensive health services",
     description: "Request for Proposal for the Australian Defence Contracted Health System",
+    aiSummary: "Defence needs a comprehensive healthcare provider to deliver medical services to military personnel and their families, including primary care, specialist consultations, mental health support, and emergency services across multiple locations.",
     closeDateTime: "2025-10-10T16:00:00",
     lastUpdated: "2025-10-03T11:39:00",
     status: "open",
@@ -41,6 +43,7 @@ const mockTenders: Tender[] = [
     agency: "Department of Health and Aged Care",
     category: "Medical Equipment",
     description: "Provision of medical equipment including diagnostic devices, surgical instruments, and monitoring equipment for public hospital networks across Australia.",
+    aiSummary: "The government wants suppliers to provide MRI machines, CT scanners, ultrasound equipment, surgical instruments, patient monitors, and diagnostic tools for 50+ public hospitals nationwide, with installation, training, and 5-year maintenance included.",
     closeDateTime: "2025-11-30T17:00:00",
     lastUpdated: "2025-10-05T14:30:00",
     status: "open",
@@ -54,6 +57,7 @@ const mockTenders: Tender[] = [
     agency: "Department of Health and Aged Care",
     category: "IT Services",
     description: "Integration of electronic health record systems and ongoing IT support for healthcare facilities.",
+    aiSummary: "Looking for IT firms to connect and integrate electronic health record systems across 120 healthcare facilities, migrate patient data securely, provide staff training, and deliver 24/7 technical support for 3 years.",
     closeDateTime: "2025-12-15T17:00:00",
     lastUpdated: "2025-09-28T11:20:00",
     status: "open",
@@ -67,6 +71,7 @@ const mockTenders: Tender[] = [
     agency: "Department of Health and Aged Care",
     category: "Healthcare Services",
     description: "Delivery of expanded mental health services including crisis support, consultation services, and facility upgrades.",
+    aiSummary: "The state wants mental health providers to expand services in regional areas: 24/7 crisis helplines, psychiatric consultations, therapy programs, and renovation of 8 mental health facilities to increase capacity by 40%.",
     closeDateTime: "2025-11-15T17:00:00",
     lastUpdated: "2025-09-30T09:45:00",
     status: "open",
@@ -80,6 +85,7 @@ const mockTenders: Tender[] = [
     agency: "Therapeutic Goods Administration",
     category: "Pharmaceutical Services",
     description: "Management and optimization of pharmaceutical supply chains for healthcare facilities.",
+    aiSummary: "TGA needs logistics companies to manage pharmaceutical distribution: warehousing temperature-controlled medicines, tracking inventory in real-time, coordinating deliveries to 200+ healthcare facilities, and ensuring compliance with pharmaceutical storage regulations.",
     closeDateTime: "2025-10-30T17:00:00",
     lastUpdated: "2025-09-22T16:10:00",
     status: "open",
@@ -93,6 +99,7 @@ const mockTenders: Tender[] = [
     agency: "Department of Health and Aged Care",
     category: "Aged Care",
     description: "Facility upgrades and equipment procurement for aged care facilities to meet new quality standards.",
+    aiSummary: "Seeking contractors to renovate 15 aged care facilities: upgrade bathrooms for accessibility, install nurse call systems, modernize kitchens, provide new mobility aids and care equipment to meet 2025 quality standards.",
     closeDateTime: "2025-10-20T17:00:00",
     lastUpdated: "2025-09-18T13:55:00",
     status: "open",
@@ -106,6 +113,7 @@ const mockTenders: Tender[] = [
     agency: "Australian Cyber Security Centre",
     category: "Cybersecurity",
     description: "Comprehensive cybersecurity assessment and remediation for healthcare data systems.",
+    aiSummary: "Cybersecurity firms needed to audit healthcare IT systems, identify vulnerabilities in patient data storage, perform penetration testing, implement security fixes, and provide staff training on data protection protocols.",
     closeDateTime: "2025-10-15T17:00:00",
     lastUpdated: "2025-09-10T10:30:00",
     status: "closed",
@@ -243,7 +251,15 @@ export function TendersSection() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground mb-3">{tender.description}</p>
+                      
+                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-3">
+                        <div className="flex items-start gap-2">
+                          <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30 flex-shrink-0">
+                            AI Summary
+                          </Badge>
+                          <p className="text-sm font-medium leading-relaxed">{tender.aiSummary}</p>
+                        </div>
+                      </div>
                       
                       <div className="space-y-2 mb-3">
                         <div className="flex items-start gap-2 text-sm">
