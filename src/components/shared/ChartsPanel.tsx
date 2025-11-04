@@ -249,14 +249,6 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
         name: "Reglamentos",
         value: alerts.filter((a) => a.norm_type === "Reglamento").length,
       },
-      {
-        name: "Dictámenes PGR",
-        value: alerts.filter((a) => a.norm_type === "Dictamen PGR").length,
-      },
-      {
-        name: "Opiniones PGR",
-        value: alerts.filter((a) => a.norm_type === "Opinión Jurídica PGR").length,
-      },
     ].filter((d) => d.value > 0);
 
     const chartComponents: Record<string, React.ReactNode> = {

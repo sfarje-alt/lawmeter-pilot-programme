@@ -54,7 +54,7 @@ export interface Alert {
   publication_date: string; // Fecha de publicación
   effective_date: string; // "Rige a partir de"
   version?: string; // Versión de la norma
-  norm_type: "Ley" | "Decreto Ejecutivo" | "Reglamento" | "Dictamen PGR" | "Opinión Jurídica PGR";
+  norm_type: "Ley" | "Decreto Ejecutivo" | "Reglamento";
   link?: string;
   issuing_entity?: string; // Ente emisor
   has_pdf?: boolean;
