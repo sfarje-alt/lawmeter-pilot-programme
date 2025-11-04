@@ -53,14 +53,14 @@ export function AlertActDrawer({
   const handleCopyLink = () => {
     if (alert.link) {
       navigator.clipboard.writeText(alert.link);
-      toast({ title: "Link copied to clipboard" });
+      toast({ title: "Enlace copiado al portapapeles" });
     }
   };
 
   const handleCopySummary = () => {
     const text = alert.AI_triage?.summary || "";
     navigator.clipboard.writeText(text);
-    toast({ title: "Summary copied to clipboard" });
+    toast({ title: "Resumen copiado al portapapeles" });
   };
 
   return (
@@ -81,7 +81,7 @@ export function AlertActDrawer({
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-warning" />
                 <div>
-                  <p className="font-semibold text-warning">Upcoming Deadline</p>
+                  <p className="font-semibold text-warning">Plazo Próximo</p>
                   <p className="text-sm text-muted-foreground">
                     {alert.AI_triage.deadline_detected}
                   </p>
@@ -105,7 +105,7 @@ export function AlertActDrawer({
               <p className="font-medium">{formatDate(alert.publication_date)}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Effective Date</p>
+              <p className="text-sm text-muted-foreground">Rige a partir de</p>
               <p className="font-medium">{formatDate(alert.effective_date)}</p>
             </div>
           </div>
@@ -118,13 +118,13 @@ export function AlertActDrawer({
           )}
 
           <div>
-            <p className="text-sm text-muted-foreground mb-2">Summary</p>
+            <p className="text-sm text-muted-foreground mb-2">Resumen</p>
             <p className="text-sm">{alert.AI_triage?.summary}</p>
           </div>
 
           {alert.AI_triage?.alert_bullets && alert.AI_triage.alert_bullets.length > 0 && (
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Key Points</p>
+              <p className="text-sm text-muted-foreground mb-2">Puntos Clave</p>
               <ul className="space-y-2">
                 {alert.AI_triage.alert_bullets.map((bullet, idx) => (
                   <li key={idx} className="flex gap-2">
@@ -158,11 +158,11 @@ export function AlertActDrawer({
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleCopyLink}>
               <Copy className="h-3 w-3 mr-2" />
-              Copy Link
+              Copiar Enlace
             </Button>
             <Button variant="outline" size="sm" onClick={handleCopySummary}>
               <Copy className="h-3 w-3 mr-2" />
-              Copy Summary
+              Copiar Resumen
             </Button>
           </div>
 
@@ -171,7 +171,7 @@ export function AlertActDrawer({
             <Collapsible>
               <CollapsibleTrigger asChild>
                 <Button variant="outline" className="w-full">
-                  Full Legislative Text
+                  Texto Completo de la Norma
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </CollapsibleTrigger>
@@ -188,7 +188,7 @@ export function AlertActDrawer({
           <Collapsible>
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="w-full">
-                QA / Reasons
+                Razones de IA
                 <ChevronDown className="h-4 w-4 ml-2" />
               </Button>
             </CollapsibleTrigger>
@@ -217,11 +217,11 @@ export function AlertActDrawer({
           </div>
 
           <div>
-            <h4 className="font-semibold mb-3">Comments</h4>
+            <h4 className="font-semibold mb-3">Comentarios</h4>
             <Tabs defaultValue="team">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="team">Team ({teamComments.length})</TabsTrigger>
-                <TabsTrigger value="private">Private ({privateComments.length})</TabsTrigger>
+                <TabsTrigger value="team">Equipo ({teamComments.length})</TabsTrigger>
+                <TabsTrigger value="private">Privado ({privateComments.length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="team" className="space-y-3">
@@ -250,7 +250,7 @@ export function AlertActDrawer({
                 </div>
                 <div className="space-y-2">
                   <Textarea
-                    placeholder="Add team comment..."
+                    placeholder="Agregar comentario del equipo..."
                     value={teamComment}
                     onChange={(e) => setTeamComment(e.target.value)}
                   />
@@ -263,7 +263,7 @@ export function AlertActDrawer({
                       }
                     }}
                   >
-                    Add Team Comment
+                    Agregar Comentario del Equipo
                   </Button>
                 </div>
               </TabsContent>
@@ -294,7 +294,7 @@ export function AlertActDrawer({
                 </div>
                 <div className="space-y-2">
                   <Textarea
-                    placeholder="Add private comment..."
+                    placeholder="Agregar comentario privado..."
                     value={privateComment}
                     onChange={(e) => setPrivateComment(e.target.value)}
                   />
@@ -307,7 +307,7 @@ export function AlertActDrawer({
                       }
                     }}
                   >
-                    Add Private Comment
+                    Agregar Comentario Privado
                   </Button>
                 </div>
               </TabsContent>

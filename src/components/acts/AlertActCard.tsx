@@ -36,7 +36,7 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge className={getRiskColor(alert.AI_triage?.risk_level || "low")}>
-              {alert.AI_triage?.risk_level?.toUpperCase() || "LOW"} RISK
+              RIESGO {alert.AI_triage?.risk_level?.toUpperCase() || "BAJO"}
             </Badge>
             {alert.AI_triage?.risk_score_hint !== undefined && (
               <Badge variant="outline">{alert.AI_triage.risk_score_hint}/100</Badge>
@@ -105,7 +105,7 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
             </Button>
           )}
           <Button variant="default" size="sm" onClick={onOpenDrawer}>
-            Details
+            Detalles
           </Button>
         </div>
       </CardContent>
