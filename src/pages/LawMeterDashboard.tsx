@@ -161,8 +161,8 @@ export default function LawMeterDashboard() {
             {/* Left side - Title */}
             <div className="flex items-center gap-6">
               <div>
-                <h1 className="text-2xl font-bold text-foreground leading-tight"><span className="blur-sm select-none">Macquarie</span> Hospital Group Dashboard</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Regulatory Monitoring</p>
+                <h1 className="text-2xl font-bold text-foreground leading-tight">Costa Rica 🇨🇷</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Monitoreo Regulatorio</p>
               </div>
               
               {/* Separator */}
