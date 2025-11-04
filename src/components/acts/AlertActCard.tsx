@@ -137,6 +137,14 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer, isP
               </a>
             </Button>
           )}
+          {alert.norm_type === "Ley" && alert.bill_project_link && (
+            <Button variant="outline" size="sm" asChild>
+              <a href={alert.bill_project_link} target="_blank" rel="noopener noreferrer">
+                <FileText className="h-3 w-3 mr-1" />
+                Proyecto de Ley
+              </a>
+            </Button>
+          )}
           {alert.law_number && (
             <Button variant="outline" size="sm" asChild>
               <a 

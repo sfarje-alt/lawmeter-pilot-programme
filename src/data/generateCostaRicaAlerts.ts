@@ -142,19 +142,22 @@ const lawsData = [
     number: "7786", 
     name: "Ley sobre Estupefacientes, Sustancias Psicotrópicas, Drogas de Uso No Autorizado, Legitimación de Capitales y Actividades Conexas",
     ministry: "ICD (Instituto Costarricense sobre Drogas)",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/25280.pdf"
   },
   { 
     number: "8204", 
     name: "Ley sobre Estupefacientes, Sustancias Psicotrópicas, Drogas de Uso No Autorizado, Legitimación de Capitales y Actividades Conexas (Reforma)",
     ministry: "ICD (Instituto Costarricense sobre Drogas)",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/18543.pdf"
   },
   { 
     number: "9416", 
     name: "Ley de Protección de la Persona frente al Tratamiento de sus Datos Personales",
     ministry: "Ministerio de Justicia y Paz",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/20463.pdf"
   },
   { 
     number: "7558", 
@@ -395,6 +398,7 @@ export function generateCostaRicaAlerts(): Alert[] {
       law_number: `Ley ${topic.law.number}`,
       detail_link: `https://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=${id}`,
       gaceta_link: `https://www.imprentanacional.go.cr/gaceta/`,
+      bill_project_link: (topic.law as any).billProjectLink,
       title_id: `LEY-${topic.law.number}-${id}`,
       publication_date: pastDate(Math.floor(Math.random() * 15)),
       effective_date: rigeDate,
@@ -499,6 +503,7 @@ export function generateCostaRicaAlerts(): Alert[] {
         law_number: `Ley ${law.number}`,
         detail_link: `https://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=${id}`,
         gaceta_link: `https://www.imprentanacional.go.cr/gaceta/`,
+        bill_project_link: (law as any).billProjectLink,
         title_id: `LEY-${law.number}-${id}`,
         publication_date: pastDate(Math.floor(Math.random() * 60)),
         effective_date: rigeDate,
@@ -669,6 +674,7 @@ export function generateCostaRicaAlerts(): Alert[] {
       law_number: `Ley ${law.number}`,
       detail_link: `https://www.pgr.go.cr/pronunciamientos/${consultNumber}`,
       gaceta_link: `https://www.imprentanacional.go.cr/gaceta/`,
+      bill_project_link: (law as any).billProjectLink,
       title_id: consultNumber,
       publication_date: pastDate(Math.floor(Math.random() * 45)),
       effective_date: rigeDate,

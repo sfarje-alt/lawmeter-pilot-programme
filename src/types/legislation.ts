@@ -49,6 +49,7 @@ export interface Alert {
   law_number?: string; // e.g., "Ley 7786"
   detail_link?: string;
   gaceta_link?: string; // Link a La Gaceta
+  bill_project_link?: string; // Link al proyecto de ley original (PDF)
   title_id: string;
   publication_date: string; // Fecha de publicación
   effective_date: string; // "Rige a partir de"
