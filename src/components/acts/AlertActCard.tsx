@@ -23,6 +23,15 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
     }
   };
 
+  const getRiskLabel = (level: string) => {
+    switch (level) {
+      case "high": return "ALTO";
+      case "medium": return "MEDIO";
+      case "low": return "BAJO";
+      default: return "BAJO";
+    }
+  };
+
   const effectiveDate = alert.effective_date;
   const publicationDate = alert.publication_date;
 
@@ -36,7 +45,7 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge className={getRiskColor(alert.AI_triage?.risk_level || "low")}>
-              RIESGO {alert.AI_triage?.risk_level?.toUpperCase() || "BAJO"}
+              RIESGO {getRiskLabel(alert.AI_triage?.risk_level || "low")}
             </Badge>
             {alert.AI_triage?.risk_score_hint !== undefined && (
               <Badge variant="outline">{alert.AI_triage.risk_score_hint}/100</Badge>
