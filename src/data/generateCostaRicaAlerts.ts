@@ -86,6 +86,45 @@ const lawsData = [
   },
 ];
 
+// Reglamentos (Decretos Ejecutivos)
+const regulationsData = [
+  {
+    number: "27548",
+    name: "Crea la Comisión Nacional para el Estudio de Políticas Preventivas Contra la Legitimación de Capitales Provenientes del Narcotráfico",
+    ministry: "ICD (Instituto Costarricense sobre Drogas)",
+    type: "Decreto Ejecutivo" as const,
+    relatedLaw: "7786"
+  },
+  {
+    number: "38233",
+    name: "Reglamento para el Control de Operaciones Sospechosas en el Sistema Financiero Nacional",
+    ministry: "SUGEF (Superintendencia General de Entidades Financieras)",
+    type: "Decreto Ejecutivo" as const,
+    relatedLaw: "8204"
+  },
+  {
+    number: "41710",
+    name: "Reglamento de Protección de Datos Personales en Entidades del Sistema Financiero",
+    ministry: "Banco Central de Costa Rica",
+    type: "Decreto Ejecutivo" as const,
+    relatedLaw: "9416"
+  },
+  {
+    number: "39913",
+    name: "Reglamento de Requisitos de Capital y Liquidez para Entidades Financieras",
+    ministry: "SUGEF (Superintendencia General de Entidades Financieras)",
+    type: "Decreto Ejecutivo" as const,
+    relatedLaw: "7558"
+  },
+  {
+    number: "42670",
+    name: "Reglamento de Debida Diligencia del Cliente en el Sector Financiero",
+    ministry: "CONASSIF (Consejo Nacional de Supervisión del Sistema Financiero)",
+    type: "Decreto Ejecutivo" as const,
+    relatedLaw: "8204"
+  }
+];
+
 // Generate alerts for all quadrants
 export function generateCostaRicaAlerts(): Alert[] {
   const alerts: Alert[] = [];
@@ -563,6 +602,212 @@ export function generateCostaRicaAlerts(): Alert[] {
         risk_level: i % 2 === 0 ? "low" : "medium",
         risk_score_hint: 35 + Math.floor(Math.random() * 25),
         deadline_detected: rigeDate,
+        recommended_action: "ALERT_NOW"
+      },
+      monitoring_use: "costa_rica_demo"
+    });
+    id++;
+  });
+
+  // Reglamentos (Decretos Ejecutivos del Poder Ejecutivo)
+  const regulationAlerts = [
+    {
+      regulation: regulationsData[0],
+      title: "Creación de Comisión Nacional para Prevención de Legitimación de Capitales del Narcotráfico",
+      summary: "El Poder Ejecutivo establece mediante Decreto Ejecutivo 27548 la creación de una Comisión Nacional especializada en el estudio y formulación de políticas preventivas contra la legitimación de capitales provenientes del narcotráfico. Esta comisión estará integrada por representantes del ICD, BCCR, SUGEF y Ministerio de Justicia, con el mandato de diseñar estrategias integrales de prevención, establecer protocolos de cooperación interinstitucional y recomendar reformas normativas. La comisión deberá presentar su primer informe de recomendaciones en un plazo de 90 días desde su constitución formal.",
+      bullets: [
+        "Comisión interinstitucional: ICD, BCCR, SUGEF, Ministerio de Justicia",
+        "Mandato: diseño de políticas preventivas contra legitimación de capitales",
+        "Primer informe de recomendaciones en 90 días desde constitución",
+        "Cooperación obligatoria de entidades financieras en suministro de información",
+        "Base para futura normativa de prevención de lavado de activos"
+      ],
+      units: ["Prevención de Lavado", "Cumplimiento", "Legal", "Relaciones Institucionales"],
+      riskScore: 68,
+      publicationDate: "28/12/1998",
+      effectiveDate: "28/12/1998",
+      gacetaNumber: "251",
+      gacetaDate: "28/12/1998",
+      alcance: "96A"
+    },
+    {
+      regulation: regulationsData[1],
+      title: "Reglamento de Control de Operaciones Sospechosas en el Sistema Financiero",
+      summary: "Decreto Ejecutivo 38233 que establece el marco reglamentario para la identificación, monitoreo y reporte de operaciones sospechosas en el sistema financiero costarricense. Define criterios técnicos para la clasificación de operaciones, umbrales de reporte, plazos de notificación al ICD, y procedimientos de análisis interno. Las entidades financieras deben implementar sistemas automatizados de detección de patrones inusuales, designar un oficial de cumplimiento certificado, y mantener registros detallados de todas las transacciones analizadas por un período mínimo de 10 años.",
+      bullets: [
+        "Criterios técnicos obligatorios para clasificación de operaciones sospechosas",
+        "Sistemas automatizados de detección requeridos en 120 días",
+        "Oficial de cumplimiento certificado obligatorio por entidad",
+        "Reporte al ICD dentro de 24 horas de detección de operación sospechosa",
+        "Conservación de registros por 10 años mínimo"
+      ],
+      units: ["Prevención de Lavado", "Cumplimiento", "TI", "Operaciones", "Riesgos"],
+      riskScore: 82,
+      publicationDate: "15/03/2014",
+      effectiveDate: "01/05/2014",
+      gacetaNumber: "52",
+      gacetaDate: "15/03/2014",
+      alcance: "45B"
+    },
+    {
+      regulation: regulationsData[2],
+      title: "Reglamento de Protección de Datos Personales en Entidades Financieras",
+      summary: "El Decreto Ejecutivo 41710 reglamenta la aplicación de la Ley 9416 específicamente para el sector financiero, estableciendo estándares técnicos y organizativos para el tratamiento de datos personales de clientes. Define categorías de datos sensibles financieros, requisitos de seguridad informática (encriptación, control de acceso, auditoría), procedimientos de gestión de consentimientos, y protocolos de notificación de brechas de seguridad. Las entidades deben designar un delegado de protección de datos, realizar evaluaciones de impacto para tratamientos de alto riesgo, e implementar políticas de minimización y retención de datos.",
+      bullets: [
+        "Delegado de protección de datos obligatorio en cada entidad financiera",
+        "Evaluaciones de impacto de privacidad para tratamientos de alto riesgo",
+        "Encriptación AES-256 mínimo para datos personales sensibles",
+        "Notificación de brechas a PRODHAB y clientes en 72 horas",
+        "Auditorías anuales de cumplimiento por terceros independientes"
+      ],
+      units: ["Legal", "Cumplimiento", "TI", "Seguridad de la Información", "Riesgos"],
+      riskScore: 79,
+      publicationDate: "22/11/2019",
+      effectiveDate: "01/02/2020",
+      gacetaNumber: "224",
+      gacetaDate: "22/11/2019",
+      alcance: "138A"
+    },
+    {
+      regulation: regulationsData[3],
+      title: "Reglamento de Requisitos de Capital y Liquidez bajo Estándares Basilea III",
+      summary: "Decreto Ejecutivo 39913 que implementa los estándares internacionales de Basilea III en Costa Rica, estableciendo requisitos reforzados de suficiencia de capital y liquidez para entidades financieras. Define el cálculo del Capital de Nivel 1 Común (CET1) mínimo del 4.5%, Capital de Nivel 1 del 6%, y capital total del 8%, más colchones de conservación y contracíclicos. Introduce los ratios de Cobertura de Liquidez (LCR) y Financiamiento Estable Neto (NSFR), con implementación gradual en un período de transición de 4 años. Incluye tratamiento específico para bancos sistémicamente importantes con recargos adicionales.",
+      bullets: [
+        "CET1 mínimo 4.5%, Nivel 1 6%, Capital Total 8% más colchones",
+        "LCR mínimo 100% - activos líquidos de alta calidad obligatorios",
+        "NSFR mínimo 100% - fondeo estable para activos y operaciones",
+        "Implementación gradual en 4 años con hitos semestrales",
+        "Recargo adicional 1-2.5% para bancos sistémicamente importantes"
+      ],
+      units: ["Finanzas", "Riesgos", "Tesorería", "ALM", "Cumplimiento Regulatorio"],
+      riskScore: 88,
+      publicationDate: "08/07/2016",
+      effectiveDate: "01/01/2017",
+      gacetaNumber: "133",
+      gacetaDate: "08/07/2016",
+      alcance: "89C"
+    },
+    {
+      regulation: regulationsData[4],
+      title: "Reglamento de Debida Diligencia del Cliente en el Sector Financiero",
+      summary: "El Decreto Ejecutivo 42670 establece procedimientos estandarizados y reforzados de debida diligencia del cliente (KYC) para todas las entidades del sistema financiero nacional. Define tres niveles de debida diligencia (simplificada, estándar y reforzada) según el perfil de riesgo del cliente, con criterios específicos para PEPs, empresas offshore, clientes de alto patrimonio y operaciones internacionales. Requiere verificación de identidad mediante fuentes independientes, determinación de beneficiarios finales en estructuras corporativas, establecimiento del propósito y naturaleza de la relación comercial, y monitoreo continuo de transacciones. Las entidades deben actualizar la información de clientes de alto riesgo cada 6 meses y de clientes estándar anualmente.",
+      bullets: [
+        "Tres niveles de debida diligencia según perfil de riesgo del cliente",
+        "Identificación de beneficiarios finales obligatoria en estructuras corporativas",
+        "Verificación mediante fuentes independientes y documentos oficiales",
+        "Actualización semestral para clientes de alto riesgo, anual para estándar",
+        "Monitoreo continuo automatizado de transacciones y comportamiento"
+      ],
+      units: ["Cumplimiento", "Prevención de Lavado", "Operaciones", "TI", "Experiencia del Cliente"],
+      riskScore: 75,
+      publicationDate: "19/04/2021",
+      effectiveDate: "01/07/2021",
+      gacetaNumber: "75",
+      gacetaDate: "19/04/2021",
+      alcance: "52D"
+    }
+  ];
+
+  regulationAlerts.forEach((topic, i) => {
+    const regId = parseInt(topic.regulation.number);
+    
+    // Calculate transitory articles based on index
+    const transitoryArticles = i === 0 
+      ? `Artículo Transitorio I: La Comisión Nacional deberá constituirse formalmente dentro de los 30 días naturales siguientes a la publicación de este decreto en el Diario Oficial La Gaceta.\n\nArtículo Transitorio II: La Comisión elaborará su reglamento interno de funcionamiento en un plazo de 45 días naturales desde su constitución formal.\n\nArtículo Transitorio III: El primer informe de recomendaciones de políticas preventivas deberá presentarse al Poder Ejecutivo dentro de los 90 días naturales siguientes a la constitución de la Comisión.`
+      : i === 1
+      ? `Artículo Transitorio I: Las entidades financieras dispondrán de un plazo de 120 días naturales para implementar los sistemas automatizados de detección de operaciones sospechosas.\n\nArtículo Transitorio II: La designación del Oficial de Cumplimiento certificado deberá realizarse dentro de los 60 días naturales siguientes a la vigencia de este reglamento.\n\nArtículo Transitorio III: Las entidades con sistemas de detección existentes deberán adecuarlos a los nuevos criterios técnicos en un plazo de 90 días naturales.\n\nArtículo Transitorio IV: La capacitación del personal en los nuevos procedimientos deberá completarse dentro de los primeros 45 días de vigencia de este reglamento.`
+      : i === 2
+      ? `Artículo Transitorio I: Las entidades financieras deberán designar al Delegado de Protección de Datos dentro de los 90 días naturales siguientes a la entrada en vigencia de este reglamento.\n\nArtículo Transitorio II: La implementación de los estándares de encriptación AES-256 deberá completarse en un plazo máximo de 180 días naturales.\n\nArtículo Transitorio III: Las políticas de minimización y retención de datos deberán estar aprobadas e implementadas dentro de los 120 días naturales.\n\nArtículo Transitorio IV: La primera auditoría de cumplimiento deberá realizarse dentro de los 12 meses siguientes a la vigencia de este reglamento.`
+      : i === 3
+      ? `Artículo Transitorio I: La implementación de los requisitos de capital se realizará de forma gradual durante un período de 4 años, con hitos semestrales de cumplimiento.\n\nArtículo Transitorio II: Para el primer año, las entidades deberán alcanzar un CET1 mínimo del 3%, Capital Nivel 1 del 4.5%, y Capital Total del 6%.\n\nArtículo Transitorio III: El ratio de Cobertura de Liquidez (LCR) deberá alcanzar el 60% en el primer año, incrementándose en 10 puntos porcentuales anuales hasta alcanzar el 100%.\n\nArtículo Transitorio IV: Las entidades deberán presentar planes de capitalización trimestrales a la SUGEF durante el período de transición.`
+      : `Artículo Transitorio I: Las entidades financieras dispondrán de un plazo de 90 días naturales para implementar los procedimientos estandarizados de debida diligencia establecidos en este reglamento.\n\nArtículo Transitorio II: La actualización de la información de clientes existentes deberá iniciarse inmediatamente, priorizando clientes de alto riesgo (6 meses) y completando clientes estándar en 18 meses.\n\nArtículo Transitorio III: Los sistemas de monitoreo continuo automatizado deberán estar operativos dentro de los 120 días naturales siguientes a la vigencia de este reglamento.\n\nArtículo Transitorio IV: La capacitación del personal en los nuevos procedimientos de debida diligencia deberá completarse dentro de los primeros 60 días de vigencia.`;
+    
+    alerts.push({
+      title: topic.title,
+      law_number: `Decreto Ejecutivo ${topic.regulation.number}`,
+      detail_link: `https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=${regId}&nValor3=${regId + 1000}&strTipM=FN`,
+      title_id: `DE-${topic.regulation.number}-${id}`,
+      publication_date: topic.publicationDate,
+      effective_date: topic.effectiveDate,
+      version: "1",
+      norm_type: "Decreto Ejecutivo",
+      link: `https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?param1=NRM&nValor1=1&nValor2=${regId}&nValor3=${regId + 1000}&strTipM=FN`,
+      issuing_entity: "Poder Ejecutivo",
+      has_pdf: true,
+      pdf_files: [
+        `https://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_pdf.aspx?param1=NRM&nValor1=1&nValor2=${regId}&nValor3=${regId + 1000}&strTipM=FN`,
+        `https://www.imprentanacional.go.cr/pub/2019/11/22/COMP_22_11_2019.pdf#page=${i + 10}`
+      ],
+      scraped_at: new Date().toISOString(),
+      source: "SINALEVI",
+      search_source: "sinalevi_monitoring",
+      csv_in_force: "Sí",
+      ministry: topic.regulation.ministry,
+      affected_norms: [
+        `Ley ${topic.regulation.relatedLaw} - Ley que reglamenta`,
+        i > 0 ? `Decreto Ejecutivo ${parseInt(regulationsData[i - 1].number)} - Reglamento anterior en materia` : undefined
+      ].filter(Boolean),
+      modifying_norms: i < regulationAlerts.length - 1 ? [
+        `Decreto Ejecutivo ${parseInt(regulationsData[i + 1].number)} - Reforma posterior`,
+        `Circular ${topic.regulation.ministry.includes('SUGEF') ? 'SUGEF' : topic.regulation.ministry.includes('SUGEVAL') ? 'SUGEVAL' : 'CONASSIF'}-${regId % 100}-${2024 + i} - Lineamiento complementario`
+      ] : [
+        `Circular ${topic.regulation.ministry.includes('SUGEF') ? 'SUGEF' : topic.regulation.ministry.includes('SUGEVAL') ? 'SUGEVAL' : 'CONASSIF'}-${regId % 100}-${2024 + i} - Lineamiento complementario`
+      ],
+      concordances: [
+        `Ley ${topic.regulation.relatedLaw} - Ley madre que desarrolla este reglamento`,
+        `Decreto Ejecutivo ${regId - 100} - Normativa complementaria`,
+        `Acuerdo ${topic.regulation.ministry.includes('SUGEF') ? 'SUGEF' : topic.regulation.ministry.includes('SUGEVAL') ? 'SUGEVAL' : 'CONASSIF'} ${regId % 1000}-2024 - Disposición relacionada`,
+        i === 0 ? `Convención Internacional Contra el Narcotráfico (Viena, 1988)` : 
+        i === 1 ? `Recomendaciones GAFI (Grupo de Acción Financiera Internacional)` :
+        i === 2 ? `RGPD (Reglamento General de Protección de Datos UE)` :
+        i === 3 ? `Marco de Basilea III - Comité de Supervisión Bancaria de Basilea` :
+        `Recomendaciones GAFI sobre Debida Diligencia del Cliente`
+      ],
+      regulations: i < regulationAlerts.length - 1 ? [
+        `Circular ${topic.regulation.ministry.includes('SUGEF') ? 'SUGEF' : 'CONASSIF'}-${(regId % 100) + 10}-${2023 + i} - Lineamientos operativos`
+      ] : [],
+      transitory_articles: i === 0 
+        ? `Artículo Transitorio I: La Comisión Nacional deberá constituirse formalmente dentro de los 30 días naturales siguientes a la publicación de este decreto en el Diario Oficial La Gaceta.\n\nArtículo Transitorio II: La Comisión elaborará su reglamento interno de funcionamiento en un plazo de 45 días naturales desde su constitución formal.\n\nArtículo Transitorio III: El primer informe de recomendaciones de políticas preventivas deberá presentarse al Poder Ejecutivo dentro de los 90 días naturales siguientes a la constitución de la Comisión.`
+        : i === 1
+        ? `Artículo Transitorio I: Las entidades financieras dispondrán de un plazo de 120 días naturales para implementar los sistemas automatizados de detección de operaciones sospechosas.\n\nArtículo Transitorio II: La designación del Oficial de Cumplimiento certificado deberá realizarse dentro de los 60 días naturales siguientes a la vigencia de este reglamento.\n\nArtículo Transitorio III: Las entidades con sistemas de detección existentes deberán adecuarlos a los nuevos criterios técnicos en un plazo de 90 días naturales.\n\nArtículo Transitorio IV: La capacitación del personal en los nuevos procedimientos deberá completarse dentro de los primeros 45 días de vigencia de este reglamento.`
+        : i === 2
+        ? `Artículo Transitorio I: Las entidades financieras deberán designar al Delegado de Protección de Datos dentro de los 90 días naturales siguientes a la entrada en vigencia de este reglamento.\n\nArtículo Transitorio II: La implementación de los estándares de encriptación AES-256 deberá completarse en un plazo máximo de 180 días naturales.\n\nArtículo Transitorio III: Las políticas de minimización y retención de datos deberán estar aprobadas e implementadas dentro de los 120 días naturales.\n\nArtículo Transitorio IV: La primera auditoría de cumplimiento deberá realizarse dentro de los 12 meses siguientes a la vigencia de este reglamento.`
+        : i === 3
+        ? `Artículo Transitorio I: La implementación de los requisitos de capital se realizará de forma gradual durante un período de 4 años, con hitos semestrales de cumplimiento.\n\nArtículo Transitorio II: Para el primer año, las entidades deberán alcanzar un CET1 mínimo del 3%, Capital Nivel 1 del 4.5%, y Capital Total del 6%.\n\nArtículo Transitorio III: El ratio de Cobertura de Liquidez (LCR) deberá alcanzar el 60% en el primer año, incrementándose en 10 puntos porcentuales anuales hasta alcanzar el 100%.\n\nArtículo Transitorio IV: Las entidades deberán presentar planes de capitalización trimestrales a la SUGEF durante el período de transición.`
+        : `Artículo Transitorio I: Las entidades financieras dispondrán de un plazo de 90 días naturales para implementar los procedimientos estandarizados de debida diligencia establecidos en este reglamento.\n\nArtículo Transitorio II: La actualización de la información de clientes existentes deberá iniciarse inmediatamente, priorizando clientes de alto riesgo (6 meses) y completando clientes estándar en 18 meses.\n\nArtículo Transitorio III: Los sistemas de monitoreo continuo automatizado deberán estar operativos dentro de los 120 días naturales siguientes a la vigencia de este reglamento.\n\nArtículo Transitorio IV: La capacitación del personal en los nuevos procedimientos de debida diligencia deberá completarse dentro de los primeros 60 días de vigencia.`,
+      text: `EL PRESIDENTE DE LA REPÚBLICA Y EL MINISTRO DE ${topic.regulation.ministry.toUpperCase()}\n\nCon fundamento en los artículos 140, incisos 3) y 18), y 146 de la Constitución Política; artículos 25, 27 y 28, párrafo 2, inciso b) de la Ley General de la Administración Pública, Ley N° 6227 del 2 de mayo de 1978; y los artículos pertinentes de la Ley ${topic.regulation.relatedLaw}.\n\nConsiderando:\n\nI.—Que es necesario ${topic.summary.substring(0, 200)}...\n\nII.—Que el ordenamiento jurídico costarricense requiere normativa complementaria para la efectiva aplicación de la Ley ${topic.regulation.relatedLaw}.\n\nIII.—Que resulta indispensable establecer disposiciones reglamentarias que desarrollen los principios y obligaciones contenidos en la ley, adaptándolos a las particularidades del sector financiero nacional.\n\nIV.—Que la experiencia internacional y las mejores prácticas recomendadas por organismos internacionales especializados fundamentan las disposiciones de este reglamento.\n\nPor tanto,\n\nDECRETAN:\n\n${topic.regulation.name.toUpperCase()}\n\nCAPÍTULO I\nDISPOSICIONES GENERALES\n\nArtículo 1º—Objeto y ámbito de aplicación. El presente reglamento tiene por objeto desarrollar y complementar las disposiciones de la Ley ${topic.regulation.relatedLaw}, estableciendo las normas específicas, procedimientos técnicos y obligaciones concretas para su efectiva aplicación en el sistema financiero nacional.\n\nEste reglamento será de aplicación obligatoria para todas las entidades supervisadas por ${topic.regulation.ministry}, incluyendo bancos comerciales públicos y privados, cooperativas de ahorro y crédito de nivel supervisado, mutuales de ahorro y préstamo, entidades financieras no bancarias autorizadas, y demás instituciones que realizan actividades de intermediación financiera.\n\nArtículo 2º—Definiciones. Para los efectos de este reglamento, se aplicarán las definiciones contenidas en la Ley ${topic.regulation.relatedLaw}, y adicionalmente se entenderá por:\n\n${topic.bullets.slice(0, 3).map((b, idx) => `${String.fromCharCode(97 + idx)}) ${b}`).join('\n\n')}\n\nArtículo 3º—Principios rectores. La aplicación de este reglamento se regirá por los siguientes principios:\n\na) Proporcionalidad: Las medidas y controles se aplicarán de acuerdo con el nivel de riesgo identificado.\n\nb) Efectividad: Los procedimientos establecidos deben ser idóneos para alcanzar los objetivos de prevención y control.\n\nc) Cooperación interinstitucional: Las entidades financieras y autoridades reguladoras colaborarán activamente en el cumplimiento de los objetivos de este reglamento.\n\nd) Confidencialidad: Se respetará el secreto bancario y la protección de datos personales en todos los procedimientos.\n\nCAPÍTULO II\nOBLIGACIONES DE LAS ENTIDADES FINANCIERAS\n\nArtículo 4º—Obligaciones generales. Las entidades financieras deberán:\n\na) Implementar y mantener actualizados sistemas y procedimientos para el cumplimiento de las disposiciones de este reglamento.\n\nb) Designar a un responsable de cumplimiento con suficiente autoridad, independencia y recursos para ejercer sus funciones.\n\nc) Capacitar periódicamente a su personal en las materias reguladas por este reglamento.\n\nd) Mantener registros detallados de todas las actividades relevantes por un período mínimo de 10 años.\n\ne) Reportar a las autoridades competentes conforme a los plazos y procedimientos establecidos.\n\nArtículo 5º—Sistemas de información y control. Las entidades deberán contar con sistemas tecnológicos que permitan:\n\na) La identificación automática de patrones de comportamiento inusuales o sospechosos.\n\nb) La generación de alertas en tiempo real sobre operaciones que requieran análisis adicional.\n\nc) El mantenimiento de registros históricos completos y de fácil consulta.\n\nd) La elaboración de reportes y estadísticas para análisis de tendencias y riesgos.\n\ne) La integración con bases de datos oficiales cuando sea técnicamente posible y legalmente permitido.\n\nArtículo 6º—Debida diligencia. Las entidades aplicarán medidas de debida diligencia que incluyan como mínimo:\n\na) Verificación de identidad mediante documentos oficiales vigentes y fuentes independientes.\n\nb) Obtención de información sobre la actividad económica, origen de fondos y propósito de la relación comercial.\n\nc) Determinación del perfil de riesgo del cliente mediante metodologías documentadas.\n\nd) Monitoreo continuo de las operaciones y actualización periódica de la información.\n\ne) Aplicación de medidas reforzadas para clientes de mayor riesgo.\n\nCAPÍTULO III\nPROCEDIMIENTOS DE SUPERVISIÓN Y CONTROL\n\nArtículo 7º—Facultades de supervisión. ${topic.regulation.ministry} ejercerá amplias facultades de supervisión, incluyendo:\n\na) Inspecciones in situ programadas o sorpresivas.\n\nb) Solicitud de información, documentos y registros.\n\nc) Entrevistas con personal y funcionarios de las entidades.\n\nd) Verificación del funcionamiento de sistemas y procedimientos.\n\ne) Aplicación de medidas correctivas cuando se detecten deficiencias.\n\nArtículo 8º—Reportes regulatorios. Las entidades deberán presentar a ${topic.regulation.ministry}:\n\na) Reportes periódicos con la frecuencia y contenido establecidos en las circulares e instructivos correspondientes.\n\nb) Reportes especiales sobre eventos significativos dentro de los plazos establecidos.\n\nc) Información estadística agregada para análisis sectorial.\n\nd) Reportes de auditoría interna y externa sobre el cumplimiento de este reglamento.\n\nCAPÍTULO IV\nSANCIONES\n\nArtículo 9º—Infracciones. Constituyen infracciones a este reglamento:\n\na) El incumplimiento de las obligaciones establecidas en los artículos 4, 5 y 6.\n\nb) La presentación de información incompleta, inexacta o fuera de plazo.\n\nc) El obstaculizar las labores de supervisión.\n\nd) La implementación deficiente de sistemas y procedimientos.\n\ne) La falta de capacitación adecuada del personal.\n\nArtículo 10—Régimen sancionatorio. Las infracciones se sancionarán conforme al régimen establecido en la Ley ${topic.regulation.relatedLaw} y sus reformas, pudiendo ${topic.regulation.ministry} imponer:\n\na) Amonestaciones escritas.\n\nb) Multas proporcionales a la gravedad de la infracción y el tamaño de la entidad.\n\nc) Suspensión temporal de operaciones específicas.\n\nd) Revocación de autorizaciones en casos graves o reiterados.\n\nCAPÍTULO V\nDISPOSICIONES TRANSITORIAS Y FINALES\n\n${transitoryArticles}\n\nArtículo ${i === 0 ? '11' : i === 1 ? '12' : i === 2 ? '13' : i === 3 ? '14' : '15'}—Normas supletorias. En lo no previsto por este reglamento, se aplicarán supletoriamente las disposiciones de la Ley General de la Administración Pública y demás normativa aplicable.\n\nArtículo ${i === 0 ? '12' : i === 1 ? '13' : i === 2 ? '14' : i === 3 ? '15' : '16'}—Interpretación y aplicación. ${topic.regulation.ministry} emitirá las circulares, lineamientos e instructivos necesarios para la correcta interpretación y aplicación de este reglamento.\n\nArtículo ${i === 0 ? '13' : i === 1 ? '14' : i === 2 ? '15' : i === 3 ? '16' : '17'}—Vigencia. Este reglamento rige a partir del ${topic.effectiveDate}.\n\nArtículo ${i === 0 ? '14' : i === 1 ? '15' : i === 2 ? '16' : i === 3 ? '17' : '18'}—Publicación. Publíquese en el Diario Oficial La Gaceta.\n\nDado en la Presidencia de la República, San José, Costa Rica, a los ${topic.publicationDate.split('/')[0]} días del mes de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][parseInt(topic.publicationDate.split('/')[1]) - 1]} de mil novecientos noventa y ocho.\n\nEjecútese y publíquese.\n\nGaceta N° ${topic.gacetaNumber} del ${topic.gacetaDate}, Alcance ${topic.alcance}.`,
+      is_relevant: true,
+      ministry_matches: [
+        { portfolio: topic.regulation.ministry, pattern: "reglamento" }
+      ],
+      AI_triage: {
+        processed: true,
+        skipped: null,
+        decision: "RELEVANT",
+        score: topic.riskScore,
+        confidence: 0.88 + Math.random() * 0.08,
+        reasons: [
+          "Reglamento del Poder Ejecutivo con carácter obligatorio",
+          "Complementa y desarrolla disposiciones legales",
+          "Establece procedimientos técnicos específicos"
+        ],
+        is_relevant_for_client: true,
+        client_relevance_level: topic.riskScore > 80 ? "high" : "medium",
+        client_relevance_reasons: [
+          `Reglamentación ejecutiva de la Ley ${topic.regulation.relatedLaw}`,
+          "Obligaciones operativas concretas para entidades financieras",
+          "Supervisión y sanciones por incumplimiento"
+        ],
+        affected_units: topic.units,
+        portfolio_priority: topic.riskScore > 80 ? "high" : "medium",
+        legal_stage: "enacted",
+        change_type: ["reglamentario", "operacional", "cumplimiento"],
+        summary: topic.summary,
+        alert_title: topic.title,
+        alert_bullets: topic.bullets,
+        risk_level: topic.riskScore > 80 ? "high" : topic.riskScore > 70 ? "medium" : "low",
+        risk_score_hint: topic.riskScore,
+        deadline_detected: topic.effectiveDate,
         recommended_action: "ALERT_NOW"
       },
       monitoring_use: "costa_rica_demo"
