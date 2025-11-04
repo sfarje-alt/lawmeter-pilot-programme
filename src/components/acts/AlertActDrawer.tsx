@@ -108,6 +108,18 @@ export function AlertActDrawer({
               <p className="text-sm text-muted-foreground">Rige a partir de</p>
               <p className="font-medium">{formatDate(alert.effective_date)}</p>
             </div>
+            {alert.law_number && (
+              <div>
+                <p className="text-sm text-muted-foreground">Número de Norma</p>
+                <p className="font-medium">{alert.law_number}</p>
+              </div>
+            )}
+            {alert.version && (
+              <div>
+                <p className="text-sm text-muted-foreground">Versión</p>
+                <p className="font-medium">{alert.version}</p>
+              </div>
+            )}
           </div>
 
           {alert.issuing_entity && (
@@ -258,6 +270,14 @@ export function AlertActDrawer({
                   <a href={alert.link} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Ver en SINALEVI
+                  </a>
+                </Button>
+              )}
+              {alert.gaceta_link && (
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={alert.gaceta_link} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Ver en La Gaceta
                   </a>
                 </Button>
               )}
