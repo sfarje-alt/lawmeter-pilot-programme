@@ -163,43 +163,50 @@ const lawsData = [
     number: "7558", 
     name: "Ley Orgánica del Banco Central de Costa Rica",
     ministry: "Banco Central de Costa Rica",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/15487.pdf"
   },
   { 
     number: "8204", 
     name: "Ley de Prevención de Lavado de Activos y Financiamiento del Terrorismo",
     ministry: "ICD (Instituto Costarricense sobre Drogas)",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/18543.pdf"
   },
   { 
     number: "7732", 
     name: "Ley Reguladora del Mercado de Valores",
     ministry: "SUGEVAL (Superintendencia General de Valores)",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/16789.pdf"
   },
   { 
     number: "7472", 
     name: "Ley de Promoción de la Competencia y Defensa Efectiva del Consumidor",
     ministry: "Ministerio de Economía, Industria y Comercio",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/14523.pdf"
   },
   { 
     number: "8634", 
     name: "Ley del Sistema de Banca para el Desarrollo",
     ministry: "Banco Central de Costa Rica",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/19234.pdf"
   },
   { 
     number: "7391", 
     name: "Ley Reguladora de la Actividad de Intermediación Financiera de las Organizaciones Cooperativas",
     ministry: "SUGEF (Superintendencia General de Entidades Financieras)",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/13956.pdf"
   },
   { 
     number: "8000", 
     name: "Ley de Protección al Ciudadano del Exceso de Requisitos y Trámites Administrativos",
     ministry: "Ministerio de Hacienda",
-    type: "Ley" as const
+    type: "Ley" as const,
+    billProjectLink: "https://d1qqtien6gys07.cloudfront.net/wp-content/uploads/2025/11/17890.pdf"
   },
 ];
 
