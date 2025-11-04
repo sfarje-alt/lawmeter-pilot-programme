@@ -4,21 +4,28 @@ import { StarredAlert, Comment } from "@/types/legislation";
 const STORAGE_KEY = "starred_alerts";
 const COMMENTS_KEY = "alert_comments";
 
+// Defaults for demo: 5 ACTS already starred to showcase PGR pronouncements
+const DEFAULT_STARRED: string[] = [
+  "ACTS:LEY-7786-5000",
+  "ACTS:LEY-7558-5001",
+  "ACTS:LEY-9416-5002",
+  "ACTS:LEY-8220-5003",
+  "ACTS:LEY-7558-5004",
+];
+
 export function useStarredAlerts() {
   const [starred, setStarred] = useState<Set<string>>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return new Set(JSON.parse(stored));
+      try {
+        const arr = JSON.parse(stored);
+        if (Array.isArray(arr) && arr.length > 0) {
+          return new Set(arr);
+        }
+      } catch {}
     }
-    // Default starred alerts for demonstration - matching actual generated IDs
-    // criticalTopics generates: [0]=7786, [1]=7558, [2]=9416, [3]=8220, [4]=7558
-    return new Set([
-      "ACTS:LEY-7786-5000",  // Operaciones Sospechosas
-      "ACTS:LEY-7558-5001",  // KYC Biométrico
-      "ACTS:LEY-9416-5002",  // Protección de Datos
-      "ACTS:LEY-8220-5003",  // Otra normativa
-      "ACTS:LEY-7558-5004"   // BCCR
-    ]);
+    // Initialize with defaults when no data or empty array is stored
+    return new Set(DEFAULT_STARRED);
   });
 
   const [comments, setComments] = useState<Record<string, Comment[]>>(() => {
