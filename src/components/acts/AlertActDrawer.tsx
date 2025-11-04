@@ -68,7 +68,7 @@ export function AlertActDrawer({
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="text-xl">
-            {alert.AI_triage?.alert_title || alert.title || alert.law_number}
+            {alert.title || alert.law_number}
           </SheetTitle>
           <SheetDescription className="sr-only">
             Legislative alert details
