@@ -8,6 +8,17 @@ export interface PortfolioMatch {
   pattern: string;
 }
 
+export interface PGRPronouncement {
+  consultation_number: string; // e.g., "C-213-2005"
+  date: string;
+  type: "Dictamen" | "Opinión Jurídica";
+  issuer: string;
+  issuer_position: string;
+  conclusion_summary: string[];
+  relevance_level: "low" | "medium" | "high";
+  link: string;
+}
+
 export interface AITriage {
   processed: boolean;
   skipped: string | null;
@@ -64,6 +75,7 @@ export interface Alert {
   ministry_matches?: PortfolioMatch[];
   AI_triage: AITriage;
   monitoring_use: string;
+  pgr_pronouncements?: PGRPronouncement[];
 }
 
 export interface MP {

@@ -1,4 +1,116 @@
-import { Alert } from "@/types/legislation";
+import { Alert, PGRPronouncement } from "@/types/legislation";
+
+// Mock PGR Pronouncements for starred alerts
+const mockPGRPronouncements: Record<string, PGRPronouncement[]> = {
+  "7786": [
+    {
+      consultation_number: "C-213-2005",
+      date: "2005-08-15",
+      type: "Dictamen",
+      issuer: "Dra. María Eugenia Gutiérrez Solís",
+      issuer_position: "Procuradora Adjunta",
+      conclusion_summary: [
+        "La presente consulta se refiere a la aplicación de la Ley de Legitimación de Capitales en el contexto de transferencias internacionales.",
+        "Se concluye que las transferencias de fondos a terceros países requieren autorización previa de la autoridad competente cuando superen los umbrales establecidos.",
+        "Las entidades financieras deben implementar medidas de seguridad técnicas y organizativas adecuadas antes de realizar cualquier transferencia transfronteriza."
+      ],
+      relevance_level: "high",
+      link: "https://www.pgr.go.cr/pronunciamientos/C-213-2005"
+    },
+    {
+      consultation_number: "OJ-087-2023",
+      date: "2023-03-22",
+      type: "Opinión Jurídica",
+      issuer: "Lic. Carlos Alberto Méndez Rojas",
+      issuer_position: "Procurador Auxiliar",
+      conclusion_summary: [
+        "Se analiza la compatibilidad de las nuevas disposiciones con el marco regulatorio vigente en materia de prevención de legitimación de capitales.",
+        "Se recomienda la implementación gradual de los cambios normativos para permitir la adaptación de los sujetos obligados.",
+        "Es conveniente establecer un periodo de transición de 6 meses para la plena aplicación de estas disposiciones."
+      ],
+      relevance_level: "medium",
+      link: "https://www.pgr.go.cr/pronunciamientos/OJ-087-2023"
+    }
+  ],
+  "9635": [
+    {
+      consultation_number: "C-142-2024",
+      date: "2024-01-18",
+      type: "Dictamen",
+      issuer: "Dr. José Francisco Ramírez Arce",
+      issuer_position: "Procurador General",
+      conclusion_summary: [
+        "El presente dictamen establece criterios vinculantes sobre la interpretación de las obligaciones tributarias bajo esta normativa.",
+        "Las entidades financieras deben reportar todas las operaciones superiores al umbral establecido sin excepción.",
+        "El incumplimiento de estas disposiciones genera responsabilidad administrativa y potencialmente penal."
+      ],
+      relevance_level: "high",
+      link: "https://www.pgr.go.cr/pronunciamientos/C-142-2024"
+    }
+  ],
+  "8220": [
+    {
+      consultation_number: "OJ-156-2023",
+      date: "2023-11-05",
+      type: "Opinión Jurídica",
+      issuer: "Licda. Patricia Mora Castellanos",
+      issuer_position: "Procuradora Adjunta",
+      conclusion_summary: [
+        "Se evalúa la necesidad de actualizar los procedimientos internos conforme a los cambios normativos recientes.",
+        "Se sugiere la implementación de controles adicionales en los procesos de validación documental.",
+        "La opinión recomienda fortalecer los mecanismos de supervisión y auditoría interna."
+      ],
+      relevance_level: "medium",
+      link: "https://www.pgr.go.cr/pronunciamientos/OJ-156-2023"
+    },
+    {
+      consultation_number: "C-089-2024",
+      date: "2024-02-14",
+      type: "Dictamen",
+      issuer: "Lic. Roberto Alvarado Núñez",
+      issuer_position: "Procurador Adjunto",
+      conclusion_summary: [
+        "La aplicación de las sanciones administrativas previstas en esta ley requiere el cumplimiento estricto del debido proceso.",
+        "Las autoridades competentes deben garantizar el derecho de defensa en todas las etapas del procedimiento sancionatorio.",
+        "Se establece que el plazo para presentar descargos es de 15 días hábiles contados a partir de la notificación."
+      ],
+      relevance_level: "high",
+      link: "https://www.pgr.go.cr/pronunciamientos/C-089-2024"
+    }
+  ],
+  "9416": [
+    {
+      consultation_number: "C-078-2024",
+      date: "2024-03-10",
+      type: "Dictamen",
+      issuer: "Dra. Ana Lorena Brenes Esquivel",
+      issuer_position: "Procuradora General Adjunta",
+      conclusion_summary: [
+        "Se establece que el tratamiento de datos personales en el sector financiero debe cumplir estrictamente con los principios de legalidad, finalidad y proporcionalidad.",
+        "Las entidades deben obtener consentimiento expreso e informado de los titulares antes de procesar sus datos personales.",
+        "Se recomienda la designación de un Oficial de Protección de Datos en cada entidad financiera."
+      ],
+      relevance_level: "high",
+      link: "https://www.pgr.go.cr/pronunciamientos/C-078-2024"
+    }
+  ],
+  "7558": [
+    {
+      consultation_number: "OJ-234-2023",
+      date: "2023-09-18",
+      type: "Opinión Jurídica",
+      issuer: "Lic. Fernando Castillo Víquez",
+      issuer_position: "Procurador Auxiliar",
+      conclusion_summary: [
+        "Se analiza el alcance de las facultades del Banco Central en materia de supervisión del sistema financiero nacional.",
+        "La opinión sugiere fortalecer los mecanismos de coordinación entre el BCCR y las superintendencias del sistema financiero.",
+        "Se recomienda actualizar los protocolos de comunicación y reporte de información financiera."
+      ],
+      relevance_level: "medium",
+      link: "https://www.pgr.go.cr/pronunciamientos/OJ-234-2023"
+    }
+  ]
+};
 
 // Helper to generate dates relative to today
 function futureDate(days: number): string {
@@ -338,7 +450,8 @@ export function generateCostaRicaAlerts(): Alert[] {
         deadline_detected: rigeDate,
         recommended_action: "ALERT_NOW"
       },
-      monitoring_use: "costa_rica_demo"
+      monitoring_use: "costa_rica_demo",
+      pgr_pronouncements: mockPGRPronouncements[topic.law.number]
     });
     id++;
   });

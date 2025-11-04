@@ -598,6 +598,7 @@ export default function LawMeterDashboard() {
         comments={selectedAlert ? starredHooks.getComments("ACTS", selectedAlert.title_id) : []}
         onAddComment={(vis, body) => selectedAlert && starredHooks.addComment("ACTS", selectedAlert.title_id, vis, body)}
         onDeleteComment={(id) => selectedAlert && starredHooks.deleteComment("ACTS", selectedAlert.title_id, id)}
+        isStarred={selectedAlert ? starredHooks.isStarred("ACTS", selectedAlert.title_id) : false}
       />
 
       <BillDrawer

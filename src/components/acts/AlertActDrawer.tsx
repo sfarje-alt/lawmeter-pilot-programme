@@ -1,4 +1,4 @@
-import { Alert, Comment } from "@/types/legislation";
+import { Alert, Comment, PGRPronouncement } from "@/types/legislation";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +28,7 @@ interface AlertActDrawerProps {
   comments: Comment[];
   onAddComment: (visibility: "TEAM" | "PRIVATE", body: string) => void;
   onDeleteComment: (commentId: string) => void;
+  isStarred?: boolean;
 }
 
 export function AlertActDrawer({
@@ -37,6 +38,7 @@ export function AlertActDrawer({
   comments,
   onAddComment,
   onDeleteComment,
+  isStarred = false,
 }: AlertActDrawerProps) {
   const [teamComment, setTeamComment] = useState("");
   const [privateComment, setPrivateComment] = useState("");
@@ -222,6 +224,89 @@ export function AlertActDrawer({
                 Plazos de Cumplimiento
               </p>
               <pre className="text-xs whitespace-pre-wrap text-muted-foreground">{alert.transitory_articles}</pre>
+            </div>
+          )}
+
+          {/* PGR Pronouncements - Only visible for starred alerts */}
+          {isStarred && alert.pgr_pronouncements && alert.pgr_pronouncements.length > 0 && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Pronunciamientos Relevantes de la PGR
+              </h4>
+              <p className="text-xs text-muted-foreground mb-4">
+                Actualizados mensualmente mediante scraping automático
+              </p>
+              <div className="space-y-4">
+                {alert.pgr_pronouncements.map((pronouncement, idx) => {
+                  const getRelevanceBadge = (level: string) => {
+                    switch(level) {
+                      case "high":
+                        return <Badge variant="destructive">Alta Relevancia</Badge>;
+                      case "medium":
+                        return <Badge className="bg-orange-500">Relevancia Media</Badge>;
+                      case "low":
+                        return <Badge variant="secondary">Baja Relevancia</Badge>;
+                      default:
+                        return null;
+                    }
+                  };
+
+                  return (
+                    <div key={idx} className="bg-background rounded-lg p-4 space-y-2 border">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-semibold text-sm">{pronouncement.consultation_number}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(pronouncement.date).toLocaleDateString('es-CR', { 
+                              day: '2-digit', 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
+                          </p>
+                        </div>
+                        {getRelevanceBadge(pronouncement.relevance_level)}
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        <Badge variant={pronouncement.type === "Dictamen" ? "default" : "outline"}>
+                          {pronouncement.type}
+                          {pronouncement.type === "Dictamen" && " (Vinculante)"}
+                          {pronouncement.type === "Opinión Jurídica" && " (Sugestivo)"}
+                        </Badge>
+                      </div>
+
+                      <div className="text-sm">
+                        <p className="font-medium">{pronouncement.issuer}</p>
+                        <p className="text-xs text-muted-foreground">{pronouncement.issuer_position}</p>
+                      </div>
+
+                      <div className="pt-2 border-t">
+                        <p className="text-xs font-semibold mb-2">Conclusión:</p>
+                        <ul className="space-y-1">
+                          {pronouncement.conclusion_summary.map((conclusion, cIdx) => (
+                            <li key={cIdx} className="text-xs text-muted-foreground">
+                              • {conclusion}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full mt-2" 
+                        asChild
+                      >
+                        <a href={pronouncement.link} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3 w-3 mr-2" />
+                          Ver Pronunciamiento Completo
+                        </a>
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

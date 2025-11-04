@@ -7,7 +7,17 @@ const COMMENTS_KEY = "alert_comments";
 export function useStarredAlerts() {
   const [starred, setStarred] = useState<Set<string>>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? new Set(JSON.parse(stored)) : new Set();
+    if (stored) {
+      return new Set(JSON.parse(stored));
+    }
+    // Default starred alerts for demonstration
+    return new Set([
+      "ACTS:LEY-7786-1001",
+      "ACTS:LEY-9635-1002",
+      "ACTS:LEY-8220-1003",
+      "ACTS:LEY-9416-1004",
+      "ACTS:LEY-7558-1005"
+    ]);
   });
 
   const [comments, setComments] = useState<Record<string, Comment[]>>(() => {
