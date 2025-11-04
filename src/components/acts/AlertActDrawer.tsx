@@ -29,6 +29,8 @@ interface AlertActDrawerProps {
   onAddComment: (visibility: "TEAM" | "PRIVATE", body: string) => void;
   onDeleteComment: (commentId: string) => void;
   isStarred?: boolean;
+  onMarkPronouncementsRead?: (pronouncementIds: string[]) => void;
+  isPronouncementRead?: (pronouncementId: string) => boolean;
 }
 
 export function AlertActDrawer({
@@ -39,6 +41,8 @@ export function AlertActDrawer({
   onAddComment,
   onDeleteComment,
   isStarred = false,
+  onMarkPronouncementsRead,
+  isPronouncementRead,
 }: AlertActDrawerProps) {
   const [teamComment, setTeamComment] = useState("");
   const [privateComment, setPrivateComment] = useState("");
@@ -230,13 +234,47 @@ export function AlertActDrawer({
           {/* PGR Pronouncements - Only visible for starred alerts */}
           {isStarred && alert.pgr_pronouncements && alert.pgr_pronouncements.length > 0 && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                Pronunciamientos Relevantes de la PGR
-              </h4>
-              <p className="text-xs text-muted-foreground mb-4">
-                Actualizados mensualmente mediante scraping automático
-              </p>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Pronunciamientos Relevantes de la PGR
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Actualizados mensualmente mediante scraping automático
+                  </p>
+                </div>
+                {(() => {
+                  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+                  const newPronouncements = alert.pgr_pronouncements.filter(p => {
+                    if (!p.is_new || !p.scraped_date) return false;
+                    const scrapedTime = new Date(p.scraped_date).getTime();
+                    const isNew = scrapedTime > thirtyDaysAgo;
+                    const isRead = isPronouncementRead ? isPronouncementRead(p.consultation_number) : false;
+                    return isNew && !isRead;
+                  });
+                  
+                  if (newPronouncements.length > 0 && onMarkPronouncementsRead) {
+                    return (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          onMarkPronouncementsRead(newPronouncements.map(p => p.consultation_number));
+                          toast({
+                            title: "Marcado como leído",
+                            description: `${newPronouncements.length} pronunciamiento${newPronouncements.length > 1 ? 's' : ''} marcado${newPronouncements.length > 1 ? 's' : ''} como leído${newPronouncements.length > 1 ? 's' : ''}`,
+                          });
+                        }}
+                        className="shrink-0"
+                      >
+                        Marcar {newPronouncements.length} como leído{newPronouncements.length > 1 ? 's' : ''}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
               <div className="space-y-4">
                 {alert.pgr_pronouncements.map((pronouncement, idx) => {
                   const getRelevanceBadge = (level: string) => {
@@ -252,8 +290,19 @@ export function AlertActDrawer({
                     }
                   };
 
+                  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+                  const isNew = pronouncement.is_new && 
+                                pronouncement.scraped_date && 
+                                new Date(pronouncement.scraped_date).getTime() > thirtyDaysAgo &&
+                                !(isPronouncementRead && isPronouncementRead(pronouncement.consultation_number));
+
                   return (
-                    <div key={idx} className="bg-background rounded-lg p-4 space-y-2 border">
+                    <div key={idx} className="bg-background rounded-lg p-4 space-y-2 border relative">
+                      {isNew && (
+                        <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground animate-pulse">
+                          NUEVO
+                        </Badge>
+                      )}
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="font-semibold text-sm">{pronouncement.consultation_number}</p>

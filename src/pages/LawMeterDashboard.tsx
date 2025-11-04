@@ -339,6 +339,7 @@ export default function LawMeterDashboard() {
                   isStarred={starredHooks.isStarred("ACTS", alert.title_id)}
                   onToggleStar={() => starredHooks.toggleStar("ACTS", alert.title_id)}
                   onOpenDrawer={() => setSelectedAlert(alert)}
+                  isPronouncementRead={(id) => starredHooks.isPronouncementRead("ACTS", alert.title_id, id)}
                 />
               ))}
             </div>
@@ -544,7 +545,16 @@ export default function LawMeterDashboard() {
                 {(starredFilter === "all" || starredFilter === "acts") && starredHooks.starred.filter(s => s.startsWith("ACTS:")).map(key => {
                   const id = key.replace("ACTS:", "");
                   const alert = alerts.find(a => a.title_id === id);
-                  return alert ? <AlertActCard key={id} alert={alert} isStarred onToggleStar={() => starredHooks.toggleStar("ACTS", id)} onOpenDrawer={() => setSelectedAlert(alert)} /> : null;
+                  return alert ? (
+                    <AlertActCard 
+                      key={id} 
+                      alert={alert} 
+                      isStarred 
+                      onToggleStar={() => starredHooks.toggleStar("ACTS", id)} 
+                      onOpenDrawer={() => setSelectedAlert(alert)}
+                      isPronouncementRead={(pronouncementId) => starredHooks.isPronouncementRead("ACTS", id, pronouncementId)}
+                    />
+                  ) : null;
                 })}
                 {(starredFilter === "all" || starredFilter === "bills") && starredHooks.starred.filter(s => s.startsWith("BILLS:")).map(key => {
                   const id = key.replace("BILLS:", "");
@@ -599,6 +609,8 @@ export default function LawMeterDashboard() {
         onAddComment={(vis, body) => selectedAlert && starredHooks.addComment("ACTS", selectedAlert.title_id, vis, body)}
         onDeleteComment={(id) => selectedAlert && starredHooks.deleteComment("ACTS", selectedAlert.title_id, id)}
         isStarred={selectedAlert ? starredHooks.isStarred("ACTS", selectedAlert.title_id) : false}
+        onMarkPronouncementsRead={(ids) => selectedAlert && starredHooks.markPronouncementsAsRead("ACTS", selectedAlert.title_id, ids)}
+        isPronouncementRead={(id) => selectedAlert ? starredHooks.isPronouncementRead("ACTS", selectedAlert.title_id, id) : false}
       />
 
       <BillDrawer

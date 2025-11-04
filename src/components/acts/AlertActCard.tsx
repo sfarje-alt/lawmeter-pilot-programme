@@ -11,9 +11,10 @@ interface AlertActCardProps {
   isStarred: boolean;
   onToggleStar: () => void;
   onOpenDrawer: () => void;
+  isPronouncementRead?: (pronouncementId: string) => boolean;
 }
 
-export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: AlertActCardProps) {
+export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer, isPronouncementRead }: AlertActCardProps) {
   const getRiskColor = (level: string) => {
     switch (level) {
       case "high": return "bg-risk-high text-white";
@@ -40,7 +41,9 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
     return alert.pgr_pronouncements.filter(p => {
       if (!p.is_new || !p.scraped_date) return false;
       const scrapedTime = new Date(p.scraped_date).getTime();
-      return scrapedTime > thirtyDaysAgo;
+      const isNew = scrapedTime > thirtyDaysAgo;
+      const isRead = isPronouncementRead ? isPronouncementRead(p.consultation_number) : false;
+      return isNew && !isRead;
     }).length;
   };
 

@@ -3,6 +3,7 @@ import { StarredAlert, Comment } from "@/types/legislation";
 
 const STORAGE_KEY = "starred_alerts";
 const COMMENTS_KEY = "alert_comments";
+const READ_PRONOUNCEMENTS_KEY = "read_pronouncements";
 
 // Defaults for demo: 5 ACTS already starred to showcase PGR pronouncements
 const DEFAULT_STARRED: string[] = [
@@ -33,6 +34,15 @@ export function useStarredAlerts() {
     return stored ? JSON.parse(stored) : {};
   });
 
+  const [readPronouncements, setReadPronouncements] = useState<Set<string>>(() => {
+    const stored = localStorage.getItem(READ_PRONOUNCEMENTS_KEY);
+    try {
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(starred)));
   }, [starred]);
@@ -40,6 +50,10 @@ export function useStarredAlerts() {
   useEffect(() => {
     localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
   }, [comments]);
+
+  useEffect(() => {
+    localStorage.setItem(READ_PRONOUNCEMENTS_KEY, JSON.stringify(Array.from(readPronouncements)));
+  }, [readPronouncements]);
 
   const toggleStar = (scope: "ACTS" | "BILLS", alertKey: string) => {
     const key = `${scope}:${alertKey}`;
@@ -115,6 +129,22 @@ export function useStarredAlerts() {
     return comments[key] || [];
   };
 
+  const markPronouncementsAsRead = (scope: "ACTS" | "BILLS", alertKey: string, pronouncementIds: string[]) => {
+    const key = `${scope}:${alertKey}`;
+    setReadPronouncements((prev) => {
+      const next = new Set(prev);
+      pronouncementIds.forEach(id => {
+        next.add(`${key}:${id}`);
+      });
+      return next;
+    });
+  };
+
+  const isPronouncementRead = (scope: "ACTS" | "BILLS", alertKey: string, pronouncementId: string): boolean => {
+    const key = `${scope}:${alertKey}:${pronouncementId}`;
+    return readPronouncements.has(key);
+  };
+
   return {
     starred: Array.from(starred),
     toggleStar,
@@ -122,5 +152,7 @@ export function useStarredAlerts() {
     addComment,
     deleteComment,
     getComments,
+    markPronouncementsAsRead,
+    isPronouncementRead,
   };
 }
