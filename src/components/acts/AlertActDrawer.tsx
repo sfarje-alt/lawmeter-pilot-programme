@@ -207,7 +207,7 @@ export function AlertActDrawer({
             <div className="bg-warning/5 border border-warning/20 rounded-lg p-4">
               <p className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-warning" />
-                Artículos Transitorios - Plazos de Cumplimiento
+                Plazos de Cumplimiento
               </p>
               <pre className="text-xs whitespace-pre-wrap text-muted-foreground">{alert.transitory_articles}</pre>
             </div>
