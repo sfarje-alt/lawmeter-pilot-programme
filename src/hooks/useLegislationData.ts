@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Alert, FilterState } from "@/types/legislation";
 import { parseDate, isWithinTimeWindow, isWithinDateRange } from "@/lib/dateUtils";
-import { generateMatrixAlerts } from "@/data/generateMatrixAlerts";
+import { generateCostaRicaAlerts } from "@/data/generateCostaRicaAlerts";
 
 export function useLegislationData() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -11,24 +11,9 @@ export function useLegislationData() {
   useEffect(() => {
     async function loadData() {
       try {
-        const response = await fetch("/data/alerts_final.json");
-        if (!response.ok) {
-          throw new Error("Failed to load legislation data");
-        }
-        const data: Alert[] = await response.json();
-        
-        // Filter to only ALERT_NOW items and exclude bills
-        const filtered = data.filter(
-          (item) =>
-            item.AI_triage?.recommended_action === "ALERT_NOW" &&
-            !item.csv_collection?.toLowerCase().includes("bill")
-        );
-        
-        // Add generated matrix alerts for demo
-        const matrixAlerts = generateMatrixAlerts();
-        const combined = [...matrixAlerts, ...filtered];
-        
-        setAlerts(combined);
+        // Only use Costa Rica generated alerts
+        const costaRicaAlerts = generateCostaRicaAlerts();
+        setAlerts(costaRicaAlerts);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
@@ -46,29 +31,27 @@ export function useFilteredAlerts(alerts: Alert[], filters: FilterState) {
   return useMemo(() => {
     let filtered = alerts.filter((alert) => {
       // Time window filter
-      const effectiveDate = parseDate(alert.effective_date) || parseDate(alert.registered_date);
+      const effectiveDate = parseDate(alert.effective_date) || parseDate(alert.publication_date);
       if (effectiveDate && !isWithinTimeWindow(effectiveDate, filters.timeWindow)) {
         return false;
       }
 
-      // Portfolio filter
-      if (filters.portfolios.length > 0 && !filters.portfolios.includes(alert.csv_portfolio)) {
+      // Ministry filter (replaces portfolio)
+      if (filters.portfolios.length > 0 && alert.ministry && !filters.portfolios.includes(alert.ministry)) {
         return false;
       }
 
-      // Regulator filter
+      // Regulator filter (issuing entity)
       if (filters.regulators.length > 0) {
-        const regulator = alert.authorised_by?.name || "";
+        const regulator = alert.issuing_entity || "";
         if (!filters.regulators.includes(regulator)) {
           return false;
         }
       }
 
-      // Type filter
+      // Type filter (norm_type)
       if (filters.types.length > 0) {
-        const matchesCollection = filters.types.includes(alert.csv_collection);
-        const matchesDocView = alert.doc_view && filters.types.includes(alert.doc_view);
-        if (!matchesCollection && !matchesDocView) {
+        if (!filters.types.includes(alert.norm_type)) {
           return false;
         }
       }
@@ -100,7 +83,7 @@ export function useFilteredAlerts(alerts: Alert[], filters: FilterState) {
       // Search text filter
       if (filters.searchText) {
         const searchLower = filters.searchText.toLowerCase();
-        const matchesTitle = (alert.title || alert.csv_name || "").toLowerCase().includes(searchLower);
+        const matchesTitle = (alert.title || alert.law_number || "").toLowerCase().includes(searchLower);
         const matchesSummary = (alert.AI_triage?.summary || "").toLowerCase().includes(searchLower);
         const matchesBullets = alert.AI_triage?.alert_bullets?.some(b => 
           b.toLowerCase().includes(searchLower)
@@ -121,8 +104,8 @@ export function useFilteredAlerts(alerts: Alert[], filters: FilterState) {
       switch (filters.sortBy) {
         case "registered":
         case "date":
-          const regDateA = parseDate(a.registered_date) || new Date(0);
-          const regDateB = parseDate(b.registered_date) || new Date(0);
+          const regDateA = parseDate(a.publication_date) || new Date(0);
+          const regDateB = parseDate(b.publication_date) || new Date(0);
           comparison = regDateA.getTime() - regDateB.getTime();
           break;
         

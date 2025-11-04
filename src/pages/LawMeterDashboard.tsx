@@ -86,11 +86,9 @@ export default function LawMeterDashboard() {
   const filteredAlerts = useFilteredAlerts(alerts, actsFilters);
 
   // Extract unique values for filters
-  const portfolios = useMemo(() => [...new Set(alerts.map(a => a.csv_portfolio).filter(Boolean))], [alerts]);
+  const portfolios = useMemo(() => [...new Set(alerts.map(a => a.ministry).filter(Boolean))], [alerts]);
   const types = useMemo(() => {
-    const collections = alerts.map(a => a.csv_collection).filter(Boolean);
-    const docViews = alerts.map(a => a.doc_view).filter(Boolean);
-    return [...new Set([...collections, ...docViews])];
+    return [...new Set(alerts.map(a => a.norm_type).filter(Boolean))];
   }, [alerts]);
   const parties = useMemo(() => [...new Set(mockBills.map(b => b.party).filter(Boolean))], []);
 
@@ -101,7 +99,7 @@ export default function LawMeterDashboard() {
     mediumRisk: filteredAlerts.filter(a => a.AI_triage?.risk_level === "medium").length,
     lowRisk: filteredAlerts.filter(a => a.AI_triage?.risk_level === "low").length,
     upcomingDeadlines: filteredAlerts.filter(a => isUpcomingDeadline(a.AI_triage?.deadline_detected)).length,
-    portfolios: new Set(filteredAlerts.map(a => a.csv_portfolio)).size,
+    portfolios: new Set(filteredAlerts.map(a => a.ministry)).size,
   };
 
   // Filter bills

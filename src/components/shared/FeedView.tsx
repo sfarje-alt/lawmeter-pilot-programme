@@ -32,7 +32,7 @@ export function FeedView({
   const oneYearAgo = getOneYearAgo();
   
   const filteredAlerts = alerts.filter((alert) => {
-    const date = parseDate(alert.effective_date) || parseDate(alert.registered_date);
+    const date = parseDate(alert.effective_date) || parseDate(alert.publication_date);
     return date && date >= oneYearAgo;
   });
 

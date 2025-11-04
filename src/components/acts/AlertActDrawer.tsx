@@ -68,7 +68,7 @@ export function AlertActDrawer({
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="text-xl">
-            {alert.AI_triage?.alert_title || alert.title || alert.csv_name}
+            {alert.AI_triage?.alert_title || alert.title || alert.law_number}
           </SheetTitle>
           <SheetDescription className="sr-only">
             Legislative alert details
@@ -101,8 +101,8 @@ export function AlertActDrawer({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Registered Date</p>
-              <p className="font-medium">{formatDate(alert.registered_date)}</p>
+              <p className="text-sm text-muted-foreground">Fecha de Publicación</p>
+              <p className="font-medium">{formatDate(alert.publication_date)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Effective Date</p>
@@ -110,10 +110,10 @@ export function AlertActDrawer({
             </div>
           </div>
 
-          {alert.authorised_by && (
+          {alert.issuing_entity && (
             <div>
-              <p className="text-sm text-muted-foreground">Authorized By</p>
-              <p className="font-medium mt-1">{alert.authorised_by.name}</p>
+              <p className="text-sm text-muted-foreground">Ente Emisor</p>
+              <p className="font-medium mt-1">{alert.issuing_entity}</p>
             </div>
           )}
 
@@ -136,16 +136,16 @@ export function AlertActDrawer({
             </div>
           )}
 
-          {/* Portfolio Keyword Matches */}
-          {alert.portfolio_matches && alert.portfolio_matches.length > 0 && alert.csv_portfolio && (
+          {/* Ministry Keyword Matches */}
+          {alert.ministry_matches && alert.ministry_matches.length > 0 && alert.ministry && (
             <div>
               <div className="flex items-center gap-2 text-sm font-semibold mb-2">
                 <Tag className="h-4 w-4" />
-                Portfolio Keywords Detected ({alert.csv_portfolio})
+                Palabras Clave Detectadas ({alert.ministry})
               </div>
               <div className="flex flex-wrap gap-2">
-                {alert.portfolio_matches
-                  .filter(match => match.portfolio === alert.csv_portfolio)
+                {alert.ministry_matches
+                  .filter(match => match.portfolio === alert.ministry)
                   .map((match, idx) => (
                     <Badge key={idx} variant="secondary" className="text-xs">
                       {match.pattern}
@@ -204,18 +204,15 @@ export function AlertActDrawer({
           </Collapsible>
 
           <div>
-            <h4 className="font-semibold mb-3">Tracker</h4>
+            <h4 className="font-semibold mb-3">Enlaces</h4>
             <div className="space-y-2">
-              {alert.authorised_by?.link && (
+              {alert.link && (
                 <Button variant="outline" className="w-full" asChild>
-                  <a href={alert.authorised_by.link} target="_blank" rel="noopener noreferrer">
-                    Bill of the Act
+                  <a href={alert.link} target="_blank" rel="noopener noreferrer">
+                    Ver en SINALEVI
                   </a>
                 </Button>
               )}
-              <Button variant="outline" className="w-full" disabled>
-                Past Amendments (Not available)
-              </Button>
             </div>
           </div>
 

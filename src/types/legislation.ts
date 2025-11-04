@@ -33,31 +33,33 @@ export interface AITriage {
 
 export interface Alert {
   title?: string;
+  law_number?: string; // e.g., "Ley 7786"
   detail_link?: string;
   title_id: string;
-  registered_date: string;
-  effective_date: string;
-  collection_code: string;
+  publication_date: string; // Fecha de publicación
+  effective_date: string; // "Rige a partir de"
+  version?: string; // Versión de la norma
+  norm_type: "Ley" | "Decreto Ejecutivo" | "Reglamento" | "Dictamen PGR" | "Opinión Jurídica PGR";
   link?: string;
-  authorised_by?: AuthorizedBy;
+  issuing_entity?: string; // Ente emisor
   has_pdf?: boolean;
   pdf_files?: string[];
   text?: string;
   scraped_at: string;
-  source: string;
+  source: "SINALEVI" | "PGR";
   search_source: string;
-  csv_name?: string;
-  csv_title_id?: string;
   csv_in_force: string;
-  csv_portfolio: string;
-  csv_effective_start?: string;
-  csv_effective_end?: string;
-  csv_collection: string;
-  csv_series?: string | null;
+  ministry?: string; // Ministerio responsable (reemplaza portfolio)
+  affected_norms?: string[]; // Normativa afectada
+  concordances?: string[]; // Concordancias
+  regulations?: string[]; // Reglamentaciones
+  pgr_consultation_number?: string; // e.g., "C-213-2005" for PGR pronouncements
+  pgr_type?: "Dictamen" | "Opinión Jurídica";
+  pgr_issuer?: string; // Persona que emitió el pronunciamiento
+  pgr_position?: string; // Puesto del emisor
   is_relevant: boolean;
-  portfolio_matches: PortfolioMatch[];
+  ministry_matches?: PortfolioMatch[];
   AI_triage: AITriage;
-  doc_view: "Compilation/Principal" | "Amending/As Made" | null;
   monitoring_use: string;
 }
 

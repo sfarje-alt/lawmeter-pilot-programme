@@ -24,10 +24,10 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
   };
 
   const effectiveDate = alert.effective_date;
-  const registeredDate = alert.registered_date;
+  const publicationDate = alert.publication_date;
 
-  const displayTitle = alert.AI_triage?.alert_title || alert.title || alert.csv_name || "Untitled";
-  const summary = alert.AI_triage?.summary || "No summary available";
+  const displayTitle = alert.AI_triage?.alert_title || alert.title || alert.law_number || "Sin título";
+  const summary = alert.AI_triage?.summary || "Resumen no disponible";
   const bullets = alert.AI_triage?.alert_bullets || [];
 
   return (
@@ -41,9 +41,9 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
             {alert.AI_triage?.risk_score_hint !== undefined && (
               <Badge variant="outline">{alert.AI_triage.risk_score_hint}/100</Badge>
             )}
-            {alert.csv_portfolio && (
-              <Badge className={getPortfolioColor(alert.csv_portfolio)}>
-                {alert.csv_portfolio}
+            {alert.ministry && (
+              <Badge className={getPortfolioColor(alert.ministry)}>
+                {alert.ministry}
               </Badge>
             )}
           </div>
@@ -64,23 +64,21 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
           {effectiveDate && (
             <div className="flex items-center gap-1.5 text-foreground font-medium">
               <Calendar className="h-4 w-4" />
-              <span>Effective: {formatDate(effectiveDate)}</span>
+              <span>Rige: {formatDate(effectiveDate)}</span>
             </div>
           )}
-          {registeredDate && (
+          {publicationDate && (
             <span className="text-muted-foreground">
-              Registered: {formatDate(registeredDate)}
+              Publicado: {formatDate(publicationDate)}
             </span>
           )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2">
-          {alert.doc_view && (
-            <Badge variant="outline">{alert.doc_view}</Badge>
-          )}
-          {alert.csv_collection && (
-            <Badge variant="outline">{alert.csv_collection}</Badge>
+          <Badge variant="outline">{alert.norm_type}</Badge>
+          {alert.version && (
+            <Badge variant="outline">{alert.version}</Badge>
           )}
         </div>
 
@@ -102,22 +100,7 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
             <Button variant="outline" size="sm" asChild>
               <a href={alert.link} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-3 w-3 mr-1" />
-                Open FRL
-              </a>
-            </Button>
-          )}
-          {alert.authorised_by?.link && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={alert.authorised_by.link} target="_blank" rel="noopener noreferrer">
-                <FileText className="h-3 w-3 mr-1" />
-                Mother Act
-              </a>
-            </Button>
-          )}
-          {alert.doc_view === "Amending/As Made" && alert.link && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={alert.link} target="_blank" rel="noopener noreferrer">
-                Amendment Act
+                Ver en SINALEVI
               </a>
             </Button>
           )}

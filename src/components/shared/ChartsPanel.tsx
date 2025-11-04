@@ -60,6 +60,14 @@ const COLORS = {
   low: "hsl(var(--risk-low))",
 };
 
+const CHART_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--accent))",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+];
+
 interface DraggableChartProps {
   id: string;
   children: React.ReactNode;
@@ -200,11 +208,11 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       },
     ].filter((d) => d.value > 0);
 
-    // Alerts by portfolio (top 10)
+    // Alerts by ministry (top 10)
     const portfolioCounts: Record<string, number> = {};
     alerts.forEach((a) => {
-      if (a.csv_portfolio) {
-        portfolioCounts[a.csv_portfolio] = (portfolioCounts[a.csv_portfolio] || 0) + 1;
+      if (a.ministry) {
+        portfolioCounts[a.ministry] = (portfolioCounts[a.ministry] || 0) + 1;
       }
     });
     const portfolioData = Object.entries(portfolioCounts)
@@ -215,7 +223,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
     // Timeline (weekly aggregation)
     const weekCounts: Record<string, number> = {};
     alerts.forEach((a) => {
-      const date = parseDate(a.effective_date) || parseDate(a.registered_date);
+      const date = parseDate(a.effective_date) || parseDate(a.publication_date);
       if (date) {
         const weekStart = new Date(date);
         weekStart.setDate(weekStart.getDate() - weekStart.getDay());
@@ -227,15 +235,27 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       .map(([date, count]) => ({ date: new Date(date).toLocaleDateString("en-AU", { month: "short", day: "numeric" }), count }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Doc view mix
-    const docViewData = [
+    // Norm type distribution
+    const normTypeData = [
       {
-        name: "Compilation/Principal",
-        value: alerts.filter((a) => a.doc_view === "Compilation/Principal").length,
+        name: "Leyes",
+        value: alerts.filter((a) => a.norm_type === "Ley").length,
       },
       {
-        name: "Amending/As Made",
-        value: alerts.filter((a) => a.doc_view === "Amending/As Made").length,
+        name: "Decretos Ejecutivos",
+        value: alerts.filter((a) => a.norm_type === "Decreto Ejecutivo").length,
+      },
+      {
+        name: "Reglamentos",
+        value: alerts.filter((a) => a.norm_type === "Reglamento").length,
+      },
+      {
+        name: "Dictámenes PGR",
+        value: alerts.filter((a) => a.norm_type === "Dictamen PGR").length,
+      },
+      {
+        name: "Opiniones PGR",
+        value: alerts.filter((a) => a.norm_type === "Opinión Jurídica PGR").length,
       },
     ].filter((d) => d.value > 0);
 
@@ -308,13 +328,13 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
       "doc-view-mix": (
         <Card>
           <CardHeader>
-            <CardTitle>Document View Mix</CardTitle>
+            <CardTitle>Distribución por Tipo de Norma</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={docViewData}
+                  data={normTypeData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -323,8 +343,8 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {docViewData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--accent))"} />
+                  {normTypeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />

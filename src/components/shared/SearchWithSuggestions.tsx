@@ -42,9 +42,9 @@ export function SearchWithSuggestions({
         const act = item as Alert;
         return (
           act.title?.toLowerCase().includes(searchLower) ||
-          act.csv_portfolio?.toLowerCase().includes(searchLower) ||
-          act.doc_view?.toLowerCase().includes(searchLower) ||
-          act.csv_collection?.toLowerCase().includes(searchLower)
+          act.ministry?.toLowerCase().includes(searchLower) ||
+          act.norm_type?.toLowerCase().includes(searchLower) ||
+          act.law_number?.toLowerCase().includes(searchLower)
         );
       } else {
         const bill = item as BillItem;
@@ -59,8 +59,8 @@ export function SearchWithSuggestions({
     // Group by portfolio
     filtered.forEach((item) => {
       const portfolio = type === "acts" 
-        ? (item as Alert).csv_portfolio || "Other"
-        : (item as BillItem).portfolio || "Other";
+        ? (item as Alert).ministry || "Otro"
+        : (item as BillItem).portfolio || "Otro";
       
       if (!groupedSuggestions[portfolio]) {
         groupedSuggestions[portfolio] = [];
@@ -112,8 +112,8 @@ export function SearchWithSuggestions({
 
   const getItemType = (item: Alert | BillItem): string => {
     return type === "acts" 
-      ? (item as Alert).doc_view || (item as Alert).csv_collection || "Act"
-      : (item as BillItem).status || "Bill";
+      ? (item as Alert).norm_type || "Norma"
+      : (item as BillItem).status || "Proyecto"
   };
 
   return (
