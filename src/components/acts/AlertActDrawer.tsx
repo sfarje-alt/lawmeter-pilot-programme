@@ -166,6 +166,53 @@ export function AlertActDrawer({
             </Button>
           </div>
 
+          {/* Normativa Afectada */}
+          {alert.affected_norms && alert.affected_norms.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold mb-2">Normativa Afectada</p>
+              <ul className="space-y-1">
+                {alert.affected_norms.map((norm, idx) => (
+                  <li key={idx} className="text-sm text-muted-foreground">• {norm}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Normativa que la Modificó */}
+          {alert.modifying_norms && alert.modifying_norms.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold mb-2">Normativa que la Modificó</p>
+              <ul className="space-y-1">
+                {alert.modifying_norms.map((norm, idx) => (
+                  <li key={idx} className="text-sm text-muted-foreground">• {norm}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Concordancias */}
+          {alert.concordances && alert.concordances.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold mb-2">Concordancias</p>
+              <ul className="space-y-1">
+                {alert.concordances.map((concordance, idx) => (
+                  <li key={idx} className="text-sm text-muted-foreground">• {concordance}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Artículos Transitorios */}
+          {alert.transitory_articles && (
+            <div className="bg-warning/5 border border-warning/20 rounded-lg p-4">
+              <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                Artículos Transitorios - Plazos de Cumplimiento
+              </p>
+              <pre className="text-xs whitespace-pre-wrap text-muted-foreground">{alert.transitory_articles}</pre>
+            </div>
+          )}
+
           {/* Full Text */}
           {alert.text && (
             <Collapsible>

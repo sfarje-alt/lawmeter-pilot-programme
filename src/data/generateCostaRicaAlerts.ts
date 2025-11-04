@@ -254,17 +254,23 @@ export function generateCostaRicaAlerts(): Alert[] {
       csv_in_force: "Sí",
       ministry: topic.law.ministry,
       affected_norms: [
-        `Ley ${parseInt(topic.law.number) - 100}`,
-        `Decreto Ejecutivo ${id - 200}`
+        `Ley ${parseInt(topic.law.number) - 100} - Ley anterior que modifica`,
+        `Decreto Ejecutivo ${id - 200} - Reglamentación complementaria`
+      ],
+      modifying_norms: [
+        `Ley ${parseInt(topic.law.number) + 200} - Reforma posterior`,
+        `Ley ${parseInt(topic.law.number) + 150} - Ley modificatoria`
       ],
       concordances: [
-        `Ley ${parseInt(topic.law.number) + 50}`,
-        `Reglamento ${id + 100}`
+        `Ley ${parseInt(topic.law.number) + 50} - Normativa relacionada`,
+        `Reglamento ${id + 100} - Disposiciones complementarias`,
+        `Circular SUGEF ${id}-2024 - Lineamientos técnicos`
       ],
       regulations: [
         `Decreto Ejecutivo ${id}-BCCR`,
         `Reglamento ${id + 50}`
       ],
+      transitory_articles: `Artículo Transitorio I: Las entidades financieras dispondrán de un plazo de ${5 + i * 3} días naturales, contados a partir de la publicación de esta reforma, para cumplir con las nuevas obligaciones establecidas.\n\nArtículo Transitorio II: Los sistemas tecnológicos y de información deberán estar actualizados en un plazo máximo de ${30 + i * 15} días naturales.\n\nArtículo Transitorio III: La capacitación del personal responsable deberá completarse dentro de los primeros ${15 + i * 5} días naturales de vigencia de esta normativa.`,
       is_relevant: true,
       ministry_matches: [
         { portfolio: topic.law.ministry, pattern: "bancario" }
@@ -349,16 +355,21 @@ export function generateCostaRicaAlerts(): Alert[] {
         csv_in_force: "No",
         ministry: law.ministry,
         affected_norms: [
-          `Ley ${parseInt(law.number) - 50}`,
-          `Ley ${parseInt(law.number) + 200}`
+          `Ley ${parseInt(law.number) - 50} - Normativa anterior afectada`,
+          `Ley ${parseInt(law.number) + 200} - Disposiciones complementarias`
+        ],
+        modifying_norms: [
+          `Ley ${parseInt(law.number) + 300} - Reforma futura`,
+          `Decreto ${id + 1000} - Modificación ejecutiva`
         ],
         concordances: [
-          `Ley ${parseInt(law.number) + 100}`,
-          `Decreto ${id + 500}`
+          `Ley ${parseInt(law.number) + 100} - Concordancia principal`,
+          `Decreto ${id + 500} - Disposición relacionada`
         ],
         regulations: [
           `Reglamento ${id}-BCCR`
         ],
+        transitory_articles: `Artículo Transitorio I: Las entidades financieras contarán con un plazo de ${400 + i * 30} días naturales para implementar las disposiciones establecidas en esta normativa.\n\nArtículo Transitorio II: Durante el período de transición, las entidades deberán presentar informes trimestrales de avance al regulador.\n\nArtículo Transitorio III: La capacitación del personal deberá iniciarse dentro de los primeros 90 días de publicada esta norma.`,
         is_relevant: true,
         ministry_matches: [
           { portfolio: law.ministry, pattern: "bancario" }
@@ -430,12 +441,16 @@ export function generateCostaRicaAlerts(): Alert[] {
       search_source: "sinalevi_monitoring",
       csv_in_force: "Sí",
       ministry: law.ministry,
-      affected_norms: [`Ley ${law.number}`],
+      affected_norms: [`Ley ${law.number} - Normativa principal`],
+      modifying_norms: [
+        `Decreto ${id - 50} - Modificación previa`
+      ],
       concordances: [
-        `Ley ${parseInt(law.number) - 10}`,
-        `Decreto ${id - 100}`
+        `Ley ${parseInt(law.number) - 10} - Normativa relacionada`,
+        `Decreto ${id - 100} - Disposición complementaria`
       ],
       regulations: [],
+      transitory_articles: `Artículo Transitorio Único: Las entidades reguladas dispondrán de un plazo de ${10 + i * 2} días naturales para implementar los cambios administrativos y procedimentales establecidos en este decreto.`,
       is_relevant: true,
       ministry_matches: [
         { portfolio: law.ministry, pattern: "bancario" }
@@ -510,12 +525,14 @@ export function generateCostaRicaAlerts(): Alert[] {
       search_source: i % 2 === 0 ? "pgr_monitoring" : "sugef_monitoring",
       csv_in_force: "Sí",
       ministry: law.ministry,
-      affected_norms: [`Ley ${law.number}`],
+      affected_norms: [`Ley ${law.number} - Ley interpretada`],
+      modifying_norms: [],
       concordances: [
-        `Ley ${parseInt(law.number) + 20}`,
-        i % 2 === 0 ? `Dictamen C-${330 + i}-2023` : `Circular SUGEF-${i + 5}-2023`
+        `Ley ${parseInt(law.number) + 20} - Normativa concordante`,
+        i % 2 === 0 ? `Dictamen C-${330 + i}-2023 - Pronunciamiento previo` : `Circular SUGEF-${i + 5}-2023 - Lineamiento anterior`
       ],
       regulations: [],
+      transitory_articles: `Artículo Transitorio: Este ${i % 2 === 0 ? 'dictamen' : 'pronunciamiento'} tiene carácter orientador y su aplicación se recomienda a partir de su publicación. No obstante, las entidades cuentan con un plazo prudencial de ${250 + i * 20} días para ajustar sus procedimientos internos conforme a las mejores prácticas aquí establecidas.`,
       is_relevant: true,
       ministry_matches: [
         { portfolio: law.ministry, pattern: "interpretación" }

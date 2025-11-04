@@ -51,8 +51,10 @@ export interface Alert {
   csv_in_force: string;
   ministry?: string; // Ministerio responsable (reemplaza portfolio)
   affected_norms?: string[]; // Normativa afectada
+  modifying_norms?: string[]; // Normativa que modificó esta norma
   concordances?: string[]; // Concordancias
   regulations?: string[]; // Reglamentaciones
+  transitory_articles?: string; // Artículos transitorios con plazos
   pgr_consultation_number?: string; // e.g., "C-213-2005" for PGR pronouncements
   pgr_type?: "Dictamen" | "Opinión Jurídica";
   pgr_issuer?: string; // Persona que emitió el pronunciamiento
