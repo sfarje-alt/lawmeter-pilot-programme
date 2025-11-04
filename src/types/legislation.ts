@@ -17,6 +17,8 @@ export interface PGRPronouncement {
   conclusion_summary: string[];
   relevance_level: "low" | "medium" | "high";
   link: string;
+  is_new?: boolean; // Marked as new when scraped
+  scraped_date?: string; // Date when this pronouncement was scraped
 }
 
 export interface AITriage {

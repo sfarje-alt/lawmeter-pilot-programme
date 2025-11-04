@@ -15,7 +15,9 @@ const mockPGRPronouncements: Record<string, PGRPronouncement[]> = {
         "Las entidades financieras deben implementar medidas de seguridad técnicas y organizativas adecuadas antes de realizar cualquier transferencia transfronteriza."
       ],
       relevance_level: "high",
-      link: "https://www.pgr.go.cr/pronunciamientos/C-213-2005"
+      link: "https://www.pgr.go.cr/pronunciamientos/C-213-2005",
+      is_new: true,
+      scraped_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 días atrás
     },
     {
       consultation_number: "OJ-087-2023",

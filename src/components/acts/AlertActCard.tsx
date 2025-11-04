@@ -32,6 +32,20 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
     }
   };
 
+  // Count new PGR pronouncements (within last 30 days)
+  const getNewPronouncementsCount = () => {
+    if (!isStarred || !alert.pgr_pronouncements) return 0;
+    
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    return alert.pgr_pronouncements.filter(p => {
+      if (!p.is_new || !p.scraped_date) return false;
+      const scrapedTime = new Date(p.scraped_date).getTime();
+      return scrapedTime > thirtyDaysAgo;
+    }).length;
+  };
+
+  const newPronouncementsCount = getNewPronouncementsCount();
+
   const effectiveDate = alert.effective_date;
   const publicationDate = alert.publication_date;
 
@@ -65,6 +79,13 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
             >
               <Star className="h-4 w-4" fill={isStarred ? "currentColor" : "none"} />
             </Button>
+            {newPronouncementsCount > 0 && (
+              <div className="relative">
+                <div className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold shadow-md animate-pulse">
+                  {newPronouncementsCount}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <h3 className="text-lg font-semibold mt-2">{displayTitle}</h3>
