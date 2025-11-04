@@ -113,6 +113,18 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer }: A
               </a>
             </Button>
           )}
+          {alert.law_number && (
+            <Button variant="outline" size="sm" asChild>
+              <a 
+                href={`https://nexuspj.poder-judicial.go.cr/search?q=&advanced=true&nq=art_num:(%7C%7C)$$norm_num:(%7C${alert.law_number}%7C)`}
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <FileText className="h-3 w-3 mr-1" />
+                Jurisprudencia Relacionada
+              </a>
+            </Button>
+          )}
           <Button variant="default" size="sm" onClick={onOpenDrawer}>
             Detalles
           </Button>

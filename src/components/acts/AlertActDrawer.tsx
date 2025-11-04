@@ -16,7 +16,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { AlertTriangle, Copy, ChevronDown, Trash2, Tag } from "lucide-react";
+import { AlertTriangle, Copy, ChevronDown, Trash2, Tag, ExternalLink, FileText } from "lucide-react";
 import { formatDate, isUpcomingDeadline } from "@/lib/dateUtils";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -209,7 +209,20 @@ export function AlertActDrawer({
               {alert.link && (
                 <Button variant="outline" className="w-full" asChild>
                   <a href={alert.link} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
                     Ver en SINALEVI
+                  </a>
+                </Button>
+              )}
+              {alert.law_number && (
+                <Button variant="outline" className="w-full" asChild>
+                  <a 
+                    href={`https://nexuspj.poder-judicial.go.cr/search?q=&advanced=true&nq=art_num:(%7C%7C)$$norm_num:(%7C${alert.law_number}%7C)`}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Jurisprudencia Relacionada
                   </a>
                 </Button>
               )}
