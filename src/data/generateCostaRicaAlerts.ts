@@ -256,6 +256,38 @@ const regulationsData = [
   }
 ];
 
+// Acuerdos
+const acuerdosData = [
+  {
+    number: "SUGEF 1-20",
+    name: "Acuerdo sobre Normas de Adecuación Patrimonial",
+    ministry: "SUGEF (Superintendencia General de Entidades Financieras)",
+    type: "Acuerdo" as const,
+  },
+  {
+    number: "CONASSIF 02-18",
+    name: "Acuerdo de Requisitos de Información Financiera",
+    ministry: "CONASSIF (Consejo Nacional de Supervisión del Sistema Financiero)",
+    type: "Acuerdo" as const,
+  }
+];
+
+// Reglamentos
+const reglamentosData = [
+  {
+    number: "R-001-2022",
+    name: "Reglamento de Operaciones Bancarias Electrónicas",
+    ministry: "Banco Central de Costa Rica",
+    type: "Reglamento" as const,
+  },
+  {
+    number: "R-005-2023",
+    name: "Reglamento de Transparencia y Divulgación de Información",
+    ministry: "SUGEF (Superintendencia General de Entidades Financieras)",
+    type: "Reglamento" as const,
+  }
+];
+
 // Generate alerts for all quadrants
 export function generateCostaRicaAlerts(): Alert[] {
   const alerts: Alert[] = [];
@@ -656,6 +688,108 @@ export function generateCostaRicaAlerts(): Alert[] {
         ],
         risk_level: i % 2 === 0 ? "medium" : "low",
         risk_score_hint: 50 + Math.floor(Math.random() * 20),
+        deadline_detected: rigeDate,
+        recommended_action: "ALERT_NOW"
+      },
+      monitoring_use: "costa_rica_demo"
+    });
+    id++;
+  });
+
+  // Generate some Acuerdos
+  acuerdosData.forEach((acuerdo, i) => {
+    const rigeDate = futureDate(15 + i * 3);
+    alerts.push({
+      title: acuerdo.name,
+      law_number: acuerdo.number,
+      detail_link: `https://www.sugef.fi.cr/normativa/${acuerdo.number}`,
+      title_id: `ACU-${id}`,
+      publication_date: pastDate(Math.floor(Math.random() * 20)),
+      effective_date: rigeDate,
+      version: "Versión 1",
+      norm_type: "Acuerdo",
+      link: `https://www.sugef.fi.cr/normativa/${acuerdo.number}`,
+      issuing_entity: acuerdo.ministry,
+      scraped_at: new Date().toISOString(),
+      source: "SINALEVI",
+      search_source: "sinalevi_monitoring",
+      csv_in_force: "Sí",
+      ministry: acuerdo.ministry,
+      is_relevant: true,
+      AI_triage: {
+        processed: true,
+        skipped: null,
+        decision: "RELEVANT",
+        score: 65 + Math.floor(Math.random() * 10),
+        confidence: 0.8,
+        reasons: ["Normativa de supervisión actualizada"],
+        is_relevant_for_client: true,
+        client_relevance_level: "medium",
+        client_relevance_reasons: ["Actualización de controles internos"],
+        affected_units: ["Cumplimiento", "Riesgos"],
+        portfolio_priority: "medium",
+        legal_stage: "enacted",
+        change_type: ["supervisión"],
+        summary: `${acuerdo.name} establece nuevos requisitos de supervisión y control para entidades financieras.`,
+        alert_title: acuerdo.name,
+        alert_bullets: [
+          "Actualización de procedimientos de supervisión",
+          `Plazo de implementación: ${rigeDate}`,
+          "Capacitación requerida para personal de cumplimiento"
+        ],
+        risk_level: "medium",
+        risk_score_hint: 60 + Math.floor(Math.random() * 15),
+        deadline_detected: rigeDate,
+        recommended_action: "ALERT_NOW"
+      },
+      monitoring_use: "costa_rica_demo"
+    });
+    id++;
+  });
+
+  // Generate some Reglamentos
+  reglamentosData.forEach((reglamento, i) => {
+    const rigeDate = futureDate(20 + i * 4);
+    alerts.push({
+      title: reglamento.name,
+      law_number: reglamento.number,
+      detail_link: `https://www.bccr.fi.cr/normativa/${reglamento.number}`,
+      title_id: `REG-${id}`,
+      publication_date: pastDate(Math.floor(Math.random() * 25)),
+      effective_date: rigeDate,
+      version: "Versión 1",
+      norm_type: "Reglamento",
+      link: `https://www.bccr.fi.cr/normativa/${reglamento.number}`,
+      issuing_entity: reglamento.ministry,
+      scraped_at: new Date().toISOString(),
+      source: "SINALEVI",
+      search_source: "sinalevi_monitoring",
+      csv_in_force: "Sí",
+      ministry: reglamento.ministry,
+      is_relevant: true,
+      AI_triage: {
+        processed: true,
+        skipped: null,
+        decision: "RELEVANT",
+        score: 70 + Math.floor(Math.random() * 10),
+        confidence: 0.85,
+        reasons: ["Normativa operativa actualizada"],
+        is_relevant_for_client: true,
+        client_relevance_level: "medium",
+        client_relevance_reasons: ["Cambios en operaciones diarias"],
+        affected_units: ["Operaciones", "TI", "Cumplimiento"],
+        portfolio_priority: "medium",
+        legal_stage: "enacted",
+        change_type: ["operacional"],
+        summary: `${reglamento.name} actualiza los procedimientos operacionales para entidades del sistema financiero.`,
+        alert_title: reglamento.name,
+        alert_bullets: [
+          "Actualización de sistemas operacionales",
+          `Plazo de implementación: ${rigeDate}`,
+          "Ajustes técnicos requeridos"
+        ],
+        risk_level: "low",
+        risk_score_hint: 55 + Math.floor(Math.random() * 10),
         deadline_detected: rigeDate,
         recommended_action: "ALERT_NOW"
       },
