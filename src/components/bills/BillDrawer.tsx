@@ -79,44 +79,156 @@ export function BillDrawer({
           {bill.firmantePrincipal && (
             <div className="space-y-6">
               <div>
-                <h4 className="font-semibold mb-4">FIRMA PRINCIPAL</h4>
-                <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
-                  <span className="text-lg font-semibold text-muted-foreground min-w-[2rem]">
-                    {bill.firmantePrincipal.numero}
-                  </span>
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={bill.firmantePrincipal.foto} alt={bill.firmantePrincipal.nombre} />
-                    <AvatarFallback>{bill.firmantePrincipal.nombre.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h5 className="font-bold text-base">{bill.firmantePrincipal.nombre}</h5>
-                    {bill.firmantePrincipal.fraccion && (
-                      <p className="text-sm text-muted-foreground uppercase">{bill.firmantePrincipal.fraccion}</p>
-                    )}
-                    <p className="text-sm">{bill.firmantePrincipal.provincia}</p>
+                <h4 className="font-semibold mb-4 text-sm tracking-wide">FIRMA PRINCIPAL</h4>
+                <div className="border rounded-lg overflow-hidden">
+                  {/* Header con foto y nombre */}
+                  <div className="flex items-center gap-4 p-4 bg-muted/20">
+                    <Avatar className="h-20 w-20 ring-2 ring-background">
+                      <AvatarImage src={bill.firmantePrincipal.foto} alt={bill.firmantePrincipal.nombre} />
+                      <AvatarFallback>{bill.firmantePrincipal.nombre.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h5 className="font-bold text-xl mb-1">{bill.firmantePrincipal.nombre}</h5>
+                      <p className="text-sm font-medium mb-0.5">{bill.firmantePrincipal.partidoPolitico}</p>
+                      <p className="text-sm text-muted-foreground">{bill.firmantePrincipal.provincia}</p>
+                    </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+
+                  {/* Perfil del Diputado */}
+                  <div className="p-4 space-y-4">
+                    <h6 className="font-bold text-sm tracking-wide uppercase">Perfil del Diputado</h6>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      {bill.firmantePrincipal.edad && (
+                        <div>
+                          <p className="font-semibold mb-1">Edad</p>
+                          <p className="text-muted-foreground">{bill.firmantePrincipal.edad}</p>
+                        </div>
+                      )}
+                      {bill.firmantePrincipal.cedula && (
+                        <div>
+                          <p className="font-semibold mb-1">Cédula</p>
+                          <p className="text-muted-foreground">{bill.firmantePrincipal.cedula}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {bill.firmantePrincipal.email && (
+                      <div className="text-sm">
+                        <p className="font-semibold mb-1">Email</p>
+                        <p className="text-muted-foreground">{bill.firmantePrincipal.email}</p>
+                      </div>
+                    )}
+
+                    {bill.firmantePrincipal.telefonos && bill.firmantePrincipal.telefonos.length > 0 && (
+                      <div className="text-sm">
+                        <p className="font-semibold mb-1">Teléfonos</p>
+                        {bill.firmantePrincipal.telefonos.map((tel, idx) => (
+                          <p key={idx} className="text-muted-foreground">{tel}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    {bill.firmantePrincipal.educacion && bill.firmantePrincipal.educacion.length > 0 && (
+                      <div className="text-sm">
+                        <p className="font-semibold mb-2 uppercase tracking-wide">Educación</p>
+                        <ul className="space-y-2 text-muted-foreground">
+                          {bill.firmantePrincipal.educacion.map((edu, idx) => (
+                            <li key={idx} className="leading-relaxed">• {edu}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {bill.firmantePrincipal.experienciaLaboral && bill.firmantePrincipal.experienciaLaboral.length > 0 && (
+                      <div className="text-sm">
+                        <p className="font-semibold mb-2 uppercase tracking-wide">Experiencia Laboral</p>
+                        <ul className="space-y-2 text-muted-foreground">
+                          {bill.firmantePrincipal.experienciaLaboral.map((exp, idx) => (
+                            <li key={idx} className="leading-relaxed">• {exp}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {bill.firmantePrincipal.comisiones && bill.firmantePrincipal.comisiones.length > 0 && (
+                      <div className="text-sm">
+                        <p className="font-semibold mb-2 uppercase tracking-wide">Comisiones que Integra</p>
+                        <div className="space-y-2">
+                          {bill.firmantePrincipal.comisiones.map((comision, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded hover:bg-muted/50 transition-colors">
+                              <span className="text-muted-foreground">{comision}</span>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {bill.coProponentes && bill.coProponentes.length > 0 && (
                 <div>
-                  <h4 className="font-semibold mb-4">CO-PROPONENTES</h4>
-                  <div className="space-y-2">
+                  <h4 className="font-semibold mb-4 text-sm tracking-wide">CO-PROPONENTES</h4>
+                  <div className="space-y-4">
                     {bill.coProponentes.map((diputado, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
-                        <span className="text-lg font-semibold text-muted-foreground min-w-[2rem]">
-                          {diputado.numero}
-                        </span>
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={diputado.foto} alt={diputado.nombre} />
-                          <AvatarFallback>{diputado.nombre.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h5 className="font-bold text-base">{diputado.nombre}</h5>
-                          <p className="text-sm">{diputado.provincia}</p>
+                      <div key={idx} className="border rounded-lg overflow-hidden">
+                        {/* Header con foto y nombre */}
+                        <div className="flex items-center gap-4 p-4 bg-muted/20">
+                          <Avatar className="h-16 w-16 ring-2 ring-background">
+                            <AvatarImage src={diputado.foto} alt={diputado.nombre} />
+                            <AvatarFallback>{diputado.nombre.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h5 className="font-bold text-lg mb-1">{diputado.nombre}</h5>
+                            <p className="text-sm font-medium mb-0.5">{diputado.partidoPolitico}</p>
+                            <p className="text-sm text-muted-foreground">{diputado.provincia}</p>
+                          </div>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+
+                        {/* Información adicional si existe */}
+                        {(diputado.edad || diputado.cedula || diputado.email || diputado.comisiones) && (
+                          <div className="p-4 space-y-3 text-sm">
+                            {(diputado.edad || diputado.cedula) && (
+                              <div className="grid grid-cols-2 gap-4">
+                                {diputado.edad && (
+                                  <div>
+                                    <p className="font-semibold mb-1">Edad</p>
+                                    <p className="text-muted-foreground">{diputado.edad}</p>
+                                  </div>
+                                )}
+                                {diputado.cedula && (
+                                  <div>
+                                    <p className="font-semibold mb-1">Cédula</p>
+                                    <p className="text-muted-foreground">{diputado.cedula}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {diputado.email && (
+                              <div>
+                                <p className="font-semibold mb-1">Email</p>
+                                <p className="text-muted-foreground">{diputado.email}</p>
+                              </div>
+                            )}
+
+                            {diputado.comisiones && diputado.comisiones.length > 0 && (
+                              <div>
+                                <p className="font-semibold mb-2 uppercase tracking-wide">Comisiones</p>
+                                <div className="space-y-1">
+                                  {diputado.comisiones.map((comision, comIdx) => (
+                                    <div key={comIdx} className="flex items-center justify-between p-2 bg-muted/30 rounded text-xs">
+                                      <span className="text-muted-foreground">{comision}</span>
+                                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
