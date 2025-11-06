@@ -96,7 +96,7 @@ export function PeopleOfInterestChart({ bills }: PeopleOfInterestChartProps) {
                         <p className="font-semibold">{data.fullName}</p>
                         <p className="text-sm text-muted-foreground">{data.party}</p>
                         {data.role && <p className="text-sm">{data.role}</p>}
-                        <p className="text-sm mt-1">Bills sponsored: {data.count}</p>
+                        <p className="text-sm mt-1">Proyectos patrocinados: {data.count}</p>
                         {data.email && (
                           <div className="flex items-center gap-1 mt-1 text-xs">
                             <Mail className="h-3 w-3" />
@@ -123,7 +123,7 @@ export function PeopleOfInterestChart({ bills }: PeopleOfInterestChartProps) {
       
       <Card>
         <CardHeader>
-          <CardTitle>Bills by Political Party</CardTitle>
+          <CardTitle>Proyectos por Partido Político</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>

@@ -34,7 +34,7 @@ export function BillsProgressFunnel({ bills }: BillsProgressFunnelProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitBranch className="h-5 w-5" />
-          Bills Progress Funnel
+          Progreso de Proyectos legislativos
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -69,7 +69,7 @@ export function BillsProgressFunnel({ bills }: BillsProgressFunnelProps) {
         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
           <div className="text-sm space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total Bills:</span>
+              <span className="text-muted-foreground">Total Proyectos:</span>
               <span className="font-semibold">{bills.length}</span>
             </div>
             <div className="flex justify-between">

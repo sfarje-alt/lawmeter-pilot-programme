@@ -186,7 +186,7 @@ export function StakeholderAnalysisChart({ bills }: StakeholderAnalysisChartProp
                         )}
                         <div className="flex gap-2 mt-2">
                           <Badge variant="outline" className="text-xs">
-                            {data.count} bills engaged
+                            {data.count} proyectos en los que participó
                           </Badge>
                         </div>
                       </div>

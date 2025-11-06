@@ -206,7 +206,7 @@ export default function LawMeterDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-9 mb-6">
             <TabsTrigger value="acts"><FileText className="h-4 w-4 mr-2" />Acts</TabsTrigger>
-            <TabsTrigger value="bills"><FileText className="h-4 w-4 mr-2" />Bills</TabsTrigger>
+            <TabsTrigger value="bills"><FileText className="h-4 w-4 mr-2" />Proyectos legislativos</TabsTrigger>
             <TabsTrigger value="media"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
             <TabsTrigger value="social"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
             <TabsTrigger value="starred"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
@@ -369,7 +369,7 @@ export default function LawMeterDashboard() {
 
           <TabsContent value="bills" className="space-y-6 mt-6">
             <div className="bg-warning/10 border border-warning rounded-lg p-4 mb-4">
-              <div className="flex gap-2"><AlertTriangle className="h-5 w-5 text-warning" /><div><p className="font-semibold">Mock Data</p><p className="text-sm">Bills are fictitious for demonstration purposes.</p></div></div>
+              <div className="flex gap-2"><AlertTriangle className="h-5 w-5 text-warning" /><div><p className="font-semibold">Datos de demostración</p><p className="text-sm">Los proyectos legislativos son ficticios para propósitos de demostración.</p></div></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <Card 
@@ -534,7 +534,7 @@ export default function LawMeterDashboard() {
                 <SelectContent>
                   <SelectItem value="all">All Items</SelectItem>
                   <SelectItem value="acts">Acts Only</SelectItem>
-                  <SelectItem value="bills">Bills Only</SelectItem>
+                  <SelectItem value="bills">Solo Proyectos legislativos</SelectItem>
                 </SelectContent>
               </Select>
             </div>

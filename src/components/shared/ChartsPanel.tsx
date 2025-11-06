@@ -446,7 +446,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
     "bills-status": (
       <Card>
         <CardHeader>
-          <CardTitle>Bills by Status</CardTitle>
+          <CardTitle>Proyectos por Estado</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -464,7 +464,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
     "bills-chamber": (
       <Card>
         <CardHeader>
-          <CardTitle>Bills by Chamber</CardTitle>
+          <CardTitle>Proyectos por Cámara</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -520,7 +520,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
     "portfolio-top10": (
       <Card>
         <CardHeader>
-          <CardTitle>Bills by Portfolio (Top 10)</CardTitle>
+          <CardTitle>Proyectos por Cartera (Top 10)</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -548,7 +548,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
               <YAxis domain={[0, 'dataMax']} allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} name="Bills" />
+              <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} name="Proyectos" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
