@@ -205,7 +205,7 @@ export default function LawMeterDashboard() {
       <div className="container mx-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-9 mb-6">
-            <TabsTrigger value="acts"><FileText className="h-4 w-4 mr-2" />Acts</TabsTrigger>
+            <TabsTrigger value="acts"><FileText className="h-4 w-4 mr-2" />Legislaciones</TabsTrigger>
             <TabsTrigger value="bills"><FileText className="h-4 w-4 mr-2" />Proyectos</TabsTrigger>
             <TabsTrigger value="media"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
             <TabsTrigger value="social"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
@@ -533,7 +533,7 @@ export default function LawMeterDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Items</SelectItem>
-                  <SelectItem value="acts">Acts Only</SelectItem>
+                  <SelectItem value="acts">Solo Legislaciones</SelectItem>
                   <SelectItem value="bills">Solo Proyectos</SelectItem>
                 </SelectContent>
               </Select>
