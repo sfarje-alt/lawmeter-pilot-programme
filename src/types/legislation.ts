@@ -81,6 +81,21 @@ export interface Alert {
   pgr_pronouncements?: PGRPronouncement[];
 }
 
+// ============= DIPUTADOS =============
+export interface Diputado {
+  numeroDeputado?: string; // Número de identificación del diputado
+  nombre: string;
+  partidoPolitico: string;
+  logoPartido?: string; // URL del logo del partido
+  rol?: string; // Ej: "Subjefe de fracción", "Firmante principal"
+  provincia: string;
+  urlPerfil?: string; // URL del perfil en Delfino
+  email?: string;
+  telefono?: string;
+  posicionVotacion?: "apoyo" | "oposicion" | "abstencion" | "desconocido";
+}
+
+// Para compatibilidad con código existente
 export interface MP {
   name: string;
   role?: string;
@@ -91,6 +106,48 @@ export interface MP {
   constituency?: string;
 }
 
+// Para compatibilidad - deprecated, usar Diputado
+export interface Deputy {
+  id: string;
+  name: string;
+  party: string;
+  role: "Firmante principal" | "Cofirmante";
+  province: string;
+  profileUrl?: string;
+}
+
+// ============= TEXTOS DEL PROYECTO =============
+export interface TextoProyecto {
+  fecha: string; // Fecha de la versión
+  tipoTexto: string; // Ej: "Texto base", "Texto sustitutivo"
+  urlPDF: string; // URL del documento PDF
+}
+
+// Para compatibilidad - deprecated, usar TextoProyecto
+export interface ProjectText {
+  date: string;
+  textType: string;
+  pdfUrl: string;
+}
+
+// ============= VOTACIONES =============
+export interface VotoDetallado {
+  nombreDiputado: string;
+  partido: string;
+  voto: "a_favor" | "en_contra" | "abstencion";
+}
+
+export interface RegistroVotacion {
+  fecha: string;
+  etapa: string; // Ej: "Primer Debate", "Segundo Debate"
+  votosAFavor: number;
+  votosEnContra: number;
+  abstenciones: number;
+  aprobado: boolean;
+  votosDetallados?: VotoDetallado[];
+}
+
+// Para compatibilidad - deprecated, usar RegistroVotacion
 export interface VotingRecord {
   date: string;
   stage: string;
@@ -105,30 +162,24 @@ export interface VotingRecord {
   }>;
 }
 
-export interface Deputy {
-  id: string;
-  name: string;
-  party: string;
-  role: "Firmante principal" | "Cofirmante";
-  province: string;
-  profileUrl?: string;
+// ============= INTERESADOS (STAKEHOLDERS) =============
+export interface Interesado {
+  nombre: string;
+  organizacion?: string;
+  posicion: "apoyo" | "oposicion" | "neutral";
+  declaracion?: string;
 }
 
-export interface ProjectText {
-  date: string;
-  textType: string;
-  pdfUrl: string;
-}
-
+// ============= PROYECTO DE LEY =============
 export interface BillItem {
-  // Campos básicos
-  id: string; // Expediente
-  title: string;
-  purpose?: string; // Propósito del proyecto
-  type?: string; // Tipo de proyecto
+  // ========== INFORMACIÓN BÁSICA DEL PROYECTO ==========
+  id: string; // Expediente (número de identificación) - Ej: "25285"
+  titulo: string; // Título del proyecto
+  proposito?: string; // Propósito del proyecto - descripción detallada
+  tipoProyecto?: string; // Tipo - Ej: "Proyecto de Ley"
   
-  // Estado y fechas
-  status:
+  // ========== ESTADO Y FECHAS ==========
+  estado:
     | "Presentado"
     | "En comisión"
     | "Aprobado en Primer Debate"
@@ -146,47 +197,74 @@ export interface BillItem {
     | "Vetado"
     | "Resellado"
     | "Admisibilidad de Reforma Constitucional";
-  presentationDate: string; // Fecha de presentación
-  lastActionDate: string;
+  fechaPresentacion: string; // Fecha de presentación - Ej: "5 NOV, 2025"
+  fechaUltimaAccion: string; // Fecha de última acción/modificación
+  fechaEstimadaVotacion?: string; // Fecha estimada de votación (si existe)
   
-  // Comisión
-  assignedCommission?: string;
-  commissionUrl?: string;
+  // ========== COMISIÓN ==========
+  comisionAsignada?: string; // Ej: "Pendiente" o nombre específico
+  urlComision?: string; // Link a la página de la comisión
+  dictamenComision?: string; // Dictamen de comisión (si existe)
   
-  // Firmantes y diputados
-  principalSigner?: Deputy;
-  coSigners?: Deputy[];
+  // ========== DIPUTADOS INVOLUCRADOS ==========
+  firmantePrincipal?: Diputado; // Diputado autor principal
+  coProponentes?: Diputado[]; // Lista de diputados co-proponentes
   
-  // Categorías y clasificación
-  categories?: string[];
-  portfolio?: string; // Mantener para compatibilidad
+  // ========== CATEGORÍAS Y CLASIFICACIÓN ==========
+  categorias?: string[]; // Áreas temáticas - Ej: ["Educación"]
+  cartera?: string; // Cartera/Ministerio relacionado
   
-  // Textos del proyecto
-  projectTexts?: ProjectText[];
+  // ========== HISTÓRICO DE TEXTOS ==========
+  textosProyecto?: TextoProyecto[]; // Versiones del documento
   
-  // Votaciones
-  votingRecords?: VotingRecord[];
+  // ========== HISTÓRICO DE VOTACIONES ==========
+  registrosVotacion?: RegistroVotacion[]; // Lista de votaciones realizadas
   
-  // Resumen y análisis
-  summary: string;
-  bullets: string[];
-  risk_level: "low" | "medium" | "high";
-  risk_score: number;
+  // ========== RESUMEN Y ANÁLISIS ==========
+  resumen: string; // Resumen del proyecto
+  puntosImportantes: string[]; // Bullets con puntos clave
+  nivelRiesgo: "bajo" | "medio" | "alto" | "low" | "medium" | "high"; // Nivel de riesgo/impacto (soporta español e inglés)
+  puntajeRiesgo: number; // Puntaje numérico de riesgo
   
-  // Enlaces
-  motherActLink?: string;
-  amendmentActLink?: string;
-  projectUrl?: string; // URL en Delfino
+  // ========== ENLACES ==========
+  urlProyecto?: string; // URL en Delfino - Ej: "https://delfino.cr/asamblea/proyecto/25285"
+  urlLeyMadre?: string; // Link a la ley que se está modificando
+  urlLeyModificatoria?: string; // Link a ley que modifica esta
   
-  // Stakeholders
+  // ========== INTERESADOS ==========
+  interesados?: Interesado[]; // Stakeholders y sus posiciones
+  
+  // ========== CAMPOS ADICIONALES ==========
+  observaciones?: string; // Observaciones o notas
+  proyectosRelacionados?: string[]; // IDs de proyectos relacionados
+  numeroConsultas?: number; // Número de consultas realizadas
+  
+  // ========== CAMPOS DEPRECATED (mantener para compatibilidad) ==========
+  title?: string; // usar titulo
+  status?: BillItem["estado"]; // usar estado
+  presentationDate?: string; // usar fechaPresentacion
+  lastActionDate?: string; // usar fechaUltimaAccion
+  assignedCommission?: string; // usar comisionAsignada
+  commissionUrl?: string; // usar urlComision
+  principalSigner?: Deputy; // usar firmantePrincipal
+  coSigners?: Deputy[]; // usar coProponentes
+  categories?: string[]; // usar categorias
+  portfolio?: string; // usar cartera
+  projectTexts?: ProjectText[]; // usar textosProyecto
+  votingRecords?: VotingRecord[]; // usar registrosVotacion
+  summary?: string; // usar resumen
+  bullets?: string[]; // usar puntosImportantes
+  risk_level?: BillItem["nivelRiesgo"]; // usar nivelRiesgo
+  risk_score?: number; // usar puntajeRiesgo
+  motherActLink?: string; // usar urlLeyMadre
+  amendmentActLink?: string; // usar urlLeyModificatoria
+  projectUrl?: string; // usar urlProyecto
   stakeholders?: Array<{
     name: string;
     organization?: string;
     position: "support" | "oppose" | "neutral";
     statement?: string;
-  }>;
-  
-  // Campos deprecados (mantener para compatibilidad)
+  }>; // usar interesados
   party?: string;
   mps?: MP[];
   chamber?: "House" | "Senate";

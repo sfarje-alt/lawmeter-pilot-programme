@@ -3,7 +3,9 @@ import { BillItem } from "@/types/legislation";
 export const baseBills: BillItem[] = [
   {
     id: "bill-001",
+    titulo: "Environment Protection and Biodiversity Conservation Amendment (Nature Positive) Bill 2024",
     title: "Environment Protection and Biodiversity Conservation Amendment (Nature Positive) Bill 2024",
+    cartera: "Environment and Water",
     portfolio: "Environment and Water",
     party: "Labor",
     mps: [
@@ -18,19 +20,32 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "House",
+    estado: "En comisión",
     status: "En comisión",
     stageLocation: "House — Environment Committee Review",
+    fechaPresentacion: "2024-08-01",
     presentationDate: "2024-08-01",
+    fechaUltimaAccion: "2024-10-01",
     lastActionDate: "2024-10-01",
+    resumen: "Introduces nature positive reforms to strengthen environmental protections and streamline assessment processes. Establishes new environmental standards and regional plans.",
     summary: "Introduces nature positive reforms to strengthen environmental protections and streamline assessment processes. Establishes new environmental standards and regional plans.",
+    puntosImportantes: [
+      "Creates new National Environmental Standards",
+      "Establishes Environment Information Australia",
+      "Introduces regional planning frameworks",
+      "Strengthens compliance and enforcement powers"
+    ],
     bullets: [
       "Creates new National Environmental Standards",
       "Establishes Environment Information Australia",
       "Introduces regional planning frameworks",
       "Strengthens compliance and enforcement powers"
     ],
+    nivelRiesgo: "alto",
     risk_level: "high",
+    puntajeRiesgo: 85,
     risk_score: 85,
+    urlLeyMadre: "https://www.legislation.gov.au/C2004A00485/latest",
     motherActLink: "https://www.legislation.gov.au/C2004A00485/latest",
     votingRecords: [
       {
@@ -520,14 +535,14 @@ const portfolioTopics: { portfolio: string; topics: string[] }[] = [
   ]},
 ];
 
-function riskLevelFromScore(score: number): BillItem["risk_level"] {
-  if (score >= 80) return "high";
-  if (score >= 60) return "medium";
-  return "low";
+function riskLevelFromScore(score: number): BillItem["nivelRiesgo"] {
+  if (score >= 80) return "alto";
+  if (score >= 60) return "medio";
+  return "bajo";
 }
 
-function makeStageLocation(chamber: BillItem["chamber"], status: BillItem["status"]): string {
-  switch (status) {
+function makeStageLocation(chamber: BillItem["chamber"], estado: BillItem["estado"]): string {
+  switch (estado) {
     case "Presentado":
       return `${chamber} — First Reading`;
     case "Aprobado en Primer Debate":
@@ -543,7 +558,7 @@ function makeStageLocation(chamber: BillItem["chamber"], status: BillItem["statu
     case "Aprobado":
       return `Both Houses — Royal Assent Pending`;
     default:
-      return `${chamber} — ${status}`;
+      return `${chamber} — ${estado}`;
   }
 }
 
@@ -553,20 +568,20 @@ function generateBill(index: number): BillItem {
   const chamber = chambers[index % chambers.length];
   
   // Create a better distribution across all quadrants
-  let status: BillItem["status"];
+  let estado: BillItem["estado"];
   let score: number;
   
   // Distribute across urgency levels (based on status)
   const urgencyGroup = index % 3;
   if (urgencyGroup === 0) {
     // High urgency - late stage bills
-    status = index % 2 === 0 ? "Aprobado" : "Aprobado en Segundo Debate (Primera Legislatura)";
+    estado = index % 2 === 0 ? "Aprobado" : "Aprobado en Segundo Debate (Primera Legislatura)";
   } else if (urgencyGroup === 1) {
     // Medium urgency - middle stage bills
-    status = index % 2 === 0 ? "Aprobado en Primer Debate" : "En comisión";
+    estado = index % 2 === 0 ? "Aprobado en Primer Debate" : "En comisión";
   } else {
     // Low urgency - early stage bills
-    status = index % 2 === 0 ? "Presentado" : "Aprobado en Segundo Debate";
+    estado = index % 2 === 0 ? "Presentado" : "Aprobado en Segundo Debate";
   }
   
   // Distribute across risk levels (impact)
@@ -659,7 +674,9 @@ function generateBill(index: number): BillItem {
 
   return {
     id: `bill-${(index + 10).toString().padStart(3, "0")}`,
+    titulo: billTitle,
     title: billTitle,
+    cartera: p.portfolio,
     portfolio: p.portfolio,
     party,
     mps: [
@@ -673,21 +690,35 @@ function generateBill(index: number): BillItem {
       }
     ],
     chamber,
-    status,
-    stageLocation: makeStageLocation(chamber, status),
+    estado,
+    status: estado,
+    stageLocation: makeStageLocation(chamber, estado),
+    fechaPresentacion: daysAgoISO(daysAgo + 30),
     presentationDate: daysAgoISO(daysAgo + 30),
+    fechaUltimaAccion: daysAgoISO(daysAgo),
     lastActionDate: daysAgoISO(daysAgo),
+    resumen: `Proposes ${isAmendment ? 'amendments' : 'reforms'} relating to ${topic.toLowerCase()} impacting organizations across multiple sectors. Includes compliance, reporting, and operational changes.`,
     summary: `Proposes ${isAmendment ? 'amendments' : 'reforms'} relating to ${topic.toLowerCase()} impacting organizations across multiple sectors. Includes compliance, reporting, and operational changes.`,
+    puntosImportantes: [
+      `${isAmendment ? 'Amends existing legislation' : 'Introduces new requirements'} for ${topic.toLowerCase()}`,
+      `Enhances compliance and audit obligations for ${p.portfolio.toLowerCase()}`,
+      `Aligns with national standards and regulator expectations`
+    ],
     bullets: [
       `${isAmendment ? 'Amends existing legislation' : 'Introduces new requirements'} for ${topic.toLowerCase()}`,
       `Enhances compliance and audit obligations for ${p.portfolio.toLowerCase()}`,
       `Aligns with national standards and regulator expectations`
     ],
+    nivelRiesgo: level,
     risk_level: level,
+    puntajeRiesgo: score,
     risk_score: score,
+    registrosVotacion: votingRecords,
     votingRecords,
+    interesados: stakeholders,
     stakeholders,
     ...(isAmendment && { 
+      urlLeyMadre: `https://www.legislation.gov.au/C${year - 10}A${String(index).padStart(5, '0')}/latest`,
       motherActLink: `https://www.legislation.gov.au/C${year - 10}A${String(index).padStart(5, '0')}/latest`
     }),
   };
