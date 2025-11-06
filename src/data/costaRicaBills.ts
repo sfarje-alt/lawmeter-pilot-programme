@@ -109,6 +109,15 @@ export const costaRicaBills: BillItem[] = [
           { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
           { mpName: "María Fernanda Jiménez", party: "Liberación Nacional", vote: "for" },
           { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
+          { mpName: "Esteban Mora Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Jorge Rojas Paniagua", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "against" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "against" },
+          { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "against" },
+          { mpName: "Roberto Fernández Quesada", party: "Nueva República", vote: "abstain" },
         ]
       }
     ],
@@ -224,6 +233,9 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
           { mpName: "Roberto Fernández Quesada", party: "Nueva República", vote: "for" },
+          { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
+          { mpName: "Silvia Hernández Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
         ]
       }
     ],
@@ -355,6 +367,15 @@ export const costaRicaBills: BillItem[] = [
           { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
           { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "for" },
           { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "María Fernanda Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Esteban Mora Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
+          { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "against" },
+          { mpName: "Rodrigo Arias Sánchez", party: "Liberación Nacional", vote: "against" },
+          { mpName: "Roberto Fernández Quesada", party: "Nueva República", vote: "abstain" },
         ]
       },
       {
@@ -369,6 +390,13 @@ export const costaRicaBills: BillItem[] = [
           { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "for" },
           { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "for" },
           { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "against" },
+          { mpName: "Rodrigo Arias Sánchez", party: "Liberación Nacional", vote: "against" },
+          { mpName: "Karina Bolaños Esquivel", party: "Acción Ciudadana", vote: "abstain" },
         ]
       }
     ],
@@ -485,6 +513,15 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
           { mpName: "Esteban Mora Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Luisa Cordero Vargas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "against" },
+          { mpName: "Rodrigo Arias Sánchez", party: "Liberación Nacional", vote: "against" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "against" },
+          { mpName: "María Fernanda Jiménez", party: "Liberación Nacional", vote: "against" },
         ]
       }
     ],
@@ -601,6 +638,16 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
           { mpName: "Silvia Hernández Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Roberto Fernández Quesada", party: "Nueva República", vote: "for" },
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "María Fernanda Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "against" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "abstain" },
         ]
       },
       {
@@ -614,6 +661,14 @@ export const costaRicaBills: BillItem[] = [
           { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
           { mpName: "Silvia Hernández Mora", party: "Acción Ciudadana", vote: "for" },
           { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Esteban Mora Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "against" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "against" },
+          { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "abstain" },
         ]
       }
     ],
@@ -730,6 +785,10 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Gabriela Soto Ramírez", party: "Liberación Nacional", vote: "for" },
           { mpName: "Manuel Solís Vargas", party: "Frente Amplio", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
         ]
       }
     ],
@@ -846,6 +905,15 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "for" },
           { mpName: "Luisa Cordero Vargas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Esteban Mora Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "against" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "against" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "against" },
         ]
       }
     ],
@@ -962,6 +1030,16 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
           { mpName: "Jorge Rojas Paniagua", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
+          { mpName: "Silvia Hernández Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "María Fernanda Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Alberto Fonseca Morales", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Roberto Fernández Quesada", party: "Nueva República", vote: "abstain" },
         ]
       },
       {
@@ -975,6 +1053,13 @@ export const costaRicaBills: BillItem[] = [
           { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
           { mpName: "Jorge Rojas Paniagua", party: "Liberación Nacional", vote: "for" },
           { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "against" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "abstain" },
         ]
       },
       {
@@ -988,6 +1073,13 @@ export const costaRicaBills: BillItem[] = [
           { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
           { mpName: "Jorge Rojas Paniagua", party: "Liberación Nacional", vote: "for" },
           { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "against" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "abstain" },
         ]
       }
     ],
@@ -1104,6 +1196,16 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
           { mpName: "Alberto Fonseca Morales", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Manuel Solís Vargas", party: "Frente Amplio", vote: "for" },
+          { mpName: "Gabriela Soto Ramírez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Silvia Hernández Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "against" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "abstain" },
+          { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "abstain" },
         ]
       }
     ],
@@ -1220,6 +1322,11 @@ export const costaRicaBills: BillItem[] = [
         mpVotes: [
           { mpName: "Rodrigo Arias Sánchez", party: "Liberación Nacional", vote: "for" },
           { mpName: "Karina Bolaños Esquivel", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
         ]
       }
     ],
