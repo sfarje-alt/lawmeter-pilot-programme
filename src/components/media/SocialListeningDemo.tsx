@@ -6,123 +6,134 @@ import { TrendingUp, TrendingDown, Minus, Newspaper, Users, Building2, Info } fr
 export function SocialListeningDemo() {
   const newspaperCoverage = [
     {
-      source: "The Australian",
-      headline: "Healthcare Bill Promises Universal Access, Critics Question Costs",
+      source: "La Nación",
+      headline: "Ley Fintech Promete Modernización Bancaria, BAC Alerta Sobre Riesgos",
       sentiment: "neutral" as const,
-      score: 0.05,
-      date: "2024-07-25",
-      excerpt: "The proposed Healthcare Access Bill has sparked debate in Parliament, with government touting unprecedented access while opposition raises fiscal concerns...",
-      reach: "2.3M readers"
+      score: 0.08,
+      date: "2025-01-16",
+      excerpt: "El proyecto de regulación fintech ha generado debate en la Asamblea. Mientras el gobierno destaca innovación, el sector bancario tradicional señala preocupaciones sobre competencia desleal...",
+      reach: "850K lectores"
     },
     {
-      source: "ABC News",
-      headline: "Government's Healthcare Overhaul Receives Mixed Reception",
-      sentiment: "neutral" as const,
-      score: -0.15,
-      date: "2024-07-24",
-      excerpt: "Healthcare reform takes center stage as the Minister defends the $2.4 billion investment against criticism from opposition benches...",
-      reach: "3.1M readers"
-    },
-    {
-      source: "Sydney Morning Herald",
-      headline: "Rural Health Groups Welcome Telehealth Expansion Plans",
-      sentiment: "positive" as const,
-      score: 0.68,
-      date: "2024-07-24",
-      excerpt: "Regional healthcare advocates have praised the telehealth provisions in the new bill, though call for stronger implementation guarantees...",
-      reach: "1.8M readers"
-    },
-    {
-      source: "Guardian Australia",
-      headline: "Mental Health Advocates Slam 'Inadequate' Healthcare Bill",
+      source: "El Financiero",
+      headline: "BAC y Banca Privada Exigen Igualdad Regulatoria ante Avance Fintech",
       sentiment: "negative" as const,
-      score: -0.79,
-      date: "2024-07-23",
-      excerpt: "Mental health organizations have criticized the Healthcare Access Bill for lacking specific mental health funding and infrastructure commitments...",
-      reach: "1.5M readers"
+      score: -0.62,
+      date: "2025-01-15",
+      excerpt: "Los principales bancos del país, liderados por BAC, han manifestado su rechazo a disposiciones que permitirían a plataformas fintech operar con menores requisitos de capital y liquidez...",
+      reach: "420K lectores"
+    },
+    {
+      source: "CRHoy",
+      headline: "SUGEF Respalda Marco Regulatorio que Equilibra Innovación y Estabilidad",
+      sentiment: "positive" as const,
+      score: 0.71,
+      date: "2025-01-14",
+      excerpt: "La Superintendencia General de Entidades Financieras destacó que el proyecto incluye salvaguardas prudenciales adecuadas para proteger el sistema financiero nacional...",
+      reach: "320K lectores"
+    },
+    {
+      source: "Semanario Universidad",
+      headline: "Proyecto Fintech Ignora Inclusión Financiera en Zonas Rurales",
+      sentiment: "negative" as const,
+      score: -0.78,
+      date: "2025-01-13",
+      excerpt: "Organizaciones de consumidores critican que la ley no contempla mecanismos para garantizar acceso bancario digital a comunidades alejadas de centros urbanos...",
+      reach: "280K lectores"
     }
   ];
 
   const ngoStatements = [
     {
-      organization: "Australian Medical Association",
-      type: "Medical Professional Body",
-      position: "Support with Conditions",
-      sentiment: "positive" as const,
-      score: 0.45,
-      date: "2024-07-24",
-      statement: "The AMA welcomes the Healthcare Access Bill's focus on universal coverage. However, we call for stronger workforce provisions and funding for GP training to ensure the system can meet increased demand.",
+      organization: "Asociación Bancaria Costarricense",
+      type: "Gremio Bancario",
+      position: "Oposición con Reservas",
+      sentiment: "negative" as const,
+      score: -0.58,
+      date: "2025-01-15",
+      statement: "La ABC reconoce la importancia de la innovación financiera. Sin embargo, exigimos que las fintech cumplan los mismos estándares de solvencia, liquidez y gestión de riesgos que la banca tradicional. No puede existir arbitraje regulatorio.",
       influence: "High",
-      followers: "95K"
+      followers: "125K"
     },
     {
-      organization: "Beyond Blue",
-      type: "Mental Health NGO",
-      position: "Opposition",
+      organization: "ASOBANCA",
+      type: "Asociación de Bancos Privados",
+      position: "Oposición Fuerte",
       sentiment: "negative" as const,
-      score: -0.82,
-      date: "2024-07-23",
-      statement: "We are deeply disappointed by the lack of dedicated mental health funding in this bill. Mental health cannot continue to be an afterthought in healthcare reform. We urge the government to amend the legislation.",
+      score: -0.84,
+      date: "2025-01-14",
+      statement: "Estamos profundamente preocupados por las asimetrías regulatorias propuestas. El BAC y los bancos privados enfrentamos requisitos estrictos de capital (Basilea III) mientras las fintech operarían con reglas más laxas. Esto pone en riesgo la estabilidad del sistema.",
+      influence: "High",
+      followers: "210K"
+    },
+    {
+      organization: "Defensoría de los Habitantes",
+      type: "Protección al Consumidor",
+      position: "Apoyo Condicionado",
+      sentiment: "neutral" as const,
+      score: 0.25,
+      date: "2025-01-13",
+      statement: "Apoyamos la innovación que beneficie a los consumidores. No obstante, exigimos garantías robustas de protección de datos personales y financieros, especialmente en transacciones con nuevos actores digitales.",
       influence: "High",
       followers: "180K"
     },
     {
-      organization: "Rural Doctors Association",
-      type: "Regional Health Advocacy",
-      position: "Strong Support",
+      organization: "Cámara de Comercio de Costa Rica",
+      type: "Sector Empresarial",
+      position: "Apoyo Fuerte",
       sentiment: "positive" as const,
-      score: 0.88,
-      date: "2024-07-24",
-      statement: "This is a game-changer for rural Australia. The telehealth expansion and regional incentives address long-standing inequities in healthcare access. We commend the government's vision.",
+      score: 0.79,
+      date: "2025-01-16",
+      statement: "La regulación fintech es fundamental para la competitividad nacional. Las PYMES necesitan acceso a financiamiento ágil y las fintech pueden llenar vacíos que la banca tradicional no atiende eficientemente.",
       influence: "Medium",
-      followers: "42K"
-    },
-    {
-      organization: "Australian Taxpayers' Alliance",
-      type: "Fiscal Advocacy",
-      position: "Opposition",
-      sentiment: "negative" as const,
-      score: -0.71,
-      date: "2024-07-25",
-      statement: "The $2.4 billion price tag raises serious concerns about fiscal responsibility. Taxpayers deserve transparency on how this expansion will be funded without increasing debt or taxes.",
-      influence: "Medium",
-      followers: "68K"
+      followers: "95K"
     }
   ];
 
   const stakeholderPush = [
     {
-      stakeholder: "Australian Council of Social Service",
-      type: "Social Services Coalition",
-      action: "Lobbying for Legislation",
-      sentiment: "positive" as const,
-      score: 0.92,
-      date: "2024-06-15",
-      description: "ACOSS has been actively campaigning for universal healthcare access legislation for 18 months. Released comprehensive policy paper and conducted nationwide consultations with 200+ community organizations.",
-      impact: "Direct influence on bill's social equity provisions",
-      coalition: "Coalition of 50+ member organizations"
-    },
-    {
-      stakeholder: "Australian Healthcare Reform Alliance",
-      type: "Industry Coalition",
-      action: "Policy Development Partnership",
-      sentiment: "positive" as const,
-      score: 0.85,
-      date: "2024-05-20",
-      description: "Multi-stakeholder alliance including hospitals, insurers, and patient groups collaborated with government on bill drafting. Provided technical expertise on implementation feasibility.",
-      impact: "Shaped telehealth framework and funding mechanisms",
-      coalition: "15 major healthcare organizations"
-    },
-    {
-      stakeholder: "Mental Health Australia",
-      type: "Mental Health Advocacy Peak Body",
-      action: "Pushing for Amendment",
+      stakeholder: "BAC Credomatic",
+      type: "Banco Líder Regional",
+      action: "Cabildeo Contra Asimetrías Regulatorias",
       sentiment: "negative" as const,
-      score: -0.65,
-      date: "2024-07-20",
-      description: "Leading a coalition demanding specific mental health provisions be added to the bill. Launched public campaign #MentalHealthMatters with 25K petition signatures in 48 hours.",
-      impact: "Pressure for bill amendment before final vote",
-      coalition: "Coalition of 30+ mental health organizations"
+      score: -0.68,
+      date: "2024-11-10",
+      description: "BAC ha liderado durante 14 meses una campaña intensiva contra el arbitraje regulatorio. Ha presentado estudios técnicos en 8 comisiones legislativas demostrando riesgos sistémicos de permitir fintech con menores requisitos de capital.",
+      impact: "Presión directa sobre modificaciones a requisitos prudenciales",
+      coalition: "Alianza con todos los bancos privados del país"
+    },
+    {
+      stakeholder: "Asociación Fintech de Costa Rica",
+      type: "Coalición Tecnología Financiera",
+      action: "Cabildeo Pro-Innovación",
+      sentiment: "positive" as const,
+      score: 0.88,
+      date: "2024-09-15",
+      description: "Alianza de 35 startups fintech que ha trabajado directamente con el Ministerio de Hacienda en el diseño del sandbox regulatorio. Presentó roadmap de inclusión financiera digital validado por BID y Banco Mundial.",
+      impact: "Influencia en diseño del marco sandbox y requisitos escalonados",
+      coalition: "35 empresas fintech + respaldo BID"
+    },
+    {
+      stakeholder: "Banco Central de Costa Rica",
+      type: "Autoridad Monetaria",
+      action: "Diseño de Marco Prudencial",
+      sentiment: "neutral" as const,
+      score: 0.15,
+      date: "2024-12-01",
+      description: "BCCR ha trabajado en conjunto con SUGEF para establecer requisitos de capital, liquidez y gestión de riesgos proporcionales. Busca equilibrio entre innovación y estabilidad del sistema de pagos nacional.",
+      impact: "Definición técnica de estándares regulatorios finales",
+      coalition: "Coordinación interinstitucional BCCR-SUGEF-Hacienda"
+    },
+    {
+      stakeholder: "MEIC - Ministerio de Economía",
+      type: "Entidad Gubernamental",
+      action: "Impulso de Competencia",
+      sentiment: "positive" as const,
+      score: 0.72,
+      date: "2025-01-05",
+      description: "MEIC ha sido promotor clave de la ley para romper oligopolio bancario. Argumenta que concentración del BAC y 3 bancos más controla 85% del mercado, limitando opciones y elevando costos para consumidores y PYMES.",
+      impact: "Respaldo político de alto nivel en gobierno",
+      coalition: "Apoyo directo de Casa Presidencial"
     }
   ];
 
@@ -169,7 +180,7 @@ export function SocialListeningDemo() {
             <h2 className="text-2xl font-bold">Social Listening</h2>
           </div>
           <p className="text-muted-foreground">
-            Real-time monitoring of media outlets, NGOs, and stakeholders driving the Healthcare Access Bill 2024
+            Monitoreo en tiempo real de medios, ONGs y actores clave que impulsan la Ley de Regulación Fintech 2025
           </p>
         </div>
       </div>
@@ -247,7 +258,7 @@ export function SocialListeningDemo() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">Media Coverage</h3>
-                <p className="text-sm text-muted-foreground">Sentiment analysis from major Australian newspapers</p>
+                <p className="text-sm text-muted-foreground">Análisis de sentimiento de principales medios costarricenses</p>
               </div>
             </div>
             <div className="space-y-4">
@@ -291,7 +302,7 @@ export function SocialListeningDemo() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">NGO Positions</h3>
-                <p className="text-sm text-muted-foreground">Statements and positions from non-governmental organizations</p>
+                <p className="text-sm text-muted-foreground">Declaraciones y posiciones de organizaciones gremiales y de consumidores</p>
               </div>
             </div>
             <div className="space-y-4">
@@ -344,8 +355,8 @@ export function SocialListeningDemo() {
                 <Building2 className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">Stakeholders Driving Legislation</h3>
-                <p className="text-sm text-muted-foreground">Organizations actively pushing for the creation or modification of the law</p>
+                <h3 className="text-xl font-bold">Actores Impulsando la Legislación</h3>
+                <p className="text-sm text-muted-foreground">Organizaciones que activamente buscan crear o modificar la ley</p>
               </div>
             </div>
             <div className="space-y-4">

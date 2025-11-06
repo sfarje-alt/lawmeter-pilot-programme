@@ -5,44 +5,51 @@ import { TrendingUp, TrendingDown, Minus, Video, Quote, Info } from "lucide-reac
 import { Progress } from "@/components/ui/progress";
 
 export function MediaMonitoringDemo() {
-  // Mock data based on Australian Parliament session
-  const videoUrl = "https://www.youtube.com/embed/AxERud7DOMQ";
+  // Mock data based on Costa Rican parliamentary session
+  const videoUrl = "https://www.youtube.com/embed/Y-KdJ86rKZw";
   
   const transcriptSegments = [
     {
-      speaker: "Minister for Health",
+      speaker: "Ministro de Hacienda",
       timestamp: "00:02:15",
-      text: "The Healthcare Access Bill 2024 represents a fundamental shift in how we deliver healthcare to all Australians. This legislation ensures that no Australian will be left behind when it comes to accessing essential medical services.",
+      text: "El Proyecto de Ley de Regulación Fintech 2025 representa un avance significativo para modernizar nuestro sistema financiero. Esta legislación garantizará que Costa Rica se posicione como líder regional en innovación bancaria digital mientras protegemos a los consumidores.",
       sentiment: "positive" as const,
-      score: 0.82
+      score: 0.85
     },
     {
-      speaker: "Opposition Leader",
+      speaker: "Diputado Opositor",
       timestamp: "00:05:42",
-      text: "While we support the principle of universal healthcare access, this bill lacks the necessary funding mechanisms. We're concerned about the financial sustainability and the burden it places on the states.",
+      text: "Si bien apoyamos la innovación financiera, nos preocupa profundamente que esta ley no contemple salvaguardas suficientes para proteger al sistema bancario tradicional. El BAC y otros bancos enfrentan competencia desleal de plataformas no reguladas.",
       sentiment: "negative" as const,
-      score: -0.65
+      score: -0.72
     },
     {
-      speaker: "Shadow Minister for Health",
+      speaker: "Presidenta Comisión Económica",
       timestamp: "00:08:30",
-      text: "The proposed telehealth expansion is a positive step. However, we need stronger provisions for rural and remote communities who face unique challenges in accessing these services.",
+      text: "La propuesta de sandbox regulatorio es positiva. Sin embargo, necesitamos disposiciones más claras sobre requisitos de capital y liquidez para nuevos actores financieros digitales.",
       sentiment: "neutral" as const,
-      score: 0.12
+      score: 0.18
     },
     {
-      speaker: "Minister for Health",
+      speaker: "Ministro de Hacienda",
       timestamp: "00:12:18",
-      text: "I want to address the funding concerns directly. The government has allocated $2.4 billion over four years, with clear pathways for state partnerships. This is fully costed and sustainable.",
+      text: "Quiero ser claro: esta ley protege tanto la innovación como la estabilidad financiera. Hemos trabajado estrechamente con SUGEF y el Banco Central para establecer requisitos prudenciales proporcionales al riesgo.",
       sentiment: "positive" as const,
-      score: 0.75
+      score: 0.78
     },
     {
-      speaker: "Independent Senator",
+      speaker: "Diputado Independiente",
       timestamp: "00:15:05",
-      text: "This bill fails to adequately address mental health services. We need specific provisions and dedicated funding for mental health infrastructure, not just vague commitments.",
+      text: "Esta ley ignora completamente la inclusión financiera en zonas rurales. Necesitamos provisiones específicas para garantizar que las comunidades alejadas no queden excluidas del sistema bancario digital.",
       sentiment: "negative" as const,
-      score: -0.71
+      score: -0.68
+    },
+    {
+      speaker: "Representante Sector Bancario",
+      timestamp: "00:18:22",
+      text: "El BAC y la banca tradicional apoyan la transformación digital, pero exigimos reglas de juego equitativas. No puede haber arbitraje regulatorio que permita a las fintech operar con menores exigencias de capital y gestión de riesgos.",
+      sentiment: "negative" as const,
+      score: -0.55
     }
   ];
 
@@ -91,10 +98,10 @@ export function MediaMonitoringDemo() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Video className="w-5 h-5" />
-            Parliamentary Session - Healthcare Access Bill 2024
+            Sesión Plenaria - Proyecto de Ley Regulación Fintech 2025
           </CardTitle>
           <CardDescription>
-            Question Time: 24th July 2025 - House of Representatives
+            Debate Legislativo: 15 de enero 2025 - Asamblea Legislativa de Costa Rica
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -251,20 +258,20 @@ export function MediaMonitoringDemo() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
-                    <h5 className="font-semibold text-sm mb-1 text-success">Strong Support For</h5>
-                    <p className="text-sm">Telehealth expansion and universal access principles</p>
+                    <h5 className="font-semibold text-sm mb-1 text-success">Apoyo Fuerte Para</h5>
+                    <p className="text-sm">Sandbox regulatorio e innovación bancaria digital</p>
                   </div>
                   <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                    <h5 className="font-semibold text-sm mb-1 text-destructive">Major Concerns</h5>
-                    <p className="text-sm">Funding sustainability and mental health provisions</p>
+                    <h5 className="font-semibold text-sm mb-1 text-destructive">Preocupaciones Principales</h5>
+                    <p className="text-sm">Competencia desleal con fintech y protección del sistema bancario tradicional</p>
                   </div>
                   <div className="p-3 bg-muted/50 border rounded-lg">
-                    <h5 className="font-semibold text-sm mb-1">Neutral Areas</h5>
-                    <p className="text-sm">Implementation timeline and state partnerships</p>
+                    <h5 className="font-semibold text-sm mb-1">Áreas Neutrales</h5>
+                    <p className="text-sm">Requisitos de capital y timeline de implementación</p>
                   </div>
                   <div className="p-3 border rounded-lg">
-                    <h5 className="font-semibold text-sm mb-1">Media Tone</h5>
-                    <p className="text-sm">Coverage is largely balanced with focus on fiscal debate</p>
+                    <h5 className="font-semibold text-sm mb-1">Tono Mediático</h5>
+                    <p className="text-sm">Cobertura equilibrada con énfasis en impacto al sector bancario</p>
                   </div>
                 </div>
               </CardContent>
