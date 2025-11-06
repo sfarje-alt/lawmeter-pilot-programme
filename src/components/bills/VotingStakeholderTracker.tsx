@@ -61,14 +61,28 @@ export function VotingStakeholderTracker({
   const supportPercentage = totalVotes ? (totalFor / totalVotes) * 100 : 0;
   const opposePercentage = totalVotes ? (totalAgainst / totalVotes) * 100 : 0;
 
-  // Group MPs by position
-  const mpsByPosition = {
-    support: mps.filter(mp => mp.votingPosition === "support"),
-    oppose: mps.filter(mp => mp.votingPosition === "oppose"),
-    abstain: mps.filter(mp => mp.votingPosition === "abstain"),
-    unknown: mps.filter(mp => !mp.votingPosition || mp.votingPosition === "unknown"),
-  };
+  // Derive MPs from latest voting record if `mps` prop is empty
+  const latestRecordWithVotes = [...votingRecords]
+    .slice()
+    .reverse()
+    .find((r) => r.mpVotes && r.mpVotes.length);
 
+  const derivedMps: MP[] = latestRecordWithVotes
+    ? latestRecordWithVotes.mpVotes!.map((v) => ({
+        name: v.mpName,
+        party: v.party,
+        votingPosition: v.vote === "for" ? "support" : v.vote === "against" ? "oppose" : "abstain",
+      }))
+    : [];
+
+  const effectiveMps: MP[] = mps && mps.length > 0 ? mps : derivedMps;
+
+  const mpsByPosition = {
+    support: effectiveMps.filter((mp) => mp.votingPosition === "support"),
+    oppose: effectiveMps.filter((mp) => mp.votingPosition === "oppose"),
+    abstain: effectiveMps.filter((mp) => mp.votingPosition === "abstain"),
+    unknown: effectiveMps.filter((mp) => !mp.votingPosition || mp.votingPosition === "unknown"),
+  };
   return (
     <Tabs defaultValue="voting" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
