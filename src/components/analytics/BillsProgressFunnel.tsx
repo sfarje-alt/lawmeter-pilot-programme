@@ -34,7 +34,7 @@ export function BillsProgressFunnel({ bills }: BillsProgressFunnelProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitBranch className="h-5 w-5" />
-          Progreso de Proyectos legislativos
+          Progreso de Proyectos
         </CardTitle>
       </CardHeader>
       <CardContent>
