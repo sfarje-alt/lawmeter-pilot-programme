@@ -81,7 +81,7 @@ export function BillDrawer({
             <div className="space-y-6">
               <div>
                 <h4 className="font-semibold mb-4 text-sm tracking-wide">FIRMA PRINCIPAL</h4>
-                <Collapsible defaultOpen={true}>
+                <Collapsible defaultOpen={false}>
                   <div className="border rounded-lg overflow-hidden">
                     {/* Header con foto y nombre - clickeable */}
                     <CollapsibleTrigger className="w-full">
