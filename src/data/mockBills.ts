@@ -20,7 +20,6 @@ const statusCycle: BillItem["status"][] = [
 ];
 
 const parties = ["Labor", "Liberal", "Greens", "Independent", "Nationals"];
-const chambers: BillItem["chamber"][] = ["House", "Senate"];
 
 const mpNamesByParty = {
   Labor: [
@@ -161,7 +160,6 @@ function makeStageLocation(chamber: BillItem["chamber"], estado: BillItem["estad
 function generateBill(index: number): BillItem {
   const p = portfolioTopics[index % portfolioTopics.length];
   const topic = p.topics[index % p.topics.length];
-  const chamber = chambers[index % chambers.length];
   
   // Create a better distribution across all quadrants
   let estado: BillItem["estado"];
@@ -223,7 +221,8 @@ function generateBill(index: number): BillItem {
   ];
 
   // Add committee stage voting if applicable
-  if (["Committee", "Consideration in Detail", "Passed House", "Passed Senate", "Royal Assent Pending"].includes(status)) {
+  const status = estado;
+  if (["Committee", "Consideration in Detail", "Aprobado en Primer Debate", "Aprobado en Segundo Debate"].includes(status)) {
     votingRecords.push({
       date: daysAgoISO(daysAgo + 10),
       stage: "Committee Stage",
@@ -278,17 +277,16 @@ function generateBill(index: number): BillItem {
     mps: [
       { 
         name: selectedMP.name, 
-        role: chamber === "House" ? "Member of Parliament" : "Senator",
+        role: "Diputado",
         email: `${selectedMP.name.toLowerCase().replace(/\s+/g, '.')}.mp@aph.gov.au`,
         phone: `(02) ${6277 + (index % 10)} ${7000 + (index % 1000)}`,
         party,
         constituency: selectedMP.constituency,
       }
     ],
-    chamber,
     estado,
     status: estado,
-    stageLocation: makeStageLocation(chamber, estado),
+    stageLocation: makeStageLocation("House", estado),
     fechaPresentacion: daysAgoISO(daysAgo + 30),
     presentationDate: daysAgoISO(daysAgo + 30),
     fechaUltimaAccion: daysAgoISO(daysAgo),

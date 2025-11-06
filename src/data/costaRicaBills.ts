@@ -19,7 +19,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Banca", "Protección al Consumidor", "Transformación Digital"],
     cartera: "Ministerio de Economía",
     portfolio: "Ministerio de Economía",
-    chamber: "House",
     stageLocation: "Comisión de Asuntos Económicos",
     firmantePrincipal: {
       numero: "01",
@@ -117,7 +116,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Privacidad", "Banca", "Ciberseguridad"],
     cartera: "Ministerio de Ciencia y Tecnología",
     portfolio: "Ministerio de Ciencia y Tecnología",
-    chamber: "House",
     stageLocation: "Primera Lectura Pendiente",
     firmantePrincipal: {
       numero: "05",
@@ -193,7 +191,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Lavado de Activos", "Criptomonedas", "Regulación Financiera"],
     cartera: "Ministerio de Hacienda",
     portfolio: "Ministerio de Hacienda",
-    chamber: "House",
     stageLocation: "Pendiente Segundo Debate",
     firmantePrincipal: {
       numero: "08",
@@ -284,7 +281,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Tributación", "Banca", "Política Fiscal"],
     cartera: "Ministerio de Hacienda",
     portfolio: "Ministerio de Hacienda",
-    chamber: "House",
     stageLocation: "Comisión de Asuntos Hacendarios",
     firmantePrincipal: {
       numero: "14",
@@ -361,7 +357,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Fintech", "Innovación", "Banca Digital"],
     cartera: "Ministerio de Ciencia y Tecnología",
     portfolio: "Ministerio de Ciencia y Tecnología",
-    chamber: "House",
     stageLocation: "Pendiente Segundo Debate",
     firmantePrincipal: {
       numero: "09",
@@ -438,7 +433,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Derecho Laboral", "Banca", "Teletrabajo"],
     cartera: "Ministerio de Trabajo",
     portfolio: "Ministerio de Trabajo",
-    chamber: "House",
     stageLocation: "Primera Lectura Pendiente",
     firmantePrincipal: {
       numero: "16",
@@ -515,7 +509,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Transparencia Fiscal", "Banca Internacional", "Cumplimiento"],
     cartera: "Ministerio de Hacienda",
     portfolio: "Ministerio de Hacienda",
-    chamber: "House",
     stageLocation: "Comisión de Asuntos Hacendarios",
     firmantePrincipal: {
       numero: "19",
@@ -592,7 +585,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Educación Financiera", "Protección al Consumidor", "Inclusión Financiera"],
     cartera: "Ministerio de Educación",
     portfolio: "Ministerio de Educación",
-    chamber: "House",
     stageLocation: "Pendiente Sanción Ejecutiva",
     firmantePrincipal: {
       numero: "11",
@@ -669,7 +661,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Inclusión Financiera", "Digitalización", "Desarrollo Social"],
     cartera: "Ministerio de Desarrollo Humano e Inclusión Social",
     portfolio: "Ministerio de Desarrollo Humano e Inclusión Social",
-    chamber: "House",
     stageLocation: "Comisión de Asuntos Sociales",
     firmantePrincipal: {
       numero: "20",
@@ -746,7 +737,6 @@ export const costaRicaBills: BillItem[] = [
     categories: ["Sostenibilidad", "ESG", "Responsabilidad Corporativa"],
     cartera: "Ministerio de Ambiente y Energía",
     portfolio: "Ministerio de Ambiente y Energía",
-    chamber: "House",
     stageLocation: "Primera Lectura Pendiente",
     firmantePrincipal: {
       numero: "13",

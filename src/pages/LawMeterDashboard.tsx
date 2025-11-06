@@ -131,8 +131,6 @@ export default function LawMeterDashboard() {
     highRisk: filteredBills.filter(b => b.risk_level === "high").length,
     mediumRisk: filteredBills.filter(b => b.risk_level === "medium").length,
     lowRisk: filteredBills.filter(b => b.risk_level === "low").length,
-    house: filteredBills.filter(b => b.chamber === "House").length,
-    senate: filteredBills.filter(b => b.chamber === "Senate").length,
   };
 
   // Pagination
@@ -419,36 +417,6 @@ export default function LawMeterDashboard() {
               </Card>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.chambers.includes("House") ? "ring-2 ring-primary" : ""}`}
-                onClick={() => {
-                  setBillsFilters(prev => ({
-                    ...prev,
-                    chambers: prev.chambers.includes("House") 
-                      ? prev.chambers.filter(c => c !== "House")
-                      : [...prev.chambers, "House"]
-                  }));
-                  setBillsPage(1);
-                }}
-              >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">House</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold">{billsKPIs.house}</div></CardContent>
-              </Card>
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.chambers.includes("Senate") ? "ring-2 ring-primary" : ""}`}
-                onClick={() => {
-                  setBillsFilters(prev => ({
-                    ...prev,
-                    chambers: prev.chambers.includes("Senate") 
-                      ? prev.chambers.filter(c => c !== "Senate")
-                      : [...prev.chambers, "Senate"]
-                  }));
-                  setBillsPage(1);
-                }}
-              >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Senate</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold">{billsKPIs.senate}</div></CardContent>
-              </Card>
             </div>
             
             <div className="flex items-center justify-between">

@@ -403,8 +403,7 @@ export function ChartsPanel({ data, type }: ChartsPanelProps) {
 
   // Bills by chamber
   const chamberData = [
-    { name: "House", value: bills.filter((b) => b.chamber === "House").length },
-    { name: "Senate", value: bills.filter((b) => b.chamber === "Senate").length },
+    { name: "Asamblea Legislativa", value: bills.length },
   ];
 
   // Risk distribution
