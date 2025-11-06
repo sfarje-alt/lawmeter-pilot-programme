@@ -18,8 +18,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "House",
-    status: "Committee",
+    status: "En comisión",
     stageLocation: "House — Environment Committee Review",
+    presentationDate: "2024-08-01",
     lastActionDate: "2024-10-01",
     summary: "Introduces nature positive reforms to strengthen environmental protections and streamline assessment processes. Establishes new environmental standards and regional plans.",
     bullets: [
@@ -101,8 +102,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "Senate",
-    status: "Second Reading",
+    status: "Aprobado en Primer Debate",
     stageLocation: "Senate — Second Reading Debate",
+    presentationDate: "2024-08-15",
     lastActionDate: "2024-09-28",
     summary: "Modernizes privacy laws to address digital economy challenges, strengthens individual rights, and increases penalties for serious breaches.",
     bullets: [
@@ -170,8 +172,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "House",
-    status: "Passed House",
+    status: "Aprobado en Primer Debate (Primera Legislatura)",
     stageLocation: "Passed House — Awaiting Senate Introduction",
+    presentationDate: "2024-07-20",
     lastActionDate: "2024-09-25",
     summary: "Closes workplace relations loopholes affecting gig economy workers, labour hire arrangements, and wage theft. Strengthens Fair Work Commission powers.",
     bullets: [
@@ -198,8 +201,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "Senate",
-    status: "Introduced",
+    status: "Presentado",
     stageLocation: "Senate — First Reading",
+    presentationDate: "2024-09-30",
     lastActionDate: "2024-09-30",
     summary: "Introduces mandatory scam prevention obligations for banks, telecommunication providers, and digital platforms. Creates enforceable industry codes.",
     bullets: [
@@ -226,8 +230,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "House",
-    status: "Second Reading",
+    status: "Aprobado en Primer Debate",
     stageLocation: "House — Second Reading Debate",
+    presentationDate: "2024-08-20",
     lastActionDate: "2024-09-27",
     summary: "Strengthens health practitioner regulation including mandatory reporting requirements and enhanced patient safety measures.",
     bullets: [
@@ -254,8 +259,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "Senate",
-    status: "Committee",
+    status: "En comisión",
     stageLocation: "Senate — Community Affairs Committee",
+    presentationDate: "2024-08-10",
     lastActionDate: "2024-09-22",
     summary: "Implements enhanced care standards and increased transparency measures for aged care providers following Royal Commission recommendations.",
     bullets: [
@@ -282,8 +288,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "House",
-    status: "Consideration in Detail",
+    status: "Aprobado en Segundo Debate",
     stageLocation: "House — Consideration in Detail",
+    presentationDate: "2024-07-15",
     lastActionDate: "2024-09-20",
     summary: "Strengthens consumer protections and competition laws, particularly targeting unfair trading practices and market concentration.",
     bullets: [
@@ -310,8 +317,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "Senate",
-    status: "Passed Senate",
+    status: "Aprobado en Segundo Debate (Primera Legislatura)",
     stageLocation: "Passed Senate — Awaiting House Consideration",
+    presentationDate: "2024-07-01",
     lastActionDate: "2024-09-18",
     summary: "Expands critical infrastructure protection requirements and incident reporting obligations for essential services sectors.",
     bullets: [
@@ -338,8 +346,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "House",
-    status: "Introduced",
+    status: "Presentado",
     stageLocation: "House — First Reading",
+    presentationDate: "2024-09-15",
     lastActionDate: "2024-09-15",
     summary: "Private member's bill proposing accelerated emissions reduction targets and phase-out timeline for fossil fuel projects.",
     bullets: [
@@ -366,8 +375,9 @@ export const baseBills: BillItem[] = [
       }
     ],
     chamber: "Senate",
-    status: "Introduced",
+    status: "Presentado",
     stageLocation: "Senate — First Reading",
+    presentationDate: "2024-09-12",
     lastActionDate: "2024-09-12",
     summary: "Opposition bill proposing enhanced age verification for social media and expanded online safety commissioner powers.",
     bullets: [
@@ -389,13 +399,13 @@ function daysAgoISO(days: number): string {
 }
 
 const statusCycle: BillItem["status"][] = [
-  "Introduced",
-  "Second Reading",
-  "Committee",
-  "Consideration in Detail",
-  "Passed House",
-  "Passed Senate",
-  "Royal Assent Pending",
+  "Presentado",
+  "En comisión",
+  "Aprobado en Primer Debate",
+  "Aprobado en Segundo Debate",
+  "Aprobado en Primer Debate (Primera Legislatura)",
+  "Aprobado en Segundo Debate (Primera Legislatura)",
+  "Aprobado",
 ];
 
 const parties = ["Labor", "Liberal", "Greens", "Independent", "Nationals"];
@@ -518,20 +528,22 @@ function riskLevelFromScore(score: number): BillItem["risk_level"] {
 
 function makeStageLocation(chamber: BillItem["chamber"], status: BillItem["status"]): string {
   switch (status) {
-    case "Introduced":
+    case "Presentado":
       return `${chamber} — First Reading`;
-    case "Second Reading":
+    case "Aprobado en Primer Debate":
       return `${chamber} — Second Reading Debate`;
-    case "Committee":
+    case "En comisión":
       return `${chamber} — Committee Stage`;
-    case "Consideration in Detail":
+    case "Aprobado en Segundo Debate":
       return `${chamber} — Consideration in Detail`;
-    case "Passed House":
+    case "Aprobado en Primer Debate (Primera Legislatura)":
       return `Passed House — Awaiting Senate Introduction`;
-    case "Passed Senate":
+    case "Aprobado en Segundo Debate (Primera Legislatura)":
       return `Passed Senate — Awaiting House Consideration`;
-    case "Royal Assent Pending":
+    case "Aprobado":
       return `Both Houses — Royal Assent Pending`;
+    default:
+      return `${chamber} — ${status}`;
   }
 }
 
@@ -548,13 +560,13 @@ function generateBill(index: number): BillItem {
   const urgencyGroup = index % 3;
   if (urgencyGroup === 0) {
     // High urgency - late stage bills
-    status = index % 2 === 0 ? "Royal Assent Pending" : "Passed Senate";
+    status = index % 2 === 0 ? "Aprobado" : "Aprobado en Segundo Debate (Primera Legislatura)";
   } else if (urgencyGroup === 1) {
     // Medium urgency - middle stage bills
-    status = index % 2 === 0 ? "Second Reading" : "Committee";
+    status = index % 2 === 0 ? "Aprobado en Primer Debate" : "En comisión";
   } else {
     // Low urgency - early stage bills
-    status = index % 2 === 0 ? "Introduced" : "Consideration in Detail";
+    status = index % 2 === 0 ? "Presentado" : "Aprobado en Segundo Debate";
   }
   
   // Distribute across risk levels (impact)
@@ -663,6 +675,7 @@ function generateBill(index: number): BillItem {
     chamber,
     status,
     stageLocation: makeStageLocation(chamber, status),
+    presentationDate: daysAgoISO(daysAgo + 30),
     lastActionDate: daysAgoISO(daysAgo),
     summary: `Proposes ${isAmendment ? 'amendments' : 'reforms'} relating to ${topic.toLowerCase()} impacting organizations across multiple sectors. Includes compliance, reporting, and operational changes.`,
     bullets: [

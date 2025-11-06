@@ -10,12 +10,11 @@ interface BillsProgressFunnelProps {
 export function BillsProgressFunnel({ bills }: BillsProgressFunnelProps) {
   // Define the stages in order
   const stages = [
-    { key: "First Reading", label: "First Reading" },
-    { key: "Second Reading", label: "Second Reading" },
-    { key: "Committee", label: "Committee Stage" },
-    { key: "Third Reading", label: "Third Reading" },
-    { key: "Passed", label: "Passed" },
-    { key: "Royal Assent", label: "Royal Assent" },
+    { key: "Presentado", label: "Presentado" },
+    { key: "En comisión", label: "En Comisión" },
+    { key: "Primer Debate", label: "Primer Debate" },
+    { key: "Segundo Debate", label: "Segundo Debate" },
+    { key: "Aprobado", label: "Aprobado" },
   ];
 
   const stageData = stages.map(stage => {
@@ -73,11 +72,11 @@ export function BillsProgressFunnel({ bills }: BillsProgressFunnelProps) {
               <span className="font-semibold">{bills.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Completed (Royal Assent):</span>
+              <span className="text-muted-foreground">Completados (Aprobados):</span>
               <span className="font-semibold">{stageData[stageData.length - 1].count}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Completion Rate:</span>
+              <span className="text-muted-foreground">Tasa de Completitud:</span>
               <span className="font-semibold">
                 {bills.length > 0 ? ((stageData[stageData.length - 1].count / bills.length) * 100).toFixed(1) : 0}%
               </span>

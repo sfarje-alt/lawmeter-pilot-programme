@@ -48,13 +48,13 @@ export function BillDrawer({
   };
 
   const statuses = [
-    "Introduced",
-    "Second Reading",
-    "Committee",
-    "Consideration in Detail",
-    "Passed House",
-    "Passed Senate",
-    "Royal Assent Pending",
+    "Presentado",
+    "En comisión",
+    "Aprobado en Primer Debate",
+    "Aprobado en Segundo Debate",
+    "Aprobado en Primer Debate (Primera Legislatura)",
+    "Aprobado en Segundo Debate (Primera Legislatura)",
+    "Aprobado",
   ];
   const currentStatusIndex = statuses.indexOf(bill.status);
 

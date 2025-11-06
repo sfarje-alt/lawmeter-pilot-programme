@@ -105,36 +105,92 @@ export interface VotingRecord {
   }>;
 }
 
-export interface BillItem {
+export interface Deputy {
   id: string;
+  name: string;
+  party: string;
+  role: "Firmante principal" | "Cofirmante";
+  province: string;
+  profileUrl?: string;
+}
+
+export interface ProjectText {
+  date: string;
+  textType: string;
+  pdfUrl: string;
+}
+
+export interface BillItem {
+  // Campos básicos
+  id: string; // Expediente
   title: string;
-  portfolio?: string;
-  party?: string;
-  mps?: MP[];
-  chamber: "House" | "Senate";
+  purpose?: string; // Propósito del proyecto
+  type?: string; // Tipo de proyecto
+  
+  // Estado y fechas
   status:
-    | "Introduced"
-    | "Second Reading"
-    | "Committee"
-    | "Consideration in Detail"
-    | "Passed House"
-    | "Passed Senate"
-    | "Royal Assent Pending";
-  stageLocation: string;
+    | "Presentado"
+    | "En comisión"
+    | "Aprobado en Primer Debate"
+    | "Aprobado en Segundo Debate"
+    | "Retirado"
+    | "Rechazado"
+    | "Archivado"
+    | "Aprobado en Primer Debate (Segunda Legislatura)"
+    | "Aprobado en Segundo Debate (Segunda Legislatura)"
+    | "Aprobado en Tercer Debate (Segunda Legislatura)"
+    | "Dictaminado"
+    | "Aprobado en Primer Debate (Primera Legislatura)"
+    | "Aprobado en Segundo Debate (Primera Legislatura)"
+    | "Aprobado"
+    | "Vetado"
+    | "Resellado"
+    | "Admisibilidad de Reforma Constitucional";
+  presentationDate: string; // Fecha de presentación
   lastActionDate: string;
+  
+  // Comisión
+  assignedCommission?: string;
+  commissionUrl?: string;
+  
+  // Firmantes y diputados
+  principalSigner?: Deputy;
+  coSigners?: Deputy[];
+  
+  // Categorías y clasificación
+  categories?: string[];
+  portfolio?: string; // Mantener para compatibilidad
+  
+  // Textos del proyecto
+  projectTexts?: ProjectText[];
+  
+  // Votaciones
+  votingRecords?: VotingRecord[];
+  
+  // Resumen y análisis
   summary: string;
   bullets: string[];
   risk_level: "low" | "medium" | "high";
   risk_score: number;
+  
+  // Enlaces
   motherActLink?: string;
   amendmentActLink?: string;
-  votingRecords?: VotingRecord[];
+  projectUrl?: string; // URL en Delfino
+  
+  // Stakeholders
   stakeholders?: Array<{
     name: string;
     organization?: string;
     position: "support" | "oppose" | "neutral";
     statement?: string;
   }>;
+  
+  // Campos deprecados (mantener para compatibilidad)
+  party?: string;
+  mps?: MP[];
+  chamber?: "House" | "Senate";
+  stageLocation?: string;
 }
 
 export interface Comment {

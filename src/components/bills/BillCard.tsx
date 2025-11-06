@@ -23,13 +23,13 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
   };
 
   const statusStages = [
-    "Introduced",
-    "Second Reading",
-    "Committee",
-    "Consideration in Detail",
-    "Passed House",
-    "Passed Senate",
-    "Royal Assent Pending"
+    "Presentado",
+    "En comisión",
+    "Aprobado en Primer Debate",
+    "Aprobado en Segundo Debate",
+    "Aprobado en Primer Debate (Primera Legislatura)",
+    "Aprobado en Segundo Debate (Primera Legislatura)",
+    "Aprobado"
   ];
 
   const currentStageIndex = statusStages.indexOf(bill.status);
@@ -107,8 +107,8 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
             })}
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Introduced</span>
-            <span>Royal Assent</span>
+            <span>Presentado</span>
+            <span>Aprobado</span>
           </div>
         </div>
 

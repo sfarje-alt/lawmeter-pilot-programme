@@ -34,9 +34,9 @@ export function ImpactUrgencyMatrix({ data, type }: ImpactUrgencyMatrixProps) {
       const bill = item as BillItem;
       impact = bill.risk_level;
       // Bills in later stages are more urgent
-      if (bill.status.includes("Third Reading") || bill.status.includes("Royal Assent")) {
+      if (bill.status.includes("Aprobado") || bill.status.includes("Tercer Debate")) {
         urgency = "high";
-      } else if (bill.status.includes("Second Reading") || bill.status.includes("Committee")) {
+      } else if (bill.status.includes("Primer Debate") || bill.status.includes("En comisión")) {
         urgency = "medium";
       }
     }
