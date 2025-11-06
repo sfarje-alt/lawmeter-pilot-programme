@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VotingStakeholderTracker } from "./VotingStakeholderTracker";
-import { Copy, Trash2, Mail, Phone } from "lucide-react";
+import { Copy, Trash2, Mail, Phone, ChevronRight } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { daysSince } from "@/lib/dateUtils";
@@ -73,6 +74,56 @@ export function BillDrawer({
             <Badge variant="outline">{bill.status}</Badge>
             {bill.portfolio && <Badge variant="outline">{bill.portfolio}</Badge>}
           </div>
+
+          {/* Firma Principal y Co-Proponentes */}
+          {bill.firmantePrincipal && (
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-semibold mb-4">FIRMA PRINCIPAL</h4>
+                <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
+                  <span className="text-lg font-semibold text-muted-foreground min-w-[2rem]">
+                    {bill.firmantePrincipal.numero}
+                  </span>
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={bill.firmantePrincipal.foto} alt={bill.firmantePrincipal.nombre} />
+                    <AvatarFallback>{bill.firmantePrincipal.nombre.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h5 className="font-bold text-base">{bill.firmantePrincipal.nombre}</h5>
+                    {bill.firmantePrincipal.fraccion && (
+                      <p className="text-sm text-muted-foreground uppercase">{bill.firmantePrincipal.fraccion}</p>
+                    )}
+                    <p className="text-sm">{bill.firmantePrincipal.provincia}</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+              </div>
+
+              {bill.coProponentes && bill.coProponentes.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-4">CO-PROPONENTES</h4>
+                  <div className="space-y-2">
+                    {bill.coProponentes.map((diputado, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
+                        <span className="text-lg font-semibold text-muted-foreground min-w-[2rem]">
+                          {diputado.numero}
+                        </span>
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={diputado.foto} alt={diputado.nombre} />
+                          <AvatarFallback>{diputado.nombre.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h5 className="font-bold text-base">{diputado.nombre}</h5>
+                          <p className="text-sm">{diputado.provincia}</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {bill.mps && bill.mps.length > 0 && (
             <div>

@@ -84,11 +84,14 @@ export interface Alert {
 // ============= DIPUTADOS =============
 export interface Diputado {
   numeroDeputado?: string; // Número de identificación del diputado
+  numero?: string; // Alias para numeroDeputado (para display)
   nombre: string;
   partidoPolitico: string;
   logoPartido?: string; // URL del logo del partido
   rol?: string; // Ej: "Subjefe de fracción", "Firmante principal"
+  fraccion?: string; // Fracción política del diputado
   provincia: string;
+  foto?: string; // URL de la foto del diputado
   urlPerfil?: string; // URL del perfil en Delfino
   email?: string;
   telefono?: string;
