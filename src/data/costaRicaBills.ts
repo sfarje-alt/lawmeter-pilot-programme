@@ -213,7 +213,20 @@ export const costaRicaBills: BillItem[] = [
     puntajeRiesgo: 90,
     risk_level: "high",
     risk_score: 90,
-    votingRecords: [],
+    votingRecords: [
+      {
+        date: "2025-01-20",
+        stage: "Consulta Pública",
+        votesFor: 0,
+        votesAgainst: 0,
+        abstentions: 0,
+        passed: true,
+        mpVotes: [
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+          { mpName: "Roberto Fernández Quesada", party: "Nueva República", vote: "for" },
+        ]
+      }
+    ],
     stakeholders: [
       {
         name: "SUGEF",
@@ -706,7 +719,20 @@ export const costaRicaBills: BillItem[] = [
     puntajeRiesgo: 65,
     risk_level: "medium",
     risk_score: 65,
-    votingRecords: [],
+    votingRecords: [
+      {
+        date: "2025-01-22",
+        stage: "Consulta Pública",
+        votesFor: 0,
+        votesAgainst: 0,
+        abstentions: 0,
+        passed: true,
+        mpVotes: [
+          { mpName: "Gabriela Soto Ramírez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Manuel Solís Vargas", party: "Frente Amplio", vote: "for" },
+        ]
+      }
+    ],
     stakeholders: [
       {
         name: "ANEP",
@@ -1183,7 +1209,20 @@ export const costaRicaBills: BillItem[] = [
     puntajeRiesgo: 60,
     risk_level: "medium",
     risk_score: 60,
-    votingRecords: [],
+    votingRecords: [
+      {
+        date: "2025-01-25",
+        stage: "Consulta Pública",
+        votesFor: 0,
+        votesAgainst: 0,
+        abstentions: 0,
+        passed: true,
+        mpVotes: [
+          { mpName: "Rodrigo Arias Sánchez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Karina Bolaños Esquivel", party: "Acción Ciudadana", vote: "for" },
+        ]
+      }
+    ],
     stakeholders: [
       {
         name: "Ministerio de Ambiente y Energía",
