@@ -246,6 +246,13 @@ const regulationsData = [
     ministry: "CONASSIF (Consejo Nacional de Supervisión del Sistema Financiero)",
     type: "Decreto Ejecutivo" as const,
     relatedLaw: "8204"
+  },
+  {
+    number: "44096-MP-H-MAG-MOPT-MGP-MSP",
+    name: "Reglamento al Artículo 35 de la Ley 8204: Procedimiento de Declaración de Dinero en Efectivo y Títulos Valores en Fronteras",
+    ministry: "Ministerio de Seguridad Pública",
+    type: "Decreto Ejecutivo" as const,
+    relatedLaw: "8204"
   }
 ];
 
@@ -756,6 +763,25 @@ export function generateCostaRicaAlerts(): Alert[] {
       gacetaNumber: "75",
       gacetaDate: "19/04/2021",
       alcance: "52D"
+    },
+    {
+      regulation: regulationsData[5],
+      title: "Reglamento para Declaración de Dinero y Títulos Valores en Fronteras",
+      summary: "El Decreto Ejecutivo 44096-MP-H-MAG-MOPT-MGP-MSP reglamenta el artículo 35 de la Ley 8204 estableciendo el procedimiento detallado para la declaración obligatoria de dinero en efectivo y títulos valores al ingresar o salir del país. Define que toda persona que porte $10,000 o más (o su equivalente en otra moneda) debe declararlo en los puestos migratorios utilizando formularios oficiales. Establece las autoridades competentes (aduanas, migración, policía), los procedimientos de verificación, las consecuencias del incumplimiento (decomiso inmediato del dinero), y los protocolos de retención. Incluye definiciones de actas de retención, constancia de hechos, y declaración de viajero. Requiere señalización clara en todos los puntos de entrada/salida del país.",
+      bullets: [
+        "Obligatorio declarar $10,000 USD o más al entrar/salir del país",
+        "Formularios disponibles en puestos migratorios - última oportunidad antes de pasar",
+        "Incumplimiento total o parcial = decomiso inmediato a favor del ICD",
+        "Acta de retención oficial por autoridad aduanera con identificación del viajero",
+        "Coordinación obligatoria entre Aduanas, Migración, Policía de Fronteras y PCD"
+      ],
+      units: ["Cumplimiento", "Prevención de Lavado", "Legal", "Operaciones Internacionales"],
+      riskScore: 72,
+      publicationDate: "21/07/2023",
+      effectiveDate: "21/08/2023",
+      gacetaNumber: "133",
+      gacetaDate: "21/07/2023",
+      alcance: "138A"
     }
   ];
 
@@ -771,7 +797,11 @@ export function generateCostaRicaAlerts(): Alert[] {
       ? `Artículo Transitorio I: Las entidades financieras deberán designar al Delegado de Protección de Datos dentro de los 90 días naturales siguientes a la entrada en vigencia de este reglamento.\n\nArtículo Transitorio II: La implementación de los estándares de encriptación AES-256 deberá completarse en un plazo máximo de 180 días naturales.\n\nArtículo Transitorio III: Las políticas de minimización y retención de datos deberán estar aprobadas e implementadas dentro de los 120 días naturales.\n\nArtículo Transitorio IV: La primera auditoría de cumplimiento deberá realizarse dentro de los 12 meses siguientes a la vigencia de este reglamento.`
       : i === 3
       ? `Artículo Transitorio I: La implementación de los requisitos de capital se realizará de forma gradual durante un período de 4 años, con hitos semestrales de cumplimiento.\n\nArtículo Transitorio II: Para el primer año, las entidades deberán alcanzar un CET1 mínimo del 3%, Capital Nivel 1 del 4.5%, y Capital Total del 6%.\n\nArtículo Transitorio III: El ratio de Cobertura de Liquidez (LCR) deberá alcanzar el 60% en el primer año, incrementándose en 10 puntos porcentuales anuales hasta alcanzar el 100%.\n\nArtículo Transitorio IV: Las entidades deberán presentar planes de capitalización trimestrales a la SUGEF durante el período de transición.`
-      : `Artículo Transitorio I: Las entidades financieras dispondrán de un plazo de 90 días naturales para implementar los procedimientos estandarizados de debida diligencia establecidos en este reglamento.\n\nArtículo Transitorio II: La actualización de la información de clientes existentes deberá iniciarse inmediatamente, priorizando clientes de alto riesgo (6 meses) y completando clientes estándar en 18 meses.\n\nArtículo Transitorio III: Los sistemas de monitoreo continuo automatizado deberán estar operativos dentro de los 120 días naturales siguientes a la vigencia de este reglamento.\n\nArtículo Transitorio IV: La capacitación del personal en los nuevos procedimientos de debida diligencia deberá completarse dentro de los primeros 60 días de vigencia.`;
+      : i === 4
+      ? `Artículo Transitorio I: Las entidades financieras dispondrán de un plazo de 90 días naturales para implementar los procedimientos estandarizados de debida diligencia establecidos en este reglamento.\n\nArtículo Transitorio II: La actualización de la información de clientes existentes deberá iniciarse inmediatamente, priorizando clientes de alto riesgo (6 meses) y completando clientes estándar en 18 meses.\n\nArtículo Transitorio III: Los sistemas de monitoreo continuo automatizado deberán estar operativos dentro de los 120 días naturales siguientes a la vigencia de este reglamento.\n\nArtículo Transitorio IV: La capacitación del personal en los nuevos procedimientos de debida diligencia deberá completarse dentro de los primeros 60 días de vigencia.`
+      : i === 5
+      ? `Artículo Transitorio I: Las entidades administradoras de aeropuertos, puertos y fronteras terrestres dispondrán de 30 días naturales para instalar señalización clara sobre la obligación de declarar dinero y títulos valores.\n\nArtículo Transitorio II: La Dirección General de Migración deberá tener disponibles los formularios oficiales en todos los puestos migratorios dentro de los 15 días naturales siguientes a la publicación de este decreto.\n\nArtículo Transitorio III: El personal de Aduanas, Migración y fuerzas policiales deberá recibir capacitación sobre los nuevos procedimientos dentro de los primeros 45 días de vigencia.\n\nArtículo Transitorio IV: Los protocolos de coordinación interinstitucional deberán estar formalizados y operativos en todos los puntos de entrada/salida dentro de los 60 días naturales.`
+      : `Artículo Transitorio Único: Las disposiciones de este reglamento entrarán en vigencia de manera inmediata a partir de su publicación en el Diario Oficial La Gaceta.`;
     
     alerts.push({
       title: topic.title,
