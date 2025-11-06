@@ -174,12 +174,12 @@ export interface Interesado {
 export interface BillItem {
   // ========== INFORMACIÓN BÁSICA DEL PROYECTO ==========
   id: string; // Expediente (número de identificación) - Ej: "25285"
-  titulo: string; // Título del proyecto
+  titulo?: string; // Título del proyecto
   proposito?: string; // Propósito del proyecto - descripción detallada
   tipoProyecto?: string; // Tipo - Ej: "Proyecto de Ley"
   
   // ========== ESTADO Y FECHAS ==========
-  estado:
+  estado?:
     | "Presentado"
     | "En comisión"
     | "Aprobado en Primer Debate"
@@ -197,8 +197,8 @@ export interface BillItem {
     | "Vetado"
     | "Resellado"
     | "Admisibilidad de Reforma Constitucional";
-  fechaPresentacion: string; // Fecha de presentación - Ej: "5 NOV, 2025"
-  fechaUltimaAccion: string; // Fecha de última acción/modificación
+  fechaPresentacion?: string; // Fecha de presentación - Ej: "5 NOV, 2025"
+  fechaUltimaAccion?: string; // Fecha de última acción/modificación
   fechaEstimadaVotacion?: string; // Fecha estimada de votación (si existe)
   
   // ========== COMISIÓN ==========
@@ -221,10 +221,10 @@ export interface BillItem {
   registrosVotacion?: RegistroVotacion[]; // Lista de votaciones realizadas
   
   // ========== RESUMEN Y ANÁLISIS ==========
-  resumen: string; // Resumen del proyecto
-  puntosImportantes: string[]; // Bullets con puntos clave
-  nivelRiesgo: "bajo" | "medio" | "alto" | "low" | "medium" | "high"; // Nivel de riesgo/impacto (soporta español e inglés)
-  puntajeRiesgo: number; // Puntaje numérico de riesgo
+  resumen?: string; // Resumen del proyecto
+  puntosImportantes?: string[]; // Bullets con puntos clave
+  nivelRiesgo?: "bajo" | "medio" | "alto" | "low" | "medium" | "high"; // Nivel de riesgo/impacto (soporta español e inglés)
+  puntajeRiesgo?: number; // Puntaje numérico de riesgo
   
   // ========== ENLACES ==========
   urlProyecto?: string; // URL en Delfino - Ej: "https://delfino.cr/asamblea/proyecto/25285"
@@ -252,10 +252,10 @@ export interface BillItem {
   portfolio?: string; // usar cartera
   projectTexts?: ProjectText[]; // usar textosProyecto
   votingRecords?: VotingRecord[]; // usar registrosVotacion
-  summary?: string; // usar resumen
-  bullets?: string[]; // usar puntosImportantes
-  risk_level?: BillItem["nivelRiesgo"]; // usar nivelRiesgo
-  risk_score?: number; // usar puntajeRiesgo
+  summary: string; // usar resumen
+  bullets: string[]; // usar puntosImportantes
+  risk_level: "low" | "medium" | "high"; // usar nivelRiesgo
+  risk_score: number; // usar puntajeRiesgo
   motherActLink?: string; // usar urlLeyMadre
   amendmentActLink?: string; // usar urlLeyModificatoria
   projectUrl?: string; // usar urlProyecto

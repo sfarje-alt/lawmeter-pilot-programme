@@ -710,12 +710,10 @@ function generateBill(index: number): BillItem {
       `Aligns with national standards and regulator expectations`
     ],
     nivelRiesgo: level,
-    risk_level: level,
+    risk_level: level === "alto" ? "high" : level === "medio" ? "medium" : "low",
     puntajeRiesgo: score,
     risk_score: score,
-    registrosVotacion: votingRecords,
     votingRecords,
-    interesados: stakeholders,
     stakeholders,
     ...(isAmendment && { 
       urlLeyMadre: `https://www.legislation.gov.au/C${year - 10}A${String(index).padStart(5, '0')}/latest`,
