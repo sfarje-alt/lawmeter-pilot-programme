@@ -95,6 +95,12 @@ export interface Diputado {
   urlPerfil?: string; // URL del perfil en Delfino
   email?: string;
   telefono?: string;
+  telefonos?: string[]; // Múltiples teléfonos
+  edad?: number;
+  cedula?: string;
+  educacion?: string[];
+  experienciaLaboral?: string[];
+  comisiones?: string[];
   posicionVotacion?: "apoyo" | "oposicion" | "abstencion" | "desconocido";
 }
 
