@@ -96,7 +96,48 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "alto",
     puntajeRiesgo: 85,
     risk_level: "high",
-    risk_score: 85
+    risk_score: 85,
+    votingRecords: [
+      {
+        date: "2025-01-22",
+        stage: "Comisión de Asuntos Económicos",
+        votesFor: 8,
+        votesAgainst: 3,
+        abstentions: 1,
+        passed: true,
+        mpVotes: [
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+          { mpName: "María Fernanda Jiménez", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Carlos Alvarado Mora", party: "Acción Ciudadana", vote: "for" },
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "oppose",
+        statement: "Estas disposiciones de transparencia imponen cargas operativas desproporcionadas que afectarán la eficiencia del sector y podrían trasladarse en costos al consumidor."
+      },
+      {
+        name: "Defensoría de los Habitantes",
+        organization: "Defensoría Pública",
+        position: "support",
+        statement: "Aplaudimos esta iniciativa que fortalece los derechos de los consumidores financieros y promueve la transparencia en un sector vital para la economía."
+      },
+      {
+        name: "Instituto Costarricense del Consumidor",
+        organization: "Protección al Consumidor",
+        position: "support",
+        statement: "Esta ley representa un avance significativo en la protección de los derechos de los usuarios de servicios financieros digitales."
+      },
+      {
+        name: "Cámara de Comercio de Costa Rica",
+        organization: "Sector Empresarial",
+        position: "neutral",
+        statement: "Reconocemos la importancia de la transparencia, pero solicitamos plazos razonables para la implementación y claridad en los requisitos técnicos."
+      }
+    ]
   },
   {
     id: "24002",
@@ -171,7 +212,34 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "alto",
     puntajeRiesgo: 90,
     risk_level: "high",
-    risk_score: 90
+    risk_score: 90,
+    votingRecords: [],
+    stakeholders: [
+      {
+        name: "SUGEF",
+        organization: "Superintendencia General de Entidades Financieras",
+        position: "support",
+        statement: "Esta normativa se alinea con las mejores prácticas internacionales de protección de datos y fortalecerá la confianza en el sistema financiero."
+      },
+      {
+        name: "Fundación Acceso",
+        organization: "Derechos Digitales",
+        position: "support",
+        statement: "Es fundamental que Costa Rica cuente con regulaciones robustas de privacidad de datos en el sector financiero. Apoyamos plenamente esta iniciativa."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "neutral",
+        statement: "Compartimos el objetivo de proteger datos personales, pero requerimos mayor claridad sobre los plazos de implementación y las inversiones tecnológicas necesarias."
+      },
+      {
+        name: "Colegio de Abogados de Costa Rica",
+        organization: "Colegio Profesional",
+        position: "support",
+        statement: "Esta ley fortalece el marco jurídico de protección de datos y está en línea con estándares internacionales como el GDPR europeo."
+      }
+    ]
   },
   {
     id: "24003",
@@ -261,7 +329,62 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "alto",
     puntajeRiesgo: 88,
     risk_level: "high",
-    risk_score: 88
+    risk_score: 88,
+    votingRecords: [
+      {
+        date: "2025-01-12",
+        stage: "Comisión de Asuntos Económicos",
+        votesFor: 9,
+        votesAgainst: 2,
+        abstentions: 1,
+        passed: true,
+        mpVotes: [
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "for" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "for" },
+        ]
+      },
+      {
+        date: "2025-01-28",
+        stage: "Primer Debate Plenario",
+        votesFor: 38,
+        votesAgainst: 15,
+        abstentions: 4,
+        passed: true,
+        mpVotes: [
+          { mpName: "Diego Vargas Solano", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Ana Gabriela Rojas", party: "Restauración Nacional", vote: "for" },
+          { mpName: "Fernando Castillo Pérez", party: "Unidad Social Cristiana", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "CONASSIF",
+        organization: "Consejo Nacional de Supervisión del Sistema Financiero",
+        position: "support",
+        statement: "La regulación de criptomonedas es esencial para prevenir el lavado de activos y garantizar la estabilidad del sistema financiero costarricense."
+      },
+      {
+        name: "ICD (Instituto Costarricense sobre Drogas)",
+        organization: "Instituto Gubernamental",
+        position: "support",
+        statement: "Esta ley es fundamental para combatir el uso de criptomonedas en el financiamiento de actividades ilícitas."
+      },
+      {
+        name: "Cámara de Tecnología de Información y Comunicación (CAMTIC)",
+        organization: "Sector Tecnológico",
+        position: "neutral",
+        statement: "Apoyamos la regulación pero advertimos que requisitos muy estrictos podrían frenar la innovación en blockchain y tecnologías emergentes."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "support",
+        statement: "Es necesario establecer reglas claras para las operaciones con activos digitales y garantizar un campo de juego equilibrado."
+      }
+    ]
   },
   {
     id: "24004",
@@ -337,7 +460,47 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "medio",
     puntajeRiesgo: 72,
     risk_level: "medium",
-    risk_score: 72
+    risk_score: 72,
+    votingRecords: [
+      {
+        date: "2025-01-18",
+        stage: "Comisión de Asuntos Hacendarios",
+        votesFor: 7,
+        votesAgainst: 4,
+        abstentions: 0,
+        passed: true,
+        mpVotes: [
+          { mpName: "Patricia Villalobos Rojas", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Esteban Mora Jiménez", party: "Liberación Nacional", vote: "for" },
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "oppose",
+        statement: "El incremento de la tasa impositiva afectará la competitividad del sector financiero y podría reducir la disponibilidad de crédito para la economía."
+      },
+      {
+        name: "Ministerio de Hacienda",
+        organization: "Gobierno Central",
+        position: "support",
+        statement: "Esta reforma es necesaria para fortalecer las finanzas públicas y garantizar que el sector financiero contribuya equitativamente al desarrollo del país."
+      },
+      {
+        name: "UCCAEP",
+        organization: "Unión de Cámaras Empresariales",
+        position: "oppose",
+        statement: "Los nuevos impuestos sobre transacciones financieras encarecerán el costo del dinero y afectarán negativamente la inversión privada."
+      },
+      {
+        name: "Colegio de Contadores Públicos",
+        organization: "Colegio Profesional",
+        position: "neutral",
+        statement: "Reconocemos la necesidad de modernizar el régimen tributario, pero solicitamos mayor claridad en los requisitos de reporte trimestral."
+      }
+    ]
   },
   {
     id: "24005",
@@ -413,7 +576,60 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "medio",
     puntajeRiesgo: 68,
     risk_level: "medium",
-    risk_score: 68
+    risk_score: 68,
+    votingRecords: [
+      {
+        date: "2024-12-05",
+        stage: "Comisión de Ciencia y Tecnología",
+        votesFor: 10,
+        votesAgainst: 1,
+        abstentions: 1,
+        passed: true,
+        mpVotes: [
+          { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
+          { mpName: "Silvia Hernández Mora", party: "Acción Ciudadana", vote: "for" },
+        ]
+      },
+      {
+        date: "2025-01-25",
+        stage: "Primer Debate Plenario",
+        votesFor: 41,
+        votesAgainst: 10,
+        abstentions: 6,
+        passed: true,
+        mpVotes: [
+          { mpName: "Andrés Jiménez Castro", party: "Frente Amplio", vote: "for" },
+          { mpName: "Silvia Hernández Mora", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Laura Montero Cascante", party: "Progreso Social Democrático", vote: "for" },
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "CAMTIC",
+        organization: "Cámara de Tecnología",
+        position: "support",
+        statement: "Esta ley es un paso fundamental para posicionar a Costa Rica como hub de innovación fintech en América Latina."
+      },
+      {
+        name: "SUGEF",
+        organization: "Superintendencia General de Entidades Financieras",
+        position: "support",
+        statement: "El sandbox regulatorio permitirá innovar con supervisión adecuada, equilibrando desarrollo tecnológico y protección al consumidor."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "neutral",
+        statement: "Apoyamos la innovación pero solicitamos garantías de que el Open Banking respete la seguridad de datos y la privacidad de clientes."
+      },
+      {
+        name: "Cámara de Comercio de Costa Rica",
+        organization: "Sector Empresarial",
+        position: "support",
+        statement: "La regulación fintech promoverá la competencia y mejorará el acceso a financiamiento para pequeñas y medianas empresas."
+      }
+    ]
   },
   {
     id: "24006",
@@ -489,7 +705,34 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "medio",
     puntajeRiesgo: 65,
     risk_level: "medium",
-    risk_score: 65
+    risk_score: 65,
+    votingRecords: [],
+    stakeholders: [
+      {
+        name: "ANEP",
+        organization: "Asociación Nacional de Empleados Públicos",
+        position: "support",
+        statement: "Los derechos laborales deben adaptarse a las nuevas realidades del trabajo digital. Esta ley protege a trabajadores bancarios en modalidades remotas."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "neutral",
+        statement: "Reconocemos la necesidad de regular el teletrabajo, pero requerimos flexibilidad para implementar modelos híbridos eficientes."
+      },
+      {
+        name: "Ministerio de Trabajo",
+        organization: "Gobierno Central",
+        position: "support",
+        statement: "Esta reforma actualiza el marco laboral para garantizar condiciones dignas en las nuevas modalidades de trabajo del sector financiero."
+      },
+      {
+        name: "UCCAEP",
+        organization: "Unión de Cámaras Empresariales",
+        position: "oppose",
+        statement: "Las disposiciones sobre provisión de equipos y restricciones de jornada aumentarán significativamente los costos operativos del sector."
+      }
+    ]
   },
   {
     id: "24007",
@@ -565,7 +808,47 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "alto",
     puntajeRiesgo: 82,
     risk_level: "high",
-    risk_score: 82
+    risk_score: 82,
+    votingRecords: [
+      {
+        date: "2025-01-20",
+        stage: "Comisión de Asuntos Hacendarios",
+        votesFor: 8,
+        votesAgainst: 3,
+        abstentions: 0,
+        passed: true,
+        mpVotes: [
+          { mpName: "Ricardo Campos Monge", party: "Unidad Social Cristiana", vote: "for" },
+          { mpName: "Luisa Cordero Vargas", party: "Acción Ciudadana", vote: "for" },
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "Ministerio de Hacienda",
+        organization: "Gobierno Central",
+        position: "support",
+        statement: "La adhesión a estándares internacionales de transparencia fiscal es esencial para combatir la evasión y fortalecer la credibilidad del país."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "neutral",
+        statement: "Apoyamos la transparencia fiscal pero requerimos tiempo y recursos para implementar los sistemas de reporte automático de información."
+      },
+      {
+        name: "Colegio de Contadores Públicos",
+        organization: "Colegio Profesional",
+        position: "support",
+        statement: "Esta ley alinea a Costa Rica con mejores prácticas internacionales y fortalecerá la lucha contra la evasión fiscal transfronteriza."
+      },
+      {
+        name: "UCCAEP",
+        organization: "Unión de Cámaras Empresariales",
+        position: "neutral",
+        statement: "Entendemos la importancia de la transparencia, pero preocupa el impacto en la competitividad y la confidencialidad de información comercial sensible."
+      }
+    ]
   },
   {
     id: "24008",
@@ -641,7 +924,73 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "bajo",
     puntajeRiesgo: 45,
     risk_level: "low",
-    risk_score: 45
+    risk_score: 45,
+    votingRecords: [
+      {
+        date: "2024-11-15",
+        stage: "Comisión de Educación",
+        votesFor: 11,
+        votesAgainst: 0,
+        abstentions: 1,
+        passed: true,
+        mpVotes: [
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Jorge Rojas Paniagua", party: "Liberación Nacional", vote: "for" },
+        ]
+      },
+      {
+        date: "2025-01-18",
+        stage: "Primer Debate Plenario",
+        votesFor: 48,
+        votesAgainst: 3,
+        abstentions: 6,
+        passed: true,
+        mpVotes: [
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Jorge Rojas Paniagua", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Ariel Robles Barrantes", party: "Frente Amplio", vote: "for" },
+        ]
+      },
+      {
+        date: "2025-01-30",
+        stage: "Segundo Debate Plenario",
+        votesFor: 46,
+        votesAgainst: 2,
+        abstentions: 9,
+        passed: true,
+        mpVotes: [
+          { mpName: "Carolina Hidalgo Herrera", party: "Acción Ciudadana", vote: "for" },
+          { mpName: "Jorge Rojas Paniagua", party: "Liberación Nacional", vote: "for" },
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "Ministerio de Educación Pública",
+        organization: "Gobierno Central",
+        position: "support",
+        statement: "La educación financiera es fundamental para formar ciudadanos capaces de tomar decisiones económicas informadas."
+      },
+      {
+        name: "Instituto Costarricense del Consumidor",
+        organization: "Protección al Consumidor",
+        position: "support",
+        statement: "Esta ley empoderará a los consumidores con conocimientos para navegar el sistema financiero y defender sus derechos."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "support",
+        statement: "Bancos tendrán clientes más informados que toman mejores decisiones financieras. Apoyamos esta iniciativa de educación."
+      },
+      {
+        name: "Defensoría de los Habitantes",
+        organization: "Defensoría Pública",
+        position: "support",
+        statement: "La educación financiera y los mecanismos simplificados de resolución de conflictos fortalecen significativamente los derechos del consumidor."
+      }
+    ]
   },
   {
     id: "24009",
@@ -717,7 +1066,47 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "bajo",
     puntajeRiesgo: 50,
     risk_level: "low",
-    risk_score: 50
+    risk_score: 50,
+    votingRecords: [
+      {
+        date: "2025-01-25",
+        stage: "Comisión de Asuntos Sociales",
+        votesFor: 9,
+        votesAgainst: 1,
+        abstentions: 2,
+        passed: true,
+        mpVotes: [
+          { mpName: "Mónica Varela Solís", party: "Frente Amplio", vote: "for" },
+          { mpName: "Alberto Fonseca Morales", party: "Acción Ciudadana", vote: "for" },
+        ]
+      }
+    ],
+    stakeholders: [
+      {
+        name: "MICITT",
+        organization: "Ministerio de Ciencia, Innovación, Tecnología y Telecomunicaciones",
+        position: "support",
+        statement: "La inclusión financiera digital es clave para reducir la brecha digital y promover el desarrollo equitativo en todo el territorio nacional."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "support",
+        statement: "Los incentivos fiscales para expansión rural son bienvenidos. Estamos comprometidos con ampliar el acceso a servicios financieros digitales."
+      },
+      {
+        name: "IMAS",
+        organization: "Instituto Mixto de Ayuda Social",
+        position: "support",
+        statement: "Las cuentas básicas gratuitas para población vulnerable permitirán que más personas accedan a servicios financieros y programas sociales digitales."
+      },
+      {
+        name: "Defensoría de los Habitantes",
+        organization: "Defensoría Pública",
+        position: "support",
+        statement: "Esta ley promueve la igualdad de oportunidades al garantizar acceso financiero para poblaciones históricamente excluidas."
+      }
+    ]
   },
   {
     id: "24010",
@@ -793,6 +1182,33 @@ export const costaRicaBills: BillItem[] = [
     nivelRiesgo: "medio",
     puntajeRiesgo: 60,
     risk_level: "medium",
-    risk_score: 60
+    risk_score: 60,
+    votingRecords: [],
+    stakeholders: [
+      {
+        name: "Ministerio de Ambiente y Energía",
+        organization: "Gobierno Central",
+        position: "support",
+        statement: "El sector financiero debe alinear sus operaciones con los compromisos climáticos del país y promover el financiamiento sostenible."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "neutral",
+        statement: "Compartimos el compromiso con la sostenibilidad, pero requerimos metodologías claras y plazos razonables para evaluar huella de carbono de portafolios."
+      },
+      {
+        name: "Cámara Costarricense de la Construcción",
+        organization: "Sector Construcción",
+        position: "oppose",
+        statement: "La prohibición absoluta de financiar ciertos proyectos podría paralizar desarrollos importantes para la economía y el empleo."
+      },
+      {
+        name: "Fundación para el Desarrollo Sostenible",
+        organization: "ONG Ambiental",
+        position: "support",
+        statement: "Costa Rica debe liderar en finanzas sostenibles. Esta ley es un paso importante hacia una economía verde y resiliente al clima."
+      }
+    ]
   }
 ];
