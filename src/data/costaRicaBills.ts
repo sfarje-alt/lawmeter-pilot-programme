@@ -548,5 +548,139 @@ export const costaRicaBills: BillItem[] = [
         statement: "Apoyamos sostenibilidad pero cuota del 15% requiere ajustes graduales."
       }
     ]
+  },
+  {
+    id: "25412",
+    titulo: "Ley de Inclusión Financiera y Educación Económica",
+    title: "Ley de Inclusión Financiera y Educación Económica",
+    proposito: "Promover el acceso universal a servicios financieros formales y establecer programas de educación financiera obligatorios.",
+    tipoProyecto: "Proyecto de Ley",
+    cartera: "Hacienda",
+    portfolio: "Hacienda",
+    categorias: ["Inclusión Financiera", "Educación"],
+    firmantePrincipal: {
+      numeroDeputado: "051",
+      nombre: "Carmen Quesada Jiménez",
+      partidoPolitico: "Partido Acción Ciudadana",
+      rol: "Diputada",
+      provincia: "Puntarenas"
+    },
+    coProponentes: [
+      {
+        numeroDeputado: "062",
+        nombre: "Fernando Mora Rojas",
+        partidoPolitico: "Partido Liberación Nacional",
+        provincia: "Limón"
+      }
+    ],
+    chamber: "House",
+    estado: "Aprobado en Primer Debate",
+    status: "Aprobado en Primer Debate",
+    stageLocation: "Pendiente Segundo Debate",
+    comisionAsignada: "Comisión de Asuntos Sociales",
+    fechaPresentacion: "2024-08-20",
+    presentationDate: "2024-08-20",
+    fechaUltimaAccion: "2024-10-18",
+    lastActionDate: "2024-10-18",
+    resumen: "Obliga a bancos a ofrecer cuentas básicas sin comisiones, establece programa nacional de educación financiera en escuelas, y crea incentivos para bancarización de zonas rurales.",
+    summary: "Obliga a bancos a ofrecer cuentas básicas sin comisiones, establece programa nacional de educación financiera en escuelas, y crea incentivos para bancarización de zonas rurales.",
+    puntosImportantes: [
+      "Cuenta básica obligatoria: sin costo de apertura ni mantenimiento, hasta 20 transacciones gratis/mes",
+      "Educación financiera obligatoria desde primaria: módulo de 40 horas anuales",
+      "Subsidio estatal para abrir sucursales en zonas desatendidas: hasta ¢50 millones por sucursal",
+      "Crédito para emprendimiento a tasas preferenciales (máx. 8% anual) para poblaciones vulnerables",
+      "Corresponsales bancarios en pulperías y pequeños comercios con incentivos fiscales",
+      "Meta: 85% de población adulta bancarizada en 5 años"
+    ],
+    bullets: [
+      "Cuenta básica obligatoria: sin costo de apertura ni mantenimiento, hasta 20 transacciones gratis/mes",
+      "Educación financiera obligatoria desde primaria: módulo de 40 horas anuales",
+      "Subsidio estatal para abrir sucursales en zonas desatendidas: hasta ¢50 millones por sucursal",
+      "Crédito para emprendimiento a tasas preferenciales (máx. 8% anual) para poblaciones vulnerables",
+      "Corresponsales bancarios en pulperías y pequeños comercios con incentivos fiscales",
+      "Meta: 85% de población adulta bancarizada en 5 años"
+    ],
+    nivelRiesgo: "bajo",
+    risk_level: "low",
+    puntajeRiesgo: 45,
+    risk_score: 45,
+    urlProyecto: "https://delfino.cr/asamblea/proyecto/25412",
+    stakeholders: [
+      {
+        name: "BCCR",
+        organization: "Banco Central de Costa Rica",
+        position: "support",
+        statement: "Fundamental para desarrollo económico inclusivo del país."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "support",
+        statement: "Apoyamos inclusión financiera, pero subsidios deben ser suficientes."
+      }
+    ]
+  },
+  {
+    id: "24892",
+    titulo: "Reforma a la Ley de Protección al Adulto Mayor - Servicios Financieros Especializados",
+    title: "Reforma a la Ley de Protección al Adulto Mayor - Servicios Financieros Especializados",
+    proposito: "Establecer protecciones especiales para adultos mayores en servicios financieros y prevenir abuso financiero contra esta población.",
+    tipoProyecto: "Proyecto de Ley",
+    cartera: "Bienestar Social",
+    portfolio: "Bienestar Social",
+    categorias: ["Protección al Adulto Mayor", "Servicios Financieros"],
+    firmantePrincipal: {
+      numeroDeputado: "029",
+      nombre: "Gloria Bejarano Almada",
+      partidoPolitico: "Partido Unidad Social Cristiana",
+      rol: "Diputada",
+      provincia: "Guanacaste"
+    },
+    chamber: "House",
+    estado: "En comisión",
+    status: "En comisión",
+    stageLocation: "Comisión de Asuntos Sociales",
+    comisionAsignada: "Comisión Permanente de Asuntos Sociales",
+    fechaPresentacion: "2024-09-28",
+    presentationDate: "2024-09-28",
+    fechaUltimaAccion: "2024-10-26",
+    lastActionDate: "2024-10-26",
+    resumen: "Crea protecciones especiales para adultos mayores (+65 años) en transacciones financieras, obliga a capacitación del personal bancario, y establece sistema de alertas para detectar abuso financiero.",
+    summary: "Crea protecciones especiales para adultos mayores (+65 años) en transacciones financieras, obliga a capacitación del personal bancario, y establece sistema de alertas para detectar abuso financiero.",
+    puntosImportantes: [
+      "Periodo de reflexión de 48 horas para créditos o inversiones mayores a ¢5 millones",
+      "Prohibición de venta agresiva de productos financieros complejos a adultos mayores",
+      "Sistema de alertas automáticas para transacciones inusuales (cambios drásticos de patrón)",
+      "Atención preferencial: ventanillas exclusivas y asistencia personalizada obligatoria",
+      "Capacitación anual obligatoria del personal en gerontología financiera",
+      "Sanciones: suspensión de licencia por 3-12 meses en casos de abuso comprobado"
+    ],
+    bullets: [
+      "Periodo de reflexión de 48 horas para créditos o inversiones mayores a ¢5 millones",
+      "Prohibición de venta agresiva de productos financieros complejos a adultos mayores",
+      "Sistema de alertas automáticas para transacciones inusuales (cambios drásticos de patrón)",
+      "Atención preferencial: ventanillas exclusivas y asistencia personalizada obligatoria",
+      "Capacitación anual obligatoria del personal en gerontología financiera",
+      "Sanciones: suspensión de licencia por 3-12 meses en casos de abuso comprobado"
+    ],
+    nivelRiesgo: "medio",
+    risk_level: "medium",
+    puntajeRiesgo: 65,
+    risk_score: 65,
+    urlProyecto: "https://delfino.cr/asamblea/proyecto/24892",
+    stakeholders: [
+      {
+        name: "CONAPAM",
+        organization: "Consejo Nacional de la Persona Adulta Mayor",
+        position: "support",
+        statement: "Protección urgente ante creciente abuso financiero de adultos mayores."
+      },
+      {
+        name: "Asociación Bancaria Costarricense",
+        organization: "Gremio Bancario",
+        position: "neutral",
+        statement: "Apoyamos protección pero preocupa operatividad del periodo de reflexión."
+      }
+    ]
   }
 ];

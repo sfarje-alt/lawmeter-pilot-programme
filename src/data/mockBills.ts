@@ -318,21 +318,5 @@ function generateBill(index: number): BillItem {
   };
 }
 
-// Calculate total unique bills we can create (each portfolio topic × 2 for amendment/non-amendment)
-const totalUniqueBills = portfolioTopics.reduce((sum, p) => sum + (p.topics.length * 2), 0);
-
-const generatedBills: BillItem[] = Array.from({ length: totalUniqueBills }, (_, i) => generateBill(i + 1));
-
-// Merge and remove duplicates by normalized title
-const combinedBills: BillItem[] = [
-  ...baseBills,
-  ...generatedBills,
-];
-
-const seenTitles = new Set<string>();
-export const mockBills: BillItem[] = combinedBills.filter((bill) => {
-  const key = bill.title.trim().replace(/\s+/g, " ").toLowerCase();
-  if (seenTitles.has(key)) return false;
-  seenTitles.add(key);
-  return true;
-});
+// Solo exportar los proyectos de Costa Rica relevantes para BAC
+export const mockBills: BillItem[] = baseBills;
