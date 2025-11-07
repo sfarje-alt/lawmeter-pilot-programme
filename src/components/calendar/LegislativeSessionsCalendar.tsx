@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown } from "lucide-react";
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -423,9 +424,9 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            {calendarView === "daily" && format(selectedDate, "d 'de' MMMM, yyyy", { locale: require('date-fns/locale/es') })}
-            {calendarView === "weekly" && `Semana del ${format(startOfWeek(selectedDate), "d MMM")} - ${format(endOfWeek(selectedDate), "d MMM, yyyy")}`}
-            {calendarView === "monthly" && format(selectedDate, "MMMM yyyy")}
+            {calendarView === "daily" && format(selectedDate, "d 'de' MMMM, yyyy", { locale: es })}
+            {calendarView === "weekly" && `Semana del ${format(startOfWeek(selectedDate), "d MMM", { locale: es })} - ${format(endOfWeek(selectedDate), "d MMM, yyyy", { locale: es })}`}
+            {calendarView === "monthly" && format(selectedDate, "MMMM yyyy", { locale: es })}
           </CardTitle>
           <CardDescription>
             {selectedSessions.length} sesión{selectedSessions.length !== 1 ? "es" : ""} programada{selectedSessions.length !== 1 ? "s" : ""}
@@ -492,7 +493,7 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
                         )}
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
-                          {format(session.date, "d 'de' MMM, yyyy 'a las' HH:mm", { locale: require('date-fns/locale/es') })}
+                          {format(session.date, "d 'de' MMM, yyyy 'a las' HH:mm", { locale: es })}
                         </div>
                       </div>
                     </div>
