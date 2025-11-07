@@ -168,10 +168,10 @@ export function TendersSection() {
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-info flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-info">Public Tenders - AusTender Integration</p>
+            <p className="font-semibold text-info">Licitaciones Públicas</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Relevant government procurement opportunities from AusTender, filtered by your portfolio keywords.
-              These tenders may represent opportunities for service expansion or indicate regulatory priorities.
+              Oportunidades de contratación pública del gobierno, filtradas por palabras clave de su cartera.
+              Estas licitaciones pueden representar oportunidades de expansión de servicios o indicar prioridades regulatorias.
             </p>
           </div>
         </div>
@@ -180,7 +180,7 @@ export function TendersSection() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Open Tenders</CardTitle>
+            <CardTitle className="text-sm">Licitaciones Abiertas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{openTenders.length}</div>
@@ -188,7 +188,7 @@ export function TendersSection() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">High Relevance</CardTitle>
+            <CardTitle className="text-sm">Alta Relevancia</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -198,7 +198,7 @@ export function TendersSection() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Closing Soon</CardTitle>
+            <CardTitle className="text-sm">Próximas a Cerrar</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">
@@ -212,7 +212,7 @@ export function TendersSection() {
         <div className="relative flex-1">
           <FileSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tenders by title, agency, category, or keywords..."
+            placeholder="Buscar licitaciones por título, agencia, categoría o palabras clave..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -223,10 +223,10 @@ export function TendersSection() {
             <SelectValue placeholder="Relevance" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Relevance</SelectItem>
-            <SelectItem value="high">High (90%+)</SelectItem>
-            <SelectItem value="medium">Medium (70-89%)</SelectItem>
-            <SelectItem value="low">Low (&lt;70%)</SelectItem>
+            <SelectItem value="all">Toda Relevancia</SelectItem>
+            <SelectItem value="high">Alta (90%+)</SelectItem>
+            <SelectItem value="medium">Media (70-89%)</SelectItem>
+            <SelectItem value="low">Baja (&lt;70%)</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -250,7 +250,7 @@ export function TendersSection() {
                         </Badge>
                         {isClosingSoon(tender.closeDateTime) && tender.status === "open" && (
                           <Badge variant="outline" className="border-warning text-warning">
-                            Closing Soon
+                            Cierra Pronto
                           </Badge>
                         )}
                       </div>
@@ -308,7 +308,7 @@ export function TendersSection() {
                       <div className="flex items-center gap-2">
                         <Button size="sm" asChild>
                           <a href={tender.fullDetailsUrl} target="_blank" rel="noopener noreferrer">
-                            Full Details
+                            Detalles Completos
                             <ExternalLink className="h-3 w-3 ml-1" />
                           </a>
                         </Button>
@@ -326,7 +326,7 @@ export function TendersSection() {
         <Card>
           <CardContent className="py-12 text-center">
             <FileSearch className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No tenders found matching your search</p>
+            <p className="text-muted-foreground">No se encontraron licitaciones que coincidan con tu búsqueda</p>
           </CardContent>
         </Card>
       )}

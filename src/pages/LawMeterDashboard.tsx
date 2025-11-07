@@ -211,7 +211,7 @@ export default function LawMeterDashboard() {
             <TabsTrigger value="starred"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
             <TabsTrigger value="calendar"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
-            <TabsTrigger value="tenders"><Receipt className="h-4 w-4 mr-2" />Tenders</TabsTrigger>
+            <TabsTrigger value="tenders"><Receipt className="h-4 w-4 mr-2" />Licitaciones</TabsTrigger>
             <TabsTrigger value="contact"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
           </TabsList>
 
