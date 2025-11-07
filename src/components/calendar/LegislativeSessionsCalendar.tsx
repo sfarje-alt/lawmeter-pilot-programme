@@ -410,9 +410,29 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   // Obtener fechas con sesiones y fechas de vigencia para resaltar en el calendario
   const datesWithSessions = showSessions ? filteredSessions.map((s) => s.date) : [];
-  const datesWithEffectiveDates = effectiveDates
-    .filter(ed => (ed.type === "efectiva" && showEffectiveDates) || (ed.type === "plazo" && showDeadlines))
+  const datesWithVigencias = effectiveDates
+    .filter(ed => ed.type === "efectiva" && showEffectiveDates)
     .map((ed) => ed.date);
+  const datesWithDeadlines = effectiveDates
+    .filter(ed => ed.type === "plazo" && showDeadlines)
+    .map((ed) => ed.date);
+
+  // Función para obtener indicadores de colores múltiples para cada fecha
+  const getDateIndicators = (date: Date) => {
+    const indicators: { color: string; type: string }[] = [];
+    
+    if (showSessions && datesWithSessions.some(d => isSameDay(d, date))) {
+      indicators.push({ color: 'bg-blue-500', type: 'session' });
+    }
+    if (showEffectiveDates && datesWithVigencias.some(d => isSameDay(d, date))) {
+      indicators.push({ color: 'bg-purple-500', type: 'vigencia' });
+    }
+    if (showDeadlines && datesWithDeadlines.some(d => isSameDay(d, date))) {
+      indicators.push({ color: 'bg-orange-500', type: 'deadline' });
+    }
+    
+    return indicators;
+  };
 
   // Función para exportar a .ics
   const exportToICS = () => {
@@ -610,7 +630,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                     checked={showSessions} 
                     onCheckedChange={(checked) => setShowSessions(checked === true)}
                   />
-                  <Label htmlFor="show-sessions" className="cursor-pointer text-sm">
+                  <Label htmlFor="show-sessions" className="cursor-pointer text-sm flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500 border border-blue-600" />
                     Sesiones
                   </Label>
                 </div>
@@ -621,7 +642,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                     checked={showEffectiveDates} 
                     onCheckedChange={(checked) => setShowEffectiveDates(checked === true)}
                   />
-                  <Label htmlFor="show-effective" className="cursor-pointer text-sm">
+                  <Label htmlFor="show-effective" className="cursor-pointer text-sm flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-purple-500 border border-purple-600" />
                     Vigencias
                   </Label>
                 </div>
@@ -632,7 +654,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                     checked={showDeadlines} 
                     onCheckedChange={(checked) => setShowDeadlines(checked === true)}
                   />
-                  <Label htmlFor="show-deadlines" className="cursor-pointer text-sm">
+                  <Label htmlFor="show-deadlines" className="cursor-pointer text-sm flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-500 border border-orange-600" />
                     Plazos de Cumplimiento
                   </Label>
                 </div>
@@ -652,16 +675,39 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                 head_cell: "text-muted-foreground rounded-md w-16 font-medium text-lg",
                 row: "flex w-full mt-3",
                 cell: "h-16 w-16 p-0 text-center align-middle",
-                day: cn(buttonVariants({ variant: "ghost" }), "h-16 w-16 p-0 font-semibold text-2xl flex items-center justify-center aria-selected:opacity-100"),
+                day: cn(buttonVariants({ variant: "ghost" }), "h-16 w-16 p-0 font-semibold text-2xl flex flex-col items-center justify-center aria-selected:opacity-100 relative"),
                 day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary rounded-md",
               }}
               modifiers={{
-                hasSessions: datesWithSessions,
-                hasEffectiveDates: datesWithEffectiveDates,
+                hasEvents: (date) => {
+                  const indicators = getDateIndicators(date);
+                  return indicators.length > 0;
+                }
               }}
-              modifiersClassNames={{
-                hasSessions: "bg-blue-500/20 border-2 border-blue-500 text-blue-600 font-bold hover:bg-blue-500/30",
-                hasEffectiveDates: "bg-purple-500/20 border-2 border-purple-500 text-purple-600 font-bold hover:bg-purple-500/30",
+              modifiersStyles={{
+                hasEvents: {}
+              }}
+              components={{
+                DayContent: ({ date }) => {
+                  const indicators = getDateIndicators(date);
+                  const dayNumber = format(date, 'd');
+                  
+                  return (
+                    <div className="relative flex flex-col items-center justify-center w-full h-full">
+                      <span>{dayNumber}</span>
+                      {indicators.length > 0 && (
+                        <div className="flex gap-0.5 mt-1 absolute bottom-1">
+                          {indicators.map((indicator, idx) => (
+                            <div
+                              key={idx}
+                              className={cn("w-1.5 h-1.5 rounded-full", indicator.color)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                },
               }}
             />
           </div>
