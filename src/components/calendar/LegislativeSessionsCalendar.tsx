@@ -41,7 +41,7 @@ interface EffectiveDate {
   date: Date;
   lawName: string;
   lawNumber: string;
-  type: "efectiva" | "vigencia";
+  type: "efectiva" | "vigencia" | "plazo";
   description?: string;
   riskLevel: "high" | "medium" | "low";
   alertId: string;
@@ -60,11 +60,11 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
   const [filterSessionType, setFilterSessionType] = useState<string>("all");
   const [showEffectiveDates, setShowEffectiveDates] = useState<boolean>(true);
 
-  // Generar fechas de vigencia desde las alertas reales
+  // Generar fechas de vigencia y plazos desde las alertas reales
   const generateEffectiveDates = (): EffectiveDate[] => {
     if (!alerts || alerts.length === 0) return [];
     
-    return alerts
+    const vigencias = alerts
       .filter(alert => alert.effective_date)
       .map(alert => {
         // Parsear la fecha de vigencia (formato puede ser DD/MM/YYYY o YYYY-MM-DD)
@@ -95,6 +95,40 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
         };
       })
       .filter(ed => !isNaN(ed.date.getTime())); // Filtrar fechas inválidas
+
+    // Generar plazos de cumplimiento desde AI_triage.deadline_detected
+    const plazos = alerts
+      .filter(alert => alert.AI_triage?.deadline_detected)
+      .map(alert => {
+        let deadlineDate: Date;
+        const dateStr = alert.AI_triage.deadline_detected;
+        
+        try {
+          // Intentar parsear como DD/MM/YYYY
+          if (dateStr.includes('/')) {
+            const [day, month, year] = dateStr.split('/');
+            deadlineDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            // Intentar parsear como ISO
+            deadlineDate = parseISO(dateStr);
+          }
+        } catch {
+          deadlineDate = new Date();
+        }
+        
+        return {
+          date: deadlineDate,
+          lawName: alert.title || alert.law_number || "Sin título",
+          lawNumber: alert.law_number || alert.title_id || "",
+          type: "plazo" as const,
+          riskLevel: alert.AI_triage?.risk_level || "low",
+          alertId: alert.title_id,
+          description: alert.AI_triage?.summary?.substring(0, 150)
+        };
+      })
+      .filter(ed => !isNaN(ed.date.getTime())); // Filtrar fechas inválidas
+
+    return [...vigencias, ...plazos];
   };
 
   // Datos de ejemplo basados en la imagen
@@ -547,13 +581,26 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                         key={`effective-${index}`}
                         onClick={() => effectiveDate.alertId && onNavigateToAlert?.(effectiveDate.alertId)}
                         className={cn(
-                          "p-4 rounded-lg border-l-4 border-purple-600 bg-purple-50 dark:bg-purple-950/20 hover:shadow-md transition-shadow",
-                          effectiveDate.alertId && onNavigateToAlert && "cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                          "p-4 rounded-lg border-l-4 hover:shadow-md transition-shadow",
+                          effectiveDate.type === "plazo" 
+                            ? "border-orange-600 bg-orange-50 dark:bg-orange-950/20" 
+                            : "border-purple-600 bg-purple-50 dark:bg-purple-950/20",
+                          effectiveDate.alertId && onNavigateToAlert && "cursor-pointer",
+                          effectiveDate.type === "plazo" 
+                            ? "hover:bg-orange-100 dark:hover:bg-orange-900/30" 
+                            : "hover:bg-purple-100 dark:hover:bg-purple-900/30"
                         )}
                       >
                         <div className="flex items-start gap-3">
-                          <div className="mt-1 text-purple-600 flex items-center gap-2">
-                            <Scale className="w-4 h-4" />
+                          <div className={cn(
+                            "mt-1 flex items-center gap-2",
+                            effectiveDate.type === "plazo" ? "text-orange-600" : "text-purple-600"
+                          )}>
+                            {effectiveDate.type === "plazo" ? (
+                              <Clock className="w-4 h-4" />
+                            ) : (
+                              <Scale className="w-4 h-4" />
+                            )}
                             <div 
                               className={cn(
                                 "w-3 h-3 rounded-full",
@@ -563,23 +610,35 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                             />
                           </div>
                           <div className="flex-1 space-y-2">
-                            <h4 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
+                            <h4 className={cn(
+                              "font-semibold text-sm",
+                              effectiveDate.type === "plazo" 
+                                ? "text-orange-900 dark:text-orange-100" 
+                                : "text-purple-900 dark:text-purple-100"
+                            )}>
                               {effectiveDate.lawName}
                             </h4>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="text-xs border-purple-600 text-purple-600">
+                              <Badge variant="outline" className={cn(
+                                "text-xs",
+                                effectiveDate.type === "plazo" 
+                                  ? "border-orange-600 text-orange-600" 
+                                  : "border-purple-600 text-purple-600"
+                              )}>
                                 {effectiveDate.lawNumber}
                               </Badge>
                               <Badge 
                                 variant={effectiveDate.type === "efectiva" ? "default" : "secondary"} 
                                 className={cn(
                                   "text-xs",
-                                  effectiveDate.type === "efectiva" 
-                                    ? "bg-purple-600 text-white hover:bg-purple-700" 
-                                    : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
+                                  effectiveDate.type === "plazo"
+                                    ? "bg-orange-600 text-white hover:bg-orange-700"
+                                    : effectiveDate.type === "efectiva" 
+                                      ? "bg-purple-600 text-white hover:bg-purple-700" 
+                                      : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
                                 )}
                               >
-                                {effectiveDate.type === "efectiva" ? "Entra en vigor" : "Vigente"}
+                                {effectiveDate.type === "plazo" ? "Plazo de cumplimiento" : effectiveDate.type === "efectiva" ? "Entra en vigor" : "Vigente"}
                               </Badge>
                             </div>
                             {effectiveDate.description && (
@@ -587,7 +646,10 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                                 {effectiveDate.description}
                               </p>
                             )}
-                            <div className="flex items-center gap-1 text-xs text-purple-600">
+                            <div className={cn(
+                              "flex items-center gap-1 text-xs",
+                              effectiveDate.type === "plazo" ? "text-orange-600" : "text-purple-600"
+                            )}>
                               <CalendarIcon className="w-3 h-3" />
                               {format(effectiveDate.date, "d 'de' MMMM, yyyy", { locale: es })}
                             </div>
