@@ -4,12 +4,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale, Download } from "lucide-react";
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -58,7 +60,9 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
   const [calendarView, setCalendarView] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [filterOrganType, setFilterOrganType] = useState<string>("all");
   const [filterSessionType, setFilterSessionType] = useState<string>("all");
+  const [showSessions, setShowSessions] = useState<boolean>(true);
   const [showEffectiveDates, setShowEffectiveDates] = useState<boolean>(true);
+  const [showDeadlines, setShowDeadlines] = useState<boolean>(true);
 
   // Generar fechas de vigencia y plazos desde las alertas reales
   const generateEffectiveDates = (): EffectiveDate[] => {
@@ -362,6 +366,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   // Obtener sesiones para la fecha o rango seleccionado
   const getSessionsForDate = (date: Date): LegislativeSession[] => {
+    if (!showSessions) return [];
+    
     if (calendarView === "daily") {
       return filteredSessions.filter((session) => isSameDay(session.date, date));
     } else if (calendarView === "weekly") {
@@ -380,27 +386,112 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   // Obtener fechas de vigencia para el rango seleccionado
   const getEffectiveDatesForDate = (date: Date): EffectiveDate[] => {
-    if (!showEffectiveDates) return [];
+    const filtered = effectiveDates.filter((ed) => {
+      if (ed.type === "efectiva" && !showEffectiveDates) return false;
+      if (ed.type === "plazo" && !showDeadlines) return false;
+      return true;
+    });
     
     if (calendarView === "daily") {
-      return effectiveDates.filter((ed) => isSameDay(ed.date, date));
+      return filtered.filter((ed) => isSameDay(ed.date, date));
     } else if (calendarView === "weekly") {
       const weekStart = startOfWeek(date);
       const weekEnd = endOfWeek(date);
-      return effectiveDates.filter((ed) => ed.date >= weekStart && ed.date <= weekEnd);
+      return filtered.filter((ed) => ed.date >= weekStart && ed.date <= weekEnd);
     } else {
       // monthly
       const monthStart = startOfMonth(date);
       const monthEnd = endOfMonth(date);
-      return effectiveDates.filter((ed) => ed.date >= monthStart && ed.date <= monthEnd);
+      return filtered.filter((ed) => ed.date >= monthStart && ed.date <= monthEnd);
     }
   };
 
   const selectedEffectiveDates = getEffectiveDatesForDate(selectedDate);
 
   // Obtener fechas con sesiones y fechas de vigencia para resaltar en el calendario
-  const datesWithSessions = filteredSessions.map((s) => s.date);
-  const datesWithEffectiveDates = showEffectiveDates ? effectiveDates.map((ed) => ed.date) : [];
+  const datesWithSessions = showSessions ? filteredSessions.map((s) => s.date) : [];
+  const datesWithEffectiveDates = effectiveDates
+    .filter(ed => (ed.type === "efectiva" && showEffectiveDates) || (ed.type === "plazo" && showDeadlines))
+    .map((ed) => ed.date);
+
+  // Función para exportar a .ics
+  const exportToICS = () => {
+    const icsEvents: string[] = [];
+    
+    // Agregar sesiones
+    if (showSessions) {
+      filteredSessions.forEach(session => {
+        const dateStr = format(session.date, "yyyyMMdd'T'HHmmss");
+        const agenda = session.agenda ? `\\n\\nAgenda:\\n${session.agenda.join('\\n')}` : '';
+        
+        icsEvents.push(
+          `BEGIN:VEVENT`,
+          `DTSTART:${dateStr}`,
+          `SUMMARY:${session.organName}`,
+          `DESCRIPTION:Sesión ${session.sessionType} - ${session.organType}${agenda}`,
+          `LOCATION:Asamblea Legislativa`,
+          `STATUS:${session.status === 'REALIZADA' ? 'CONFIRMED' : session.status === 'CANCELADA' ? 'CANCELLED' : 'TENTATIVE'}`,
+          `END:VEVENT`
+        );
+      });
+    }
+
+    // Agregar fechas de vigencia
+    if (showEffectiveDates) {
+      effectiveDates
+        .filter(ed => ed.type === "efectiva")
+        .forEach(item => {
+          const dateStr = format(item.date, "yyyyMMdd");
+          
+          icsEvents.push(
+            `BEGIN:VEVENT`,
+            `DTSTART;VALUE=DATE:${dateStr}`,
+            `SUMMARY:Vigencia: ${item.lawName}`,
+            `DESCRIPTION:Entra en vigor - ${item.lawNumber}${item.description ? '\\n\\n' + item.description : ''}`,
+            `CATEGORIES:Fecha de Vigencia`,
+            `END:VEVENT`
+          );
+        });
+    }
+
+    // Agregar plazos de cumplimiento
+    if (showDeadlines) {
+      effectiveDates
+        .filter(ed => ed.type === "plazo")
+        .forEach(item => {
+          const dateStr = format(item.date, "yyyyMMdd");
+          
+          icsEvents.push(
+            `BEGIN:VEVENT`,
+            `DTSTART;VALUE=DATE:${dateStr}`,
+            `SUMMARY:Plazo: ${item.lawName}`,
+            `DESCRIPTION:Fecha límite de cumplimiento - ${item.lawNumber}${item.description ? '\\n\\n' + item.description : ''}`,
+            `CATEGORIES:Plazo de Cumplimiento`,
+            `END:VEVENT`
+          );
+        });
+    }
+
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//LawMeter//Calendario Legislativo//ES',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      ...icsEvents,
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'calendario-legislativo.ics';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -460,54 +551,91 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             </div>
             
             {/* Filtros */}
-            <div className="flex flex-wrap items-center gap-3 pt-2 border-t">
-              <span className="text-sm font-medium text-muted-foreground">Filtrar por:</span>
-              
-              <Select value={filterOrganType} onValueChange={setFilterOrganType}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Tipo de órgano" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los órganos</SelectItem>
-                  <SelectItem value="PLENARIO">Plenario</SelectItem>
-                  <SelectItem value="ESPECIAL">Comisión Especial</SelectItem>
-                  <SelectItem value="PERMANENTE ESPECIAL">Permanente Especial</SelectItem>
-                  <SelectItem value="PERMANENTE ORDINARIA">Permanente Ordinaria</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-3 pt-2 border-t">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground">Filtrar por:</span>
+                
+                <Select value={filterOrganType} onValueChange={setFilterOrganType}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Tipo de órgano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los órganos</SelectItem>
+                    <SelectItem value="PLENARIO">Plenario</SelectItem>
+                    <SelectItem value="ESPECIAL">Comisión Especial</SelectItem>
+                    <SelectItem value="PERMANENTE ESPECIAL">Permanente Especial</SelectItem>
+                    <SelectItem value="PERMANENTE ORDINARIA">Permanente Ordinaria</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={filterSessionType} onValueChange={setFilterSessionType}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Tipo de sesión" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las sesiones</SelectItem>
-                  <SelectItem value="ORDINARIA">Ordinaria</SelectItem>
-                  <SelectItem value="EXTRAORDINARIA">Extraordinaria</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={filterSessionType} onValueChange={setFilterSessionType}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Tipo de sesión" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las sesiones</SelectItem>
+                    <SelectItem value="ORDINARIA">Ordinaria</SelectItem>
+                    <SelectItem value="EXTRAORDINARIA">Extraordinaria</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => {
-                  setFilterOrganType("all");
-                  setFilterSessionType("all");
-                }}
-              >
-                Limpiar filtros
-              </Button>
-
-              <div className="flex items-center gap-2 ml-auto">
-                <Button
-                  variant={showEffectiveDates ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowEffectiveDates(!showEffectiveDates)}
-                  className="flex items-center gap-2"
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    setFilterOrganType("all");
+                    setFilterSessionType("all");
+                  }}
                 >
-                  <Scale className="w-4 h-4" />
-                  {showEffectiveDates ? "Ocultar" : "Mostrar"} vigencias
+                  Limpiar filtros
                 </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportToICS}
+                  className="flex items-center gap-2 ml-auto"
+                >
+                  <Download className="w-4 h-4" />
+                  Exportar .ics
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 p-3 bg-muted/30 rounded-lg">
+                <span className="text-sm font-medium text-muted-foreground">Mostrar:</span>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-sessions" 
+                    checked={showSessions} 
+                    onCheckedChange={(checked) => setShowSessions(checked === true)}
+                  />
+                  <Label htmlFor="show-sessions" className="cursor-pointer text-sm">
+                    Sesiones
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-effective" 
+                    checked={showEffectiveDates} 
+                    onCheckedChange={(checked) => setShowEffectiveDates(checked === true)}
+                  />
+                  <Label htmlFor="show-effective" className="cursor-pointer text-sm">
+                    Vigencias
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-deadlines" 
+                    checked={showDeadlines} 
+                    onCheckedChange={(checked) => setShowDeadlines(checked === true)}
+                  />
+                  <Label htmlFor="show-deadlines" className="cursor-pointer text-sm">
+                    Plazos de Cumplimiento
+                  </Label>
+                </div>
               </div>
             </div>
           </div>
