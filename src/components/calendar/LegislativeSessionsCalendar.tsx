@@ -41,73 +41,60 @@ interface EffectiveDate {
   date: Date;
   lawName: string;
   lawNumber: string;
-  type: "efectiva" | "vigencia"; // efectiva = entra en vigor, vigencia = continúa vigente
+  type: "efectiva" | "vigencia";
   description?: string;
   riskLevel: "high" | "medium" | "low";
-  alertId?: string; // ID de la alerta correspondiente
+  alertId: string;
 }
 
 interface LegislativeSessionsCalendarProps {
-  clientInterests?: string[]; // Areas de interés del cliente para filtrar
-  onNavigateToAlert?: (alertId: string) => void; // Callback para navegar a una alerta
+  alerts?: any[]; // Alertas de legislaciones
+  clientInterests?: string[];
+  onNavigateToAlert?: (alertId: string) => void;
 }
 
-export function LegislativeSessionsCalendar({ clientInterests = [], onNavigateToAlert }: LegislativeSessionsCalendarProps) {
+export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [], onNavigateToAlert }: LegislativeSessionsCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [filterOrganType, setFilterOrganType] = useState<string>("all");
   const [filterSessionType, setFilterSessionType] = useState<string>("all");
   const [showEffectiveDates, setShowEffectiveDates] = useState<boolean>(true);
 
-  // Fechas de vigencia de normas
+  // Generar fechas de vigencia desde las alertas reales
   const generateEffectiveDates = (): EffectiveDate[] => {
-    return [
-      {
-        date: parseISO("2025-11-01T00:00:00"),
-        lawName: "Ley de Regulación Fintech",
-        lawNumber: "Ley N° 10234",
-        type: "efectiva",
-        description: "Entra en vigor la nueva regulación del sector fintech",
-        riskLevel: "high",
-        alertId: "alert-1"
-      },
-      {
-        date: parseISO("2025-11-15T00:00:00"),
-        lawName: "Reforma a Ley de Protección al Consumidor Financiero",
-        lawNumber: "Ley N° 10145",
-        type: "efectiva",
-        description: "Nuevas disposiciones para protección de consumidores bancarios",
-        riskLevel: "medium",
-        alertId: "alert-2"
-      },
-      {
-        date: parseISO("2025-10-30T00:00:00"),
-        lawName: "Ley de Prevención de Blanqueo de Capitales",
-        lawNumber: "Ley N° 9786",
-        type: "vigencia",
-        description: "Continúa en vigor con las modificaciones de 2024",
-        riskLevel: "high",
-        alertId: "alert-3"
-      },
-      {
-        date: parseISO("2025-11-05T00:00:00"),
-        lawName: "Ley de Fortalecimiento Regulatorio Bancario",
-        lawNumber: "Ley N° 10198",
-        type: "efectiva",
-        description: "Entra en vigor nuevos requisitos de capital para bancos",
-        riskLevel: "medium",
-        alertId: "alert-4"
-      },
-      {
-        date: parseISO("2025-10-29T00:00:00"),
-        lawName: "Ley de Mercado de Valores",
-        lawNumber: "Ley N° 7732",
-        type: "vigencia",
-        description: "Marco regulatorio vigente del mercado de valores",
-        riskLevel: "low",
-        alertId: "alert-5"
-      },
-    ];
+    if (!alerts || alerts.length === 0) return [];
+    
+    return alerts
+      .filter(alert => alert.effective_date)
+      .map(alert => {
+        // Parsear la fecha de vigencia (formato puede ser DD/MM/YYYY o YYYY-MM-DD)
+        let effectiveDate: Date;
+        const dateStr = alert.effective_date;
+        
+        try {
+          // Intentar parsear como DD/MM/YYYY
+          if (dateStr.includes('/')) {
+            const [day, month, year] = dateStr.split('/');
+            effectiveDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            // Intentar parsear como ISO
+            effectiveDate = parseISO(dateStr);
+          }
+        } catch {
+          effectiveDate = new Date();
+        }
+        
+        return {
+          date: effectiveDate,
+          lawName: alert.title || alert.law_number || "Sin título",
+          lawNumber: alert.law_number || alert.title_id || "",
+          type: "efectiva" as const,
+          riskLevel: alert.AI_triage?.risk_level || "low",
+          alertId: alert.title_id,
+          description: alert.AI_triage?.summary?.substring(0, 150)
+        };
+      })
+      .filter(ed => !isNaN(ed.date.getTime())); // Filtrar fechas inválidas
   };
 
   // Datos de ejemplo basados en la imagen

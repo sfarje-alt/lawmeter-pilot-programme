@@ -539,7 +539,8 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-6">
-            <LegislativeSessionsCalendar 
+            <LegislativeSessionsCalendar
+              alerts={alerts}
               onNavigateToAlert={(alertId) => {
                 // Buscar la alerta correspondiente
                 const alert = alerts.find(a => a.title_id === alertId);
