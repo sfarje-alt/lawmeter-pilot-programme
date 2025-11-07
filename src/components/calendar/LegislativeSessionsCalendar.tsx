@@ -43,13 +43,16 @@ interface EffectiveDate {
   lawNumber: string;
   type: "efectiva" | "vigencia"; // efectiva = entra en vigor, vigencia = continúa vigente
   description?: string;
+  riskLevel: "high" | "medium" | "low";
+  alertId?: string; // ID de la alerta correspondiente
 }
 
 interface LegislativeSessionsCalendarProps {
   clientInterests?: string[]; // Areas de interés del cliente para filtrar
+  onNavigateToAlert?: (alertId: string) => void; // Callback para navegar a una alerta
 }
 
-export function LegislativeSessionsCalendar({ clientInterests = [] }: LegislativeSessionsCalendarProps) {
+export function LegislativeSessionsCalendar({ clientInterests = [], onNavigateToAlert }: LegislativeSessionsCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [filterOrganType, setFilterOrganType] = useState<string>("all");
@@ -64,35 +67,45 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
         lawName: "Ley de Regulación Fintech",
         lawNumber: "Ley N° 10234",
         type: "efectiva",
-        description: "Entra en vigor la nueva regulación del sector fintech"
+        description: "Entra en vigor la nueva regulación del sector fintech",
+        riskLevel: "high",
+        alertId: "alert-1"
       },
       {
         date: parseISO("2025-11-15T00:00:00"),
         lawName: "Reforma a Ley de Protección al Consumidor Financiero",
         lawNumber: "Ley N° 10145",
         type: "efectiva",
-        description: "Nuevas disposiciones para protección de consumidores bancarios"
+        description: "Nuevas disposiciones para protección de consumidores bancarios",
+        riskLevel: "medium",
+        alertId: "alert-2"
       },
       {
         date: parseISO("2025-10-30T00:00:00"),
         lawName: "Ley de Prevención de Blanqueo de Capitales",
         lawNumber: "Ley N° 9786",
         type: "vigencia",
-        description: "Continúa en vigor con las modificaciones de 2024"
+        description: "Continúa en vigor con las modificaciones de 2024",
+        riskLevel: "high",
+        alertId: "alert-3"
       },
       {
         date: parseISO("2025-11-05T00:00:00"),
         lawName: "Ley de Fortalecimiento Regulatorio Bancario",
         lawNumber: "Ley N° 10198",
         type: "efectiva",
-        description: "Entra en vigor nuevos requisitos de capital para bancos"
+        description: "Entra en vigor nuevos requisitos de capital para bancos",
+        riskLevel: "medium",
+        alertId: "alert-4"
       },
       {
         date: parseISO("2025-10-29T00:00:00"),
         lawName: "Ley de Mercado de Valores",
         lawNumber: "Ley N° 7732",
         type: "vigencia",
-        description: "Marco regulatorio vigente del mercado de valores"
+        description: "Marco regulatorio vigente del mercado de valores",
+        riskLevel: "low",
+        alertId: "alert-5"
       },
     ];
   };
@@ -532,48 +545,70 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
                 {/* Fechas de vigencia */}
                 {selectedEffectiveDates
                   .sort((a, b) => a.date.getTime() - b.date.getTime())
-                  .map((effectiveDate, index) => (
-                  <div
-                    key={`effective-${index}`}
-                    className="p-4 rounded-lg border-l-4 border-purple-600 bg-purple-50 dark:bg-purple-950/20 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 text-purple-600">
-                        <Scale className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <h4 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
-                          {effectiveDate.lawName}
-                        </h4>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="outline" className="text-xs border-purple-600 text-purple-600">
-                            {effectiveDate.lawNumber}
-                          </Badge>
-                          <Badge 
-                            variant={effectiveDate.type === "efectiva" ? "default" : "secondary"} 
-                            className={cn(
-                              "text-xs",
-                              effectiveDate.type === "efectiva" 
-                                ? "bg-purple-600 text-white hover:bg-purple-700" 
-                                : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
-                            )}
-                          >
-                            {effectiveDate.type === "efectiva" ? "Entra en vigor" : "Vigente"}
-                          </Badge>
-                        </div>
-                        {effectiveDate.description && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {effectiveDate.description}
-                          </p>
+                  .map((effectiveDate, index) => {
+                    const getRiskColor = (level: string) => {
+                      switch (level) {
+                        case "high": return "bg-red-500";
+                        case "medium": return "bg-yellow-500";
+                        case "low": return "bg-green-500";
+                        default: return "bg-gray-500";
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={`effective-${index}`}
+                        onClick={() => effectiveDate.alertId && onNavigateToAlert?.(effectiveDate.alertId)}
+                        className={cn(
+                          "p-4 rounded-lg border-l-4 border-purple-600 bg-purple-50 dark:bg-purple-950/20 hover:shadow-md transition-shadow",
+                          effectiveDate.alertId && onNavigateToAlert && "cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30"
                         )}
-                        <div className="flex items-center gap-1 text-xs text-purple-600">
-                          <CalendarIcon className="w-3 h-3" />
-                          {format(effectiveDate.date, "d 'de' MMMM, yyyy", { locale: es })}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1 text-purple-600 flex items-center gap-2">
+                            <Scale className="w-4 h-4" />
+                            <div 
+                              className={cn(
+                                "w-3 h-3 rounded-full",
+                                getRiskColor(effectiveDate.riskLevel)
+                              )}
+                              title={`Riesgo ${effectiveDate.riskLevel === "high" ? "alto" : effectiveDate.riskLevel === "medium" ? "medio" : "bajo"}`}
+                            />
+                          </div>
+                          <div className="flex-1 space-y-2">
+                            <h4 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
+                              {effectiveDate.lawName}
+                            </h4>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline" className="text-xs border-purple-600 text-purple-600">
+                                {effectiveDate.lawNumber}
+                              </Badge>
+                              <Badge 
+                                variant={effectiveDate.type === "efectiva" ? "default" : "secondary"} 
+                                className={cn(
+                                  "text-xs",
+                                  effectiveDate.type === "efectiva" 
+                                    ? "bg-purple-600 text-white hover:bg-purple-700" 
+                                    : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
+                                )}
+                              >
+                                {effectiveDate.type === "efectiva" ? "Entra en vigor" : "Vigente"}
+                              </Badge>
+                            </div>
+                            {effectiveDate.description && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {effectiveDate.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-1 text-xs text-purple-600">
+                              <CalendarIcon className="w-3 h-3" />
+                              {format(effectiveDate.date, "d 'de' MMMM, yyyy", { locale: es })}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
 
                 {/* Sesiones legislativas */}
                 {selectedSessions

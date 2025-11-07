@@ -25,6 +25,7 @@ import { BillCard } from "@/components/bills/BillCard";
 import { BillDrawer } from "@/components/bills/BillDrawer";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { LegislativeSessionsCalendar } from "@/components/calendar/LegislativeSessionsCalendar";
+import { useNavigate as useReactRouterNavigate } from "react-router-dom";
 import { ContactForm } from "@/components/ContactForm";
 import { TendersSection } from "@/components/tenders/TendersSection";
 import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
@@ -538,7 +539,16 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-6">
-            <LegislativeSessionsCalendar />
+            <LegislativeSessionsCalendar 
+              onNavigateToAlert={(alertId) => {
+                // Buscar la alerta correspondiente
+                const alert = alerts.find(a => a.title_id === alertId);
+                if (alert) {
+                  setSelectedAlert(alert);
+                  setActiveTab("acts");
+                }
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
