@@ -24,7 +24,7 @@ import { AlertActDrawer } from "@/components/acts/AlertActDrawer";
 import { BillCard } from "@/components/bills/BillCard";
 import { BillDrawer } from "@/components/bills/BillDrawer";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
-import { LegislativeCalendar } from "@/components/calendar/LegislativeCalendar";
+import { LegislativeSessionsCalendar } from "@/components/calendar/LegislativeSessionsCalendar";
 import { ContactForm } from "@/components/ContactForm";
 import { TendersSection } from "@/components/tenders/TendersSection";
 import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
@@ -538,10 +538,7 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-6">
-            <LegislativeCalendar 
-              alerts={filteredAlerts} 
-              bills={filteredBills}
-            />
+            <LegislativeSessionsCalendar />
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
