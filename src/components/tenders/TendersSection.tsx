@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSearch, ExternalLink, AlertCircle, FileText, ShoppingCart, Users, Bookmark, Share2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileSearch, ExternalLink, AlertCircle, FileText, ShoppingCart, Users, Bookmark, Share2, Building2, DollarSign } from "lucide-react";
 
 interface Tender {
   sicopId: string;
@@ -27,6 +28,9 @@ interface Tender {
   modality: string;
   tags: string[];
   sicopUrl: string;
+  catalogPurchase: boolean;
+  institutionType: "publica" | "semi-privada" | "autonoma";
+  convenioEstatal?: string;
 }
 
 // Mock tenders data relevant to BAC (banking sector) from SICOP
@@ -51,7 +55,9 @@ const mockTenders: Tender[] = [
     procedureType: "Licitación Pública",
     modality: "Servicios",
     tags: ["urgent", "high-value", "banking", "IT services"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000012-0001400001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000012-0001400001",
+    catalogPurchase: false,
+    institutionType: "publica"
   },
   {
     sicopId: "2025CD-000345-0002100001",
@@ -73,7 +79,9 @@ const mockTenders: Tender[] = [
     procedureType: "Contratación Directa",
     modality: "Bienes y Servicios",
     tags: ["cybersecurity", "urgent", "critical-infrastructure"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025CD-000345-0002100001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025CD-000345-0002100001",
+    catalogPurchase: false,
+    institutionType: "autonoma"
   },
   {
     sicopId: "2025LA-000089-0000800001",
@@ -95,7 +103,9 @@ const mockTenders: Tender[] = [
     procedureType: "Licitación Abreviada",
     modality: "Servicios",
     tags: ["compliance", "audit", "regulatory"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LA-000089-0000800001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LA-000089-0000800001",
+    catalogPurchase: false,
+    institutionType: "autonoma"
   },
   {
     sicopId: "2025LN-000156-0001200001",
@@ -117,7 +127,10 @@ const mockTenders: Tender[] = [
     procedureType: "Licitación Pública",
     modality: "Bienes",
     tags: ["ATM", "banking-equipment", "high-value"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000156-0001200001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000156-0001200001",
+    catalogPurchase: true,
+    institutionType: "semi-privada",
+    convenioEstatal: "Ley Orgánica del Banco Popular - Convenio SICOP 2024"
   },
   {
     sicopId: "2025CD-000234-0000500001",
@@ -139,7 +152,9 @@ const mockTenders: Tender[] = [
     procedureType: "Contratación Directa",
     modality: "Servicios",
     tags: ["AI", "credit-risk", "fintech"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025CD-000234-0000500001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025CD-000234-0000500001",
+    catalogPurchase: false,
+    institutionType: "publica"
   },
   {
     sicopId: "2025LA-000067-0001900001",
@@ -161,7 +176,9 @@ const mockTenders: Tender[] = [
     procedureType: "Licitación Abreviada",
     modality: "Servicios",
     tags: ["fraud-prevention", "AML", "real-time-monitoring"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LA-000067-0001900001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LA-000067-0001900001",
+    catalogPurchase: false,
+    institutionType: "publica"
   },
   {
     sicopId: "2024LN-000891-0001100001",
@@ -183,7 +200,9 @@ const mockTenders: Tender[] = [
     procedureType: "Licitación Pública",
     modality: "Bienes y Servicios",
     tags: ["data-center", "high-availability", "adjudicated"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2024LN-000891-0001100001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2024LN-000891-0001100001",
+    catalogPurchase: false,
+    institutionType: "publica"
   },
   {
     sicopId: "2025CD-000412-0000300001",
@@ -205,7 +224,9 @@ const mockTenders: Tender[] = [
     procedureType: "Contratación Directa",
     modality: "Servicios",
     tags: ["DRP", "business-continuity", "backup"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025CD-000412-0000300001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025CD-000412-0000300001",
+    catalogPurchase: false,
+    institutionType: "autonoma"
   },
   {
     sicopId: "2025LA-000123-0000900001",
@@ -227,7 +248,10 @@ const mockTenders: Tender[] = [
     procedureType: "Licitación Abreviada",
     modality: "Servicios",
     tags: ["training", "risk-management", "compliance"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LA-000123-0000900001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LA-000123-0000900001",
+    catalogPurchase: true,
+    institutionType: "semi-privada",
+    convenioEstatal: "Institución educativa con convenio SICOP para sector público"
   },
   {
     sicopId: "2025LN-000203-0001600001",
@@ -249,7 +273,85 @@ const mockTenders: Tender[] = [
     procedureType: "Licitación Pública",
     modality: "Servicios",
     tags: ["digital-banking", "mobile-app", "high-value", "fintech"],
-    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000203-0001600001"
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000203-0001600001",
+    catalogPurchase: false,
+    institutionType: "publica"
+  },
+  // New high-value catalog purchases from semi-private institutions
+  {
+    sicopId: "2025LN-000567-0002300001",
+    title: "Sistema de gestión de clientes empresariales y facturación electrónica",
+    institution: "Instituto Costarricense de Electricidad (ICE)",
+    category: "Software Empresarial - ERP",
+    description: "Desarrollo e implementación de plataforma integrada para gestión de clientes empresariales, facturación electrónica masiva, y portal de autogestión para grandes cuentas corporativas del sector eléctrico y telecomunicaciones.",
+    aiSummary: "ICE moderniza su gestión de clientes empresariales con una plataforma que automatiza la facturación electrónica de millones de transacciones mensuales, permite autogestión de servicios y analiza patrones de consumo para ofrecer planes personalizados a grandes empresas.",
+    closeDateTime: "2026-02-15T16:00:00",
+    publishDate: "2025-11-28T09:00:00",
+    lastUpdated: "2025-11-28T09:00:00",
+    status: "abierta",
+    relevanceScore: 94,
+    portfolioMatches: ["ERP", "facturación electrónica", "gestión clientes", "portal empresarial", "telecomunicaciones"],
+    unspsc: ["81111500", "43232700", "43233100"],
+    amount: 850000,
+    currency: "USD",
+    location: "San José + Regional (Heredia, Alajuela, Cartago)",
+    procedureType: "Licitación Pública",
+    modality: "Servicios",
+    tags: ["ERP", "high-value", "catalog-purchase", "enterprise"],
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000567-0002300001",
+    catalogPurchase: true,
+    institutionType: "semi-privada",
+    convenioEstatal: "Ley 449 - ICE como institución autónoma con convenio SICOP"
+  },
+  {
+    sicopId: "2025LN-000789-0001800001",
+    title: "Plataforma de análisis actuarial y gestión de riesgos de seguros",
+    institution: "Instituto Nacional de Seguros (INS)",
+    category: "Software Actuarial - Seguros",
+    description: "Adquisición de plataforma avanzada de análisis actuarial, modelado de riesgos, pricing de productos de seguros y reaseguros, incluyendo módulos de machine learning para predicción de siniestralidad.",
+    aiSummary: "El INS busca modernizar su análisis actuarial con una plataforma que utilice IA para modelar riesgos complejos, optimizar el pricing de pólizas, predecir patrones de siniestralidad y mejorar la rentabilidad de productos de seguros y reaseguros.",
+    closeDateTime: "2026-01-30T15:00:00",
+    publishDate: "2025-11-27T10:00:00",
+    lastUpdated: "2025-11-27T10:00:00",
+    status: "abierta",
+    relevanceScore: 96,
+    portfolioMatches: ["análisis actuarial", "seguros", "riesgo", "machine learning", "pricing", "siniestralidad"],
+    unspsc: ["81111500", "43232800", "86121500"],
+    amount: 620000,
+    currency: "USD",
+    location: "San José, Distrito Central",
+    procedureType: "Licitación Pública",
+    modality: "Servicios",
+    tags: ["insurance", "actuarial", "high-value", "catalog-purchase", "AI"],
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000789-0001800001",
+    catalogPurchase: true,
+    institutionType: "semi-privada",
+    convenioEstatal: "Ley 12 - INS monopolio estatal con procedimiento SICOP"
+  },
+  {
+    sicopId: "2025LN-000912-0002100001",
+    title: "Infraestructura de almacenamiento y refinación - Sistema SCADA avanzado",
+    institution: "Refinadora Costarricense de Petróleo (RECOPE)",
+    category: "Sistemas de Control Industrial - SCADA",
+    description: "Implementación de sistema SCADA de última generación para monitoreo y control en tiempo real de procesos de refinación, almacenamiento y distribución de combustibles, con ciberseguridad industrial integrada.",
+    aiSummary: "RECOPE moderniza su infraestructura crítica con sistema SCADA que permite control centralizado de todos los procesos de refinación y distribución, monitoreo en tiempo real de tanques de almacenamiento, detección temprana de anomalías y máxima seguridad contra ciberataques.",
+    closeDateTime: "2026-02-28T16:00:00",
+    publishDate: "2025-11-29T08:30:00",
+    lastUpdated: "2025-11-29T08:30:00",
+    status: "abierta",
+    relevanceScore: 91,
+    portfolioMatches: ["SCADA", "control industrial", "infraestructura crítica", "ciberseguridad industrial", "monitoreo tiempo real"],
+    unspsc: ["43211900", "43233200", "81111700"],
+    amount: 1200000,
+    currency: "USD",
+    location: "Limón (Moín) + San José + Barranca",
+    procedureType: "Licitación Pública",
+    modality: "Bienes y Servicios",
+    tags: ["SCADA", "industrial", "critical-infrastructure", "high-value", "catalog-purchase"],
+    sicopUrl: "https://www.sicop.go.cr/moduloContratacion/licitacion/ver/2025LN-000912-0002100001",
+    catalogPurchase: true,
+    institutionType: "semi-privada",
+    convenioEstatal: "Refinadora estatal - Convenio de contratación pública SICOP"
   }
 ];
 
@@ -257,8 +359,17 @@ export function TendersSection() {
   const [searchTerm, setSearchTerm] = useState("");
   const [relevanceFilter, setRelevanceFilter] = useState<"all" | "high" | "medium" | "low">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "abierta" | "en-evaluacion" | "adjudicada" | "desierta" | "cancelada">("all");
+  const [viewMode, setViewMode] = useState<"tradicionales" | "catalogo">("tradicionales");
 
-  const filteredTenders = mockTenders.filter(tender => {
+  // Separate tenders by catalog purchase
+  const catalogTenders = mockTenders.filter(t => t.catalogPurchase);
+  const traditionalTenders = mockTenders.filter(t => !t.catalogPurchase);
+  
+  // Apply filters to the active view
+  const activeTenders = viewMode === "catalogo" ? catalogTenders : traditionalTenders;
+
+
+  const filteredTenders = activeTenders.filter(tender => {
     const matchesSearch = tender.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tender.institution.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tender.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -275,6 +386,7 @@ export function TendersSection() {
     return matchesSearch && matchesRelevance && matchesStatus;
   });
 
+  // KPIs for traditional tenders
   const openTenders = filteredTenders.filter(t => t.status === "abierta");
   const highRelevanceTenders = openTenders.filter(t => t.relevanceScore >= 90);
   
@@ -287,13 +399,18 @@ export function TendersSection() {
 
   const closingSoonTenders = openTenders.filter(t => isClosingSoon(t.closeDateTime));
   
-  const recentlyAdjudicated = mockTenders.filter(t => {
+  const recentlyAdjudicated = filteredTenders.filter(t => {
     if (t.status !== "adjudicada") return false;
     const updated = new Date(t.lastUpdated);
     const now = new Date();
     const daysDiff = Math.ceil((now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24));
     return daysDiff <= 30;
   });
+  
+  // KPIs specific to catalog purchases
+  const catalogOpen = catalogTenders.filter(t => t.status === "abierta");
+  const catalogTotalValue = catalogOpen.reduce((sum, t) => sum + t.amount, 0);
+  const catalogHighValue = catalogOpen.filter(t => t.amount >= 500000);
 
   const formatDateTime = (dateTime: string) => {
     const date = new Date(dateTime);
@@ -341,40 +458,109 @@ export function TendersSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Licitaciones Abiertas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{openTenders.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Alta Relevancia</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{highRelevanceTenders.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Próximas a Cerrar (7 días)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">{closingSoonTenders.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Adjudicadas Recientes (30 días)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-info">{recentlyAdjudicated.length}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[500px]">
+          <TabsTrigger value="tradicionales" className="flex items-center gap-2">
+            <FileSearch className="h-4 w-4" />
+            Licitaciones Tradicionales
+          </TabsTrigger>
+          <TabsTrigger value="catalogo" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Compra por Catálogo
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tradicionales" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Licitaciones Abiertas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{openTenders.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Alta Relevancia</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{highRelevanceTenders.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Próximas a Cerrar (7 días)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-warning">{closingSoonTenders.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Adjudicadas Recientes (30 días)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-info">{recentlyAdjudicated.length}</div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="catalogo" className="space-y-6">
+          <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-purple-900 dark:text-purple-100">Compra por Catálogo - Alto Valor</p>
+                <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                  Instituciones semi-privadas (ICE, INS, Banco Popular, RECOPE, INCAE) que usan procedimiento de contratación pública por convenio con el Estado. 
+                  <span className="font-semibold"> Estas licitaciones representan oportunidades de mayor valor económico.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="border-purple-200 dark:border-purple-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Catálogo Abiertas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{catalogOpen.length}</div>
+              </CardContent>
+            </Card>
+            <Card className="border-purple-200 dark:border-purple-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Valor Total Abierto</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  ${(catalogTotalValue / 1000000).toFixed(1)}M
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-purple-200 dark:border-purple-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Alto Valor (&gt;$500K)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{catalogHighValue.length}</div>
+              </CardContent>
+            </Card>
+            <Card className="border-purple-200 dark:border-purple-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Instituciones Semi-Privadas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {new Set(catalogTenders.map(t => t.institution)).size}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
         <div className="relative flex-1">
@@ -414,7 +600,7 @@ export function TendersSection() {
 
       <div className="space-y-4">
         {filteredTenders.map(tender => (
-          <Card key={tender.sicopId} className="hover:shadow-md transition-shadow">
+          <Card key={tender.sicopId} className={`hover:shadow-md transition-shadow ${tender.catalogPurchase ? 'border-purple-200 dark:border-purple-800' : ''}`}>
             <CardContent className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -423,6 +609,18 @@ export function TendersSection() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <h3 className="font-semibold text-lg">{tender.title}</h3>
+                        {tender.catalogPurchase && (
+                          <Badge className="bg-purple-600 hover:bg-purple-700 text-white border-purple-600">
+                            <Building2 className="h-3 w-3 mr-1" />
+                            Compra por Catálogo - Alto Valor
+                          </Badge>
+                        )}
+                        {tender.amount >= 500000 && (
+                          <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-amber-500">
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            Alto Valor
+                          </Badge>
+                        )}
                         <Badge 
                           variant={getStatusBadgeVariant(tender.status)}
                           className={tender.status === "abierta" || tender.status === "adjudicada" ? getStatusColor(tender.status) : ""}
@@ -456,7 +654,15 @@ export function TendersSection() {
                         </div>
                         <div className="flex items-start gap-2 text-sm">
                           <span className="font-semibold min-w-[140px]">Institución:</span>
-                          <span className="text-muted-foreground">{tender.institution}</span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-muted-foreground">{tender.institution}</span>
+                            {tender.institutionType === "semi-privada" && (
+                              <Badge variant="outline" className="text-xs border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-300">
+                                <Building2 className="h-3 w-3 mr-1" />
+                                Semi-Privada
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-start gap-2 text-sm">
                           <span className="font-semibold min-w-[140px]">Categoría:</span>
@@ -472,7 +678,7 @@ export function TendersSection() {
                         </div>
                         <div className="flex items-start gap-2 text-sm">
                           <span className="font-semibold min-w-[140px]">Monto Estimado:</span>
-                          <span className="text-muted-foreground font-semibold">
+                          <span className={`font-semibold ${tender.amount >= 500000 ? 'text-amber-600 dark:text-amber-400 text-base' : 'text-muted-foreground'}`}>
                             {new Intl.NumberFormat('es-CR', { style: 'currency', currency: tender.currency }).format(tender.amount)}
                           </span>
                         </div>
@@ -540,10 +746,14 @@ export function TendersSection() {
                           <FileText className="h-3 w-3 mr-1" />
                           Expediente Electrónico
                         </Button>
-                        <Button size="sm" variant="outline">
-                          <ShoppingCart className="h-3 w-3 mr-1" />
-                          Compra por Catálogo
-                        </Button>
+                        {tender.catalogPurchase && (
+                          <Button size="sm" variant="outline" className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-950/30" asChild>
+                            <a href={`https://www.sicop.go.cr/moduloContratacion/catalogo/buscar`} target="_blank" rel="noopener noreferrer">
+                              <ShoppingCart className="h-3 w-3 mr-1" />
+                              Ir a Catálogo SICOP
+                            </a>
+                          </Button>
+                        )}
                         <Button size="sm" variant="outline">
                           <Users className="h-3 w-3 mr-1" />
                           Consulta Proveedores
