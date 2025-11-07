@@ -4,7 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale } from "lucide-react";
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,14 @@ interface LegislativeSession {
   agenda?: string[];
 }
 
+interface EffectiveDate {
+  date: Date;
+  lawName: string;
+  lawNumber: string;
+  type: "efectiva" | "vigencia"; // efectiva = entra en vigor, vigencia = continúa vigente
+  description?: string;
+}
+
 interface LegislativeSessionsCalendarProps {
   clientInterests?: string[]; // Areas de interés del cliente para filtrar
 }
@@ -46,6 +54,48 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
   const [calendarView, setCalendarView] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [filterOrganType, setFilterOrganType] = useState<string>("all");
   const [filterSessionType, setFilterSessionType] = useState<string>("all");
+  const [showEffectiveDates, setShowEffectiveDates] = useState<boolean>(true);
+
+  // Fechas de vigencia de normas
+  const generateEffectiveDates = (): EffectiveDate[] => {
+    return [
+      {
+        date: parseISO("2025-11-01T00:00:00"),
+        lawName: "Ley de Regulación Fintech",
+        lawNumber: "Ley N° 10234",
+        type: "efectiva",
+        description: "Entra en vigor la nueva regulación del sector fintech"
+      },
+      {
+        date: parseISO("2025-11-15T00:00:00"),
+        lawName: "Reforma a Ley de Protección al Consumidor Financiero",
+        lawNumber: "Ley N° 10145",
+        type: "efectiva",
+        description: "Nuevas disposiciones para protección de consumidores bancarios"
+      },
+      {
+        date: parseISO("2025-10-30T00:00:00"),
+        lawName: "Ley de Prevención de Blanqueo de Capitales",
+        lawNumber: "Ley N° 9786",
+        type: "vigencia",
+        description: "Continúa en vigor con las modificaciones de 2024"
+      },
+      {
+        date: parseISO("2025-11-05T00:00:00"),
+        lawName: "Ley de Fortalecimiento Regulatorio Bancario",
+        lawNumber: "Ley N° 10198",
+        type: "efectiva",
+        description: "Entra en vigor nuevos requisitos de capital para bancos"
+      },
+      {
+        date: parseISO("2025-10-29T00:00:00"),
+        lawName: "Ley de Mercado de Valores",
+        lawNumber: "Ley N° 7732",
+        type: "vigencia",
+        description: "Marco regulatorio vigente del mercado de valores"
+      },
+    ];
+  };
 
   // Datos de ejemplo basados en la imagen
   const generateMockSessions = (): LegislativeSession[] => {
@@ -259,6 +309,7 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
   };
 
   const sessions = generateMockSessions();
+  const effectiveDates = generateEffectiveDates();
 
   // Filtrar sesiones según los filtros seleccionados
   const getFilteredSessions = () => {
@@ -293,8 +344,29 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
 
   const selectedSessions = getSessionsForDate(selectedDate);
 
-  // Obtener fechas con sesiones para resaltar en el calendario
+  // Obtener fechas de vigencia para el rango seleccionado
+  const getEffectiveDatesForDate = (date: Date): EffectiveDate[] => {
+    if (!showEffectiveDates) return [];
+    
+    if (calendarView === "daily") {
+      return effectiveDates.filter((ed) => isSameDay(ed.date, date));
+    } else if (calendarView === "weekly") {
+      const weekStart = startOfWeek(date);
+      const weekEnd = endOfWeek(date);
+      return effectiveDates.filter((ed) => ed.date >= weekStart && ed.date <= weekEnd);
+    } else {
+      // monthly
+      const monthStart = startOfMonth(date);
+      const monthEnd = endOfMonth(date);
+      return effectiveDates.filter((ed) => ed.date >= monthStart && ed.date <= monthEnd);
+    }
+  };
+
+  const selectedEffectiveDates = getEffectiveDatesForDate(selectedDate);
+
+  // Obtener fechas con sesiones y fechas de vigencia para resaltar en el calendario
   const datesWithSessions = filteredSessions.map((s) => s.date);
+  const datesWithEffectiveDates = showEffectiveDates ? effectiveDates.map((ed) => ed.date) : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -384,7 +456,6 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="ml-auto"
                 onClick={() => {
                   setFilterOrganType("all");
                   setFilterSessionType("all");
@@ -392,6 +463,18 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
               >
                 Limpiar filtros
               </Button>
+
+              <div className="flex items-center gap-2 ml-auto">
+                <Button
+                  variant={showEffectiveDates ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowEffectiveDates(!showEffectiveDates)}
+                  className="flex items-center gap-2"
+                >
+                  <Scale className="w-4 h-4" />
+                  {showEffectiveDates ? "Ocultar" : "Mostrar"} vigencias
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -412,9 +495,11 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
               }}
               modifiers={{
                 hasSessions: datesWithSessions,
+                hasEffectiveDates: datesWithEffectiveDates,
               }}
               modifiersClassNames={{
                 hasSessions: "bg-blue-500/20 border-2 border-blue-500 text-blue-600 font-bold hover:bg-blue-500/30",
+                hasEffectiveDates: "bg-purple-500/20 border-2 border-purple-500 text-purple-600 font-bold hover:bg-purple-500/30",
               }}
             />
           </div>
@@ -430,17 +515,67 @@ export function LegislativeSessionsCalendar({ clientInterests = [] }: Legislativ
           </CardTitle>
           <CardDescription>
             {selectedSessions.length} sesión{selectedSessions.length !== 1 ? "es" : ""} programada{selectedSessions.length !== 1 ? "s" : ""}
+            {showEffectiveDates && selectedEffectiveDates.length > 0 && (
+              <> • {selectedEffectiveDates.length} norma{selectedEffectiveDates.length !== 1 ? "s" : ""} vigente{selectedEffectiveDates.length !== 1 ? "s" : ""}</>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[500px] pr-4">
-            {selectedSessions.length === 0 ? (
+            {selectedSessions.length === 0 && selectedEffectiveDates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No hay sesiones programadas</p>
+                <p>No hay sesiones ni normas vigentes</p>
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Fechas de vigencia */}
+                {selectedEffectiveDates
+                  .sort((a, b) => a.date.getTime() - b.date.getTime())
+                  .map((effectiveDate, index) => (
+                  <div
+                    key={`effective-${index}`}
+                    className="p-4 rounded-lg border-l-4 border-purple-600 bg-purple-50 dark:bg-purple-950/20 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 text-purple-600">
+                        <Scale className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <h4 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
+                          {effectiveDate.lawName}
+                        </h4>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs border-purple-600 text-purple-600">
+                            {effectiveDate.lawNumber}
+                          </Badge>
+                          <Badge 
+                            variant={effectiveDate.type === "efectiva" ? "default" : "secondary"} 
+                            className={cn(
+                              "text-xs",
+                              effectiveDate.type === "efectiva" 
+                                ? "bg-purple-600 text-white hover:bg-purple-700" 
+                                : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
+                            )}
+                          >
+                            {effectiveDate.type === "efectiva" ? "Entra en vigor" : "Vigente"}
+                          </Badge>
+                        </div>
+                        {effectiveDate.description && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {effectiveDate.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-1 text-xs text-purple-600">
+                          <CalendarIcon className="w-3 h-3" />
+                          {format(effectiveDate.date, "d 'de' MMMM, yyyy", { locale: es })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Sesiones legislativas */}
                 {selectedSessions
                   .sort((a, b) => a.date.getTime() - b.date.getTime())
                   .map((session, index) => (
