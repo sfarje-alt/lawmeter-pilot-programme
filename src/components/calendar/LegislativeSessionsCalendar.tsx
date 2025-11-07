@@ -419,16 +419,36 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   // Función para obtener indicadores de colores múltiples para cada fecha
   const getDateIndicators = (date: Date) => {
-    const indicators: { color: string; type: string }[] = [];
+    const indicators: { color: string; type: string; riskLevel?: string }[] = [];
     
     if (showSessions && datesWithSessions.some(d => isSameDay(d, date))) {
       indicators.push({ color: 'bg-blue-500', type: 'session' });
     }
-    if (showEffectiveDates && datesWithVigencias.some(d => isSameDay(d, date))) {
-      indicators.push({ color: 'bg-purple-500', type: 'vigencia' });
+    
+    if (showEffectiveDates) {
+      const vigenciasOnDate = effectiveDates.filter(
+        ed => ed.type === "efectiva" && isSameDay(ed.date, date)
+      );
+      vigenciasOnDate.forEach(v => {
+        indicators.push({ 
+          color: 'bg-purple-500', 
+          type: 'vigencia',
+          riskLevel: v.riskLevel 
+        });
+      });
     }
-    if (showDeadlines && datesWithDeadlines.some(d => isSameDay(d, date))) {
-      indicators.push({ color: 'bg-orange-500', type: 'deadline' });
+    
+    if (showDeadlines) {
+      const plazosOnDate = effectiveDates.filter(
+        ed => ed.type === "plazo" && isSameDay(ed.date, date)
+      );
+      plazosOnDate.forEach(p => {
+        indicators.push({ 
+          color: 'bg-orange-500', 
+          type: 'deadline',
+          riskLevel: p.riskLevel 
+        });
+      });
     }
     
     return indicators;
@@ -692,6 +712,16 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   const indicators = getDateIndicators(date);
                   const dayNumber = format(date, 'd');
                   
+                  const getRiskBorderColor = (riskLevel?: string) => {
+                    if (!riskLevel) return '';
+                    switch (riskLevel) {
+                      case "high": return "border-red-500";
+                      case "medium": return "border-yellow-500";
+                      case "low": return "border-green-500";
+                      default: return '';
+                    }
+                  };
+                  
                   return (
                     <div className="relative flex flex-col items-center justify-center w-full h-full">
                       <span>{dayNumber}</span>
@@ -700,7 +730,13 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                           {indicators.map((indicator, idx) => (
                             <div
                               key={idx}
-                              className={cn("w-1.5 h-1.5 rounded-full", indicator.color)}
+                              className={cn(
+                                "w-2 h-2 rounded-full",
+                                indicator.color,
+                                indicator.riskLevel && "border-2",
+                                indicator.riskLevel && getRiskBorderColor(indicator.riskLevel)
+                              )}
+                              title={indicator.riskLevel ? `Riesgo ${indicator.riskLevel === "high" ? "alto" : indicator.riskLevel === "medium" ? "medio" : "bajo"}` : ''}
                             />
                           ))}
                         </div>
