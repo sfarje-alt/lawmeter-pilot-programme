@@ -434,8 +434,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
     return indicators;
   };
 
-  // Función para exportar a .ics
-  const exportToICS = () => {
+  // Función para generar contenido ICS
+  const generateICSContent = () => {
     const icsEvents: string[] = [];
     
     // Agregar sesiones
@@ -502,6 +502,12 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
       'END:VCALENDAR'
     ].join('\r\n');
 
+    return icsContent;
+  };
+
+  // Función para exportar a .ics
+  const exportToICS = () => {
+    const icsContent = generateICSContent();
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -610,15 +616,55 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   Limpiar filtros
                 </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={exportToICS}
-                  className="flex items-center gap-2 ml-auto"
-                >
-                  <Download className="w-4 h-4" />
-                  Exportar .ics
-                </Button>
+                <div className="flex items-center gap-2 ml-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={exportToICS}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Descargar .ics
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      exportToICS();
+                      const blob = new Blob([generateICSContent()], { type: 'text/calendar;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      window.open(`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(url)}`, '_blank');
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Google Calendar
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const icsContent = generateICSContent();
+                      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = 'calendario-legislativo.ics';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                      window.open('https://outlook.office.com/calendar/', '_blank');
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Outlook
+                  </Button>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 p-3 bg-muted/30 rounded-lg">
