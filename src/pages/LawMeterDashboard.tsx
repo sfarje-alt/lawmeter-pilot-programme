@@ -178,6 +178,14 @@ export default function LawMeterDashboard() {
             <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
+                onClick={() => navigate("/inteligencia-empresarial")}
+                className="gap-2"
+              >
+                <Users className="w-4 h-4" />
+                Inteligencia Empresarial
+              </Button>
+              <Button 
+                variant="outline" 
                 onClick={() => navigate("/documentation")}
                 className="gap-2"
               >
