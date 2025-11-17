@@ -63,14 +63,14 @@ export default function BusinessIntelligence() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-4 gap-2 hover:bg-white/10"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Volver al Dashboard
-        </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/")}
+                className="gap-2 hover:bg-white/10"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Volver al Dashboard
+              </Button>
         <SearchHeader onSearch={handleSearch} selectedEntity={selectedEntity} />
 
         {selectedEntity ? (
