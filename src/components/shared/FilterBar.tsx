@@ -139,7 +139,7 @@ export function FilterBar({
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Portfolios
+                Ente Emisor
                 {filters.portfolios.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
                     {filters.portfolios.length}
