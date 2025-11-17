@@ -156,7 +156,7 @@ export default function LawMeterDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
       <header className="border-b border-white/10 sticky top-0 z-10 glass-card shadow-lg">
         <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center justify-between gap-8">
+          <div className="flex items-center justify-between gap-12">
             {/* Left side - Title */}
             <div className="flex items-center gap-6">
               <div>
