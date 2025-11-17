@@ -153,54 +153,54 @@ export default function LawMeterDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b shadow-sm sticky top-0 z-10 bg-white">
-        <div className="container mx-auto px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
+      <header className="border-b border-white/10 sticky top-0 z-10 glass-card shadow-lg">
+        <div className="container mx-auto px-6 py-3">
           <div className="flex items-center justify-between gap-8">
             {/* Left side - Title */}
             <div className="flex items-center gap-6">
               <div>
-                <h1 className="text-2xl font-bold text-foreground leading-tight">Costa Rica 🇨🇷</h1>
+                <h1 className="text-3xl font-bold text-foreground leading-tight">Costa Rica 🇨🇷</h1>
                 <p className="text-sm text-muted-foreground mt-0.5">Monitoreo Regulatorio</p>
               </div>
               
               {/* Separator */}
-              <div className="border-l border-border h-14"></div>
+              <div className="border-l border-white/20 h-14"></div>
               
               {/* Powered by */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">Powered by</span>
-                <img src={lawmeterLogo} alt="LawMeter" className="h-8" />
+                <img src={lawmeterLogo} alt="LawMeter" className="h-10" />
               </div>
             </div>
 
             {/* Right side - Buttons and Badge */}
             <div className="flex items-center gap-3">
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 onClick={() => navigate("/inteligencia-empresarial")}
-                className="gap-2"
+                className="gap-2 hover:bg-white/10"
               >
                 <Users className="w-4 h-4" />
                 Inteligencia Empresarial
               </Button>
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 onClick={() => navigate("/documentation")}
-                className="gap-2"
+                className="gap-2 hover:bg-white/10"
               >
                 <BookOpen className="w-4 h-4" />
                 Documentation
               </Button>
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 onClick={() => setSettingsOpen(true)}
-                className="gap-2"
+                className="gap-2 hover:bg-white/10"
               >
                 <Settings className="w-4 h-4" />
                 Alert Settings
               </Button>
-              <Badge variant="outline" className="bg-success/10">
+              <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground">
                 <Clock className="h-3 w-3 mr-1" />
                 Updated: Just now
               </Badge>
@@ -209,18 +209,18 @@ export default function LawMeterDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-9 mb-6">
-            <TabsTrigger value="acts"><FileText className="h-4 w-4 mr-2" />Legislaciones</TabsTrigger>
-            <TabsTrigger value="bills"><FileText className="h-4 w-4 mr-2" />Proyectos</TabsTrigger>
-            <TabsTrigger value="media"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
-            <TabsTrigger value="social"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
-            <TabsTrigger value="starred"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
-            <TabsTrigger value="calendar"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
-            <TabsTrigger value="analytics"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
-            <TabsTrigger value="tenders"><Receipt className="h-4 w-4 mr-2" />Licitaciones</TabsTrigger>
-            <TabsTrigger value="contact"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
+      <div className="container mx-auto px-6 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-9 mb-8 glass-card p-1 gap-1">
+            <TabsTrigger value="acts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislaciones</TabsTrigger>
+            <TabsTrigger value="bills" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Proyectos</TabsTrigger>
+            <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
+            <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
+            <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
+            <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
+            <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Licitaciones</TabsTrigger>
+            <TabsTrigger value="contact" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
           </TabsList>
 
           {activeTab === "acts" && (
