@@ -267,7 +267,7 @@ export default function LawMeterDashboard() {
                   setActsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Alto</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-high">{actsKPIs.highRisk}</div></CardContent>
               </Card>
               <Card 
@@ -282,7 +282,7 @@ export default function LawMeterDashboard() {
                   setActsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Medio</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-medium">{actsKPIs.mediumRisk}</div></CardContent>
               </Card>
               <Card 
@@ -297,7 +297,7 @@ export default function LawMeterDashboard() {
                   setActsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Bajo</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-low">{actsKPIs.lowRisk}</div></CardContent>
               </Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Portfolios</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.portfolios}</div></CardContent></Card>
@@ -391,7 +391,7 @@ export default function LawMeterDashboard() {
                   setBillsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Alto</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-high">{billsKPIs.highRisk}</div></CardContent>
               </Card>
               <Card 
@@ -406,7 +406,7 @@ export default function LawMeterDashboard() {
                   setBillsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Medio</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-medium">{billsKPIs.mediumRisk}</div></CardContent>
               </Card>
               <Card 
@@ -421,7 +421,7 @@ export default function LawMeterDashboard() {
                   setBillsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Bajo</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-low">{billsKPIs.lowRisk}</div></CardContent>
               </Card>
             </div>
