@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import lawmeterLogo from "@/assets/lawmeter-logo-white.png";
+import lawmeterLogo from "@/assets/logo-legal-tech.png";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
