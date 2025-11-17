@@ -170,7 +170,7 @@ export default function LawMeterDashboard() {
               {/* Powered by */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">Powered by</span>
-                <img src={lawmeterLogo} alt="LawMeter" className="h-20" />
+                <img src={lawmeterLogo} alt="LawMeter" className="h-32" />
               </div>
             </div>
 
@@ -617,7 +617,7 @@ export default function LawMeterDashboard() {
             <img 
               src={lawmeterLogo} 
               alt="LawMeter - Legal Tech" 
-              className="h-36 opacity-90 hover:opacity-100 transition-opacity"
+              className="h-56 opacity-90 hover:opacity-100 transition-opacity"
             />
           </div>
         </div>
