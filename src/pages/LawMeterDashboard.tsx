@@ -254,7 +254,7 @@ export default function LawMeterDashboard() {
 
           <TabsContent value="acts" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total Alerts</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.total}</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Alertas Activas</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.total}</div></CardContent></Card>
               <Card 
                 className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("high") ? "ring-2 ring-risk-high" : ""}`}
                 onClick={() => {
