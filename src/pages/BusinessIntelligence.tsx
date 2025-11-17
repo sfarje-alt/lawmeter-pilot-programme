@@ -4,12 +4,15 @@ import { EntityProfile } from "@/components/business-intelligence/EntityProfile"
 import { mockEntities } from "@/data/mockBusinessIntelligence";
 import { Entity } from "@/types/businessIntelligence";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Building2 } from "lucide-react";
+import { Building2, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function BusinessIntelligence() {
   const [selectedEntity, setSelectedEntity] = useState<Entity | undefined>();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSearch = (query: string, type: "cedula" | "nombre" | "placa" | "finca") => {
     const cleanedQuery = query.replace(/[^0-9a-zA-Z]/gi, "").toLowerCase();
@@ -58,8 +61,16 @@ export default function BusinessIntelligence() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard")}
+          className="mb-4 gap-2 hover:bg-white/10"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Volver al Dashboard
+        </Button>
         <SearchHeader onSearch={handleSearch} selectedEntity={selectedEntity} />
 
         {selectedEntity ? (
