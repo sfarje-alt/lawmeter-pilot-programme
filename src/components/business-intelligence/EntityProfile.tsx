@@ -115,7 +115,7 @@ export function EntityProfile({ entity, onCreateAlert }: EntityProfileProps) {
                   <h3 className="font-semibold">AI Summary - Análisis de Riesgo</h3>
                 </div>
                 <div className={`p-4 rounded-lg border ${entity.kpis.riesgo >= 70 ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900" : entity.kpis.riesgo >= 50 ? "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900" : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900"}`}>
-                  <p className="text-sm leading-relaxed">{entity.ai_summary}</p>
+                  <p className={`text-sm leading-relaxed ${entity.kpis.riesgo >= 70 ? "text-green-900 dark:text-green-100" : entity.kpis.riesgo >= 50 ? "text-yellow-900 dark:text-yellow-100" : "text-red-900 dark:text-red-100"}`}>{entity.ai_summary}</p>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Fuentes: OVT (Hacienda), Registro Nacional, CCSS, Cosevi
