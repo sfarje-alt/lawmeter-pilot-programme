@@ -50,11 +50,11 @@ export function FeedView({
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-warning">Data Retention Policy</p>
+            <p className="font-semibold text-warning">Política de Retención de Datos</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Data is retained for a maximum of 1 year from the alert date. Non-starred alerts
-              older than 1 year are automatically purged. Starred alerts are retained
-              indefinitely.
+              Los datos se retienen por un máximo de 1 año desde la fecha de alerta. Las alertas no destacadas
+              con más de 1 año se eliminan automáticamente. Las alertas destacadas se retienen
+              indefinidamente.
             </p>
           </div>
         </div>
@@ -62,7 +62,7 @@ export function FeedView({
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-lg font-semibold">
-          {feedType === "acts" ? "Acts & Instruments Feed" : "Bills Feed"} (1 Year History)
+          {feedType === "acts" ? "Actos e Instrumentos" : "Proyectos de Ley"} (Historial de 1 Año)
         </h3>
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -71,7 +71,7 @@ export function FeedView({
             onClick={() => setFeedType("acts")}
           >
             <FileText className="h-4 w-4 mr-2" />
-            Acts
+            Actos
           </Button>
           <Button
             variant={feedType === "bills" ? "default" : "outline"}
@@ -79,7 +79,7 @@ export function FeedView({
             onClick={() => setFeedType("bills")}
           >
             <Receipt className="h-4 w-4 mr-2" />
-            Bills
+            Proyectos
           </Button>
           <div className="border-l mx-2"></div>
           <Button
@@ -100,15 +100,15 @@ export function FeedView({
       </div>
 
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Showing {itemCount} items from the last year</span>
+        <span>Mostrando {itemCount} elementos del último año</span>
         {feedType === "acts" && (
           <Badge variant="outline">
-            {filteredAlerts.filter((a) => isStarred("ACTS", a.title_id)).length} starred
+            {filteredAlerts.filter((a) => isStarred("ACTS", a.title_id)).length} destacados
           </Badge>
         )}
         {feedType === "bills" && (
           <Badge variant="outline">
-            {filteredBills.filter((b) => isStarred("BILLS", b.id)).length} starred
+            {filteredBills.filter((b) => isStarred("BILLS", b.id)).length} destacados
           </Badge>
         )}
       </div>
@@ -116,7 +116,7 @@ export function FeedView({
       {itemCount === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No items found in the last year</p>
+            <p className="text-muted-foreground">No se encontraron elementos en el último año</p>
           </CardContent>
         </Card>
       ) : (

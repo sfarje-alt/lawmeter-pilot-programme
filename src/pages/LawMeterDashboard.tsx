@@ -169,7 +169,7 @@ export default function LawMeterDashboard() {
               
               {/* Powered by */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Powered by</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Desarrollado por</span>
                 <img src={lawmeterLogo} alt="LawMeter" className="h-32" />
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function LawMeterDashboard() {
                 className="gap-2 hover:bg-white/10"
               >
                 <BookOpen className="w-4 h-4" />
-                Documentation
+                Documentación
               </Button>
               <Button 
                 variant="ghost" 
@@ -198,11 +198,11 @@ export default function LawMeterDashboard() {
                 className="gap-2 hover:bg-white/10"
               >
                 <Settings className="w-4 h-4" />
-                Alert Settings
+                Configuración de Alertas
               </Button>
               <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground">
                 <Clock className="h-3 w-3 mr-1" />
-                Updated: Just now
+                Actualizado: Ahora
               </Badge>
             </div>
           </div>
