@@ -93,7 +93,7 @@ export function FilterBar({
     <div className="space-y-4">
       <div className="flex flex-col lg:flex-row gap-4">
         <SearchWithSuggestions
-          placeholder={searchType === "acts" ? "Search acts, legislation..." : "Search bills..."}
+          placeholder={searchType === "acts" ? "Buscar actos, legislación..." : "Buscar proyectos..."}
           value={filters.searchText}
           onChange={(value) => updateFilter("searchText", value)}
           data={searchData}
@@ -107,7 +107,7 @@ export function FilterBar({
           className="gap-2"
         >
           <Filter className="h-4 w-4" />
-          Advanced Search
+          Búsqueda Avanzada
           {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           {hasActiveFilters && (
             <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
@@ -124,14 +124,14 @@ export function FilterBar({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All time</SelectItem>
-              <SelectItem value="1w">Last 1 week</SelectItem>
-              <SelectItem value="2w">Last 2 weeks</SelectItem>
-              <SelectItem value="4w">Last 4 weeks</SelectItem>
-              <SelectItem value="8w">Last 8 weeks</SelectItem>
-              <SelectItem value="12w">Last 12 weeks</SelectItem>
-              <SelectItem value="6m">Last 6 months</SelectItem>
-              <SelectItem value="1y">Last 1 year</SelectItem>
+              <SelectItem value="all">Todo el tiempo</SelectItem>
+              <SelectItem value="1w">Última semana</SelectItem>
+              <SelectItem value="2w">Últimas 2 semanas</SelectItem>
+              <SelectItem value="4w">Últimas 4 semanas</SelectItem>
+              <SelectItem value="8w">Últimas 8 semanas</SelectItem>
+              <SelectItem value="12w">Últimas 12 semanas</SelectItem>
+              <SelectItem value="6m">Últimos 6 meses</SelectItem>
+              <SelectItem value="1y">Último año</SelectItem>
             </SelectContent>
           </Select>
 
@@ -168,7 +168,7 @@ export function FilterBar({
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Types
+                Tipos
                 {filters.types.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
                     {filters.types.length}
@@ -198,7 +198,7 @@ export function FilterBar({
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <Filter className="h-4 w-4" />
-                  Party
+                  Partido
                   {filters.parties.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
                       {filters.parties.length}
@@ -229,7 +229,7 @@ export function FilterBar({
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <Filter className="h-4 w-4" />
-                  Risk Score
+                  Puntuación de Riesgo
                   {(filters.riskScoreRange[0] !== 0 || filters.riskScoreRange[1] !== 100) && (
                     <Badge variant="secondary" className="ml-1">
                       {filters.riskScoreRange[0]}-{filters.riskScoreRange[1]}
@@ -241,7 +241,7 @@ export function FilterBar({
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm mb-2">
-                      Range: {filters.riskScoreRange[0]} - {filters.riskScoreRange[1]}
+                      Rango: {filters.riskScoreRange[0]} - {filters.riskScoreRange[1]}
                     </p>
                     <Slider
                       value={filters.riskScoreRange}
@@ -257,21 +257,21 @@ export function FilterBar({
                       size="sm"
                       onClick={() => updateFilter("riskScoreRange", [1, 39])}
                     >
-                      Low (1-39)
+                      Bajo (1-39)
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => updateFilter("riskScoreRange", [40, 79])}
                     >
-                      Medium (40-79)
+                      Medio (40-79)
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => updateFilter("riskScoreRange", [80, 100])}
                     >
-                      High (80-100)
+                      Alto (80-100)
                     </Button>
                   </div>
                 </div>
@@ -283,7 +283,7 @@ export function FilterBar({
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Risk Level
+                Nivel de Riesgo
                 {filters.riskLevels.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
                     {filters.riskLevels.length}
@@ -300,7 +300,7 @@ export function FilterBar({
                       onCheckedChange={() => toggleMultiSelect("riskLevels", level)}
                     />
                     <label className="text-sm cursor-pointer flex-1 capitalize">
-                      {level}
+                      {level === "low" ? "Bajo" : level === "medium" ? "Medio" : "Alto"}
                     </label>
                   </div>
                 ))}
@@ -312,7 +312,7 @@ export function FilterBar({
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Urgency
+                Urgencia
                 {filters.urgencyLevels.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
                     {filters.urgencyLevels.length}
@@ -329,7 +329,7 @@ export function FilterBar({
                       onCheckedChange={() => toggleMultiSelect("urgencyLevels", level)}
                     />
                     <label className="text-sm cursor-pointer flex-1 capitalize">
-                      {level}
+                      {level === "low" ? "Baja" : level === "medium" ? "Media" : "Alta"}
                     </label>
                   </div>
                 ))}
@@ -341,10 +341,10 @@ export function FilterBar({
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Calendar className="h-4 w-4" />
-                Deadline
+                Fecha Límite
                 {filters.hasDeadline !== null && (
                   <Badge variant="secondary" className="ml-1">
-                    {filters.hasDeadline ? "Yes" : "No"}
+                    {filters.hasDeadline ? "Sí" : "No"}
                   </Badge>
                 )}
               </Button>
@@ -357,7 +357,7 @@ export function FilterBar({
                   className="w-full"
                   onClick={() => updateFilter("hasDeadline", filters.hasDeadline === true ? null : true)}
                 >
-                  Has Deadline
+                  Con Fecha Límite
                 </Button>
                 <Button
                   variant={filters.hasDeadline === false ? "default" : "outline"}
@@ -365,7 +365,7 @@ export function FilterBar({
                   className="w-full"
                   onClick={() => updateFilter("hasDeadline", filters.hasDeadline === false ? null : false)}
                 >
-                  No Deadline
+                  Sin Fecha Límite
                 </Button>
               </div>
             </PopoverContent>
@@ -377,11 +377,11 @@ export function FilterBar({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="registered">Sort by Registered Date</SelectItem>
-              <SelectItem value="effective">Sort by Effective Date</SelectItem>
-              <SelectItem value="risk">Sort by Risk</SelectItem>
-              <SelectItem value="relevance">Sort by Relevance</SelectItem>
-              <SelectItem value="deadline">Sort by Deadline</SelectItem>
+              <SelectItem value="registered">Ordenar por Fecha de Registro</SelectItem>
+              <SelectItem value="effective">Ordenar por Fecha Efectiva</SelectItem>
+              <SelectItem value="risk">Ordenar por Riesgo</SelectItem>
+              <SelectItem value="relevance">Ordenar por Relevancia</SelectItem>
+              <SelectItem value="deadline">Ordenar por Fecha Límite</SelectItem>
             </SelectContent>
           </Select>
 
