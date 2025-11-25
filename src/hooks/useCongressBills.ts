@@ -4,9 +4,7 @@ import { CongressBill, CongressApiResponse } from "@/types/congress";
 const CONGRESS_API_BASE = "https://api.congress.gov/v3";
 const CURRENT_CONGRESS = 118; // 118th Congress (2023-2025)
 
-// Note: Users need to get their own API key from https://api.congress.gov/sign-up/
-// For demo purposes, we'll use a demo key (replace with actual key)
-const API_KEY = "demo"; // User should replace this with their actual API key
+const API_KEY = "KD2m5YgyIPMtxMOweZ6Tb57c1W8pD7Zr5eaDrM86";
 
 export function useCongressBills() {
   const [bills, setBills] = useState<CongressBill[]>([]);
