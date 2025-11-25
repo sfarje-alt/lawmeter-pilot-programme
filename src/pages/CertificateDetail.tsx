@@ -30,7 +30,7 @@ export default function CertificateDetail() {
   const handleDelete = async () => {
     if (id) {
       await deleteCertificate.mutateAsync(id);
-      navigate('/certificates');
+      navigate('/');
     }
   };
 
@@ -71,8 +71,8 @@ export default function CertificateDetail() {
         <div className="container mx-auto px-6 py-8">
           <div className="text-center py-12">
             <p className="text-muted-foreground">Certificate not found</p>
-            <Button onClick={() => navigate('/certificates')} className="mt-4">
-              Back to Certificates
+            <Button onClick={() => navigate('/')} className="mt-4">
+              Back to Dashboard
             </Button>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function CertificateDetail() {
       <div className="container mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/certificates')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
