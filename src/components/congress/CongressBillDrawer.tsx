@@ -321,9 +321,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             </p>
                           )}
                           {sponsorDetails.addressInformation.phoneNumber && (
-                            <p className="text-sm text-muted-foreground">
-                              Tel: {sponsorDetails.addressInformation.phoneNumber}
-                            </p>
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={`tel:${sponsorDetails.addressInformation.phoneNumber}`}>
+                                📞 {sponsorDetails.addressInformation.phoneNumber}
+                              </a>
+                            </Button>
                           )}
                         </div>
                       )}
