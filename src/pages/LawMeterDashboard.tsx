@@ -182,7 +182,7 @@ export default function LawMeterDashboard() {
             <div className="flex items-center gap-6">
               <div>
                 <h1 className="text-3xl font-bold text-foreground leading-tight">Costa Rica 🇨🇷</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Monitoreo Regulatorio</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Intelligence Hub</p>
               </div>
               
               {/* Separator */}
@@ -190,7 +190,7 @@ export default function LawMeterDashboard() {
               
               {/* Powered by */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Desarrollado por</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Developed by</span>
                 <img src={lawmeterLogo} alt="LawMeter" className="h-32" />
               </div>
             </div>
