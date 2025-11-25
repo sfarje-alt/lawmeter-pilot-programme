@@ -174,6 +174,12 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
             {bill.policyArea && (
               <Badge variant="secondary">{bill.policyArea.name}</Badge>
             )}
+            {bill.introducedDate && (
+              <Badge variant="outline" className="gap-1">
+                <Calendar className="h-3 w-3" />
+                Introducido: {formatDate(bill.introducedDate)}
+              </Badge>
+            )}
             {analysis && (
               <Badge className={getRiskColor(analysis.riskCategory)}>
                 <TrendingUp className="h-3 w-3 mr-1" />
