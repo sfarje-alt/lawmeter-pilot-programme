@@ -25,7 +25,9 @@ import {
   Tag,
   Briefcase,
   AlignLeft,
-  Download
+  Download,
+  Copy,
+  Check
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { 
@@ -59,6 +61,17 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   const [committees, setCommittees] = useState<any[]>([]);
   const [titles, setTitles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedText(id);
+      setTimeout(() => setCopiedText(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+    }
+  };
 
   useEffect(() => {
     if (open && bill) {
@@ -248,12 +261,28 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       <>
                         <Separator />
                         <div className="space-y-2">
-                          <h3 className="font-semibold flex items-center gap-2">
-                            <Scale className="h-4 w-4" />
-                            Autoridad Constitucional
-                          </h3>
-                          <div className="p-4 rounded-lg bg-muted/50">
-                            <p className="text-sm whitespace-pre-line leading-relaxed">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold flex items-center gap-2">
+                              <Scale className="h-4 w-4" />
+                              Autoridad Constitucional
+                            </h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyToClipboard(
+                                cleanConstitutionalAuthority(billDetails.constitutionalAuthorityStatementText),
+                                "constitutional"
+                              )}
+                            >
+                              {copiedText === "constitutional" ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                          <div className="p-4 rounded-lg bg-muted/50 select-text">
+                            <p className="text-sm whitespace-pre-line leading-relaxed select-text">
                               {cleanConstitutionalAuthority(billDetails.constitutionalAuthorityStatementText)}
                             </p>
                           </div>
