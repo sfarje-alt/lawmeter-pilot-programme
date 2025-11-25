@@ -51,6 +51,10 @@ export interface BillAnalysis {
   riskCategory: "Critical" | "High" | "Medium" | "Low";
   explanation: string;
   stakeholders: BillStakeholder[];
+  metadata?: {
+    textCharCount: number;
+    usedFullText: boolean;
+  };
 }
 
 export interface CongressBillDetail extends CongressBill {

@@ -1,7 +1,7 @@
 import { BillAnalysis } from "@/types/congress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, TrendingUp, Users, Building2, Landmark, Globe } from "lucide-react";
+import { AlertTriangle, TrendingUp, Users, Building2, Landmark, Globe, CheckCircle2, FileText } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface BillAnalysisTabProps {
@@ -93,6 +93,33 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Analysis Metadata */}
+      {analysis.metadata && (
+        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              {analysis.metadata.usedFullText ? (
+                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+              ) : (
+                <FileText className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+              )}
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  {analysis.metadata.usedFullText 
+                    ? "✓ Análisis basado en el texto completo del bill" 
+                    : "⚠ Análisis basado solo en el título"}
+                </p>
+                {analysis.metadata.usedFullText && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Se analizaron {analysis.metadata.textCharCount.toLocaleString()} caracteres del texto del bill
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Risk Score Card */}
       <Card>
         <CardHeader>

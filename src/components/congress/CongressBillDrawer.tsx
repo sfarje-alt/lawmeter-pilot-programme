@@ -139,37 +139,23 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     if (!versions || versions.length === 0) return;
 
     setAnalyzingBill(true);
-    
     try {
-      // Get the latest text version
+      // Find the latest "Formatted Text" version
       const latestVersion = versions[0];
+      const formattedText = latestVersion?.formats?.find((f: any) => f.type === "Formatted Text");
       
-      // Fetch the formatted text URL
-      let billText = "";
-      if (latestVersion.formats) {
-        const formattedText = latestVersion.formats.find((f: any) => f.type === "Formatted Text");
-        if (formattedText?.url) {
-          try {
-            const textResponse = await fetch(formattedText.url);
-            billText = await textResponse.text();
-            
-            // Clean HTML tags if present
-            billText = billText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-          } catch (error) {
-            console.error("Error fetching bill text:", error);
-            billText = title; // Fallback to title
-          }
-        }
+      if (!formattedText?.url) {
+        console.log("No formatted text URL found");
+        setAnalyzingBill(false);
+        return;
       }
 
-      if (!billText) {
-        billText = title;
-      }
+      console.log("Sending bill text URL to analyze:", formattedText.url);
 
-      // Call the edge function to analyze the bill
-      const { data, error } = await supabase.functions.invoke("analyze-bill", {
+      // Send the URL to the edge function - it will fetch the text server-side
+      const { data, error } = await supabase.functions.invoke('analyze-bill', {
         body: {
-          billText: billText,
+          billTextUrl: formattedText.url,
           billTitle: title,
           policyArea: policyArea
         }
@@ -185,11 +171,10 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         return;
       }
 
-      if (data) {
-        setAnalysis(data);
-      }
+      console.log("Analysis received:", data);
+      setAnalysis(data);
     } catch (error) {
-      console.error("Error in bill analysis:", error);
+      console.error("Error in analyzeBillWithAI:", error);
       toast({
         title: "Error",
         description: "Ocurrió un error al analizar el bill",

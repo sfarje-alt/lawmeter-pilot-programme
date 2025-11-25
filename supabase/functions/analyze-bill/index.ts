@@ -11,13 +11,41 @@ serve(async (req) => {
   }
 
   try {
-    const { billText, billTitle, policyArea } = await req.json();
+    const { billTextUrl, billTitle, policyArea } = await req.json();
     
-    if (!billText) {
+    if (!billTextUrl && !billTitle) {
       return new Response(
-        JSON.stringify({ error: "billText is required" }),
+        JSON.stringify({ error: "billTextUrl or billTitle is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    let billText = "";
+    let textCharCount = 0;
+
+    // Fetch bill text from Congress.gov (server-side, no CORS issues)
+    if (billTextUrl) {
+      console.log(`Fetching bill text from: ${billTextUrl}`);
+      try {
+        const textResponse = await fetch(billTextUrl);
+        if (textResponse.ok) {
+          billText = await textResponse.text();
+          // Clean HTML tags if present
+          billText = billText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          textCharCount = billText.length;
+          console.log(`Successfully fetched ${textCharCount} characters from bill text`);
+        } else {
+          console.warn(`Failed to fetch bill text: ${textResponse.status}`);
+        }
+      } catch (fetchError) {
+        console.error("Error fetching bill text:", fetchError);
+      }
+    }
+
+    if (!billText) {
+      console.log("No bill text available, using title only");
+      billText = billTitle;
+      textCharCount = 0;
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -113,8 +141,17 @@ ${billText.substring(0, 8000)}`; // Limit to avoid token limits
 
     const analysis = JSON.parse(jsonMatch[0]);
 
+    // Add metadata about the analysis
+    const result = {
+      ...analysis,
+      metadata: {
+        textCharCount,
+        usedFullText: textCharCount > 0
+      }
+    };
+
     return new Response(
-      JSON.stringify(analysis),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
