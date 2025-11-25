@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useCongressBills, SortOption } from "@/hooks/useCongressBills";
 import { CongressBillCard } from "./CongressBillCard";
 import { CongressBillDrawer } from "./CongressBillDrawer";
+import { EmailSetupDialog } from "./EmailSetupDialog";
 import { CongressBill } from "@/types/congress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, ArrowUpDown, Database } from "lucide-react";
+import { AlertCircle, Loader2, ArrowUpDown, Database, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ export function CongressBillsSection() {
   const [selectedBill, setSelectedBill] = useState<CongressBill | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChamber, setSelectedChamber] = useState<string | null>(null);
+  const [emailSetupOpen, setEmailSetupOpen] = useState(false);
   const { loadAllStatuses, loading: batchLoading, progress } = useBatchStatusLoader();
   const { toast } = useToast();
 
@@ -144,7 +146,6 @@ export function CongressBillsSection() {
             size="sm"
             onClick={handleBatchLoad}
             disabled={batchLoading}
-            className="ml-auto"
           >
             {batchLoading ? (
               <>
@@ -157,6 +158,14 @@ export function CongressBillsSection() {
                 Actualizar Base de Datos
               </>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEmailSetupOpen(true)}
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Email Notifications
           </Button>
         </div>
         
@@ -194,6 +203,12 @@ export function CongressBillsSection() {
           onOpenChange={(open) => !open && setSelectedBill(null)}
         />
       )}
+
+      {/* Email Setup Dialog */}
+      <EmailSetupDialog
+        open={emailSetupOpen}
+        onOpenChange={setEmailSetupOpen}
+      />
     </div>
   );
 }

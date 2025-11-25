@@ -20,6 +20,8 @@ export type Database = {
           bill_type: string
           congress: number
           current_stage: string
+          email_updated_at: string | null
+          has_email_update: boolean | null
           id: string
           scraped_at: string
           stages: Json
@@ -29,6 +31,8 @@ export type Database = {
           bill_type: string
           congress: number
           current_stage: string
+          email_updated_at?: string | null
+          has_email_update?: boolean | null
           id?: string
           scraped_at?: string
           stages: Json
@@ -38,6 +42,8 @@ export type Database = {
           bill_type?: string
           congress?: number
           current_stage?: string
+          email_updated_at?: string | null
+          has_email_update?: boolean | null
           id?: string
           scraped_at?: string
           stages?: Json

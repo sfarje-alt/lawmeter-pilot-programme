@@ -2,7 +2,9 @@ import { CongressBill } from "@/types/congress";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Calendar, Users } from "lucide-react";
+import { ExternalLink, Calendar, Users, Bell } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CongressBillCardProps {
   bill: CongressBill;
@@ -10,6 +12,50 @@ interface CongressBillCardProps {
 }
 
 export function CongressBillCard({ bill, onViewDetails }: CongressBillCardProps) {
+  const [hasEmailUpdate, setHasEmailUpdate] = useState(false);
+
+  useEffect(() => {
+    // Check if this bill has email updates
+    const checkEmailUpdate = async () => {
+      const { data } = await supabase
+        .from('congress_bill_statuses')
+        .select('has_email_update')
+        .eq('congress', bill.congress)
+        .eq('bill_type', bill.type)
+        .eq('bill_number', bill.number)
+        .maybeSingle();
+
+      if (data?.has_email_update) {
+        setHasEmailUpdate(true);
+      }
+    };
+
+    checkEmailUpdate();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('bill-email-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'congress_bill_statuses',
+          filter: `congress=eq.${bill.congress},bill_type=eq.${bill.type},bill_number=eq.${bill.number}`
+        },
+        (payload: any) => {
+          if (payload.new.has_email_update) {
+            setHasEmailUpdate(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [bill.congress, bill.type, bill.number]);
+
   const getBillTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       hr: "H.R.",
@@ -43,6 +89,12 @@ export function CongressBillCard({ bill, onViewDetails }: CongressBillCardProps)
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
+            {hasEmailUpdate && (
+              <Badge className="bg-orange-500 text-white animate-pulse">
+                <Bell className="h-3 w-3 mr-1" />
+                New Update
+              </Badge>
+            )}
             <Badge variant="outline" className="font-mono">
               {getBillTypeLabel(bill.type)} {bill.number}
             </Badge>
