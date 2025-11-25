@@ -274,8 +274,10 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               <TabsContent value="sponsors" className="space-y-6 mt-6">
                 {/* Primary Sponsor with Details */}
                 {sponsorDetails && billDetails?.sponsors?.[0] && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <h3 className="font-semibold">Patrocinador Principal</h3>
+                    
+                    {/* Profile Section */}
                     <div className="p-4 rounded-lg bg-muted/50 space-y-4">
                       <div className="flex items-start gap-4">
                         <Avatar className="w-20 h-20">
@@ -287,29 +289,127 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             <User className="h-10 w-10" />
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium text-lg">{billDetails.sponsors[0].fullName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {billDetails.sponsors[0].party} - {billDetails.sponsors[0].state}
-                            {billDetails.sponsors[0].district ? ` - Distrito ${billDetails.sponsors[0].district}` : ""}
-                          </p>
-                          {sponsorDetails.birthYear && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Año de nacimiento: {sponsorDetails.birthYear}
+                        <div className="flex-1 space-y-2">
+                          <div>
+                            <p className="font-medium text-lg">
+                              {sponsorDetails.honorificName} {sponsorDetails.directOrderName}
                             </p>
-                          )}
+                            <p className="text-sm text-muted-foreground">
+                              {billDetails.sponsors[0].party} - {billDetails.sponsors[0].state}
+                              {billDetails.sponsors[0].district ? ` - Distrito ${billDetails.sponsors[0].district}` : ""}
+                            </p>
+                          </div>
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            {sponsorDetails.currentMember && (
+                              <Badge variant="secondary">Miembro Actual</Badge>
+                            )}
+                            {sponsorDetails.birthYear && (
+                              <Badge variant="outline">Nacido: {sponsorDetails.birthYear}</Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
-                      {sponsorDetails.officialWebsiteUrl && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={sponsorDetails.officialWebsiteUrl} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Sitio Oficial
-                          </a>
-                        </Button>
+                      {/* Contact Information */}
+                      {sponsorDetails.addressInformation && (
+                        <div className="space-y-2 pt-3 border-t">
+                          <h4 className="text-sm font-semibold">Información de Contacto</h4>
+                          {sponsorDetails.addressInformation.officeAddress && (
+                            <p className="text-sm text-muted-foreground">
+                              {sponsorDetails.addressInformation.officeAddress}
+                            </p>
+                          )}
+                          {sponsorDetails.addressInformation.phoneNumber && (
+                            <p className="text-sm text-muted-foreground">
+                              Tel: {sponsorDetails.addressInformation.phoneNumber}
+                            </p>
+                          )}
+                        </div>
                       )}
+                      
+                      {/* Legislative Stats */}
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t">
+                        {sponsorDetails.sponsoredLegislation?.count && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Bills Patrocinados</p>
+                            <p className="text-xl font-semibold">{sponsorDetails.sponsoredLegislation.count}</p>
+                          </div>
+                        )}
+                        {sponsorDetails.cosponsoredLegislation?.count && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Bills Copatrocinados</p>
+                            <p className="text-xl font-semibold">{sponsorDetails.cosponsoredLegislation.count}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Leadership Positions */}
+                      {sponsorDetails.leadership?.length > 0 && (
+                        <div className="space-y-2 pt-3 border-t">
+                          <h4 className="text-sm font-semibold">Posiciones de Liderazgo</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {sponsorDetails.leadership.map((position: any, idx: number) => (
+                              <Badge key={idx} variant={position.current ? "default" : "outline"}>
+                                {position.type} - Congreso {position.congress}
+                                {position.current && " (Actual)"}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Links */}
+                      <div className="flex gap-2 pt-3 border-t">
+                        {sponsorDetails.officialWebsiteUrl && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={sponsorDetails.officialWebsiteUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Sitio Oficial
+                            </a>
+                          </Button>
+                        )}
+                        {sponsorDetails.bioguideId && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a 
+                              href={`https://bioguide.congress.gov/search/bio/${sponsorDetails.bioguideId}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              Biografía
+                            </a>
+                          </Button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Terms of Service */}
+                    {sponsorDetails.terms?.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-semibold">Historial de Servicio</h4>
+                        <ScrollArea className="h-[200px]">
+                          <div className="space-y-2 pr-4">
+                            {sponsorDetails.terms.map((term: any, idx: number) => (
+                              <div key={idx} className="p-3 rounded-lg bg-muted/50">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-medium">{term.chamber}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {term.memberType} - {term.stateName}
+                                      {term.district ? ` Distrito ${term.district}` : ""}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {term.startYear} - {term.endYear} ({term.partyName})
+                                    </p>
+                                  </div>
+                                  <Badge variant="outline">Congreso {term.congress}</Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    )}
                   </div>
                 )}
 
