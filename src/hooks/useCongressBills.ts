@@ -290,3 +290,52 @@ export async function fetchBillTitles(
     return [];
   }
 }
+
+// Scrape bill status tracker from Congress.gov HTML page
+export async function scrapeBillStatus(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<{ currentStage: string; stages: string[] } | null> {
+  try {
+    const chamberName = billType.toLowerCase() === 'hr' ? 'house-bill' : 
+                        billType.toLowerCase() === 's' ? 'senate-bill' :
+                        billType.toLowerCase() === 'hjres' ? 'house-joint-resolution' :
+                        billType.toLowerCase() === 'sjres' ? 'senate-joint-resolution' :
+                        billType.toLowerCase() === 'hconres' ? 'house-concurrent-resolution' :
+                        billType.toLowerCase() === 'sconres' ? 'senate-concurrent-resolution' :
+                        billType.toLowerCase() === 'hres' ? 'house-resolution' : 'senate-resolution';
+    
+    const url = `https://www.congress.gov/bill/${congress}th-congress/${chamberName}/${billNumber}`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch page: ${response.status}`);
+    }
+
+    const html = await response.text();
+    
+    // Parse the bill_progress ordered list
+    const progressMatch = html.match(/<ol class="bill_progress">([\s\S]*?)<\/ol>/);
+    if (!progressMatch) {
+      return null;
+    }
+
+    const progressHtml = progressMatch[1];
+    
+    // Extract all stages and find the selected one
+    const stageMatches = [...progressHtml.matchAll(/<li(?:\s+class="([^"]*)")?>([^<]+)/g)];
+    const stages = stageMatches.map(match => match[2].trim());
+    
+    const selectedStage = stageMatches.find(match => 
+      match[1] && (match[1].includes('selected') || match[1] === 'selected')
+    );
+    
+    const currentStage = selectedStage ? selectedStage[2].trim() : stages[0];
+
+    return { currentStage, stages };
+  } catch (error) {
+    console.error("Error scraping bill status:", error);
+    return null;
+  }
+}
