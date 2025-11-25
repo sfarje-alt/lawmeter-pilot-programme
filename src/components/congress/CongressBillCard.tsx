@@ -154,6 +154,9 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
 
   const billStatus = getBillStatus();
 
+  // Debug log
+  console.log(`Bill ${billId} introducedDate:`, bill.introducedDate);
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
