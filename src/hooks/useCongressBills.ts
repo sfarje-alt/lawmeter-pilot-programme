@@ -6,7 +6,9 @@ const CURRENT_CONGRESS = 118; // 118th Congress (2023-2025)
 
 const API_KEY = "KD2m5YgyIPMtxMOweZ6Tb57c1W8pD7Zr5eaDrM86";
 
-export function useCongressBills() {
+export type SortOption = "latestAction-desc" | "latestAction-asc" | "title-asc" | "title-desc";
+
+export function useCongressBills(sortBy: SortOption = "latestAction-desc") {
   const [bills, setBills] = useState<CongressBill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,8 +16,9 @@ export function useCongressBills() {
   useEffect(() => {
     async function fetchBills() {
       try {
+        // Fetch with sort parameter - the API supports sort by updateDate
         const response = await fetch(
-          `${CONGRESS_API_BASE}/bill/${CURRENT_CONGRESS}?format=json&limit=50&api_key=${API_KEY}`
+          `${CONGRESS_API_BASE}/bill/${CURRENT_CONGRESS}?format=json&limit=50&sort=updateDate+desc&api_key=${API_KEY}`
         );
 
         if (!response.ok) {
@@ -23,10 +26,14 @@ export function useCongressBills() {
         }
 
         const data: CongressApiResponse = await response.json();
-        setBills(data.bills || []);
+        let sortedBills = data.bills || [];
+        
+        // Apply client-side sorting based on the sortBy parameter
+        sortedBills = sortBills(sortedBills, sortBy);
+        
+        setBills(sortedBills);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch bills");
-        // Set some mock data for development/demo
         setBills([]);
       } finally {
         setLoading(false);
@@ -34,9 +41,30 @@ export function useCongressBills() {
     }
 
     fetchBills();
-  }, []);
+  }, [sortBy]);
 
   return { bills, loading, error };
+}
+
+function sortBills(bills: CongressBill[], sortBy: SortOption): CongressBill[] {
+  const sorted = [...bills];
+  
+  switch (sortBy) {
+    case "latestAction-desc":
+      return sorted.sort((a, b) => 
+        new Date(b.latestAction.actionDate).getTime() - new Date(a.latestAction.actionDate).getTime()
+      );
+    case "latestAction-asc":
+      return sorted.sort((a, b) => 
+        new Date(a.latestAction.actionDate).getTime() - new Date(b.latestAction.actionDate).getTime()
+      );
+    case "title-asc":
+      return sorted.sort((a, b) => a.title.localeCompare(b.title));
+    case "title-desc":
+      return sorted.sort((a, b) => b.title.localeCompare(a.title));
+    default:
+      return sorted;
+  }
 }
 
 export async function fetchBillDetails(
@@ -58,5 +86,27 @@ export async function fetchBillDetails(
   } catch (err) {
     console.error("Error fetching bill details:", err);
     throw err;
+  }
+}
+
+export async function fetchBillCosponsors(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/cosponsors?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.cosponsors || [];
+  } catch (err) {
+    console.error("Error fetching bill cosponsors:", err);
+    return [];
   }
 }

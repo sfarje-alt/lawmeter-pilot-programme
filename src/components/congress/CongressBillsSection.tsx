@@ -1,16 +1,24 @@
 import { useState } from "react";
-import { useCongressBills } from "@/hooks/useCongressBills";
+import { useCongressBills, SortOption } from "@/hooks/useCongressBills";
 import { CongressBillCard } from "./CongressBillCard";
 import { CongressBillDrawer } from "./CongressBillDrawer";
 import { CongressBill } from "@/types/congress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CongressBillsSection() {
-  const { bills, loading, error } = useCongressBills();
+  const [sortBy, setSortBy] = useState<SortOption>("latestAction-desc");
+  const { bills, loading, error } = useCongressBills(sortBy);
   const [selectedBill, setSelectedBill] = useState<CongressBill | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChamber, setSelectedChamber] = useState<string | null>(null);
@@ -72,6 +80,20 @@ export function CongressBillsSection() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-md"
           />
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="latestAction-desc">Última Acción - Más Reciente</SelectItem>
+                <SelectItem value="latestAction-asc">Última Acción - Más Antigua</SelectItem>
+                <SelectItem value="title-asc">Título - A a Z</SelectItem>
+                <SelectItem value="title-desc">Título - Z a A</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex gap-2">
             <Button
               variant={selectedChamber === null ? "default" : "outline"}

@@ -8,7 +8,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ExternalLink, Calendar, Users, Building } from "lucide-react";
+import { ExternalLink, Calendar, Users, Building, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchBillCosponsors } from "@/hooks/useCongressBills";
 
 interface CongressBillDrawerProps {
   bill: CongressBill;
@@ -17,6 +19,22 @@ interface CongressBillDrawerProps {
 }
 
 export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDrawerProps) {
+  const [cosponsors, setCosponsors] = useState<any[]>([]);
+  const [loadingCosponsors, setLoadingCosponsors] = useState(false);
+
+  useEffect(() => {
+    if (open && bill) {
+      setLoadingCosponsors(true);
+      fetchBillCosponsors(bill.congress, bill.type, bill.number)
+        .then((data) => {
+          setCosponsors(data);
+        })
+        .finally(() => {
+          setLoadingCosponsors(false);
+        });
+    }
+  }, [open, bill]);
+
   const getBillTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       hr: "H.R.",
@@ -107,6 +125,45 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                 {bill.latestAction.text}
               </p>
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Cosponsors */}
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Copatrocinadores
+              {loadingCosponsors && <Loader2 className="h-4 w-4 animate-spin" />}
+            </h3>
+            {loadingCosponsors ? (
+              <p className="text-sm text-muted-foreground">Cargando copatrocinadores...</p>
+            ) : cosponsors.length > 0 ? (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {cosponsors.map((cosponsor, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium">{cosponsor.fullName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {cosponsor.party} - {cosponsor.state}
+                        {cosponsor.district ? ` - Distrito ${cosponsor.district}` : ""}
+                      </p>
+                      {cosponsor.sponsorshipDate && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Fecha: {formatDate(cosponsor.sponsorshipDate)}
+                          {cosponsor.isOriginalCosponsor && " (Original)"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No hay copatrocinadores</p>
+            )}
           </div>
 
           <Separator />
