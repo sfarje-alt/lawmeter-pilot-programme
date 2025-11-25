@@ -173,6 +173,10 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
 
       console.log("Analysis received:", data);
       setAnalysis(data);
+      
+      // Cache analysis in localStorage
+      const billId = `${bill.congress}-${bill.type}-${bill.number}`;
+      localStorage.setItem(`bill_analysis_${billId}`, JSON.stringify(data));
     } catch (error) {
       console.error("Error in analyzeBillWithAI:", error);
       toast({
