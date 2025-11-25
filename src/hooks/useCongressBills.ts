@@ -221,3 +221,72 @@ export async function fetchMemberDetails(bioguideId: string): Promise<any> {
     return null;
   }
 }
+
+// Fetch bill subjects (legislative subjects)
+export async function fetchBillSubjects(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/subjects?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.subjects || null;
+  } catch (error) {
+    console.error("Error fetching bill subjects:", error);
+    return null;
+  }
+}
+
+// Fetch bill committees
+export async function fetchBillCommittees(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any[]> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/committees?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.committees || [];
+  } catch (error) {
+    console.error("Error fetching bill committees:", error);
+    return [];
+  }
+}
+
+// Fetch bill titles (all versions)
+export async function fetchBillTitles(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any[]> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/titles?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.titles || [];
+  } catch (error) {
+    console.error("Error fetching bill titles:", error);
+    return [];
+  }
+}

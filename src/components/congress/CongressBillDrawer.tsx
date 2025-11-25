@@ -21,7 +21,11 @@ import {
   History,
   Scale,
   Info,
-  User
+  User,
+  Tag,
+  Briefcase,
+  AlignLeft,
+  Download
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { 
@@ -31,7 +35,10 @@ import {
   fetchBillSummaries,
   fetchBillAmendments,
   fetchBillTextVersions,
-  fetchMemberDetails
+  fetchMemberDetails,
+  fetchBillSubjects,
+  fetchBillCommittees,
+  fetchBillTitles
 } from "@/hooks/useCongressBills";
 
 interface CongressBillDrawerProps {
@@ -48,6 +55,9 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   const [amendments, setAmendments] = useState<any[]>([]);
   const [textVersions, setTextVersions] = useState<any[]>([]);
   const [sponsorDetails, setSponsorDetails] = useState<any>(null);
+  const [subjects, setSubjects] = useState<any>(null);
+  const [committees, setCommittees] = useState<any[]>([]);
+  const [titles, setTitles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -62,14 +72,20 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         fetchBillSummaries(bill.congress, bill.type, bill.number),
         fetchBillAmendments(bill.congress, bill.type, bill.number),
         fetchBillTextVersions(bill.congress, bill.type, bill.number),
+        fetchBillSubjects(bill.congress, bill.type, bill.number),
+        fetchBillCommittees(bill.congress, bill.type, bill.number),
+        fetchBillTitles(bill.congress, bill.type, bill.number),
       ])
-        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData]) => {
+        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData]) => {
           setBillDetails(details);
           setCosponsors(cosponsorData);
           setActions(actionsData);
           setSummaries(summariesData);
           setAmendments(amendmentsData);
           setTextVersions(textVersionsData);
+          setSubjects(subjectsData);
+          setCommittees(committeesData);
+          setTitles(titlesData);
           
           // Fetch sponsor details if available
           if (details?.sponsors?.[0]?.bioguideId) {
@@ -242,20 +258,96 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                   </div>
                 </div>
 
+                {/* Policy Area */}
+                {billDetails?.policyArea && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        Área de Política
+                      </h3>
+                      <Badge variant="default" className="text-sm">
+                        {billDetails.policyArea.name}
+                      </Badge>
+                    </div>
+                  </>
+                )}
+
                 {/* Subjects */}
-                {bill.subjects?.legislativeSubjects && bill.subjects.legislativeSubjects.length > 0 && (
+                {subjects?.legislativeSubjects && subjects.legislativeSubjects.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Tag className="h-4 w-4" />
+                        Temas Legislativos
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {subjects.legislativeSubjects.map((subject: any, idx: number) => (
+                          <Badge key={idx} variant="outline">
+                            {subject.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Committees */}
+                {committees && committees.length > 0 && (
                   <>
                     <Separator />
                     <div className="space-y-3">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Building className="h-4 w-4" />
-                        Temas Legislativos
+                        Comités Asignados
                       </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {bill.subjects.legislativeSubjects.map((subject, idx) => (
-                          <Badge key={idx} variant="outline">
-                            {subject.name}
-                          </Badge>
+                      <div className="space-y-2">
+                        {committees.map((committee: any, idx: number) => (
+                          <div key={idx} className="p-3 rounded-lg bg-muted/50">
+                            <p className="font-medium text-sm">{committee.name}</p>
+                            {committee.systemCode && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Código: {committee.systemCode}
+                              </p>
+                            )}
+                            {committee.chamber && (
+                              <Badge variant="secondary" className="mt-2">
+                                {committee.chamber}
+                              </Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* All Titles */}
+                {titles && titles.length > 1 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <AlignLeft className="h-4 w-4" />
+                        Títulos Alternativos
+                      </h3>
+                      <div className="space-y-2">
+                        {titles.map((title: any, idx: number) => (
+                          <div key={idx} className="p-3 rounded-lg bg-muted/50 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                {title.titleType}
+                              </Badge>
+                              {title.titleTypeCode && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {title.titleTypeCode}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm">{title.title}</p>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -267,22 +359,40 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                   <>
                     <Separator />
                     <div className="space-y-3">
-                      <h3 className="font-semibold">Versiones del Texto</h3>
-                      <div className="space-y-2">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Texto Completo del Proyecto
+                      </h3>
+                      <div className="space-y-3">
                         {textVersions.map((version, idx) => (
-                          <div key={idx} className="p-3 rounded-lg bg-muted/50 flex items-center justify-between">
+                          <div key={idx} className="p-4 rounded-lg bg-muted/50 space-y-3">
                             <div>
-                              <p className="text-sm font-medium">{version.type}</p>
+                              <p className="text-sm font-semibold">{version.type}</p>
                               <p className="text-xs text-muted-foreground">
                                 {formatDate(version.date)}
                               </p>
                             </div>
                             {version.formats && version.formats.length > 0 && (
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={version.formats[0].url} target="_blank" rel="noopener noreferrer">
-                                  Ver Texto
-                                </a>
-                              </Button>
+                              <div className="flex flex-wrap gap-2">
+                                {version.formats.map((format: any, formatIdx: number) => (
+                                  <Button 
+                                    key={formatIdx} 
+                                    variant="outline" 
+                                    size="sm" 
+                                    asChild
+                                  >
+                                    <a 
+                                      href={format.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Download className="h-3 w-3" />
+                                      {format.type}
+                                    </a>
+                                  </Button>
+                                ))}
+                              </div>
                             )}
                           </div>
                         ))}
