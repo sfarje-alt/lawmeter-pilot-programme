@@ -120,9 +120,9 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
       if (onRefresh) {
         await onRefresh(billId);
       }
-      toast({ title: "Bill actualizado", description: "La información ha sido actualizada." });
+      toast({ title: "Bill updated", description: "Information has been updated." });
     } catch (error) {
-      toast({ title: "Error", description: "No se pudo actualizar la bill.", variant: "destructive" });
+      toast({ title: "Error", description: "Could not update the bill.", variant: "destructive" });
     } finally {
       setIsRefreshing(false);
     }
@@ -153,9 +153,6 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
   };
 
   const billStatus = getBillStatus();
-
-  // Debug log
-  console.log(`Bill ${billId} introducedDate:`, bill.introducedDate);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -212,14 +209,14 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
           <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border border-yellow-200 dark:border-yellow-800 mt-2">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-medium text-foreground">
-                {keywordHits.reduce((sum, hit) => sum + hit.count, 0)} coincidencias encontradas
+                {keywordHits.reduce((sum, hit) => sum + hit.count, 0)} matches found
               </span>
             </div>
             <div className="space-y-2">
               {keywordHits.map((hit, idx) => (
                 <div key={idx} className="text-xs">
                   <span className="font-medium text-foreground">"{hit.keyword}"</span>
-                  <span className="text-muted-foreground"> ({hit.count} veces)</span>
+                  <span className="text-muted-foreground"> ({hit.count} times)</span>
                   {hit.snippets.slice(0, 2).map((snippet, i) => (
                     <p key={i} className="text-muted-foreground italic mt-1 line-clamp-1">
                       ...{snippet}...
@@ -263,7 +260,7 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
           <div className="text-sm bg-muted/50 p-3 rounded-md border border-border/50">
             <div className="flex items-center gap-2 mb-1">
               <Activity className="h-4 w-4 text-primary" />
-              <span className="font-medium text-foreground">Análisis IA:</span>
+              <span className="font-medium text-foreground">AI Analysis:</span>
             </div>
             <p className="text-muted-foreground line-clamp-2">{analysis.explanation}</p>
           </div>
@@ -273,20 +270,20 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
         <div className="flex items-center gap-4 text-sm flex-wrap">
           <div className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-foreground">Introducido:</span>
+            <span className="font-medium text-foreground">Introduced:</span>
             <span className="text-muted-foreground">
               {bill.introducedDate ? formatDate(bill.introducedDate) : 'N/A'}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-foreground">Última Acción:</span>
+            <span className="font-medium text-foreground">Last Action:</span>
             <span className="text-muted-foreground">{formatDate(bill.latestAction.actionDate)}</span>
           </div>
           {bill.updateDate && (
             <div className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-foreground">Actualizado LawMeter:</span>
+              <span className="font-medium text-foreground">Updated LawMeter:</span>
               <span className="text-muted-foreground">{formatDate(bill.updateDate)}</span>
             </div>
           )}
@@ -305,7 +302,7 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
       
       <CardContent className="space-y-3">
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium text-foreground mb-1">Última Acción:</p>
+          <p className="font-medium text-foreground mb-1">Last Action:</p>
           <p className="line-clamp-2">{bill.latestAction.text}</p>
         </div>
 
@@ -317,11 +314,11 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
               rel="noopener noreferrer"
             >
               <ExternalLink className="h-3 w-3 mr-1" />
-              Ver en Congress.gov
+              View on Congress.gov
             </a>
           </Button>
           <Button variant="default" size="sm" onClick={onViewDetails}>
-            Ver Detalles
+            View Details
           </Button>
         </div>
       </CardContent>

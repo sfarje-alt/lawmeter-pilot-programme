@@ -69,7 +69,7 @@ export function VotingRecordsTab({ votes }: VotingRecordsTabProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
+    return new Date(dateString).toLocaleDateString("en-US", {
       day: "numeric",
       month: "long",
       year: "numeric",

@@ -164,8 +164,8 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
       if (error) {
         console.error("Error analyzing bill:", error);
         toast({
-          title: "Error al analizar bill",
-          description: error.message || "No se pudo generar el análisis de riesgo",
+          title: "Error analyzing bill",
+          description: error.message || "Could not generate risk analysis",
           variant: "destructive"
         });
         return;
@@ -181,7 +181,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
       console.error("Error in analyzeBillWithAI:", error);
       toast({
         title: "Error",
-        description: "Ocurrió un error al analizar el bill",
+        description: "An error occurred while analyzing the bill",
         variant: "destructive"
       });
     } finally {
@@ -205,11 +205,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
 
   const getPartyLabel = (partyCode: string) => {
     const parties: Record<string, string> = {
-      R: "Republicano",
-      D: "Demócrata",
-      I: "Independiente",
-      ID: "Independiente Demócrata",
-      L: "Libertario",
+      R: "Republican",
+      D: "Democrat",
+      I: "Independent",
+      ID: "Independent Democrat",
+      L: "Libertarian",
     };
     return parties[partyCode] || partyCode;
   };
@@ -226,7 +226,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
+    return new Date(dateString).toLocaleDateString("en-US", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -304,13 +304,13 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                   <DrawerTitle className="text-left">{bill.title}</DrawerTitle>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                  <a 
+                    <a 
                     href={`https://www.congress.gov/bill/${bill.congress}th-congress/${bill.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${bill.number}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Ver en Congress.gov
+                    View on Congress.gov
                   </a>
                 </Button>
               </div>
@@ -326,11 +326,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="overview">
                   <Info className="h-4 w-4 mr-2" />
-                  General
+                  Overview
                 </TabsTrigger>
                 <TabsTrigger value="analysis">
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  Análisis IA
+                  AI Analysis
                 </TabsTrigger>
                 <TabsTrigger value="votes">
                   <ThumbsUp className="h-4 w-4 mr-2" />
@@ -338,19 +338,19 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                 </TabsTrigger>
                 <TabsTrigger value="sponsors">
                   <Users className="h-4 w-4 mr-2" />
-                  Patrocinadores
+                  Sponsors
                 </TabsTrigger>
                 <TabsTrigger value="actions">
                   <History className="h-4 w-4 mr-2" />
-                  Acciones
+                  Actions
                 </TabsTrigger>
                 <TabsTrigger value="summaries">
                   <FileText className="h-4 w-4 mr-2" />
-                  Resúmenes
+                  Summaries
                 </TabsTrigger>
                 <TabsTrigger value="amendments">
                   <Scale className="h-4 w-4 mr-2" />
-                  Enmiendas
+                  Amendments
                 </TabsTrigger>
               </TabsList>
 
@@ -364,7 +364,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                 {/* Bill Progress Tracker */}
                 {billStatus && billStatus.stages.length > 0 && (
                   <div className="p-6 rounded-lg bg-muted/50 border">
-                    <p className="text-sm font-semibold text-muted-foreground mb-4">Estado Legislativo</p>
+                    <p className="text-sm font-semibold text-muted-foreground mb-4">Legislative Status</p>
                     <div className="flex items-center gap-1">
                       {billStatus.stages.map((stage, index) => (
                         <>
@@ -392,16 +392,16 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                   <div className="space-y-4">
                     <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Fecha de Introducción:</span>
+                        <span className="text-sm text-muted-foreground">Introduction Date:</span>
                         <span className="text-sm font-medium">{formatDate(billDetails.introducedDate)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Última Actualización:</span>
+                        <span className="text-sm text-muted-foreground">Last Updated:</span>
                         <span className="text-sm font-medium">{formatDate(billDetails.updateDate)}</span>
                       </div>
                       {billDetails.cosponsors && (
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Copatrocinadores:</span>
+                          <span className="text-sm text-muted-foreground">Cosponsors:</span>
                           <span className="text-sm font-medium">{billDetails.cosponsors.count || 0}</span>
                         </div>
                       )}
@@ -415,7 +415,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                           <div className="flex items-center justify-between">
                             <h3 className="font-semibold flex items-center gap-2">
                               <Scale className="h-4 w-4" />
-                              Autoridad Constitucional
+                              Constitutional Authority
                             </h3>
                             <Button
                               variant="ghost"
@@ -448,7 +448,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                 <div className="space-y-3">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Última Acción
+                    Latest Action
                   </h3>
                   <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                     <p className="text-sm font-medium">
@@ -467,7 +467,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     <div className="space-y-3">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Briefcase className="h-4 w-4" />
-                        Área de Política
+                        Policy Area
                       </h3>
                       <Badge variant="default" className="text-sm">
                         {billDetails.policyArea.name}
@@ -483,7 +483,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     <div className="space-y-3">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Tag className="h-4 w-4" />
-                        Temas Legislativos
+                        Legislative Subjects
                       </h3>
                       <div className="flex flex-wrap gap-2">
                         {subjects.legislativeSubjects.map((subject: any, idx: number) => (
@@ -503,7 +503,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     <div className="space-y-3">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Building className="h-4 w-4" />
-                        Comités Asignados
+                        Assigned Committees
                       </h3>
                       <div className="space-y-2">
                         {committees.map((committee: any, idx: number) => (
@@ -511,7 +511,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             <p className="font-medium text-sm">{committee.name}</p>
                             {committee.systemCode && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                Código: {committee.systemCode}
+                                Code: {committee.systemCode}
                               </p>
                             )}
                             {committee.chamber && (
@@ -533,7 +533,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     <div className="space-y-3">
                       <h3 className="font-semibold flex items-center gap-2">
                         <AlignLeft className="h-4 w-4" />
-                        Títulos Alternativos
+                        Alternative Titles
                       </h3>
                       <div className="space-y-2">
                         {titles.map((title: any, idx: number) => (
@@ -563,7 +563,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     <div className="space-y-3">
                       <h3 className="font-semibold flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        Texto Completo del Proyecto
+                        Full Bill Text
                       </h3>
                       <div className="space-y-3">
                         {textVersions.map((version, idx) => (
@@ -614,7 +614,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                 {/* Primary Sponsor with Details */}
                 {sponsorDetails && billDetails?.sponsors?.[0] && (
                   <div className="space-y-4">
-                    <h3 className="font-semibold">Patrocinador Principal</h3>
+                    <h3 className="font-semibold">Primary Sponsor</h3>
                     
                     {/* Profile Section */}
                     <div className="p-4 rounded-lg bg-muted/50 space-y-4">
@@ -639,17 +639,17 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                               </Badge>
                               <span className="text-muted-foreground">
                                 {billDetails.sponsors[0].state}
-                                {billDetails.sponsors[0].district ? ` - Distrito ${billDetails.sponsors[0].district}` : ""}
+                                {billDetails.sponsors[0].district ? ` - District ${billDetails.sponsors[0].district}` : ""}
                               </span>
                             </div>
                           </div>
                           
                           <div className="flex gap-2 flex-wrap">
                             {sponsorDetails.currentMember && (
-                              <Badge variant="secondary">Miembro Actual</Badge>
+                              <Badge variant="secondary">Current Member</Badge>
                             )}
                             {sponsorDetails.birthYear && (
-                              <Badge variant="outline">Nacido: {sponsorDetails.birthYear}</Badge>
+                              <Badge variant="outline">Born: {sponsorDetails.birthYear}</Badge>
                             )}
                           </div>
                         </div>
@@ -658,7 +658,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       {/* Contact Information */}
                       {sponsorDetails.addressInformation && (
                         <div className="space-y-2 pt-3 border-t">
-                          <h4 className="text-sm font-semibold">Información de Contacto</h4>
+                          <h4 className="text-sm font-semibold">Contact Information</h4>
                           {sponsorDetails.addressInformation.officeAddress && (
                             <p className="text-sm text-muted-foreground">
                               {sponsorDetails.addressInformation.officeAddress}
@@ -678,13 +678,13 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       <div className="grid grid-cols-2 gap-3 pt-3 border-t">
                         {sponsorDetails.sponsoredLegislation?.count && (
                           <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Bills Patrocinados</p>
+                            <p className="text-xs text-muted-foreground">Bills Sponsored</p>
                             <p className="text-xl font-semibold">{sponsorDetails.sponsoredLegislation.count}</p>
                           </div>
                         )}
                         {sponsorDetails.cosponsoredLegislation?.count && (
                           <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Bills Copatrocinados</p>
+                            <p className="text-xs text-muted-foreground">Bills Cosponsored</p>
                             <p className="text-xl font-semibold">{sponsorDetails.cosponsoredLegislation.count}</p>
                           </div>
                         )}
@@ -693,11 +693,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       {/* Leadership Positions */}
                       {sponsorDetails.leadership?.length > 0 && (
                         <div className="space-y-2 pt-3 border-t">
-                          <h4 className="text-sm font-semibold">Posiciones de Liderazgo</h4>
+                          <h4 className="text-sm font-semibold">Leadership Positions</h4>
                           <div className="flex flex-wrap gap-2">
                             {sponsorDetails.leadership.map((position: any, idx: number) => (
                               <Badge key={idx} variant={position.current ? "default" : "outline"}>
-                                {position.type} - Congreso {position.congress}
+                                {position.type} - Congress {position.congress}
                                 {position.current && " (Actual)"}
                               </Badge>
                             ))}
@@ -711,7 +711,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                           <Button variant="outline" size="sm" asChild>
                             <a href={sponsorDetails.officialWebsiteUrl} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-4 w-4 mr-2" />
-                              Sitio Oficial
+                              Official Website
                             </a>
                           </Button>
                         )}
@@ -722,7 +722,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                               target="_blank" 
                               rel="noopener noreferrer"
                             >
-                              Biografía
+                              Biography
                             </a>
                           </Button>
                         )}
@@ -732,7 +732,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     {/* Terms of Service */}
                     {sponsorDetails.terms?.length > 0 && (
                       <div className="space-y-3">
-                        <h4 className="font-semibold">Historial de Servicio</h4>
+                        <h4 className="font-semibold">Service History</h4>
                         <ScrollArea className="h-[200px]">
                           <div className="space-y-2 pr-4">
                             {sponsorDetails.terms.map((term: any, idx: number) => (
@@ -742,13 +742,13 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                                     <p className="font-medium">{term.chamber}</p>
                                     <p className="text-sm text-muted-foreground">
                                       {term.memberType} - {term.stateName}
-                                      {term.district ? ` Distrito ${term.district}` : ""}
+                                      {term.district ? ` District ${term.district}` : ""}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
                                       {term.startYear} - {term.endYear} ({term.partyName})
                                     </p>
                                   </div>
-                                  <Badge variant="outline">Congreso {term.congress}</Badge>
+                                  <Badge variant="outline">Congress {term.congress}</Badge>
                                 </div>
                               </div>
                             ))}
@@ -764,7 +764,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                 {/* Cosponsors */}
                 <div className="space-y-3">
                   <h3 className="font-semibold">
-                    Copatrocinadores ({cosponsors.length})
+                    Cosponsors ({cosponsors.length})
                   </h3>
                   {cosponsors.length > 0 ? (
                     <ScrollArea className="h-[400px]">
@@ -782,12 +782,12 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                                 </Badge>
                                 <span className="text-muted-foreground">
                                   {cosponsor.state}
-                                  {cosponsor.district ? ` - Distrito ${cosponsor.district}` : ""}
+                                  {cosponsor.district ? ` - District ${cosponsor.district}` : ""}
                                 </span>
                               </div>
                               {cosponsor.sponsorshipDate && (
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Fecha: {formatDate(cosponsor.sponsorshipDate)}
+                                  Date: {formatDate(cosponsor.sponsorshipDate)}
                                   {cosponsor.isOriginalCosponsor && " (Original)"}
                                 </p>
                               )}
@@ -799,7 +799,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                                   target="_blank" 
                                   rel="noopener noreferrer"
                                 >
-                                  Biografía
+                                  Biography
                                 </a>
                               </Button>
                             )}
@@ -808,7 +808,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       </div>
                     </ScrollArea>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No hay copatrocinadores</p>
+                    <p className="text-sm text-muted-foreground">No cosponsors</p>
                   )}
                 </div>
               </TabsContent>
@@ -817,7 +817,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               <TabsContent value="actions" className="space-y-6 mt-6">
                 <div className="space-y-3">
                   <h3 className="font-semibold">
-                    Historial de Acciones ({actions.length})
+                    Action History ({actions.length})
                   </h3>
                   {actions.length > 0 ? (
                     <ScrollArea className="h-[500px]">
@@ -842,7 +842,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             </p>
                             {action.type && (
                               <p className="text-xs text-muted-foreground">
-                                Tipo: {action.type}
+                                Type: {action.type}
                               </p>
                             )}
                           </div>
@@ -850,7 +850,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       </div>
                     </ScrollArea>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No hay acciones disponibles</p>
+                    <p className="text-sm text-muted-foreground">No actions available</p>
                   )}
                 </div>
               </TabsContent>
@@ -859,7 +859,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               <TabsContent value="summaries" className="space-y-6 mt-6">
                 <div className="space-y-3">
                   <h3 className="font-semibold">
-                    Resúmenes del CRS ({summaries.length})
+                    CRS Summaries ({summaries.length})
                   </h3>
                   {summaries.length > 0 ? (
                     <ScrollArea className="h-[500px]">
@@ -888,7 +888,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       </div>
                     </ScrollArea>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No hay resúmenes disponibles</p>
+                    <p className="text-sm text-muted-foreground">No summaries available</p>
                   )}
                 </div>
               </TabsContent>
@@ -897,7 +897,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               <TabsContent value="amendments" className="space-y-6 mt-6">
                 <div className="space-y-3">
                   <h3 className="font-semibold">
-                    Enmiendas ({amendments.length})
+                    Amendments ({amendments.length})
                   </h3>
                   {amendments.length > 0 ? (
                     <ScrollArea className="h-[500px]">
@@ -920,7 +920,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             )}
                             {amendment.latestAction && (
                               <div className="text-xs text-muted-foreground">
-                                <p>Última acción: {formatDate(amendment.latestAction.actionDate)}</p>
+                                <p>Last action: {formatDate(amendment.latestAction.actionDate)}</p>
                                 <p>{amendment.latestAction.text}</p>
                               </div>
                             )}
@@ -929,7 +929,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       </div>
                     </ScrollArea>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No hay enmiendas disponibles</p>
+                    <p className="text-sm text-muted-foreground">No amendments available</p>
                   )}
                 </div>
               </TabsContent>

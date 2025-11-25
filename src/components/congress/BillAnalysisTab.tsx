@@ -34,7 +34,7 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
       <Card>
         <CardContent className="pt-6">
           <p className="text-muted-foreground text-center">
-            No hay análisis disponible para este bill. El análisis se genera automáticamente al cargar el texto del bill.
+            No analysis available for this bill. Analysis is generated automatically when loading bill text.
           </p>
         </CardContent>
       </Card>
@@ -106,12 +106,12 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
               <div className="flex-1">
                 <p className="text-sm font-medium text-foreground">
                   {analysis.metadata.usedFullText 
-                    ? "✓ Análisis basado en el texto completo del bill" 
-                    : "⚠ Análisis basado solo en el título"}
+                    ? "✓ Analysis based on full bill text" 
+                    : "⚠ Analysis based on title only"}
                 </p>
                 {analysis.metadata.usedFullText && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Se analizaron {analysis.metadata.textCharCount.toLocaleString()} caracteres del texto del bill
+                    Analyzed {analysis.metadata.textCharCount.toLocaleString()} characters from bill text
                   </p>
                 )}
               </div>
@@ -126,7 +126,7 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Risk Assessment para Data Centers
+              Risk Assessment for Data Centers
             </CardTitle>
             <Badge variant="outline" className={getRiskColor(analysis.riskCategory)}>
               {analysis.riskCategory} Risk
@@ -152,7 +152,7 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
           <div className="pt-4 border-t">
             <h4 className="font-semibold mb-2 flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Análisis de Impacto
+              Impact Analysis
             </h4>
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
               {analysis.explanation}
@@ -167,7 +167,7 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Análisis de Stakeholders
+              Stakeholder Analysis
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -202,7 +202,7 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
       )}
 
       <div className="text-xs text-muted-foreground text-center pt-2">
-        <p>Análisis generado por IA basado en el texto del bill</p>
+        <p>AI-generated analysis based on bill text</p>
       </div>
     </div>
   );

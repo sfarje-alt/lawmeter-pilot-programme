@@ -39,13 +39,13 @@ export function CongressBillsSection() {
     
     if (result.success) {
       toast({
-        title: "Base de datos actualizada",
-        description: `${result.successCount} de ${result.total} proyectos de ley actualizados exitosamente`,
+        title: "Database updated",
+        description: `${result.successCount} of ${result.total} bills updated successfully`,
       });
     } else {
       toast({
         title: "Error",
-        description: "No se pudo completar la actualización",
+        description: "Could not complete the update",
         variant: "destructive",
       });
     }
@@ -57,8 +57,8 @@ export function CongressBillsSection() {
     const newKeyword = keywordSearch.trim();
     if (activeKeywords.includes(newKeyword)) {
       toast({
-        title: "Keyword ya existe",
-        description: "Esta palabra clave ya está en la búsqueda",
+        title: "Keyword already exists",
+        description: "This keyword is already in the search",
         variant: "destructive"
       });
       return;
@@ -125,14 +125,14 @@ export function CongressBillsSection() {
       setBillKeywordHits(hits);
       
       toast({
-        title: "Búsqueda completa",
-        description: `Encontrados ${Object.keys(hits).length} bills con coincidencias`
+        title: "Search complete",
+        description: `Found ${Object.keys(hits).length} bills with matches`
       });
     } catch (error) {
       console.error("Error searching keywords:", error);
       toast({
         title: "Error",
-        description: "No se pudo completar la búsqueda de keywords",
+        description: "Could not complete keyword search",
         variant: "destructive"
       });
     } finally {
@@ -184,17 +184,17 @@ export function CongressBillsSection() {
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Error al cargar datos del Congreso: {error}
+          Error loading Congress data: {error}
           <br />
           <span className="text-xs mt-2 block">
-            Nota: Necesitas una clave API de Congress.gov. 
+            Note: You need a Congress.gov API key. 
             <a 
               href="https://api.congress.gov/sign-up/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="underline ml-1"
             >
-              Regístrate aquí
+              Sign up here
             </a>
           </span>
         </AlertDescription>
@@ -207,9 +207,9 @@ export function CongressBillsSection() {
       {/* Header */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-2xl font-bold">Proyectos de Ley del Congreso de EE.UU.</h2>
+          <h2 className="text-2xl font-bold">U.S. Congress Bills</h2>
           <p className="text-muted-foreground">
-            119º Congreso (2025-2027) • {bills.length} proyectos de ley
+            119th Congress (2025-2027) • {bills.length} bills
           </p>
         </div>
 
@@ -218,7 +218,7 @@ export function CongressBillsSection() {
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex gap-2 flex-1">
               <Input
-                placeholder="Añadir keyword para buscar en texto completo..."
+                placeholder="Add keyword to search in full text..."
                 value={keywordSearch}
                 onChange={(e) => setKeywordSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
@@ -257,7 +257,7 @@ export function CongressBillsSection() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Input
-            placeholder="Buscar proyectos de ley..."
+            placeholder="Search bills..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-md"
@@ -269,17 +269,17 @@ export function CongressBillsSection() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="introducedDate-desc">Fecha de Introducción - Más Reciente</SelectItem>
-                <SelectItem value="introducedDate-asc">Fecha de Introducción - Más Antigua</SelectItem>
-                <SelectItem value="latestAction-desc">Última Acción - Más Reciente</SelectItem>
-                <SelectItem value="latestAction-asc">Última Acción - Más Antigua</SelectItem>
-                <SelectItem value="number-asc">Número - Ascendente</SelectItem>
-                <SelectItem value="number-desc">Número - Descendente</SelectItem>
-                <SelectItem value="title">Título</SelectItem>
-                <SelectItem value="lawNumber-asc">Número de Ley - Ascendente</SelectItem>
-                <SelectItem value="lawNumber-desc">Número de Ley - Descendente</SelectItem>
-                <SelectItem value="cosponsorCount-desc">Copatrocinadores - Más a Menos</SelectItem>
-                <SelectItem value="cosponsorCount-asc">Copatrocinadores - Menos a Más</SelectItem>
+                <SelectItem value="introducedDate-desc">Introduction Date - Newest</SelectItem>
+                <SelectItem value="introducedDate-asc">Introduction Date - Oldest</SelectItem>
+                <SelectItem value="latestAction-desc">Latest Action - Newest</SelectItem>
+                <SelectItem value="latestAction-asc">Latest Action - Oldest</SelectItem>
+                <SelectItem value="number-asc">Number - Ascending</SelectItem>
+                <SelectItem value="number-desc">Number - Descending</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="lawNumber-asc">Law Number - Ascending</SelectItem>
+                <SelectItem value="lawNumber-desc">Law Number - Descending</SelectItem>
+                <SelectItem value="cosponsorCount-desc">Cosponsors - Most to Least</SelectItem>
+                <SelectItem value="cosponsorCount-asc">Cosponsors - Least to Most</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -289,21 +289,21 @@ export function CongressBillsSection() {
               size="sm"
               onClick={() => setSelectedChamber(null)}
             >
-              Todos
+              All
             </Button>
             <Button
               variant={selectedChamber === "House" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedChamber("House")}
             >
-              Cámara
+              House
             </Button>
             <Button
               variant={selectedChamber === "Senate" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedChamber("Senate")}
             >
-              Senado
+              Senate
             </Button>
           </div>
           <Button
@@ -320,7 +320,7 @@ export function CongressBillsSection() {
             ) : (
               <>
                 <Database className="h-4 w-4 mr-2" />
-                Actualizar Base de Datos
+                Update Database
               </>
             )}
           </Button>
@@ -346,7 +346,7 @@ export function CongressBillsSection() {
       {/* Bills List - Vertical Stack */}
       {filteredBills.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          No se encontraron proyectos de ley
+          No bills found
         </div>
       ) : (
         <div className="space-y-4">
