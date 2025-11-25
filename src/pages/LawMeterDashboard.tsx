@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2 } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2, Shield } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -213,11 +213,12 @@ export default function LawMeterDashboard() {
 
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 mb-8 glass-card p-1 gap-1">
+          <TabsList className="grid w-full grid-cols-9 mb-8 glass-card p-1 gap-1">
             <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislations</TabsTrigger>
             <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Medios</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
             <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Destacados</TabsTrigger>
+            <TabsTrigger value="certificates" onClick={() => navigate('/certificates')} className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Shield className="h-4 w-4 mr-2" />Certificates</TabsTrigger>
             <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendario</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Análisis</TabsTrigger>
             <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Licitaciones</TabsTrigger>
