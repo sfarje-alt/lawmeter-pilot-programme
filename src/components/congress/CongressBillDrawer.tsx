@@ -23,6 +23,7 @@ import {
   Info,
   User,
   Tag,
+  ChevronRight,
   Briefcase,
   AlignLeft,
   Download,
@@ -178,32 +179,54 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     return lines.join("\n");
   };
 
-  const getBillStatus = (latestActionText: string) => {
-    const text = latestActionText.toLowerCase();
-    
-    if (text.includes("became public law") || text.includes("signed by president")) {
-      return { label: "Ley Pública", variant: "default" as const, color: "bg-green-500" };
+  // Analyze all actions to determine bill progression
+  const getBillProgress = () => {
+    const stages = {
+      introduced: false,
+      passedHouse: false,
+      passedSenate: false,
+      toPresident: false,
+      becameLaw: false
+    };
+
+    if (!actions || actions.length === 0) {
+      stages.introduced = true;
+      return stages;
     }
-    if (text.includes("passed senate") && text.includes("passed house")) {
-      return { label: "Aprobado en Ambas Cámaras", variant: "default" as const, color: "bg-blue-500" };
-    }
-    if (text.includes("passed senate")) {
-      return { label: "Aprobado en Senado", variant: "secondary" as const, color: "bg-blue-400" };
-    }
-    if (text.includes("passed house")) {
-      return { label: "Aprobado en Cámara", variant: "secondary" as const, color: "bg-blue-400" };
-    }
-    if (text.includes("reported to")) {
-      return { label: "Reportado por Comité", variant: "secondary" as const, color: "bg-yellow-500" };
-    }
-    if (text.includes("referred to") || text.includes("committee on")) {
-      return { label: "En Comité", variant: "outline" as const, color: "bg-orange-500" };
-    }
-    if (text.includes("introduced")) {
-      return { label: "Introducido", variant: "outline" as const, color: "bg-gray-500" };
-    }
-    
-    return { label: "En Proceso", variant: "outline" as const, color: "bg-muted" };
+
+    actions.forEach((action: any) => {
+      const text = action.text.toLowerCase();
+      
+      if (text.includes("introduced")) {
+        stages.introduced = true;
+      }
+      if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) {
+        stages.passedHouse = true;
+      }
+      if (text.includes("passed") && text.includes("senate")) {
+        stages.passedSenate = true;
+      }
+      if (text.includes("presented to president") || text.includes("sent to president")) {
+        stages.toPresident = true;
+      }
+      if (text.includes("became public law") || text.includes("signed by president")) {
+        stages.becameLaw = true;
+      }
+    });
+
+    return stages;
+  };
+
+  const progress = getBillProgress();
+  
+  const getBillStatus = () => {
+    if (progress.becameLaw) return { label: "Ley Pública", color: "bg-green-500" };
+    if (progress.toPresident) return { label: "Al Presidente", color: "bg-blue-500" };
+    if (progress.passedSenate && progress.passedHouse) return { label: "Aprobado Ambas Cámaras", color: "bg-blue-400" };
+    if (progress.passedSenate) return { label: "Aprobado en Senado", color: "bg-blue-400" };
+    if (progress.passedHouse) return { label: "Aprobado en Cámara", color: "bg-blue-400" };
+    if (progress.introduced) return { label: "Introducido", color: "bg-gray-500" };
+    return { label: "En Proceso", color: "bg-muted" };
   };
 
   return (
@@ -220,8 +243,8 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     {bill.policyArea && (
                       <Badge>{bill.policyArea.name}</Badge>
                     )}
-                    <Badge className={getBillStatus(bill.latestAction.text).color + " text-white"}>
-                      {getBillStatus(bill.latestAction.text).label}
+                    <Badge className={getBillStatus().color + " text-white"}>
+                      {getBillStatus().label}
                     </Badge>
                   </div>
                   <DrawerTitle className="text-left">{bill.title}</DrawerTitle>
@@ -267,16 +290,81 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6 mt-6">
-                {/* Bill Status */}
-                <div className="p-4 rounded-lg bg-muted/50 border-l-4 border-primary">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Estado Legislativo</p>
-                      <p className="text-lg font-semibold">{getBillStatus(bill.latestAction.text).label}</p>
+                {/* Bill Progress Tracker */}
+                <div className="p-6 rounded-lg bg-muted/50 border">
+                  <p className="text-sm font-semibold text-muted-foreground mb-4">Tracker</p>
+                  <div className="flex items-center gap-2">
+                    {/* Introducido */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className={`w-full h-2 rounded-full transition-colors ${
+                        progress.introduced ? "bg-primary" : "bg-muted"
+                      }`} />
+                      <span className={`text-xs mt-2 font-medium ${
+                        progress.introduced ? "text-foreground" : "text-muted-foreground"
+                      }`}>
+                        Introducido
+                      </span>
                     </div>
-                    <Badge className={getBillStatus(bill.latestAction.text).color + " text-white text-sm"}>
-                      {bill.originChamber}
-                    </Badge>
+
+                    {/* Arrow */}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+
+                    {/* Aprobado Cámara */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className={`w-full h-2 rounded-full transition-colors ${
+                        progress.passedHouse ? "bg-primary" : "bg-muted"
+                      }`} />
+                      <span className={`text-xs mt-2 font-medium text-center ${
+                        progress.passedHouse ? "text-foreground" : "text-muted-foreground"
+                      }`}>
+                        Aprobado Cámara
+                      </span>
+                    </div>
+
+                    {/* Arrow */}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+
+                    {/* Aprobado Senado */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className={`w-full h-2 rounded-full transition-colors ${
+                        progress.passedSenate ? "bg-primary" : "bg-muted"
+                      }`} />
+                      <span className={`text-xs mt-2 font-medium text-center ${
+                        progress.passedSenate ? "text-foreground" : "text-muted-foreground"
+                      }`}>
+                        Aprobado Senado
+                      </span>
+                    </div>
+
+                    {/* Arrow */}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+
+                    {/* Al Presidente */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className={`w-full h-2 rounded-full transition-colors ${
+                        progress.toPresident ? "bg-primary" : "bg-muted"
+                      }`} />
+                      <span className={`text-xs mt-2 font-medium text-center ${
+                        progress.toPresident ? "text-foreground" : "text-muted-foreground"
+                      }`}>
+                        Al Presidente
+                      </span>
+                    </div>
+
+                    {/* Arrow */}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+
+                    {/* Ley Pública */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className={`w-full h-2 rounded-full transition-colors ${
+                        progress.becameLaw ? "bg-primary" : "bg-muted"
+                      }`} />
+                      <span className={`text-xs mt-2 font-medium text-center ${
+                        progress.becameLaw ? "text-foreground" : "text-muted-foreground"
+                      }`}>
+                        Ley Pública
+                      </span>
+                    </div>
                   </div>
                 </div>
 
