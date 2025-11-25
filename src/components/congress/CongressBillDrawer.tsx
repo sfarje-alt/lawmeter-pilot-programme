@@ -41,8 +41,7 @@ import {
   fetchMemberDetails,
   fetchBillSubjects,
   fetchBillCommittees,
-  fetchBillTitles,
-  scrapeBillStatus
+  fetchBillTitles
 } from "@/hooks/useCongressBills";
 
 interface CongressBillDrawerProps {
@@ -62,7 +61,6 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   const [subjects, setSubjects] = useState<any>(null);
   const [committees, setCommittees] = useState<any[]>([]);
   const [titles, setTitles] = useState<any[]>([]);
-  const [billStatus, setBillStatus] = useState<{ currentStage: string; stages: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
@@ -91,9 +89,8 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         fetchBillSubjects(bill.congress, bill.type, bill.number),
         fetchBillCommittees(bill.congress, bill.type, bill.number),
         fetchBillTitles(bill.congress, bill.type, bill.number),
-        scrapeBillStatus(bill.congress, bill.type, bill.number),
       ])
-        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData, statusData]) => {
+        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData]) => {
           setBillDetails(details);
           setCosponsors(cosponsorData);
           setActions(actionsData);
@@ -103,7 +100,6 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
           setSubjects(subjectsData);
           setCommittees(committeesData);
           setTitles(titlesData);
-          setBillStatus(statusData);
           
           // Fetch sponsor details if available
           if (details?.sponsors?.[0]?.bioguideId) {
@@ -183,6 +179,40 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     return lines.join("\n");
   };
 
+  // Derive bill status from actions (since scraping is blocked by CORS)
+  const deriveBillStatus = () => {
+    if (!actions || actions.length === 0) {
+      return {
+        currentStage: "Introduced",
+        stages: ["Introduced", "Passed House", "Passed Senate", "To President", "Became Law"]
+      };
+    }
+
+    const stages = ["Introduced", "Passed House", "Passed Senate", "To President", "Became Law"];
+    let currentStageIndex = 0;
+
+    actions.forEach((action: any) => {
+      const text = action.text.toLowerCase();
+      
+      if (text.includes("became public law") || text.includes("signed by president")) {
+        currentStageIndex = Math.max(currentStageIndex, 4);
+      } else if (text.includes("presented to president") || text.includes("sent to president")) {
+        currentStageIndex = Math.max(currentStageIndex, 3);
+      } else if (text.includes("passed") && text.includes("senate")) {
+        currentStageIndex = Math.max(currentStageIndex, 2);
+      } else if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) {
+        currentStageIndex = Math.max(currentStageIndex, 1);
+      }
+    });
+
+    return {
+      currentStage: stages[currentStageIndex],
+      stages: stages
+    };
+  };
+
+  const billStatus = deriveBillStatus();
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[90vh]">
@@ -196,11 +226,6 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     <Badge variant="secondary">{bill.originChamber}</Badge>
                     {bill.policyArea && (
                       <Badge>{bill.policyArea.name}</Badge>
-                    )}
-                    {billStatus && (
-                      <Badge className="bg-primary text-primary-foreground">
-                        {billStatus.currentStage}
-                      </Badge>
                     )}
                   </div>
                   <DrawerTitle className="text-left">{bill.title}</DrawerTitle>
