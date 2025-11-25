@@ -25,7 +25,6 @@ const App = () => (
           <Route path="/" element={<LawMeterDashboard />} />
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/business-intelligence" element={<BusinessIntelligence />} />
-          <Route path="/certificates" element={<CertificatesDashboard />} />
           <Route path="/certificates/new" element={<CertificateForm />} />
           <Route path="/certificates/:id" element={<CertificateDetail />} />
           <Route path="/certificates/:id/edit" element={<CertificateForm />} />
