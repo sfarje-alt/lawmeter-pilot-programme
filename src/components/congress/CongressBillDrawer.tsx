@@ -146,6 +146,25 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     });
   };
 
+  const cleanConstitutionalAuthority = (htmlText: string) => {
+    // Remove HTML tags but preserve the content
+    const withoutTags = htmlText
+      .replace(/<pre>/g, "")
+      .replace(/<\/pre>/g, "")
+      .replace(/<a href="[^"]*">/g, "")
+      .replace(/<\/a>/g, "")
+      .replace(/\[Page [^\]]+\]/g, "")
+      .trim();
+    
+    // Extract the meaningful lines
+    const lines = withoutTags
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    return lines.join("\n");
+  };
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[90vh]">
@@ -229,10 +248,13 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                       <>
                         <Separator />
                         <div className="space-y-2">
-                          <h3 className="font-semibold">Autoridad Constitucional</h3>
+                          <h3 className="font-semibold flex items-center gap-2">
+                            <Scale className="h-4 w-4" />
+                            Autoridad Constitucional
+                          </h3>
                           <div className="p-4 rounded-lg bg-muted/50">
-                            <p className="text-sm whitespace-pre-wrap">
-                              {billDetails.constitutionalAuthorityStatementText}
+                            <p className="text-sm whitespace-pre-line leading-relaxed">
+                              {cleanConstitutionalAuthority(billDetails.constitutionalAuthorityStatementText)}
                             </p>
                           </div>
                         </div>
