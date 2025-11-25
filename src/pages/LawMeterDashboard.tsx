@@ -36,7 +36,8 @@ import { CongressBillsSection } from "@/components/congress/CongressBillsSection
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const { alerts, loading } = useLegislationData();
-  const [activeTab, setActiveTab] = useState("acts");
+  const [activeTab, setActiveTab] = useState("legislation");
+  const [legislationSubTab, setLegislationSubTab] = useState("congress");
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -212,10 +213,8 @@ export default function LawMeterDashboard() {
 
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-10 mb-8 glass-card p-1 gap-1">
-            <TabsTrigger value="acts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislación</TabsTrigger>
-            <TabsTrigger value="bills" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Proyectos</TabsTrigger>
-            <TabsTrigger value="congress" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Building2 className="h-4 w-4 mr-2" />Congreso EE.UU.</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-8 mb-8 glass-card p-1 gap-1">
+            <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislations Monitoring</TabsTrigger>
             <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Medios</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
             <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Destacados</TabsTrigger>
@@ -225,36 +224,57 @@ export default function LawMeterDashboard() {
             <TabsTrigger value="contact" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Contacto</TabsTrigger>
           </TabsList>
 
-          {activeTab === "acts" && (
-            <FilterBar
-              filters={actsFilters}
-              onFiltersChange={setActsFilters}
-              portfolios={portfolios}
-              types={types}
-              showPartyFilters={false}
-              showRiskScore={true}
-              searchData={alerts}
-              searchType="acts"
-              onSelectSearchItem={(item) => setSelectedAlert(item as Alert)}
-            />
-          )}
-          
-          {activeTab === "bills" && (
-            <FilterBar
-              filters={billsFilters}
-              onFiltersChange={setBillsFilters}
-              portfolios={portfolios}
-              types={types}
-              parties={parties}
-              showPartyFilters={true}
-              showRiskScore={true}
-              searchData={mockBills}
-              searchType="bills"
-              onSelectSearchItem={(item) => setSelectedBill(item as BillItem)}
-            />
-          )}
+          <TabsContent value="legislation" className="space-y-6 mt-6">
+            <Tabs value={legislationSubTab} onValueChange={setLegislationSubTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6 glass-card p-1 gap-1">
+                <TabsTrigger value="congress" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  US Federal (US Congress Bills)
+                </TabsTrigger>
+                <TabsTrigger value="acts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                  <FileText className="h-4 w-4 mr-2" />
+                  🇨🇷 Costa Rica - Legislación
+                </TabsTrigger>
+                <TabsTrigger value="bills" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                  <FileText className="h-4 w-4 mr-2" />
+                  🇨🇷 Costa Rica - Proyectos
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="acts" className="space-y-6 mt-6">
+              <TabsContent value="congress" className="space-y-6 mt-6">
+                <CongressBillsSection />
+              </TabsContent>
+
+              {legislationSubTab === "acts" && (
+                <FilterBar
+                  filters={actsFilters}
+                  onFiltersChange={setActsFilters}
+                  portfolios={portfolios}
+                  types={types}
+                  showPartyFilters={false}
+                  showRiskScore={true}
+                  searchData={alerts}
+                  searchType="acts"
+                  onSelectSearchItem={(item) => setSelectedAlert(item as Alert)}
+                />
+              )}
+              
+              {legislationSubTab === "bills" && (
+                <FilterBar
+                  filters={billsFilters}
+                  onFiltersChange={setBillsFilters}
+                  portfolios={portfolios}
+                  types={types}
+                  parties={parties}
+                  showPartyFilters={true}
+                  showRiskScore={true}
+                  searchData={mockBills}
+                  searchType="bills"
+                  onSelectSearchItem={(item) => setSelectedBill(item as BillItem)}
+                />
+              )}
+
+              <TabsContent value="acts" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Alertas Activas</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.total}</div></CardContent></Card>
               <Card 
@@ -374,9 +394,9 @@ export default function LawMeterDashboard() {
                 </Button>
               </div>
             )}
-          </TabsContent>
+              </TabsContent>
 
-          <TabsContent value="bills" className="space-y-6 mt-6">
+              <TabsContent value="bills" className="space-y-6 mt-6">
             <div className="bg-warning/10 border border-warning rounded-lg p-4 mb-4">
               <div className="flex gap-2"><AlertTriangle className="h-5 w-5 text-warning" /><div><p className="font-semibold">Datos de demostración</p><p className="text-sm">Los proyectos son ficticios para propósitos de demostración.</p></div></div>
             </div>
@@ -498,10 +518,8 @@ export default function LawMeterDashboard() {
                 </Button>
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="congress" className="space-y-6 mt-6">
-            <CongressBillsSection />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="starred" className="space-y-6 mt-6">
