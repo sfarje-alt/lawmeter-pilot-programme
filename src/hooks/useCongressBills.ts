@@ -292,11 +292,23 @@ export async function fetchBillTitles(
 }
 
 // Scrape bill status tracker from Congress.gov HTML page
+const statusCache = new Map<string, { data: { currentStage: string; stages: string[] }; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export async function scrapeBillStatus(
   congress: number,
   billType: string,
   billNumber: string
 ): Promise<{ currentStage: string; stages: string[] } | null> {
+  const cacheKey = `${congress}-${billType}-${billNumber}`;
+  
+  // Check cache
+  const cached = statusCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log("Using cached bill status");
+    return cached.data;
+  }
+
   try {
     const chamberName = billType.toLowerCase() === 'hr' ? 'house-bill' : 
                         billType.toLowerCase() === 's' ? 'senate-bill' :
@@ -333,7 +345,12 @@ export async function scrapeBillStatus(
     
     const currentStage = selectedStage ? selectedStage[2].trim() : stages[0];
 
-    return { currentStage, stages };
+    const result = { currentStage, stages };
+    
+    // Cache the result
+    statusCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+    return result;
   } catch (error) {
     console.error("Error scraping bill status:", error);
     return null;
