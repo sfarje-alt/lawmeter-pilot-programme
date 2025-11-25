@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   ExternalLink, 
   Calendar, 
@@ -19,7 +20,8 @@ import {
   FileText,
   History,
   Scale,
-  Info
+  Info,
+  User
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { 
@@ -28,7 +30,8 @@ import {
   fetchBillActions,
   fetchBillSummaries,
   fetchBillAmendments,
-  fetchBillTextVersions
+  fetchBillTextVersions,
+  fetchMemberDetails
 } from "@/hooks/useCongressBills";
 
 interface CongressBillDrawerProps {
@@ -44,6 +47,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   const [summaries, setSummaries] = useState<any[]>([]);
   const [amendments, setAmendments] = useState<any[]>([]);
   const [textVersions, setTextVersions] = useState<any[]>([]);
+  const [sponsorDetails, setSponsorDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -59,13 +63,19 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         fetchBillAmendments(bill.congress, bill.type, bill.number),
         fetchBillTextVersions(bill.congress, bill.type, bill.number),
       ])
-        .then(([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData]) => {
+        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData]) => {
           setBillDetails(details);
           setCosponsors(cosponsorData);
           setActions(actionsData);
           setSummaries(summariesData);
           setAmendments(amendmentsData);
           setTextVersions(textVersionsData);
+          
+          // Fetch sponsor details if available
+          if (details?.sponsors?.[0]?.bioguideId) {
+            const sponsorData = await fetchMemberDetails(details.sponsors[0].bioguideId);
+            setSponsorDetails(sponsorData);
+          }
         })
         .catch((error) => {
           console.error("Error fetching bill data:", error);
@@ -262,25 +272,43 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
 
               {/* Sponsors Tab */}
               <TabsContent value="sponsors" className="space-y-6 mt-6">
-                {/* Sponsors */}
-                {billDetails?.sponsors && billDetails.sponsors.length > 0 && (
+                {/* Primary Sponsor with Details */}
+                {sponsorDetails && billDetails?.sponsors?.[0] && (
                   <div className="space-y-3">
-                    <h3 className="font-semibold">Patrocinadores Principales</h3>
-                    <div className="space-y-2">
-                      {billDetails.sponsors.map((sponsor, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
-                        >
-                          <div>
-                            <p className="font-medium">{sponsor.fullName}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {sponsor.party} - {sponsor.state}
-                              {sponsor.district ? ` - Distrito ${sponsor.district}` : ""}
+                    <h3 className="font-semibold">Patrocinador Principal</h3>
+                    <div className="p-4 rounded-lg bg-muted/50 space-y-4">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="w-20 h-20">
+                          <AvatarImage 
+                            src={sponsorDetails.depiction?.imageUrl} 
+                            alt={billDetails.sponsors[0].fullName}
+                          />
+                          <AvatarFallback>
+                            <User className="h-10 w-10" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="font-medium text-lg">{billDetails.sponsors[0].fullName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {billDetails.sponsors[0].party} - {billDetails.sponsors[0].state}
+                            {billDetails.sponsors[0].district ? ` - Distrito ${billDetails.sponsors[0].district}` : ""}
+                          </p>
+                          {sponsorDetails.birthYear && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Año de nacimiento: {sponsorDetails.birthYear}
                             </p>
-                          </div>
+                          )}
                         </div>
-                      ))}
+                      </div>
+                      
+                      {sponsorDetails.officialWebsiteUrl && (
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={sponsorDetails.officialWebsiteUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Sitio Oficial
+                          </a>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
