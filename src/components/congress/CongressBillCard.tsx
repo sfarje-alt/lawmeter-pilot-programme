@@ -80,9 +80,13 @@ export function CongressBillCard({ bill, onViewDetails }: CongressBillCardProps)
 
         <div className="flex flex-wrap gap-2 pt-2">
           <Button variant="outline" size="sm" asChild>
-            <a href={bill.url} target="_blank" rel="noopener noreferrer">
+            <a 
+              href={`https://www.congress.gov/bill/${bill.congress}th-congress/${bill.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${bill.number}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
               <ExternalLink className="h-3 w-3 mr-1" />
-              Congress.gov
+              Ver en Congress.gov
             </a>
           </Button>
           <Button variant="default" size="sm" onClick={onViewDetails}>
