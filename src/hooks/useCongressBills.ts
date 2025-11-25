@@ -6,7 +6,18 @@ const CURRENT_CONGRESS = 119; // 119th Congress (2025-2027)
 
 const API_KEY = "KD2m5YgyIPMtxMOweZ6Tb57c1W8pD7Zr5eaDrM86";
 
-export type SortOption = "latestAction-desc" | "latestAction-asc" | "title-asc" | "title-desc";
+export type SortOption = 
+  | "introducedDate-desc" 
+  | "introducedDate-asc"
+  | "latestAction-desc" 
+  | "latestAction-asc" 
+  | "number-asc" 
+  | "number-desc"
+  | "title"
+  | "lawNumber-asc"
+  | "lawNumber-desc"
+  | "cosponsorCount-desc"
+  | "cosponsorCount-asc";
 
 export function useCongressBills(sortBy: SortOption = "latestAction-desc") {
   const [bills, setBills] = useState<CongressBill[]>([]);
@@ -50,6 +61,18 @@ function sortBills(bills: CongressBill[], sortBy: SortOption): CongressBill[] {
   const sorted = [...bills];
   
   switch (sortBy) {
+    case "introducedDate-desc":
+      return sorted.sort((a, b) => {
+        const aDate = a.introducedDate || a.updateDate;
+        const bDate = b.introducedDate || b.updateDate;
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      });
+    case "introducedDate-asc":
+      return sorted.sort((a, b) => {
+        const aDate = a.introducedDate || a.updateDate;
+        const bDate = b.introducedDate || b.updateDate;
+        return new Date(aDate).getTime() - new Date(bDate).getTime();
+      });
     case "latestAction-desc":
       return sorted.sort((a, b) => 
         new Date(b.latestAction.actionDate).getTime() - new Date(a.latestAction.actionDate).getTime()
@@ -58,10 +81,42 @@ function sortBills(bills: CongressBill[], sortBy: SortOption): CongressBill[] {
       return sorted.sort((a, b) => 
         new Date(a.latestAction.actionDate).getTime() - new Date(b.latestAction.actionDate).getTime()
       );
-    case "title-asc":
+    case "number-asc":
+      return sorted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+    case "number-desc":
+      return sorted.sort((a, b) => parseInt(b.number) - parseInt(a.number));
+    case "title":
       return sorted.sort((a, b) => a.title.localeCompare(b.title));
-    case "title-desc":
-      return sorted.sort((a, b) => b.title.localeCompare(a.title));
+    case "lawNumber-asc":
+      return sorted.sort((a, b) => {
+        const aLaw = a.laws?.[0]?.number || "";
+        const bLaw = b.laws?.[0]?.number || "";
+        if (!aLaw && !bLaw) return 0;
+        if (!aLaw) return 1;
+        if (!bLaw) return -1;
+        return aLaw.localeCompare(bLaw);
+      });
+    case "lawNumber-desc":
+      return sorted.sort((a, b) => {
+        const aLaw = a.laws?.[0]?.number || "";
+        const bLaw = b.laws?.[0]?.number || "";
+        if (!aLaw && !bLaw) return 0;
+        if (!aLaw) return 1;
+        if (!bLaw) return -1;
+        return bLaw.localeCompare(aLaw);
+      });
+    case "cosponsorCount-desc":
+      return sorted.sort((a, b) => {
+        const aCount = a.cosponsors?.count || 0;
+        const bCount = b.cosponsors?.count || 0;
+        return bCount - aCount;
+      });
+    case "cosponsorCount-asc":
+      return sorted.sort((a, b) => {
+        const aCount = a.cosponsors?.count || 0;
+        const bCount = b.cosponsors?.count || 0;
+        return aCount - bCount;
+      });
     default:
       return sorted;
   }

@@ -6,6 +6,7 @@ export interface CongressBill {
   originChamber: string;
   originChamberCode: string;
   title: string;
+  introducedDate?: string;
   latestAction: {
     actionDate: string;
     text: string;
@@ -17,6 +18,14 @@ export interface CongressBill {
     lastName: string;
     party: string;
     state: string;
+  }>;
+  cosponsors?: {
+    count: number;
+    countIncludingWithdrawnCosponsors?: number;
+  };
+  laws?: Array<{
+    number: string;
+    type: string;
   }>;
   policyArea?: {
     name: string;

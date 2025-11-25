@@ -111,10 +111,17 @@ export function CongressBillsSection() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="introducedDate-desc">Fecha de Introducción - Más Reciente</SelectItem>
+                <SelectItem value="introducedDate-asc">Fecha de Introducción - Más Antigua</SelectItem>
                 <SelectItem value="latestAction-desc">Última Acción - Más Reciente</SelectItem>
                 <SelectItem value="latestAction-asc">Última Acción - Más Antigua</SelectItem>
-                <SelectItem value="title-asc">Título - A a Z</SelectItem>
-                <SelectItem value="title-desc">Título - Z a A</SelectItem>
+                <SelectItem value="number-asc">Número - Ascendente</SelectItem>
+                <SelectItem value="number-desc">Número - Descendente</SelectItem>
+                <SelectItem value="title">Título</SelectItem>
+                <SelectItem value="lawNumber-asc">Número de Ley - Ascendente</SelectItem>
+                <SelectItem value="lawNumber-desc">Número de Ley - Descendente</SelectItem>
+                <SelectItem value="cosponsorCount-desc">Copatrocinadores - Más a Menos</SelectItem>
+                <SelectItem value="cosponsorCount-asc">Copatrocinadores - Menos a Más</SelectItem>
               </SelectContent>
             </Select>
           </div>
