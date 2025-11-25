@@ -253,11 +253,11 @@ export default function LawMeterDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="acts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   <FileText className="h-4 w-4 mr-2" />
-                  🇨🇷 Costa Rica - Acts (Spanish)
+                  🇨🇷 Costa Rica - Acts
                 </TabsTrigger>
                 <TabsTrigger value="bills" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   <FileText className="h-4 w-4 mr-2" />
-                  🇨🇷 Costa Rica - Bills (Spanish)
+                  🇨🇷 Costa Rica - Bills
                 </TabsTrigger>
               </TabsList>
 

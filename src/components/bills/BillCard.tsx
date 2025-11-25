@@ -2,8 +2,11 @@ import { BillItem } from "@/types/legislation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ExternalLink, FileText, Calendar } from "lucide-react";
+import { Star, ExternalLink, FileText, Calendar, Languages } from "lucide-react";
 import { getPortfolioColor } from "@/lib/portfolioColors";
+import { useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useToast } from "@/hooks/use-toast";
 
 interface BillCardProps {
   bill: BillItem;
@@ -13,6 +16,44 @@ interface BillCardProps {
 }
 
 export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCardProps) {
+  const { translateToEnglish, isTranslating } = useTranslation();
+  const { toast } = useToast();
+  const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
+  const [translatedSummary, setTranslatedSummary] = useState<string | null>(null);
+  const [translatedBullets, setTranslatedBullets] = useState<string[] | null>(null);
+  const [isTranslated, setIsTranslated] = useState(false);
+
+  const handleTranslate = async () => {
+    if (isTranslated) {
+      // Reset to Spanish
+      setIsTranslated(false);
+      setTranslatedTitle(null);
+      setTranslatedSummary(null);
+      setTranslatedBullets(null);
+      return;
+    }
+
+    try {
+      const [titleEn, summaryEn, ...bulletsEn] = await Promise.all([
+        translateToEnglish(bill.title),
+        translateToEnglish(bill.summary),
+        ...bill.bullets.slice(0, 3).map(b => translateToEnglish(b))
+      ]);
+      
+      setTranslatedTitle(titleEn);
+      setTranslatedSummary(summaryEn);
+      setTranslatedBullets(bulletsEn);
+      setIsTranslated(true);
+      toast({ title: "Translated to English" });
+    } catch (error) {
+      toast({ 
+        title: "Translation failed", 
+        description: "Please try again later",
+        variant: "destructive" 
+      });
+    }
+  };
+
   const getRiskColor = (level: string) => {
     switch (level) {
       case "high": return "bg-risk-high text-white";
@@ -60,7 +101,9 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
             </Button>
           </div>
         </div>
-        <h3 className="text-lg font-semibold mt-2">{bill.title}</h3>
+        <h3 className="text-lg font-semibold mt-2">
+          {isTranslated && translatedTitle ? translatedTitle : bill.title}
+        </h3>
         
         <div className="flex items-center gap-1.5 mt-2 text-sm text-foreground font-medium">
           <Calendar className="h-4 w-4" />
@@ -112,20 +155,33 @@ export function BillCard({ bill, isStarred, onToggleStar, onOpenDrawer }: BillCa
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-3">{bill.summary}</p>
+        <p className="text-sm text-muted-foreground line-clamp-3">
+          {isTranslated && translatedSummary ? translatedSummary : bill.summary}
+        </p>
 
         {bill.bullets.length > 0 && (
           <ul className="text-sm space-y-1">
             {bill.bullets.slice(0, 3).map((bullet, idx) => (
               <li key={idx} className="flex gap-2">
                 <span className="text-primary">•</span>
-                <span className="text-muted-foreground">{bullet}</span>
+                <span className="text-muted-foreground">
+                  {isTranslated && translatedBullets ? translatedBullets[idx] : bullet}
+                </span>
               </li>
             ))}
           </ul>
         )}
 
         <div className="flex flex-wrap gap-2 pt-2">
+          <Button 
+            variant={isTranslated ? "default" : "outline"} 
+            size="sm" 
+            onClick={handleTranslate}
+            disabled={isTranslating}
+          >
+            <Languages className="h-3 w-3 mr-1" />
+            {isTranslating ? "Translating..." : isTranslated ? "Show Spanish" : "Translate to English"}
+          </Button>
           {bill.motherActLink && (
             <Button variant="outline" size="sm" asChild>
               <a href={bill.motherActLink} target="_blank" rel="noopener noreferrer">

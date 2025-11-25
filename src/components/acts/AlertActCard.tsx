@@ -2,9 +2,12 @@ import { Alert } from "@/types/legislation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ExternalLink, FileText, Calendar } from "lucide-react";
+import { Star, ExternalLink, FileText, Calendar, Languages } from "lucide-react";
 import { getPortfolioColor } from "@/lib/portfolioColors";
 import { formatDate } from "@/lib/dateUtils";
+import { useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useToast } from "@/hooks/use-toast";
 
 interface AlertActCardProps {
   alert: Alert;
@@ -15,6 +18,44 @@ interface AlertActCardProps {
 }
 
 export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer, isPronouncementRead }: AlertActCardProps) {
+  const { translateToEnglish, isTranslating } = useTranslation();
+  const { toast } = useToast();
+  const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
+  const [translatedSummary, setTranslatedSummary] = useState<string | null>(null);
+  const [translatedBullets, setTranslatedBullets] = useState<string[] | null>(null);
+  const [isTranslated, setIsTranslated] = useState(false);
+
+  const handleTranslate = async () => {
+    if (isTranslated) {
+      // Reset to Spanish
+      setIsTranslated(false);
+      setTranslatedTitle(null);
+      setTranslatedSummary(null);
+      setTranslatedBullets(null);
+      return;
+    }
+
+    try {
+      const [titleEn, summaryEn, ...bulletsEn] = await Promise.all([
+        translateToEnglish(displayTitle),
+        translateToEnglish(summary),
+        ...bullets.slice(0, 3).map(b => translateToEnglish(b))
+      ]);
+      
+      setTranslatedTitle(titleEn);
+      setTranslatedSummary(summaryEn);
+      setTranslatedBullets(bulletsEn);
+      setIsTranslated(true);
+      toast({ title: "Translated to English" });
+    } catch (error) {
+      toast({ 
+        title: "Translation failed", 
+        description: "Please try again later",
+        variant: "destructive" 
+      });
+    }
+  };
+
   const getRiskColor = (level: string) => {
     switch (level) {
       case "high": return "bg-risk-high text-white";
@@ -91,7 +132,7 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer, isP
             )}
           </div>
         </div>
-        <h3 className="text-lg font-semibold mt-2">{displayTitle}</h3>
+        <h3 className="text-lg font-semibold mt-2">{isTranslated && translatedTitle ? translatedTitle : displayTitle}</h3>
         
         <div className="flex items-center gap-4 mt-2 text-sm">
           {effectiveDate && (
@@ -115,20 +156,33 @@ export function AlertActCard({ alert, isStarred, onToggleStar, onOpenDrawer, isP
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-3">{summary}</p>
+        <p className="text-sm text-muted-foreground line-clamp-3">
+          {isTranslated && translatedSummary ? translatedSummary : summary}
+        </p>
 
         {bullets.length > 0 && (
           <ul className="text-sm space-y-1">
             {bullets.slice(0, 3).map((bullet, idx) => (
               <li key={idx} className="flex gap-2">
                 <span className="text-primary">•</span>
-                <span className="text-muted-foreground">{bullet}</span>
+                <span className="text-muted-foreground">
+                  {isTranslated && translatedBullets ? translatedBullets[idx] : bullet}
+                </span>
               </li>
             ))}
           </ul>
         )}
 
         <div className="flex flex-wrap gap-2 pt-2">
+          <Button 
+            variant={isTranslated ? "default" : "outline"} 
+            size="sm" 
+            onClick={handleTranslate}
+            disabled={isTranslating}
+          >
+            <Languages className="h-3 w-3 mr-1" />
+            {isTranslating ? "Translating..." : isTranslated ? "Show Spanish" : "Translate to English"}
+          </Button>
           {alert.link && (
             <Button variant="outline" size="sm" asChild>
               <a href={alert.link} target="_blank" rel="noopener noreferrer">
