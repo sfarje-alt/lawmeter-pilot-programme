@@ -202,3 +202,22 @@ export async function fetchBillTextVersions(
     return [];
   }
 }
+
+// Fetch detailed member information by bioguideId
+export async function fetchMemberDetails(bioguideId: string): Promise<any> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/member/${bioguideId}?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.member;
+  } catch (error) {
+    console.error("Error fetching member details:", error);
+    return null;
+  }
+}
