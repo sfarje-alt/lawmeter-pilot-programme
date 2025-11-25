@@ -2,7 +2,7 @@ import { CongressBill, BillAnalysis } from "@/types/congress";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Calendar, Users, Bell, Star, RefreshCw, TrendingUp, Activity, CheckCircle2, Clock } from "lucide-react";
+import { ExternalLink, Calendar, Users, Bell, Star, RefreshCw, TrendingUp, Activity, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStarredBills } from "@/hooks/useStarredBills";
@@ -128,22 +128,31 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
     }
   };
 
-  const getStatusSteps = () => {
-    const steps = [
-      { label: "Introducido", date: bill.introducedDate, completed: true },
-      { label: "En Comité", date: null, completed: false },
-      { label: "Votación Cámara", date: null, completed: false },
-      { label: "Votación Senado", date: null, completed: false },
-      { label: "Ley", date: bill.laws?.[0] ? "Enacted" : null, completed: !!bill.laws?.[0] }
-    ];
-    
-    // Simple heuristic: if there's recent activity, mark second step as completed
-    if (bill.latestAction && bill.latestAction.text.toLowerCase().includes("committee")) {
-      steps[1].completed = true;
+  const getBillStatus = () => {
+    const stages = ["Introduced", "Passed House", "Passed Senate", "To President", "Became Law"];
+    let currentStageIndex = 0;
+
+    if (bill.latestAction) {
+      const text = bill.latestAction.text.toLowerCase();
+      
+      if (text.includes("became public law") || text.includes("signed by president")) {
+        currentStageIndex = 4;
+      } else if (text.includes("presented to president") || text.includes("sent to president")) {
+        currentStageIndex = 3;
+      } else if (text.includes("passed") && text.includes("senate")) {
+        currentStageIndex = 2;
+      } else if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) {
+        currentStageIndex = 1;
+      }
     }
-    
-    return steps;
+
+    return {
+      currentStage: stages[currentStageIndex],
+      stages: stages
+    };
   };
+
+  const billStatus = getBillStatus();
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -221,33 +230,27 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
 
         {/* Status Timeline */}
         <div className="bg-muted/30 p-3 rounded-md border border-border/50 mt-2">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Timeline de Status</span>
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Status</span>
           </div>
-          <div className="flex items-center gap-2">
-            {getStatusSteps().map((step, idx) => (
-              <div key={idx} className="flex items-center gap-1">
-                <div className={`flex flex-col items-center ${idx < getStatusSteps().length - 1 ? 'flex-1' : ''}`}>
-                  <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
-                    step.completed 
-                      ? 'bg-primary border-primary text-primary-foreground' 
-                      : 'bg-background border-muted-foreground text-muted-foreground'
+          <div className="flex items-center gap-1">
+            {billStatus.stages.map((stage, index) => (
+              <>
+                {index > 0 && (
+                  <ChevronRight key={`arrow-${index}`} className="h-4 w-4 text-muted-foreground flex-shrink-0 mx-1" />
+                )}
+                <div key={stage} className="flex flex-col items-center flex-1">
+                  <div className={`w-full h-2 rounded-full transition-colors ${
+                    billStatus.currentStage === stage ? "bg-primary" : "bg-muted"
+                  }`} />
+                  <span className={`text-xs mt-2 font-medium text-center ${
+                    billStatus.currentStage === stage ? "text-foreground" : "text-muted-foreground"
                   }`}>
-                    {step.completed ? (
-                      <CheckCircle2 className="h-3 w-3" />
-                    ) : (
-                      <span className="text-xs">{idx + 1}</span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground mt-1 text-center whitespace-nowrap">
-                    {step.label}
+                    {stage}
                   </span>
                 </div>
-                {idx < getStatusSteps().length - 1 && (
-                  <div className={`h-0.5 w-8 ${step.completed ? 'bg-primary' : 'bg-border'}`} />
-                )}
-              </div>
+              </>
             ))}
           </div>
         </div>
@@ -272,9 +275,15 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            <Activity className="h-4 w-4" />
+            <Calendar className="h-4 w-4" />
             <span>Última Acción: {formatDate(bill.latestAction.actionDate)}</span>
           </div>
+          {bill.updateDate && (
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
+              <span>Actualizado LawMeter: {formatDate(bill.updateDate)}</span>
+            </div>
+          )}
         </div>
 
         {/* Sponsor */}
