@@ -250,9 +250,13 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                   <DrawerTitle className="text-left">{bill.title}</DrawerTitle>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                  <a href={bill.url} target="_blank" rel="noopener noreferrer">
+                  <a 
+                    href={`https://www.congress.gov/bill/${bill.congress}th-congress/${bill.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${bill.number}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Congress.gov
+                    Ver en Congress.gov
                   </a>
                 </Button>
               </div>
