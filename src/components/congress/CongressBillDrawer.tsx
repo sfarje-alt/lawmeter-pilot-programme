@@ -100,6 +100,17 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     return types[type.toLowerCase()] || type.toUpperCase();
   };
 
+  const getPartyLabel = (partyCode: string) => {
+    const parties: Record<string, string> = {
+      R: "Republicano",
+      D: "Demócrata",
+      I: "Independiente",
+      ID: "Independiente Demócrata",
+      L: "Libertario",
+    };
+    return parties[partyCode] || partyCode;
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-ES", {
       day: "numeric",
@@ -295,7 +306,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                               {sponsorDetails.honorificName} {sponsorDetails.directOrderName}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {billDetails.sponsors[0].party} - {billDetails.sponsors[0].state}
+                              {getPartyLabel(billDetails.sponsors[0].party)} - {billDetails.sponsors[0].state}
                               {billDetails.sponsors[0].district ? ` - Distrito ${billDetails.sponsors[0].district}` : ""}
                             </p>
                           </div>
@@ -433,7 +444,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             <div className="flex-1">
                               <p className="font-medium">{cosponsor.fullName}</p>
                               <p className="text-sm text-muted-foreground">
-                                {cosponsor.party} - {cosponsor.state}
+                                {getPartyLabel(cosponsor.party)} - {cosponsor.state}
                                 {cosponsor.district ? ` - Distrito ${cosponsor.district}` : ""}
                               </p>
                               {cosponsor.sponsorshipDate && (
