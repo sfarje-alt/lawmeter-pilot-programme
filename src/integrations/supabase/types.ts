@@ -14,6 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
+      certificates: {
+        Row: {
+          certificate_file_key: string | null
+          certificate_file_url: string | null
+          certificate_name: string
+          certificate_number: string | null
+          certificate_type: Database["public"]["Enums"]["certificate_type"]
+          certification_body: string | null
+          client_id: string
+          country_or_region: string
+          created_at: string | null
+          created_by: string | null
+          expiration_date: string | null
+          external_id: string | null
+          id: string
+          internal_notes: string | null
+          internal_responsible: string | null
+          issue_date: string
+          product_model: string | null
+          product_name: string
+          regulatory_standard: string | null
+          status: Database["public"]["Enums"]["certificate_status"] | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          certificate_file_key?: string | null
+          certificate_file_url?: string | null
+          certificate_name: string
+          certificate_number?: string | null
+          certificate_type: Database["public"]["Enums"]["certificate_type"]
+          certification_body?: string | null
+          client_id: string
+          country_or_region: string
+          created_at?: string | null
+          created_by?: string | null
+          expiration_date?: string | null
+          external_id?: string | null
+          id?: string
+          internal_notes?: string | null
+          internal_responsible?: string | null
+          issue_date: string
+          product_model?: string | null
+          product_name: string
+          regulatory_standard?: string | null
+          status?: Database["public"]["Enums"]["certificate_status"] | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          certificate_file_key?: string | null
+          certificate_file_url?: string | null
+          certificate_name?: string
+          certificate_number?: string | null
+          certificate_type?: Database["public"]["Enums"]["certificate_type"]
+          certification_body?: string | null
+          client_id?: string
+          country_or_region?: string
+          created_at?: string | null
+          created_by?: string | null
+          expiration_date?: string | null
+          external_id?: string | null
+          id?: string
+          internal_notes?: string | null
+          internal_responsible?: string | null
+          issue_date?: string
+          product_model?: string | null
+          product_name?: string
+          regulatory_standard?: string | null
+          status?: Database["public"]["Enums"]["certificate_status"] | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          client_name: string
+          contact_email: string | null
+          contact_person: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          internal_code: string | null
+          notes: string | null
+          primary_country: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_name: string
+          contact_email?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          internal_code?: string | null
+          notes?: string | null
+          primary_country?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_name?: string
+          contact_email?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          internal_code?: string | null
+          notes?: string | null
+          primary_country?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       congress_bill_statuses: {
         Row: {
           bill_number: string
@@ -50,15 +175,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      certificate_status: "Valid" | "Expiring Soon" | "Expired" | "In Progress"
+      certificate_type:
+        | "CE"
+        | "FCC"
+        | "UL"
+        | "UKCA"
+        | "CB"
+        | "EMC"
+        | "RF"
+        | "Safety"
+        | "Eco-design"
+        | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -185,6 +349,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      certificate_status: ["Valid", "Expiring Soon", "Expired", "In Progress"],
+      certificate_type: [
+        "CE",
+        "FCC",
+        "UL",
+        "UKCA",
+        "CB",
+        "EMC",
+        "RF",
+        "Safety",
+        "Eco-design",
+        "Other",
+      ],
+    },
   },
 } as const
