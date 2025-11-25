@@ -443,6 +443,17 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                                 </p>
                               )}
                             </div>
+                            {cosponsor.bioguideId && (
+                              <Button variant="outline" size="sm" asChild>
+                                <a 
+                                  href={`https://bioguide.congress.gov/search/bio/${cosponsor.bioguideId}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                >
+                                  Biografía
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         ))}
                       </div>
