@@ -48,7 +48,7 @@ export interface BillStakeholder {
 
 export interface BillAnalysis {
   riskScore: number;
-  riskCategory: "Critical" | "High" | "Medium" | "Low";
+  riskCategory: "Critical" | "Urgent" | "High" | "Medium" | "Low" | "Minimal";
   explanation: string;
   stakeholders: BillStakeholder[];
   metadata?: {

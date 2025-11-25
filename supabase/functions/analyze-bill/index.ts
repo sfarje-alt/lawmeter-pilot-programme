@@ -55,9 +55,17 @@ serve(async (req) => {
 
     const systemPrompt = `You are a legislative risk analyst for a data center company. Analyze the given US Congress bill and provide:
 1. A risk score from 0-100 (where 100 is highest risk for a data center business)
-2. A risk category: "Critical", "High", "Medium", or "Low"
+2. A risk category: "Critical", "Urgent", "High", "Medium", "Low", or "Minimal"
 3. A detailed explanation of why this bill poses that level of risk to a data center company
 4. Key stakeholders who would be affected (companies, industries, groups)
+
+Risk Categories:
+- Critical (90-100): Immediate existential threat to operations
+- Urgent (80-89): Time-sensitive major operational threat
+- High (60-79): Significant operational or financial impact
+- Medium (40-59): Moderate impact requiring attention
+- Low (20-39): Minor impact or indirect effects
+- Minimal (0-19): No significant impact
 
 Consider impacts on:
 - Energy regulations and costs
@@ -71,7 +79,7 @@ Consider impacts on:
 Respond ONLY with valid JSON in this exact format:
 {
   "riskScore": <number 0-100>,
-  "riskCategory": "<Critical|High|Medium|Low>",
+  "riskCategory": "<Critical|Urgent|High|Medium|Low|Minimal>",
   "explanation": "<detailed explanation>",
   "stakeholders": [
     {
