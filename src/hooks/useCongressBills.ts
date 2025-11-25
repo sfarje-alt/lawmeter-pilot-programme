@@ -110,3 +110,95 @@ export async function fetchBillCosponsors(
     return [];
   }
 }
+
+// Fetch all actions for a bill
+export async function fetchBillActions(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any[]> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/actions?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.actions || [];
+  } catch (error) {
+    console.error("Error fetching bill actions:", error);
+    return [];
+  }
+}
+
+// Fetch bill summaries (CRS summaries)
+export async function fetchBillSummaries(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any[]> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/summaries?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.summaries || [];
+  } catch (error) {
+    console.error("Error fetching bill summaries:", error);
+    return [];
+  }
+}
+
+// Fetch bill amendments
+export async function fetchBillAmendments(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any[]> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/amendments?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.amendments || [];
+  } catch (error) {
+    console.error("Error fetching bill amendments:", error);
+    return [];
+  }
+}
+
+// Fetch bill text versions
+export async function fetchBillTextVersions(
+  congress: number,
+  billType: string,
+  billNumber: string
+): Promise<any[]> {
+  try {
+    const response = await fetch(
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/text?format=json&api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.textVersions || [];
+  } catch (error) {
+    console.error("Error fetching bill text versions:", error);
+    return [];
+  }
+}
