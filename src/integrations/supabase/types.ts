@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      congress_bill_statuses: {
+        Row: {
+          bill_number: string
+          bill_type: string
+          congress: number
+          current_stage: string
+          id: string
+          scraped_at: string
+          stages: Json
+        }
+        Insert: {
+          bill_number: string
+          bill_type: string
+          congress: number
+          current_stage: string
+          id?: string
+          scraped_at?: string
+          stages: Json
+        }
+        Update: {
+          bill_number?: string
+          bill_type?: string
+          congress?: number
+          current_stage?: string
+          id?: string
+          scraped_at?: string
+          stages?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
