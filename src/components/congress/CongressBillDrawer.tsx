@@ -42,7 +42,7 @@ import {
   fetchBillSubjects,
   fetchBillCommittees,
   fetchBillTitles,
-  fetchBillStatus
+  scrapeBillStatus
 } from "@/hooks/useCongressBills";
 
 interface CongressBillDrawerProps {
@@ -91,7 +91,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         fetchBillSubjects(bill.congress, bill.type, bill.number),
         fetchBillCommittees(bill.congress, bill.type, bill.number),
         fetchBillTitles(bill.congress, bill.type, bill.number),
-        fetchBillStatus(bill.congress, bill.type, bill.number),
+        scrapeBillStatus(bill.congress, bill.type, bill.number),
       ])
         .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData, statusData]) => {
           setBillDetails(details);
