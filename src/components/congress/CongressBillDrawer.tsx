@@ -178,30 +178,61 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     return lines.join("\n");
   };
 
+  const getBillStatus = (latestActionText: string) => {
+    const text = latestActionText.toLowerCase();
+    
+    if (text.includes("became public law") || text.includes("signed by president")) {
+      return { label: "Ley Pública", variant: "default" as const, color: "bg-green-500" };
+    }
+    if (text.includes("passed senate") && text.includes("passed house")) {
+      return { label: "Aprobado en Ambas Cámaras", variant: "default" as const, color: "bg-blue-500" };
+    }
+    if (text.includes("passed senate")) {
+      return { label: "Aprobado en Senado", variant: "secondary" as const, color: "bg-blue-400" };
+    }
+    if (text.includes("passed house")) {
+      return { label: "Aprobado en Cámara", variant: "secondary" as const, color: "bg-blue-400" };
+    }
+    if (text.includes("reported to")) {
+      return { label: "Reportado por Comité", variant: "secondary" as const, color: "bg-yellow-500" };
+    }
+    if (text.includes("referred to") || text.includes("committee on")) {
+      return { label: "En Comité", variant: "outline" as const, color: "bg-orange-500" };
+    }
+    if (text.includes("introduced")) {
+      return { label: "Introducido", variant: "outline" as const, color: "bg-gray-500" };
+    }
+    
+    return { label: "En Proceso", variant: "outline" as const, color: "bg-muted" };
+  };
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="font-mono">
-                  {getBillTypeLabel(bill.type)} {bill.number}
-                </Badge>
-                <Badge variant="secondary">{bill.originChamber}</Badge>
-                {bill.policyArea && (
-                  <Badge>{bill.policyArea.name}</Badge>
-                )}
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="font-mono">
+                      {getBillTypeLabel(bill.type)} {bill.number}
+                    </Badge>
+                    <Badge variant="secondary">{bill.originChamber}</Badge>
+                    {bill.policyArea && (
+                      <Badge>{bill.policyArea.name}</Badge>
+                    )}
+                    <Badge className={getBillStatus(bill.latestAction.text).color + " text-white"}>
+                      {getBillStatus(bill.latestAction.text).label}
+                    </Badge>
+                  </div>
+                  <DrawerTitle className="text-left">{bill.title}</DrawerTitle>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={bill.url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Congress.gov
+                  </a>
+                </Button>
               </div>
-              <DrawerTitle className="text-left">{bill.title}</DrawerTitle>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <a href={bill.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Congress.gov
-              </a>
-            </Button>
-          </div>
         </DrawerHeader>
 
         <div className="overflow-y-auto px-6 pb-6">
@@ -236,6 +267,19 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6 mt-6">
+                {/* Bill Status */}
+                <div className="p-4 rounded-lg bg-muted/50 border-l-4 border-primary">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Estado Legislativo</p>
+                      <p className="text-lg font-semibold">{getBillStatus(bill.latestAction.text).label}</p>
+                    </div>
+                    <Badge className={getBillStatus(bill.latestAction.text).color + " text-white text-sm"}>
+                      {bill.originChamber}
+                    </Badge>
+                  </div>
+                </div>
+
                 {/* Bill Details */}
                 {billDetails && (
                   <div className="space-y-4">
