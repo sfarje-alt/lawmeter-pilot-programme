@@ -74,7 +74,7 @@ export async function fetchBillDetails(
 ): Promise<any> {
   try {
     const response = await fetch(
-      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}?format=json&api_key=${API_KEY}`
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}?format=json&api_key=${API_KEY}`
     );
 
     if (!response.ok) {
@@ -96,7 +96,7 @@ export async function fetchBillCosponsors(
 ): Promise<any> {
   try {
     const response = await fetch(
-      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/cosponsors?format=json&api_key=${API_KEY}`
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/cosponsors?format=json&api_key=${API_KEY}`
     );
 
     if (!response.ok) {
@@ -119,7 +119,7 @@ export async function fetchBillActions(
 ): Promise<any[]> {
   try {
     const response = await fetch(
-      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/actions?format=json&api_key=${API_KEY}`
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/actions?format=json&api_key=${API_KEY}`
     );
 
     if (!response.ok) {
@@ -142,7 +142,7 @@ export async function fetchBillSummaries(
 ): Promise<any[]> {
   try {
     const response = await fetch(
-      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/summaries?format=json&api_key=${API_KEY}`
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/summaries?format=json&api_key=${API_KEY}`
     );
 
     if (!response.ok) {
@@ -165,7 +165,7 @@ export async function fetchBillAmendments(
 ): Promise<any[]> {
   try {
     const response = await fetch(
-      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/amendments?format=json&api_key=${API_KEY}`
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/amendments?format=json&api_key=${API_KEY}`
     );
 
     if (!response.ok) {
@@ -188,7 +188,7 @@ export async function fetchBillTextVersions(
 ): Promise<any[]> {
   try {
     const response = await fetch(
-      `${CONGRESS_API_BASE}/bill/${congress}/${billType}/${billNumber}/text?format=json&api_key=${API_KEY}`
+      `${CONGRESS_API_BASE}/bill/${congress}/${billType.toLowerCase()}/${billNumber}/text?format=json&api_key=${API_KEY}`
     );
 
     if (!response.ok) {
