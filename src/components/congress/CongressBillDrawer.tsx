@@ -111,6 +111,17 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     return parties[partyCode] || partyCode;
   };
 
+  const getPartyBadgeColor = (partyCode: string) => {
+    const colors: Record<string, string> = {
+      R: "bg-party-republican text-white",
+      D: "bg-party-democrat text-white",
+      I: "bg-muted text-muted-foreground",
+      ID: "bg-party-democrat/70 text-white",
+      L: "bg-warning text-warning-foreground",
+    };
+    return colors[partyCode] || "bg-muted text-muted-foreground";
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-ES", {
       day: "numeric",
@@ -305,10 +316,15 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             <p className="font-medium text-lg">
                               {sponsorDetails.honorificName} {sponsorDetails.directOrderName}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              {getPartyLabel(billDetails.sponsors[0].party)} - {billDetails.sponsors[0].state}
-                              {billDetails.sponsors[0].district ? ` - Distrito ${billDetails.sponsors[0].district}` : ""}
-                            </p>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Badge className={getPartyBadgeColor(billDetails.sponsors[0].party)}>
+                                {getPartyLabel(billDetails.sponsors[0].party)}
+                              </Badge>
+                              <span className="text-muted-foreground">
+                                {billDetails.sponsors[0].state}
+                                {billDetails.sponsors[0].district ? ` - Distrito ${billDetails.sponsors[0].district}` : ""}
+                              </span>
+                            </div>
                           </div>
                           
                           <div className="flex gap-2 flex-wrap">
@@ -443,10 +459,15 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                           >
                             <div className="flex-1">
                               <p className="font-medium">{cosponsor.fullName}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {getPartyLabel(cosponsor.party)} - {cosponsor.state}
-                                {cosponsor.district ? ` - Distrito ${cosponsor.district}` : ""}
-                              </p>
+                              <div className="flex items-center gap-2 text-sm mt-1">
+                                <Badge className={getPartyBadgeColor(cosponsor.party)}>
+                                  {getPartyLabel(cosponsor.party)}
+                                </Badge>
+                                <span className="text-muted-foreground">
+                                  {cosponsor.state}
+                                  {cosponsor.district ? ` - Distrito ${cosponsor.district}` : ""}
+                                </span>
+                              </div>
                               {cosponsor.sponsorshipDate && (
                                 <p className="text-xs text-muted-foreground mt-1">
                                   Fecha: {formatDate(cosponsor.sponsorshipDate)}

@@ -61,6 +61,8 @@
     --party-labor: 0 75% 55%;
     --party-greens: 142 60% 45%;
     --party-crossbench: 280 15% 60%;
+    --party-republican: 0 75% 50%;
+    --party-democrat: 220 85% 55%;
 
     /* Brand Colors */
     --brand-navy: 220 40% 8%;

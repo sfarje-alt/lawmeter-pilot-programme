@@ -72,6 +72,8 @@ export default {
           labor: "hsl(var(--party-labor))",
           greens: "hsl(var(--party-greens))",
           crossbench: "hsl(var(--party-crossbench))",
+          republican: "hsl(var(--party-republican))",
+          democrat: "hsl(var(--party-democrat))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
