@@ -268,13 +268,13 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
 
         {/* Dates */}
         <div className="flex items-center gap-4 text-sm flex-wrap">
-          {bill.introducedDate && (
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-foreground">Introducido:</span>
-              <span className="text-muted-foreground">{formatDate(bill.introducedDate)}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-foreground">Introducido:</span>
+            <span className="text-muted-foreground">
+              {bill.introducedDate ? formatDate(bill.introducedDate) : 'N/A'}
+            </span>
+          </div>
           <div className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium text-foreground">Última Acción:</span>
