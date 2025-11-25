@@ -2,33 +2,28 @@ import { CongressBill, BillAnalysis } from "@/types/congress";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ExternalLink, Calendar, Users, Bell, Star, RefreshCw, Plus, X, TrendingUp, Activity } from "lucide-react";
+import { ExternalLink, Calendar, Users, Bell, Star, RefreshCw, TrendingUp, Activity, CheckCircle2, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStarredBills } from "@/hooks/useStarredBills";
-import { useBillKeywords } from "@/hooks/useBillKeywords";
 import { useToast } from "@/hooks/use-toast";
 
 interface CongressBillCardProps {
   bill: CongressBill;
   onViewDetails: () => void;
   onRefresh?: (billId: string) => void;
+  keywordHits?: { keyword: string; count: number; snippets: string[] }[];
 }
 
-export function CongressBillCard({ bill, onViewDetails, onRefresh }: CongressBillCardProps) {
+export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }: CongressBillCardProps) {
   const [hasEmailUpdate, setHasEmailUpdate] = useState(false);
   const [analysis, setAnalysis] = useState<BillAnalysis | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [newKeyword, setNewKeyword] = useState("");
-  const [showKeywordInput, setShowKeywordInput] = useState(false);
   
   const { isStarred, toggleStar } = useStarredBills();
-  const { addKeyword, removeKeyword, getKeywords } = useBillKeywords();
   const { toast } = useToast();
   
   const billId = `${bill.congress}-${bill.type}-${bill.number}`;
-  const keywords = getKeywords(billId);
   const starred = isStarred(billId);
 
   useEffect(() => {
@@ -133,12 +128,21 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh }: CongressBil
     }
   };
 
-  const handleAddKeyword = () => {
-    if (newKeyword.trim()) {
-      addKeyword(billId, newKeyword);
-      setNewKeyword("");
-      setShowKeywordInput(false);
+  const getStatusSteps = () => {
+    const steps = [
+      { label: "Introducido", date: bill.introducedDate, completed: true },
+      { label: "En Comité", date: null, completed: false },
+      { label: "Votación Cámara", date: null, completed: false },
+      { label: "Votación Senado", date: null, completed: false },
+      { label: "Ley", date: bill.laws?.[0] ? "Enacted" : null, completed: !!bill.laws?.[0] }
+    ];
+    
+    // Simple heuristic: if there's recent activity, mark second step as completed
+    if (bill.latestAction && bill.latestAction.text.toLowerCase().includes("committee")) {
+      steps[1].completed = true;
     }
+    
+    return steps;
   };
 
   return (
@@ -191,46 +195,66 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh }: CongressBil
         
         <h3 className="text-lg font-semibold mt-2 line-clamp-2">{bill.title}</h3>
         
-        {/* Keywords */}
-        <div className="flex items-center gap-2 flex-wrap mt-2">
-          {keywords.map((keyword) => (
-            <Badge key={keyword} variant="outline" className="gap-1">
-              {keyword}
-              <X
-                className="h-3 w-3 cursor-pointer hover:text-destructive"
-                onClick={() => removeKeyword(billId, keyword)}
-              />
-            </Badge>
-          ))}
-          {showKeywordInput ? (
-            <div className="flex items-center gap-1">
-              <Input
-                value={newKeyword}
-                onChange={(e) => setNewKeyword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
-                placeholder="keyword"
-                className="h-6 w-24 text-xs"
-              />
-              <Button size="sm" onClick={handleAddKeyword} className="h-6 px-2">
-                <Plus className="h-3 w-3" />
-              </Button>
+        {/* Keyword Hits */}
+        {keywordHits && keywordHits.length > 0 && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border border-yellow-200 dark:border-yellow-800 mt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium text-foreground">
+                {keywordHits.reduce((sum, hit) => sum + hit.count, 0)} coincidencias encontradas
+              </span>
             </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowKeywordInput(true)}
-              className="h-6 px-2 text-xs"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Keyword
-            </Button>
-          )}
+            <div className="space-y-2">
+              {keywordHits.map((hit, idx) => (
+                <div key={idx} className="text-xs">
+                  <span className="font-medium text-foreground">"{hit.keyword}"</span>
+                  <span className="text-muted-foreground"> ({hit.count} veces)</span>
+                  {hit.snippets.slice(0, 2).map((snippet, i) => (
+                    <p key={i} className="text-muted-foreground italic mt-1 line-clamp-1">
+                      ...{snippet}...
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Status Timeline */}
+        <div className="bg-muted/30 p-3 rounded-md border border-border/50 mt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Timeline de Status</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {getStatusSteps().map((step, idx) => (
+              <div key={idx} className="flex items-center gap-1">
+                <div className={`flex flex-col items-center ${idx < getStatusSteps().length - 1 ? 'flex-1' : ''}`}>
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
+                    step.completed 
+                      ? 'bg-primary border-primary text-primary-foreground' 
+                      : 'bg-background border-muted-foreground text-muted-foreground'
+                  }`}>
+                    {step.completed ? (
+                      <CheckCircle2 className="h-3 w-3" />
+                    ) : (
+                      <span className="text-xs">{idx + 1}</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground mt-1 text-center whitespace-nowrap">
+                    {step.label}
+                  </span>
+                </div>
+                {idx < getStatusSteps().length - 1 && (
+                  <div className={`h-0.5 w-8 ${step.completed ? 'bg-primary' : 'bg-border'}`} />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* AI Analysis Snippet */}
         {analysis && (
-          <div className="text-sm bg-muted/50 p-3 rounded-md border border-border/50 mt-2">
+          <div className="text-sm bg-muted/50 p-3 rounded-md border border-border/50">
             <div className="flex items-center gap-2 mb-1">
               <Activity className="h-4 w-4 text-primary" />
               <span className="font-medium text-foreground">Análisis IA:</span>
@@ -240,7 +264,7 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh }: CongressBil
         )}
 
         {/* Dates */}
-        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
           {bill.introducedDate && (
             <div className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
@@ -249,11 +273,7 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh }: CongressBil
           )}
           <div className="flex items-center gap-1.5">
             <Activity className="h-4 w-4" />
-            <span>Última: {formatDate(bill.latestAction.actionDate)}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <RefreshCw className="h-4 w-4" />
-            <span>Update: {formatDate(bill.updateDate)}</span>
+            <span>Última Acción: {formatDate(bill.latestAction.actionDate)}</span>
           </div>
         </div>
 
