@@ -41,7 +41,8 @@ import {
   fetchMemberDetails,
   fetchBillSubjects,
   fetchBillCommittees,
-  fetchBillTitles
+  fetchBillTitles,
+  scrapeBillStatus
 } from "@/hooks/useCongressBills";
 
 interface CongressBillDrawerProps {
@@ -61,6 +62,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   const [subjects, setSubjects] = useState<any>(null);
   const [committees, setCommittees] = useState<any[]>([]);
   const [titles, setTitles] = useState<any[]>([]);
+  const [billStatus, setBillStatus] = useState<{ currentStage: string; stages: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
@@ -89,8 +91,9 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         fetchBillSubjects(bill.congress, bill.type, bill.number),
         fetchBillCommittees(bill.congress, bill.type, bill.number),
         fetchBillTitles(bill.congress, bill.type, bill.number),
+        scrapeBillStatus(bill.congress, bill.type, bill.number),
       ])
-        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData]) => {
+        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData, statusData]) => {
           setBillDetails(details);
           setCosponsors(cosponsorData);
           setActions(actionsData);
@@ -100,6 +103,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
           setSubjects(subjectsData);
           setCommittees(committeesData);
           setTitles(titlesData);
+          setBillStatus(statusData);
           
           // Fetch sponsor details if available
           if (details?.sponsors?.[0]?.bioguideId) {
@@ -179,56 +183,6 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     return lines.join("\n");
   };
 
-  // Analyze all actions to determine bill progression
-  const getBillProgress = () => {
-    const stages = {
-      introduced: false,
-      passedHouse: false,
-      passedSenate: false,
-      toPresident: false,
-      becameLaw: false
-    };
-
-    if (!actions || actions.length === 0) {
-      stages.introduced = true;
-      return stages;
-    }
-
-    actions.forEach((action: any) => {
-      const text = action.text.toLowerCase();
-      
-      if (text.includes("introduced")) {
-        stages.introduced = true;
-      }
-      if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) {
-        stages.passedHouse = true;
-      }
-      if (text.includes("passed") && text.includes("senate")) {
-        stages.passedSenate = true;
-      }
-      if (text.includes("presented to president") || text.includes("sent to president")) {
-        stages.toPresident = true;
-      }
-      if (text.includes("became public law") || text.includes("signed by president")) {
-        stages.becameLaw = true;
-      }
-    });
-
-    return stages;
-  };
-
-  const progress = getBillProgress();
-  
-  const getBillStatus = () => {
-    if (progress.becameLaw) return { label: "Ley Pública", color: "bg-green-500" };
-    if (progress.toPresident) return { label: "Al Presidente", color: "bg-blue-500" };
-    if (progress.passedSenate && progress.passedHouse) return { label: "Aprobado Ambas Cámaras", color: "bg-blue-400" };
-    if (progress.passedSenate) return { label: "Aprobado en Senado", color: "bg-blue-400" };
-    if (progress.passedHouse) return { label: "Aprobado en Cámara", color: "bg-blue-400" };
-    if (progress.introduced) return { label: "Introducido", color: "bg-gray-500" };
-    return { label: "En Proceso", color: "bg-muted" };
-  };
-
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[90vh]">
@@ -243,9 +197,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     {bill.policyArea && (
                       <Badge>{bill.policyArea.name}</Badge>
                     )}
-                    <Badge className={getBillStatus().color + " text-white"}>
-                      {getBillStatus().label}
-                    </Badge>
+                    {billStatus && (
+                      <Badge className="bg-primary text-primary-foreground">
+                        {billStatus.currentStage}
+                      </Badge>
+                    )}
                   </div>
                   <DrawerTitle className="text-left">{bill.title}</DrawerTitle>
                 </div>
@@ -295,82 +251,30 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6 mt-6">
                 {/* Bill Progress Tracker */}
-                <div className="p-6 rounded-lg bg-muted/50 border">
-                  <p className="text-sm font-semibold text-muted-foreground mb-4">Tracker</p>
-                  <div className="flex items-center gap-2">
-                    {/* Introducido */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className={`w-full h-2 rounded-full transition-colors ${
-                        progress.introduced ? "bg-primary" : "bg-muted"
-                      }`} />
-                      <span className={`text-xs mt-2 font-medium ${
-                        progress.introduced ? "text-foreground" : "text-muted-foreground"
-                      }`}>
-                        Introducido
-                      </span>
-                    </div>
-
-                    {/* Arrow */}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-
-                    {/* Aprobado Cámara */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className={`w-full h-2 rounded-full transition-colors ${
-                        progress.passedHouse ? "bg-primary" : "bg-muted"
-                      }`} />
-                      <span className={`text-xs mt-2 font-medium text-center ${
-                        progress.passedHouse ? "text-foreground" : "text-muted-foreground"
-                      }`}>
-                        Aprobado Cámara
-                      </span>
-                    </div>
-
-                    {/* Arrow */}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-
-                    {/* Aprobado Senado */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className={`w-full h-2 rounded-full transition-colors ${
-                        progress.passedSenate ? "bg-primary" : "bg-muted"
-                      }`} />
-                      <span className={`text-xs mt-2 font-medium text-center ${
-                        progress.passedSenate ? "text-foreground" : "text-muted-foreground"
-                      }`}>
-                        Aprobado Senado
-                      </span>
-                    </div>
-
-                    {/* Arrow */}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-
-                    {/* Al Presidente */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className={`w-full h-2 rounded-full transition-colors ${
-                        progress.toPresident ? "bg-primary" : "bg-muted"
-                      }`} />
-                      <span className={`text-xs mt-2 font-medium text-center ${
-                        progress.toPresident ? "text-foreground" : "text-muted-foreground"
-                      }`}>
-                        Al Presidente
-                      </span>
-                    </div>
-
-                    {/* Arrow */}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-
-                    {/* Ley Pública */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className={`w-full h-2 rounded-full transition-colors ${
-                        progress.becameLaw ? "bg-primary" : "bg-muted"
-                      }`} />
-                      <span className={`text-xs mt-2 font-medium text-center ${
-                        progress.becameLaw ? "text-foreground" : "text-muted-foreground"
-                      }`}>
-                        Ley Pública
-                      </span>
+                {billStatus && (
+                  <div className="p-6 rounded-lg bg-muted/50 border">
+                    <p className="text-sm font-semibold text-muted-foreground mb-4">Estado Legislativo</p>
+                    <div className="flex items-center gap-2">
+                      {billStatus.stages.map((stage, index) => (
+                        <div key={stage} className="flex items-center gap-2 flex-1">
+                          {index > 0 && (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <div className="flex flex-col items-center flex-1">
+                            <div className={`w-full h-2 rounded-full transition-colors ${
+                              billStatus.currentStage === stage ? "bg-primary" : "bg-muted"
+                            }`} />
+                            <span className={`text-xs mt-2 font-medium text-center ${
+                              billStatus.currentStage === stage ? "text-foreground" : "text-muted-foreground"
+                            }`}>
+                              {stage}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Bill Details */}
                 {billDetails && (
