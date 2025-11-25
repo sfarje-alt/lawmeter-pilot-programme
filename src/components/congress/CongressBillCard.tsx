@@ -174,12 +174,6 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
             {bill.policyArea && (
               <Badge variant="secondary">{bill.policyArea.name}</Badge>
             )}
-            {bill.introducedDate && (
-              <Badge variant="outline" className="gap-1">
-                <Calendar className="h-3 w-3" />
-                Introducido: {formatDate(bill.introducedDate)}
-              </Badge>
-            )}
             {analysis && (
               <Badge className={getRiskColor(analysis.riskCategory)}>
                 <TrendingUp className="h-3 w-3 mr-1" />
@@ -242,11 +236,11 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
           </div>
           <div className="flex items-center gap-1">
             {billStatus.stages.map((stage, index) => (
-              <>
+              <div key={`stage-${index}`} className="flex items-center gap-1 flex-1">
                 {index > 0 && (
-                  <ChevronRight key={`arrow-${index}`} className="h-4 w-4 text-muted-foreground flex-shrink-0 mx-1" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mx-1" />
                 )}
-                <div key={stage} className="flex flex-col items-center flex-1">
+                <div className="flex flex-col items-center flex-1">
                   <div className={`w-full h-2 rounded-full transition-colors ${
                     billStatus.currentStage === stage ? "bg-primary" : "bg-muted"
                   }`} />
@@ -256,7 +250,7 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
                     {stage}
                   </span>
                 </div>
-              </>
+              </div>
             ))}
           </div>
         </div>
@@ -273,21 +267,24 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
         )}
 
         {/* Dates */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+        <div className="flex items-center gap-4 text-sm flex-wrap">
           {bill.introducedDate && (
             <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              <span>Intro: {formatDate(bill.introducedDate)}</span>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-foreground">Introducido:</span>
+              <span className="text-muted-foreground">{formatDate(bill.introducedDate)}</span>
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            <Calendar className="h-4 w-4" />
-            <span>Última Acción: {formatDate(bill.latestAction.actionDate)}</span>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-foreground">Última Acción:</span>
+            <span className="text-muted-foreground">{formatDate(bill.latestAction.actionDate)}</span>
           </div>
           {bill.updateDate && (
             <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              <span>Actualizado LawMeter: {formatDate(bill.updateDate)}</span>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-foreground">Actualizado LawMeter:</span>
+              <span className="text-muted-foreground">{formatDate(bill.updateDate)}</span>
             </div>
           )}
         </div>
