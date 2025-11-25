@@ -68,3 +68,60 @@ export interface CongressApiResponse {
     next?: string;
   };
 }
+
+// Vote Types
+export interface CongressVote {
+  congress: number;
+  session: number;
+  chamber: 'House' | 'Senate';
+  rollNumber: number;
+  voteDate: string;
+  voteQuestion: string;
+  voteResult: string;
+  voteTitle?: string;
+  voteDocument?: {
+    text: string;
+    url: string;
+  };
+  voteType: string;
+  bill?: {
+    congress: number;
+    type: string;
+    number: string;
+    title?: string;
+    url: string;
+  };
+  amendment?: {
+    number: string;
+    url: string;
+  };
+  majority: string;
+  totals: {
+    yea: number;
+    nay: number;
+    present: number;
+    notVoting: number;
+  };
+  updateDate: string;
+}
+
+export interface VoteMember {
+  bioguideId: string;
+  chamber: string;
+  name: string;
+  party: string;
+  state: string;
+  vote: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+}
+
+export interface CongressVoteDetail extends CongressVote {
+  members?: VoteMember[];
+}
+
+export interface VoteApiResponse {
+  votes: CongressVote[];
+  pagination: {
+    count: number;
+    next?: string;
+  };
+}
