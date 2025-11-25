@@ -1,4 +1,4 @@
-import { CongressBill } from "@/types/congress";
+import { CongressBill, BillAnalysis } from "@/types/congress";
 import {
   Drawer,
   DrawerContent,
@@ -29,7 +29,8 @@ import {
   Download,
   Copy,
   Check,
-  ThumbsUp
+  ThumbsUp,
+  TrendingUp
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { 
@@ -47,6 +48,9 @@ import {
 import { fetchBillVotes } from "@/hooks/useCongressVotes";
 import { CongressVote } from "@/types/congress";
 import { VotingRecordsTab } from "./VotingRecordsTab";
+import { BillAnalysisTab } from "./BillAnalysisTab";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CongressBillDrawerProps {
   bill: CongressBill;
@@ -68,6 +72,9 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   const [votes, setVotes] = useState<CongressVote[]>([]);
   const [loading, setLoading] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<BillAnalysis | null>(null);
+  const [analyzingBill, setAnalyzingBill] = useState(false);
+  const { toast } = useToast();
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -113,6 +120,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
             const sponsorData = await fetchMemberDetails(details.sponsors[0].bioguideId);
             setSponsorDetails(sponsorData);
           }
+
+          // Analyze bill with AI if text is available
+          if (textVersionsData && textVersionsData.length > 0) {
+            analyzeBillWithAI(textVersionsData, bill.title, bill.policyArea?.name);
+          }
         })
         .catch((error) => {
           console.error("Error fetching bill data:", error);
@@ -122,6 +134,71 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         });
     }
   }, [open, bill]);
+
+  const analyzeBillWithAI = async (versions: any[], title: string, policyArea?: string) => {
+    if (!versions || versions.length === 0) return;
+
+    setAnalyzingBill(true);
+    
+    try {
+      // Get the latest text version
+      const latestVersion = versions[0];
+      
+      // Fetch the formatted text URL
+      let billText = "";
+      if (latestVersion.formats) {
+        const formattedText = latestVersion.formats.find((f: any) => f.type === "Formatted Text");
+        if (formattedText?.url) {
+          try {
+            const textResponse = await fetch(formattedText.url);
+            billText = await textResponse.text();
+            
+            // Clean HTML tags if present
+            billText = billText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          } catch (error) {
+            console.error("Error fetching bill text:", error);
+            billText = title; // Fallback to title
+          }
+        }
+      }
+
+      if (!billText) {
+        billText = title;
+      }
+
+      // Call the edge function to analyze the bill
+      const { data, error } = await supabase.functions.invoke("analyze-bill", {
+        body: {
+          billText: billText,
+          billTitle: title,
+          policyArea: policyArea
+        }
+      });
+
+      if (error) {
+        console.error("Error analyzing bill:", error);
+        toast({
+          title: "Error al analizar bill",
+          description: error.message || "No se pudo generar el análisis de riesgo",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data) {
+        setAnalysis(data);
+      }
+    } catch (error) {
+      console.error("Error in bill analysis:", error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al analizar el bill",
+        variant: "destructive"
+      });
+    } finally {
+      setAnalyzingBill(false);
+    }
+  };
 
   const getBillTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -257,10 +334,14 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
             </div>
           ) : (
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="overview">
                   <Info className="h-4 w-4 mr-2" />
                   General
+                </TabsTrigger>
+                <TabsTrigger value="analysis">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Análisis IA
                 </TabsTrigger>
                 <TabsTrigger value="votes">
                   <ThumbsUp className="h-4 w-4 mr-2" />
@@ -283,6 +364,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                   Enmiendas
                 </TabsTrigger>
               </TabsList>
+
+              {/* Analysis Tab */}
+              <TabsContent value="analysis" className="space-y-4 mt-6">
+                <BillAnalysisTab analysis={analysis} loading={analyzingBill} />
+              </TabsContent>
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6 mt-6">
