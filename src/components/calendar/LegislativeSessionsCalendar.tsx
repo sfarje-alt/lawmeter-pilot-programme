@@ -156,7 +156,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
         organName: "COMISIÓN ESP. DE LA PROVINCIA DE GUANACASTE, ENCARGADA DE ANÁLISIS, INVESTIGACIÓN...",
         sessionType: "ORDINARIA",
         status: "PENDIENTE",
-        agenda: ["Análisis de proyectos regionales"]
+        agenda: ["Analysis of regional bills"]
       },
       {
         date: parseISO("2025-11-02T18:05:00"),
@@ -258,7 +258,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
         organName: "PLENARIO",
         sessionType: "EXTRAORDINARIA",
         status: "PENDIENTE",
-        agenda: ["Votaciones de proyectos pendientes", "Ley Fintech"]
+        agenda: ["Voting on pending bills", "Ley Fintech"]
       },
       {
         date: parseISO("2025-10-30T14:45:00"),

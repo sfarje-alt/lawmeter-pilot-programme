@@ -62,7 +62,7 @@ export function FeedView({
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-lg font-semibold">
-          {feedType === "acts" ? "Actos e Instrumentos" : "Proyectos de Ley"} (Historial de 1 Año)
+          {feedType === "acts" ? "Acts & Instruments" : "Bills"} (1 Year History)
         </h3>
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -79,7 +79,7 @@ export function FeedView({
             onClick={() => setFeedType("bills")}
           >
             <Receipt className="h-4 w-4 mr-2" />
-            Proyectos
+            Bills
           </Button>
           <div className="border-l mx-2"></div>
           <Button

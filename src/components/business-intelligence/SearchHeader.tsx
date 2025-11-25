@@ -59,7 +59,7 @@ export function SearchHeader({ onSearch, selectedEntity }: SearchHeaderProps) {
           Costa Rica – Inteligencia Empresarial
         </h1>
         <p className="text-muted-foreground">
-          Análisis integral de proveedores y competidores
+          Comprehensive analysis of suppliers and competitors
         </p>
       </div>
 

@@ -93,7 +93,7 @@ export function FilterBar({
     <div className="space-y-4">
       <div className="flex flex-col lg:flex-row gap-4">
         <SearchWithSuggestions
-          placeholder={searchType === "acts" ? "Buscar actos, legislación..." : "Buscar proyectos..."}
+          placeholder={searchType === "acts" ? "Search acts, legislation..." : "Search bills..."}
           value={filters.searchText}
           onChange={(value) => updateFilter("searchText", value)}
           data={searchData}
