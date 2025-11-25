@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -31,6 +31,7 @@ import { TendersSection } from "@/components/tenders/TendersSection";
 import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
 import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
+import { CongressBillsSection } from "@/components/congress/CongressBillsSection";
 
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
@@ -211,9 +212,10 @@ export default function LawMeterDashboard() {
 
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-9 mb-8 glass-card p-1 gap-1">
+          <TabsList className="grid w-full grid-cols-10 mb-8 glass-card p-1 gap-1">
             <TabsTrigger value="acts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislación</TabsTrigger>
             <TabsTrigger value="bills" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Proyectos</TabsTrigger>
+            <TabsTrigger value="congress" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Building2 className="h-4 w-4 mr-2" />Congreso EE.UU.</TabsTrigger>
             <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Medios</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
             <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Destacados</TabsTrigger>
@@ -496,6 +498,10 @@ export default function LawMeterDashboard() {
                 </Button>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="congress" className="space-y-6 mt-6">
+            <CongressBillsSection />
           </TabsContent>
 
           <TabsContent value="starred" className="space-y-6 mt-6">
