@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { CongressBill, CongressApiResponse } from "@/types/congress";
 
 const CONGRESS_API_BASE = "https://api.congress.gov/v3";
-const CURRENT_CONGRESS = 118; // 118th Congress (2023-2025)
+const CURRENT_CONGRESS = 119; // 119th Congress (2025-2027)
 
 const API_KEY = "KD2m5YgyIPMtxMOweZ6Tb57c1W8pD7Zr5eaDrM86";
 

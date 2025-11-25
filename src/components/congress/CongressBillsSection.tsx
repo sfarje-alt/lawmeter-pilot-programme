@@ -68,7 +68,7 @@ export function CongressBillsSection() {
         <div>
           <h2 className="text-2xl font-bold">Proyectos de Ley del Congreso de EE.UU.</h2>
           <p className="text-muted-foreground">
-            118º Congreso (2023-2025) • {bills.length} proyectos de ley
+            119º Congreso (2025-2027) • {bills.length} proyectos de ley
           </p>
         </div>
 
