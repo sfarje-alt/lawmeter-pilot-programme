@@ -155,7 +155,7 @@ export default function CertificateForm() {
         await createCertificate.mutateAsync(certificateData);
       }
 
-      navigate('/certificates');
+      navigate('/?tab=certificates');
     } catch (error) {
       console.error('Error saving certificate:', error);
       toast({
@@ -183,7 +183,7 @@ export default function CertificateForm() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/certificates')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/?tab=certificates')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -447,7 +447,7 @@ export default function CertificateForm() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate('/certificates')}
+                    onClick={() => navigate('/?tab=certificates')}
                   >
                     Cancel
                   </Button>

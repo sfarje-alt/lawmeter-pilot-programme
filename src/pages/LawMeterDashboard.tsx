@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
@@ -32,9 +32,16 @@ import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
 import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
 import { CongressBillsSection } from "@/components/congress/CongressBillsSection";
+import { CertificateFilters as CertFilters } from '@/components/certificates/CertificateFilters';
+import { SummaryCards } from '@/components/certificates/SummaryCards';
+import { CertificateTable } from '@/components/certificates/CertificateTable';
+import { useCertificates } from '@/hooks/useCertificates';
+import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
+import { Download, Plus } from "lucide-react";
 
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("legislation");
   const [legislationSubTab, setLegislationSubTab] = useState("congress");
@@ -84,6 +91,10 @@ export default function LawMeterDashboard() {
   const [billsViewMode, setBillsViewMode] = useState<"list" | "grid">("list");
   const [billsPage, setBillsPage] = useState(1);
   const [billsPerPage, setBillsPerPage] = useState(25);
+  
+  // Certificates state
+  const [certificateFilters, setCertificateFilters] = useState<CertificateFiltersType>({});
+  const { data: certificates = [], isLoading: certificatesLoading } = useCertificates(certificateFilters);
 
   const starredHooks = useStarredAlerts();
   const filteredAlerts = useFilteredAlerts(alerts, actsFilters);
@@ -149,6 +160,14 @@ export default function LawMeterDashboard() {
 
   const totalActsPages = Math.ceil(filteredAlerts.length / actsPerPage);
   const totalBillsPages = Math.ceil(filteredBills.length / billsPerPage);
+
+  // Handle URL tab parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading legislation data...</div>;
@@ -218,7 +237,7 @@ export default function LawMeterDashboard() {
             <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Medios</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
             <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Destacados</TabsTrigger>
-            <TabsTrigger value="certificates" onClick={() => navigate('/certificates')} className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Shield className="h-4 w-4 mr-2" />Certificates</TabsTrigger>
+            <TabsTrigger value="certificates" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Shield className="h-4 w-4 mr-2" />Certificates</TabsTrigger>
             <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendario</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Análisis</TabsTrigger>
             <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Licitaciones</TabsTrigger>
@@ -568,6 +587,73 @@ export default function LawMeterDashboard() {
                   <Card><CardContent className="py-12 text-center"><Star className="h-12 w-12 mx-auto text-muted-foreground mb-4" /><p>No starred {starredFilter} yet</p></CardContent></Card>
                 )}
               </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="certificates" className="space-y-6 mt-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Certificate Repository</h2>
+                <p className="text-muted-foreground">
+                  Go Global Compliance - Manage and track all certifications
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const headers = ['Client', 'Product', 'Model', 'Type', 'Country/Region', 'Standard', 'Cert Body', 'Cert Number', 'Issue Date', 'Expiration', 'Status'];
+                    const rows = certificates.map(cert => [
+                      cert.clients?.client_name || '',
+                      cert.product_name,
+                      cert.product_model || '',
+                      cert.certificate_type,
+                      cert.country_or_region,
+                      cert.regulatory_standard || '',
+                      cert.certification_body || '',
+                      cert.certificate_number || '',
+                      cert.issue_date,
+                      cert.expiration_date || '',
+                      cert.status,
+                    ]);
+                    const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `certificates-export-${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
+                <Button onClick={() => navigate('/certificates/new')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Certificate
+                </Button>
+              </div>
+            </div>
+
+            <CertFilters filters={certificateFilters} onFiltersChange={setCertificateFilters} />
+
+            {certificatesLoading ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[...Array(4)].map((_, i) => (
+                    <Card key={i} className="glass-card"><CardContent className="h-32" /></Card>
+                  ))}
+                </div>
+                <Card className="glass-card"><CardContent className="h-96" /></Card>
+              </div>
+            ) : (
+              <>
+                <SummaryCards certificates={certificates} />
+                <CertificateTable certificates={certificates} />
+              </>
             )}
           </TabsContent>
 
