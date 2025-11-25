@@ -263,11 +263,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               {/* Sponsors Tab */}
               <TabsContent value="sponsors" className="space-y-6 mt-6">
                 {/* Sponsors */}
-                {bill.sponsors && bill.sponsors.length > 0 && (
+                {billDetails?.sponsors && billDetails.sponsors.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="font-semibold">Patrocinadores Principales</h3>
                     <div className="space-y-2">
-                      {bill.sponsors.map((sponsor, idx) => (
+                      {billDetails.sponsors.map((sponsor, idx) => (
                         <div
                           key={idx}
                           className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
@@ -276,6 +276,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                             <p className="font-medium">{sponsor.fullName}</p>
                             <p className="text-sm text-muted-foreground">
                               {sponsor.party} - {sponsor.state}
+                              {sponsor.district ? ` - Distrito ${sponsor.district}` : ""}
                             </p>
                           </div>
                         </div>
