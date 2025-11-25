@@ -18,7 +18,7 @@ export function useCongressBills(sortBy: SortOption = "latestAction-desc") {
       try {
         // Fetch with sort parameter - the API supports sort by updateDate
         const response = await fetch(
-          `${CONGRESS_API_BASE}/bill/${CURRENT_CONGRESS}?format=json&limit=50&sort=updateDate+desc&api_key=${API_KEY}`
+          `${CONGRESS_API_BASE}/bill/${CURRENT_CONGRESS}?format=json&limit=250&sort=updateDate+desc&api_key=${API_KEY}`
         );
 
         if (!response.ok) {
