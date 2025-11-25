@@ -2,7 +2,7 @@ import { CongressBill } from "@/types/congress";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Calendar, Users, Bell } from "lucide-react";
+import { ExternalLink, Calendar, Users, Bell, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 

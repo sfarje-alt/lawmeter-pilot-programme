@@ -39,6 +39,20 @@ export interface CongressBill {
   url: string;
 }
 
+export interface BillStakeholder {
+  name: string;
+  type: "Industry" | "Company" | "Government" | "Public";
+  position: "Support" | "Oppose" | "Neutral";
+  impact: string;
+}
+
+export interface BillAnalysis {
+  riskScore: number;
+  riskCategory: "Critical" | "High" | "Medium" | "Low";
+  explanation: string;
+  stakeholders: BillStakeholder[];
+}
+
 export interface CongressBillDetail extends CongressBill {
   introducedDate: string;
   constitutionalAuthorityStatementText?: string;
@@ -59,6 +73,7 @@ export interface CongressBillDetail extends CongressBill {
     updateDate: string;
     text: string;
   }>;
+  analysis?: BillAnalysis;
 }
 
 export interface CongressApiResponse {

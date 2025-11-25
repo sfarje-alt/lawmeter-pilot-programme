@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.scrape-bill-statuses]
 verify_jwt = false
+
+[functions.analyze-bill]
+verify_jwt = false
