@@ -185,13 +185,13 @@ export function CongressBillsSection() {
         )}
       </div>
 
-      {/* Bills Grid */}
+      {/* Bills List - Vertical Stack */}
       {filteredBills.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           No se encontraron proyectos de ley
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="space-y-4">
           {filteredBills.map((bill) => (
             <CongressBillCard
               key={`${bill.type}-${bill.number}`}
