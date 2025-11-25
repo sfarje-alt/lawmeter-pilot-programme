@@ -181,8 +181,7 @@ export default function LawMeterDashboard() {
             {/* Left side - Title */}
             <div className="flex items-center gap-6">
               <div>
-                <h1 className="text-3xl font-bold text-foreground leading-tight">Costa Rica 🇨🇷</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Intelligence Hub</p>
+                <h1 className="text-3xl font-bold text-foreground leading-tight">Intelligence Hub</h1>
               </div>
               
               {/* Separator */}
