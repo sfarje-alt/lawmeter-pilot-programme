@@ -28,7 +28,8 @@ import {
   AlignLeft,
   Download,
   Copy,
-  Check
+  Check,
+  ThumbsUp
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { 
@@ -43,6 +44,9 @@ import {
   fetchBillCommittees,
   fetchBillTitles
 } from "@/hooks/useCongressBills";
+import { fetchBillVotes } from "@/hooks/useCongressVotes";
+import { CongressVote } from "@/types/congress";
+import { VotingRecordsTab } from "./VotingRecordsTab";
 
 interface CongressBillDrawerProps {
   bill: CongressBill;
@@ -61,6 +65,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
   const [subjects, setSubjects] = useState<any>(null);
   const [committees, setCommittees] = useState<any[]>([]);
   const [titles, setTitles] = useState<any[]>([]);
+  const [votes, setVotes] = useState<CongressVote[]>([]);
   const [loading, setLoading] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
@@ -89,8 +94,9 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
         fetchBillSubjects(bill.congress, bill.type, bill.number),
         fetchBillCommittees(bill.congress, bill.type, bill.number),
         fetchBillTitles(bill.congress, bill.type, bill.number),
+        fetchBillVotes(bill.congress, bill.type, bill.number),
       ])
-        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData]) => {
+        .then(async ([details, cosponsorData, actionsData, summariesData, amendmentsData, textVersionsData, subjectsData, committeesData, titlesData, votesData]) => {
           setBillDetails(details);
           setCosponsors(cosponsorData);
           setActions(actionsData);
@@ -100,6 +106,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
           setSubjects(subjectsData);
           setCommittees(committeesData);
           setTitles(titlesData);
+          setVotes(votesData);
           
           // Fetch sponsor details if available
           if (details?.sponsors?.[0]?.bioguideId) {
@@ -250,10 +257,14 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
             </div>
           ) : (
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="overview">
                   <Info className="h-4 w-4 mr-2" />
                   General
+                </TabsTrigger>
+                <TabsTrigger value="votes">
+                  <ThumbsUp className="h-4 w-4 mr-2" />
+                  Votes
                 </TabsTrigger>
                 <TabsTrigger value="sponsors">
                   <Users className="h-4 w-4 mr-2" />
@@ -516,6 +527,11 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                     </div>
                   </>
                 )}
+              </TabsContent>
+
+              {/* Votes Tab */}
+              <TabsContent value="votes" className="mt-6">
+                <VotingRecordsTab votes={votes} />
               </TabsContent>
 
               {/* Sponsors Tab */}
