@@ -214,7 +214,7 @@ export default function LawMeterDashboard() {
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-8 mb-8 glass-card p-1 gap-1">
-            <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislations Monitoring</TabsTrigger>
+            <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislations</TabsTrigger>
             <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Medios</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
             <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Destacados</TabsTrigger>
