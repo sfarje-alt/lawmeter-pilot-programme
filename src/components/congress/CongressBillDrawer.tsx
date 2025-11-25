@@ -251,16 +251,16 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6 mt-6">
                 {/* Bill Progress Tracker */}
-                {billStatus && (
+                {billStatus && billStatus.stages.length > 0 && (
                   <div className="p-6 rounded-lg bg-muted/50 border">
                     <p className="text-sm font-semibold text-muted-foreground mb-4">Estado Legislativo</p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {billStatus.stages.map((stage, index) => (
-                        <div key={stage} className="flex items-center gap-2 flex-1">
+                        <>
                           {index > 0 && (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <ChevronRight key={`arrow-${index}`} className="h-4 w-4 text-muted-foreground flex-shrink-0 mx-1" />
                           )}
-                          <div className="flex flex-col items-center flex-1">
+                          <div key={stage} className="flex flex-col items-center flex-1">
                             <div className={`w-full h-2 rounded-full transition-colors ${
                               billStatus.currentStage === stage ? "bg-primary" : "bg-muted"
                             }`} />
@@ -270,7 +270,7 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
                               {stage}
                             </span>
                           </div>
-                        </div>
+                        </>
                       ))}
                     </div>
                   </div>
