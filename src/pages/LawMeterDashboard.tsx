@@ -229,7 +229,7 @@ export default function LawMeterDashboard() {
               <TabsList className="grid w-full grid-cols-3 mb-6 glass-card p-1 gap-1">
                 <TabsTrigger value="congress" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   <Building2 className="h-4 w-4 mr-2" />
-                  US Federal (US Congress Bills)
+                  🇺🇸 US Federal (US Congress Bills)
                 </TabsTrigger>
                 <TabsTrigger value="acts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   <FileText className="h-4 w-4 mr-2" />
