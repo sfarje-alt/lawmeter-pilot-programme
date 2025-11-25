@@ -4,10 +4,13 @@ import { CongressBillCard } from "./CongressBillCard";
 import { CongressBillDrawer } from "./CongressBillDrawer";
 import { CongressBill } from "@/types/congress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, ArrowUpDown } from "lucide-react";
+import { AlertCircle, Loader2, ArrowUpDown, Database } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { useBatchStatusLoader } from "@/hooks/useBatchStatusLoader";
 import {
   Select,
   SelectContent,
@@ -22,6 +25,25 @@ export function CongressBillsSection() {
   const [selectedBill, setSelectedBill] = useState<CongressBill | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChamber, setSelectedChamber] = useState<string | null>(null);
+  const { loadAllStatuses, loading: batchLoading, progress } = useBatchStatusLoader();
+  const { toast } = useToast();
+
+  const handleBatchLoad = async () => {
+    const result = await loadAllStatuses();
+    
+    if (result.success) {
+      toast({
+        title: "Base de datos actualizada",
+        description: `${result.successCount} de ${result.total} proyectos de ley actualizados exitosamente`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "No se pudo completar la actualización",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredBills = bills.filter((bill) => {
     const matchesSearch = bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,7 +139,34 @@ export function CongressBillsSection() {
               Senado
             </Button>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBatchLoad}
+            disabled={batchLoading}
+            className="ml-auto"
+          >
+            {batchLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {progress.current}/{progress.total}
+              </>
+            ) : (
+              <>
+                <Database className="h-4 w-4 mr-2" />
+                Actualizar Base de Datos
+              </>
+            )}
+          </Button>
         </div>
+        
+        {/* Progress Bar */}
+        {batchLoading && progress.total > 0 && (
+          <div className="space-y-2">
+            <Progress value={(progress.current / progress.total) * 100} />
+            <p className="text-xs text-muted-foreground">{progress.status}</p>
+          </div>
+        )}
       </div>
 
       {/* Bills Grid */}
