@@ -33,7 +33,7 @@ export function BillsProgressFunnel({ bills }: BillsProgressFunnelProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitBranch className="h-5 w-5" />
-          Progreso de Proyectos
+          Bill Progress
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -68,15 +68,15 @@ export function BillsProgressFunnel({ bills }: BillsProgressFunnelProps) {
         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
           <div className="text-sm space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total Proyectos:</span>
+              <span className="text-muted-foreground">Total Bills:</span>
               <span className="font-semibold">{bills.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Completados (Aprobados):</span>
+              <span className="text-muted-foreground">Completed (Approved):</span>
               <span className="font-semibold">{stageData[stageData.length - 1].count}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Tasa de Completitud:</span>
+              <span className="text-muted-foreground">Completion Rate:</span>
               <span className="font-semibold">
                 {bills.length > 0 ? ((stageData[stageData.length - 1].count / bills.length) * 100).toFixed(1) : 0}%
               </span>

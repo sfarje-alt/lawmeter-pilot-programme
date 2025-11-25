@@ -199,11 +199,11 @@ export default function LawMeterDashboard() {
             <div className="flex items-center gap-3">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate("/inteligencia-empresarial")}
+                onClick={() => navigate("/business-intelligence")}
                 className="gap-2 hover:bg-white/10"
               >
                 <Users className="w-4 h-4" />
-                Inteligencia Empresarial
+                Business Intelligence
               </Button>
               <Button 
                 variant="ghost" 
@@ -211,7 +211,7 @@ export default function LawMeterDashboard() {
                 className="gap-2 hover:bg-white/10"
               >
                 <BookOpen className="w-4 h-4" />
-                Documentación
+                Documentation
               </Button>
               <Button 
                 variant="ghost" 
@@ -219,11 +219,11 @@ export default function LawMeterDashboard() {
                 className="gap-2 hover:bg-white/10"
               >
                 <Settings className="w-4 h-4" />
-                Configuración de Alertas
+                Alert Settings
               </Button>
               <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground">
                 <Clock className="h-3 w-3 mr-1" />
-                Actualizado: Ahora
+                Updated: Now
               </Badge>
             </div>
           </div>
@@ -233,15 +233,15 @@ export default function LawMeterDashboard() {
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-9 mb-8 glass-card p-1 gap-1">
-            <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislations</TabsTrigger>
-            <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Medios</TabsTrigger>
+            <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislation</TabsTrigger>
+            <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
-            <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Destacados</TabsTrigger>
+            <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
             <TabsTrigger value="certificates" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Shield className="h-4 w-4 mr-2" />Certificates</TabsTrigger>
-            <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendario</TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Análisis</TabsTrigger>
-            <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Licitaciones</TabsTrigger>
-            <TabsTrigger value="contact" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Contacto</TabsTrigger>
+            <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
+            <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Tenders</TabsTrigger>
+            <TabsTrigger value="contact" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
           </TabsList>
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
@@ -249,15 +249,15 @@ export default function LawMeterDashboard() {
               <TabsList className="grid w-full grid-cols-3 mb-6 glass-card p-1 gap-1">
                 <TabsTrigger value="congress" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   <Building2 className="h-4 w-4 mr-2" />
-                  🇺🇸 US Federal (US Congress Bills)
+                  🇺🇸 US Federal (Congress Bills)
                 </TabsTrigger>
                 <TabsTrigger value="acts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   <FileText className="h-4 w-4 mr-2" />
-                  🇨🇷 Costa Rica - Legislación
+                  🇨🇷 Costa Rica - Acts (Spanish)
                 </TabsTrigger>
                 <TabsTrigger value="bills" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   <FileText className="h-4 w-4 mr-2" />
-                  🇨🇷 Costa Rica - Proyectos
+                  🇨🇷 Costa Rica - Bills (Spanish)
                 </TabsTrigger>
               </TabsList>
 
@@ -296,7 +296,7 @@ export default function LawMeterDashboard() {
 
               <TabsContent value="acts" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Alertas Activas</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.total}</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Active Alerts</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.total}</div></CardContent></Card>
               <Card 
                 className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("high") ? "ring-2 ring-risk-high" : ""}`}
                 onClick={() => {
@@ -309,7 +309,7 @@ export default function LawMeterDashboard() {
                   setActsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Alto</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-high">{actsKPIs.highRisk}</div></CardContent>
               </Card>
               <Card 
@@ -324,7 +324,7 @@ export default function LawMeterDashboard() {
                   setActsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Medio</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-medium">{actsKPIs.mediumRisk}</div></CardContent>
               </Card>
               <Card 
@@ -339,7 +339,7 @@ export default function LawMeterDashboard() {
                   setActsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Bajo</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-low">{actsKPIs.lowRisk}</div></CardContent>
               </Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Portfolios</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.portfolios}</div></CardContent></Card>
@@ -418,7 +418,7 @@ export default function LawMeterDashboard() {
 
               <TabsContent value="bills" className="space-y-6 mt-6">
             <div className="bg-warning/10 border border-warning rounded-lg p-4 mb-4">
-              <div className="flex gap-2"><AlertTriangle className="h-5 w-5 text-warning" /><div><p className="font-semibold">Datos de demostración</p><p className="text-sm">Los proyectos son ficticios para propósitos de demostración.</p></div></div>
+              <div className="flex gap-2"><AlertTriangle className="h-5 w-5 text-warning" /><div><p className="font-semibold">Demo Data</p><p className="text-sm">Bills are fictional for demonstration purposes.</p></div></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <Card 
@@ -433,7 +433,7 @@ export default function LawMeterDashboard() {
                   setBillsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Alto</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-high">{billsKPIs.highRisk}</div></CardContent>
               </Card>
               <Card 
@@ -448,7 +448,7 @@ export default function LawMeterDashboard() {
                   setBillsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Medio</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-medium">{billsKPIs.mediumRisk}</div></CardContent>
               </Card>
               <Card 
@@ -463,7 +463,7 @@ export default function LawMeterDashboard() {
                   setBillsPage(1);
                 }}
               >
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Riesgo Bajo</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold text-risk-low">{billsKPIs.lowRisk}</div></CardContent>
               </Card>
             </div>
@@ -554,8 +554,8 @@ export default function LawMeterDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Items</SelectItem>
-                  <SelectItem value="acts">Solo Legislaciones</SelectItem>
-                  <SelectItem value="bills">Solo Proyectos</SelectItem>
+                  <SelectItem value="acts">Acts Only</SelectItem>
+                  <SelectItem value="bills">Bills Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>

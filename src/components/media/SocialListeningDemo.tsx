@@ -258,7 +258,7 @@ export function SocialListeningDemo() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">Media Coverage</h3>
-                <p className="text-sm text-muted-foreground">Análisis de sentimiento de principales medios costarricenses</p>
+                <p className="text-sm text-muted-foreground">Sentiment analysis of main Costa Rican media outlets</p>
               </div>
             </div>
             <div className="space-y-4">
@@ -355,8 +355,8 @@ export function SocialListeningDemo() {
                 <Building2 className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">Actores Impulsando la Legislación</h3>
-                <p className="text-sm text-muted-foreground">Organizaciones que activamente buscan crear o modificar la ley</p>
+                <h3 className="text-xl font-bold">Actors Promoting Legislation</h3>
+                <p className="text-sm text-muted-foreground">Organizations actively seeking to create or modify legislation</p>
               </div>
             </div>
             <div className="space-y-4">

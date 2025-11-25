@@ -59,7 +59,7 @@ export function VotingAnalyticsChart({ bills }: VotingAnalyticsChartProps) {
             Overall Vote Distribution
           </CardTitle>
           <CardDescription>
-            Patrones de votación agregados en todos los proyectos
+            Aggregate voting patterns across all bills
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,7 +109,7 @@ export function VotingAnalyticsChart({ bills }: VotingAnalyticsChartProps) {
             Voting Patterns by Party
           </CardTitle>
           <CardDescription>
-            Cómo votaron los diferentes partidos en los proyectos
+            How different parties voted on bills
           </CardDescription>
         </CardHeader>
         <CardContent>
