@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useCongressBills, SortOption } from "@/hooks/useCongressBills";
+import { useCongressBills, SortOption, fetchBillTextVersions } from "@/hooks/useCongressBills";
 import { CongressBillCard } from "./CongressBillCard";
 import { CongressBillDrawer } from "./CongressBillDrawer";
 import { EmailSetupDialog } from "./EmailSetupDialog";
 import { CongressBill } from "@/types/congress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, ArrowUpDown, Database, Mail } from "lucide-react";
+import { AlertCircle, Loader2, ArrowUpDown, Database, Mail, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,10 @@ export function CongressBillsSection() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChamber, setSelectedChamber] = useState<string | null>(null);
   const [emailSetupOpen, setEmailSetupOpen] = useState(false);
+  const [keywordSearch, setKeywordSearch] = useState("");
+  const [activeKeywords, setActiveKeywords] = useState<string[]>([]);
+  const [keywordSearching, setKeywordSearching] = useState(false);
+  const [billKeywordHits, setBillKeywordHits] = useState<Record<string, { keyword: string; count: number; snippets: string[] }[]>>({});
   const { loadAllStatuses, loading: batchLoading, progress } = useBatchStatusLoader();
   const { toast } = useToast();
 
@@ -47,11 +51,124 @@ export function CongressBillsSection() {
     }
   };
 
+  const handleAddKeyword = async () => {
+    if (!keywordSearch.trim()) return;
+    
+    const newKeyword = keywordSearch.trim();
+    if (activeKeywords.includes(newKeyword)) {
+      toast({
+        title: "Keyword ya existe",
+        description: "Esta palabra clave ya está en la búsqueda",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setKeywordSearching(true);
+    const newActiveKeywords = [...activeKeywords, newKeyword];
+    setActiveKeywords(newActiveKeywords);
+    setKeywordSearch("");
+
+    try {
+      // Search through all bills
+      const hits: Record<string, { keyword: string; count: number; snippets: string[] }[]> = {};
+      
+      for (const bill of bills) {
+        const billId = `${bill.congress}-${bill.type}-${bill.number}`;
+        
+        // Fetch bill text versions
+        const versions = await fetchBillTextVersions(bill.congress, bill.type, bill.number);
+        if (!versions || versions.length === 0) continue;
+
+        const latestVersion = versions[0];
+        const formattedText = latestVersion?.formats?.find((f: any) => f.type === "Formatted Text");
+        
+        if (!formattedText?.url) continue;
+
+        // Fetch the full text
+        const response = await fetch(formattedText.url);
+        const html = await response.text();
+        
+        // Remove HTML tags for searching
+        const textContent = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+        // Search for all active keywords
+        const billHits: { keyword: string; count: number; snippets: string[] }[] = [];
+        
+        for (const keyword of newActiveKeywords) {
+          const regex = new RegExp(keyword, 'gi');
+          const matches = textContent.match(regex);
+          
+          if (matches && matches.length > 0) {
+            // Extract snippets
+            const snippets: string[] = [];
+            let match;
+            const snippetRegex = new RegExp(`.{0,50}${keyword}.{0,50}`, 'gi');
+            
+            while ((match = snippetRegex.exec(textContent)) !== null && snippets.length < 3) {
+              snippets.push(match[0].trim());
+            }
+            
+            billHits.push({
+              keyword,
+              count: matches.length,
+              snippets
+            });
+          }
+        }
+        
+        if (billHits.length > 0) {
+          hits[billId] = billHits;
+        }
+      }
+      
+      setBillKeywordHits(hits);
+      
+      toast({
+        title: "Búsqueda completa",
+        description: `Encontrados ${Object.keys(hits).length} bills con coincidencias`
+      });
+    } catch (error) {
+      console.error("Error searching keywords:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo completar la búsqueda de keywords",
+        variant: "destructive"
+      });
+    } finally {
+      setKeywordSearching(false);
+    }
+  };
+
+  const handleRemoveKeyword = (keyword: string) => {
+    const newKeywords = activeKeywords.filter(k => k !== keyword);
+    setActiveKeywords(newKeywords);
+    
+    if (newKeywords.length === 0) {
+      setBillKeywordHits({});
+    } else {
+      // Refilter hits
+      const newHits: Record<string, { keyword: string; count: number; snippets: string[] }[]> = {};
+      Object.entries(billKeywordHits).forEach(([billId, hits]) => {
+        const filteredHits = hits.filter(h => newKeywords.includes(h.keyword));
+        if (filteredHits.length > 0) {
+          newHits[billId] = filteredHits;
+        }
+      });
+      setBillKeywordHits(newHits);
+    }
+  };
+
   const filteredBills = bills.filter((bill) => {
     const matchesSearch = bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       `${bill.type} ${bill.number}`.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesChamber = !selectedChamber || bill.originChamber === selectedChamber;
-    return matchesSearch && matchesChamber;
+    
+    // If keywords are active, only show bills with hits
+    const matchesKeywords = activeKeywords.length === 0 || 
+      billKeywordHits[`${bill.congress}-${bill.type}-${bill.number}`];
+    
+    return matchesSearch && matchesChamber && matchesKeywords;
   });
 
   if (loading) {
@@ -94,6 +211,47 @@ export function CongressBillsSection() {
           <p className="text-muted-foreground">
             119º Congreso (2025-2027) • {bills.length} proyectos de ley
           </p>
+        </div>
+
+        {/* Keyword Search */}
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex gap-2 flex-1">
+              <Input
+                placeholder="Añadir keyword para buscar en texto completo..."
+                value={keywordSearch}
+                onChange={(e) => setKeywordSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
+                className="max-w-md"
+              />
+              <Button
+                onClick={handleAddKeyword}
+                disabled={keywordSearching || !keywordSearch.trim()}
+              >
+                {keywordSearching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          {activeKeywords.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {activeKeywords.map((keyword) => (
+                <Badge key={keyword} variant="secondary" className="gap-1">
+                  {keyword}
+                  <button
+                    onClick={() => handleRemoveKeyword(keyword)}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Filters */}
@@ -192,13 +350,19 @@ export function CongressBillsSection() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredBills.map((bill) => (
-            <CongressBillCard
-              key={`${bill.type}-${bill.number}`}
-              bill={bill}
-              onViewDetails={() => setSelectedBill(bill)}
-            />
-          ))}
+          {filteredBills.map((bill) => {
+            const billId = `${bill.congress}-${bill.type}-${bill.number}`;
+            const keywordHits = billKeywordHits[billId];
+            
+            return (
+              <CongressBillCard
+                key={billId}
+                bill={bill}
+                onViewDetails={() => setSelectedBill(bill)}
+                keywordHits={keywordHits}
+              />
+            );
+          })}
         </div>
       )}
 
