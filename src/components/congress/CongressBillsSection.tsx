@@ -4,12 +4,10 @@ import { CongressBillCard } from "./CongressBillCard";
 import { CongressBillDrawer } from "./CongressBillDrawer";
 import { CongressBill } from "@/types/congress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, ArrowUpDown, RefreshCw } from "lucide-react";
+import { AlertCircle, Loader2, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -24,31 +22,6 @@ export function CongressBillsSection() {
   const [selectedBill, setSelectedBill] = useState<CongressBill | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChamber, setSelectedChamber] = useState<string | null>(null);
-  const [scraping, setScraping] = useState(false);
-  const { toast } = useToast();
-
-  const handleScrapeStatuses = async () => {
-    setScraping(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('scrape-bill-statuses');
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Estado actualizado",
-        description: `Se actualizaron ${data.scrapedCount} proyectos de ley exitosamente`,
-      });
-    } catch (error) {
-      console.error("Error scraping statuses:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron actualizar los estados de los proyectos",
-        variant: "destructive",
-      });
-    } finally {
-      setScraping(false);
-    }
-  };
 
   const filteredBills = bills.filter((bill) => {
     const matchesSearch = bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -144,25 +117,6 @@ export function CongressBillsSection() {
               Senado
             </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleScrapeStatuses}
-            disabled={scraping}
-            className="ml-auto"
-          >
-            {scraping ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Actualizando...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Actualizar Estados
-              </>
-            )}
-          </Button>
         </div>
       </div>
 

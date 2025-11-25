@@ -291,37 +291,135 @@ export async function fetchBillTitles(
   }
 }
 
-// Fetch bill status from database or scrape as fallback
-export async function fetchBillStatus(
+// Scrape bill status from Congress.gov (client-side) and cache in database
+export async function scrapeBillStatus(
   congress: number,
   billType: string,
   billNumber: string
 ): Promise<{ currentStage: string; stages: string[] } | null> {
   try {
-    // First try to get from database
+    // First check database cache
     const { supabase } = await import("@/integrations/supabase/client");
     
-    const { data, error } = await supabase
+    const { data: cached } = await supabase
       .from('congress_bill_statuses')
-      .select('current_stage, stages')
+      .select('current_stage, stages, scraped_at')
       .eq('congress', congress)
       .eq('bill_type', billType)
       .eq('bill_number', billNumber)
       .maybeSingle();
 
-    if (data && !error) {
-      console.log("Using cached bill status from database");
-      return {
-        currentStage: data.current_stage,
-        stages: data.stages as string[]
-      };
+    // If cached and less than 1 hour old, use it
+    if (cached) {
+      const scrapedAt = new Date(cached.scraped_at);
+      const now = new Date();
+      const hoursSinceLastScrape = (now.getTime() - scrapedAt.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastScrape < 1) {
+        console.log("Using cached status from database");
+        return {
+          currentStage: cached.current_stage,
+          stages: cached.stages as string[]
+        };
+      }
     }
 
-    // If not in database, trigger scraping via edge function
-    console.log("Status not in database, triggering scrape");
-    return null;
+    // Scrape from Congress.gov (client-side to avoid 403)
+    const chamberName = billType.toLowerCase() === 'hr' ? 'house-bill' : 
+                        billType.toLowerCase() === 's' ? 'senate-bill' :
+                        billType.toLowerCase() === 'hjres' ? 'house-joint-resolution' :
+                        billType.toLowerCase() === 'sjres' ? 'senate-joint-resolution' :
+                        billType.toLowerCase() === 'hconres' ? 'house-concurrent-resolution' :
+                        billType.toLowerCase() === 'sconres' ? 'senate-concurrent-resolution' :
+                        billType.toLowerCase() === 'hres' ? 'house-resolution' : 'senate-resolution';
+    
+    const url = `https://www.congress.gov/bill/${congress}th-congress/${chamberName}/${billNumber}`;
+    console.log(`Scraping ${url}`);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch page: ${response.status}`);
+      // Return cached data even if old, better than nothing
+      if (cached) {
+        return {
+          currentStage: cached.current_stage,
+          stages: cached.stages as string[]
+        };
+      }
+      return null;
+    }
+
+    const html = await response.text();
+    
+    // Parse the bill_progress ordered list
+    const progressMatch = html.match(/<ol class="bill_progress">([\s\S]*?)<\/ol>/);
+    if (!progressMatch) {
+      console.error("No bill_progress element found");
+      if (cached) {
+        return {
+          currentStage: cached.current_stage,
+          stages: cached.stages as string[]
+        };
+      }
+      return null;
+    }
+
+    const progressHtml = progressMatch[1];
+    
+    // Extract all stages and find the selected one
+    const stageMatches = [...progressHtml.matchAll(/<li(?:\s+class="([^"]*)")?>([^<]+)/g)];
+    const stages = stageMatches.map(match => match[2].trim());
+    
+    const selectedStage = stageMatches.find(match => 
+      match[1] && (match[1].includes('selected') || match[1] === 'selected')
+    );
+    
+    const currentStage = selectedStage ? selectedStage[2].trim() : stages[0];
+
+    const result = { currentStage, stages };
+    
+    // Cache in database for future use
+    await supabase
+      .from('congress_bill_statuses')
+      .upsert({
+        congress,
+        bill_type: billType,
+        bill_number: billNumber,
+        current_stage: currentStage,
+        stages: stages,
+        scraped_at: new Date().toISOString()
+      }, {
+        onConflict: 'congress,bill_type,bill_number'
+      });
+
+    console.log(`Scraped and cached: ${currentStage}`);
+    return result;
   } catch (error) {
-    console.error("Error fetching bill status:", error);
+    console.error("Error scraping bill status:", error);
+    
+    // Try to return cached data as fallback
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: fallback } = await supabase
+        .from('congress_bill_statuses')
+        .select('current_stage, stages')
+        .eq('congress', congress)
+        .eq('bill_type', billType)
+        .eq('bill_number', billNumber)
+        .maybeSingle();
+
+      if (fallback) {
+        console.log("Using stale cache as fallback");
+        return {
+          currentStage: fallback.current_stage,
+          stages: fallback.stages as string[]
+        };
+      }
+    } catch (dbError) {
+      console.error("Database fallback failed:", dbError);
+    }
+    
     return null;
   }
 }
