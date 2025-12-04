@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Calendar, Building2, MapPin } from "lucide-react";
-import { InternationalLegislation } from "@/data/mockInternationalLegislation";
+import { AlertTriangle, Calendar, Building2, MapPin, FileText, Gavel, ScrollText } from "lucide-react";
+import { InternationalLegislation, LegislationType } from "@/data/mockInternationalLegislation";
 
 interface InternationalLegislationCardProps {
   legislation: InternationalLegislation;
@@ -18,21 +18,40 @@ export function InternationalLegislationCard({ legislation }: InternationalLegis
   };
 
   const getStatusColor = (status: string) => {
-    if (status.includes("In Force") || status.includes("Enacted") || status.includes("Adopted")) {
+    if (status.includes("In Force") || status.includes("Enacted") || status.includes("Adopted") || status.includes("Royal Assent")) {
       return "bg-success/20 text-success border-success/30";
     }
-    if (status.includes("Draft") || status.includes("Proposed") || status.includes("Public")) {
+    if (status.includes("Draft") || status.includes("Proposed") || status.includes("Public") || status.includes("Voluntary")) {
       return "bg-info/20 text-info border-info/30";
     }
     return "bg-warning/20 text-warning border-warning/30";
   };
+
+  const getLegislationTypeInfo = (type: LegislationType) => {
+    switch (type) {
+      case "law": return { label: "Law", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: Gavel };
+      case "regulation": return { label: "Regulation", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: ScrollText };
+      case "bill": return { label: "Bill", color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: FileText };
+      case "decree": return { label: "Decree", color: "bg-purple-500/20 text-purple-400 border-purple-500/30", icon: Gavel };
+      case "directive": return { label: "Directive", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30", icon: ScrollText };
+      case "proposal": return { label: "Proposal", color: "bg-orange-500/20 text-orange-400 border-orange-500/30", icon: FileText };
+      default: return { label: "Unknown", color: "bg-muted text-muted-foreground", icon: FileText };
+    }
+  };
+
+  const typeInfo = getLegislationTypeInfo(legislation.legislationType);
+  const TypeIcon = typeInfo.icon;
 
   return (
     <Card className="glass-card hover:shadow-lg transition-all duration-200 border-white/10">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <Badge variant="outline" className={typeInfo.color}>
+                <TypeIcon className="w-3 h-3 mr-1" />
+                {legislation.localTerminology || typeInfo.label}
+              </Badge>
               <Badge variant="outline" className={getRiskColor(legislation.riskLevel)}>
                 <AlertTriangle className="w-3 h-3 mr-1" />
                 {legislation.riskLevel.toUpperCase()} ({legislation.riskScore})
