@@ -4,7 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InternationalLegislation, LegislativeCategory, filterByLegislativeCategory } from "@/data/mockInternationalLegislation";
 import { InternationalLegislationCard } from "./InternationalLegislationCard";
-import { FileText, Gavel, LayoutList } from "lucide-react";
+import { FileText, Gavel, LayoutList, Map } from "lucide-react";
+import { USStatesMap, CanadaProvincesMap, GCCRegionMap, GlobalJurisdictionMap } from "@/components/maps";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 interface InternationalLegislationSectionProps {
   legislation: InternationalLegislation[];
@@ -13,6 +16,8 @@ interface InternationalLegislationSectionProps {
   showCategoryFilter?: boolean;
   pendingLabel?: string;
   enactedLabel?: string;
+  showMaps?: boolean;
+  mapType?: "global" | "usa" | "canada" | "gcc";
 }
 
 export function InternationalLegislationSection({ 
@@ -21,9 +26,12 @@ export function InternationalLegislationSection({
   showDemo = true,
   showCategoryFilter = true,
   pendingLabel = "Pending Bills",
-  enactedLabel = "Enacted Laws"
+  enactedLabel = "Enacted Laws",
+  showMaps = false,
+  mapType = "global"
 }: InternationalLegislationSectionProps) {
   const [categoryFilter, setCategoryFilter] = useState<LegislativeCategory | "all">("all");
+  const [mapsOpen, setMapsOpen] = useState(true);
   
   const filteredLegislation = filterByLegislativeCategory(legislation, categoryFilter);
   
@@ -109,6 +117,29 @@ export function InternationalLegislationSection({
           </CardContent>
         </Card>
       </div>
+
+      {/* Maps Section */}
+      {showMaps && (
+        <Collapsible open={mapsOpen} onOpenChange={setMapsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span className="flex items-center gap-2">
+                <Map className="w-4 h-4" />
+                Alert Distribution Map
+              </span>
+              <span className="text-muted-foreground text-xs">
+                {mapsOpen ? "Click to collapse" : "Click to expand"}
+              </span>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            {mapType === "global" && <GlobalJurisdictionMap legislation={legislation} />}
+            {mapType === "usa" && <USStatesMap legislation={legislation} />}
+            {mapType === "canada" && <CanadaProvincesMap legislation={legislation} />}
+            {mapType === "gcc" && <GCCRegionMap legislation={legislation} />}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredLegislation.map((item) => (
