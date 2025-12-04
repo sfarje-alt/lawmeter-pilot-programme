@@ -44,10 +44,13 @@ export default function LawMeterDashboard() {
   const [searchParams] = useSearchParams();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("legislation");
-  const [selectedCountry, setSelectedCountry] = useState<"usa" | "costa-rica">("usa");
+  const [selectedCountry, setSelectedCountry] = useState<"usa" | "costa-rica" | "japan" | "korea" | "taiwan" | "canada" | "gcc" | "eu">("usa");
   const [usaSubTab, setUsaSubTab] = useState<"federal" | "state">("federal");
   const [costaRicaSubTab, setCostaRicaSubTab] = useState<"normas" | "proyectos">("normas");
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
+  const [gccSubTab, setGccSubTab] = useState<"uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar">("uae");
+  const [euSubTab, setEuSubTab] = useState<"regulations" | "directives" | "parliament" | "council">("regulations");
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -248,9 +251,9 @@ export default function LawMeterDashboard() {
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
             {/* Country Selector */}
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-sm font-medium text-muted-foreground">Select Country:</span>
-              <div className="flex gap-2">
+            <div className="flex items-center gap-4 mb-6 flex-wrap">
+              <span className="text-sm font-medium text-muted-foreground">Select Region:</span>
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant={selectedCountry === "usa" ? "default" : "outline"}
                   onClick={() => setSelectedCountry("usa")}
@@ -259,11 +262,53 @@ export default function LawMeterDashboard() {
                   🇺🇸 USA
                 </Button>
                 <Button
+                  variant={selectedCountry === "canada" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("canada")}
+                  className="gap-2"
+                >
+                  🇨🇦 Canada
+                </Button>
+                <Button
                   variant={selectedCountry === "costa-rica" ? "default" : "outline"}
                   onClick={() => setSelectedCountry("costa-rica")}
                   className="gap-2"
                 >
                   🇨🇷 Costa Rica
+                </Button>
+                <Button
+                  variant={selectedCountry === "eu" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("eu")}
+                  className="gap-2"
+                >
+                  🇪🇺 EU
+                </Button>
+                <Button
+                  variant={selectedCountry === "gcc" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("gcc")}
+                  className="gap-2"
+                >
+                  🏛️ GCC
+                </Button>
+                <Button
+                  variant={selectedCountry === "japan" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("japan")}
+                  className="gap-2"
+                >
+                  🇯🇵 Japan
+                </Button>
+                <Button
+                  variant={selectedCountry === "korea" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("korea")}
+                  className="gap-2"
+                >
+                  🇰🇷 Korea
+                </Button>
+                <Button
+                  variant={selectedCountry === "taiwan" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("taiwan")}
+                  className="gap-2"
+                >
+                  🇹🇼 Taiwan
                 </Button>
               </div>
             </div>
@@ -642,6 +687,320 @@ export default function LawMeterDashboard() {
                       </Button>
                     </div>
                   )}
+                </TabsContent>
+              </Tabs>
+            )}
+
+            {/* Japan Section */}
+            {selectedCountry === "japan" && (
+              <div className="space-y-6">
+                <div className="bg-info/10 border border-info rounded-lg p-4">
+                  <div className="flex gap-2">
+                    <FileText className="h-5 w-5 text-info" />
+                    <div>
+                      <p className="font-semibold">🇯🇵 Japan Legislation - Coming Soon</p>
+                      <p className="text-sm text-muted-foreground">
+                        Japanese legislation tracking including Diet proceedings, laws, and regulations will be available here.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Korea Section */}
+            {selectedCountry === "korea" && (
+              <div className="space-y-6">
+                <div className="bg-info/10 border border-info rounded-lg p-4">
+                  <div className="flex gap-2">
+                    <FileText className="h-5 w-5 text-info" />
+                    <div>
+                      <p className="font-semibold">🇰🇷 Korea Legislation - Coming Soon</p>
+                      <p className="text-sm text-muted-foreground">
+                        Korean legislation tracking including National Assembly bills, laws, and regulations will be available here.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Taiwan Section */}
+            {selectedCountry === "taiwan" && (
+              <div className="space-y-6">
+                <div className="bg-info/10 border border-info rounded-lg p-4">
+                  <div className="flex gap-2">
+                    <FileText className="h-5 w-5 text-info" />
+                    <div>
+                      <p className="font-semibold">🇹🇼 Taiwan Legislation - Coming Soon</p>
+                      <p className="text-sm text-muted-foreground">
+                        Taiwan legislation tracking including Legislative Yuan bills, laws, and regulations will be available here.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Canada Section */}
+            {selectedCountry === "canada" && (
+              <div className="space-y-6">
+                {/* Province Filter */}
+                <div className="flex items-center gap-4 mb-4 flex-wrap">
+                  <span className="text-sm font-medium">Filter by Province:</span>
+                  <Select
+                    value={selectedProvinces.length === 1 ? selectedProvinces[0] : ""}
+                    onValueChange={(value) => {
+                      if (value === "all") {
+                        setSelectedProvinces([]);
+                      } else {
+                        setSelectedProvinces(prev => 
+                          prev.includes(value) 
+                            ? prev.filter(s => s !== value)
+                            : [...prev, value]
+                        );
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder={selectedProvinces.length > 0 ? `${selectedProvinces.length} selected` : "All Provinces/Territories"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border">
+                      <SelectItem value="all">All Provinces/Territories</SelectItem>
+                      <SelectItem value="AB">Alberta</SelectItem>
+                      <SelectItem value="BC">British Columbia</SelectItem>
+                      <SelectItem value="MB">Manitoba</SelectItem>
+                      <SelectItem value="NB">New Brunswick</SelectItem>
+                      <SelectItem value="NL">Newfoundland and Labrador</SelectItem>
+                      <SelectItem value="NS">Nova Scotia</SelectItem>
+                      <SelectItem value="NT">Northwest Territories</SelectItem>
+                      <SelectItem value="NU">Nunavut</SelectItem>
+                      <SelectItem value="ON">Ontario</SelectItem>
+                      <SelectItem value="PE">Prince Edward Island</SelectItem>
+                      <SelectItem value="QC">Quebec</SelectItem>
+                      <SelectItem value="SK">Saskatchewan</SelectItem>
+                      <SelectItem value="YT">Yukon</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {selectedProvinces.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProvinces.map(prov => (
+                        <Badge 
+                          key={prov} 
+                          variant="secondary" 
+                          className="cursor-pointer"
+                          onClick={() => setSelectedProvinces(prev => prev.filter(s => s !== prov))}
+                        >
+                          {prov} ×
+                        </Badge>
+                      ))}
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedProvinces([])}>
+                        Clear all
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="bg-info/10 border border-info rounded-lg p-4">
+                  <div className="flex gap-2">
+                    <FileText className="h-5 w-5 text-info" />
+                    <div>
+                      <p className="font-semibold">🇨🇦 Canada Legislation - Coming Soon</p>
+                      <p className="text-sm text-muted-foreground">
+                        Canadian federal and provincial legislation tracking will be available here. Select one or more provinces to filter bills from specific provincial legislatures.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* GCC Section */}
+            {selectedCountry === "gcc" && (
+              <Tabs value={gccSubTab} onValueChange={(v) => setGccSubTab(v as "uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar")} className="w-full">
+                <TabsList className="grid w-full grid-cols-6 mb-6 glass-card p-1 gap-1">
+                  <TabsTrigger value="uae" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    🇦🇪 UAE
+                  </TabsTrigger>
+                  <TabsTrigger value="saudi" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    🇸🇦 Saudi Arabia
+                  </TabsTrigger>
+                  <TabsTrigger value="oman" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    🇴🇲 Oman
+                  </TabsTrigger>
+                  <TabsTrigger value="kuwait" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    🇰🇼 Kuwait
+                  </TabsTrigger>
+                  <TabsTrigger value="bahrain" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    🇧🇭 Bahrain
+                  </TabsTrigger>
+                  <TabsTrigger value="qatar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    🇶🇦 Qatar
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="uae" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇦🇪 UAE Legislation - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          UAE federal laws, decrees, and regulations monitoring will be available here.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="saudi" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇸🇦 Saudi Arabia Legislation - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          Saudi Arabian royal decrees, regulations, and ministry directives monitoring will be available here.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="oman" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇴🇲 Oman Legislation - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          Omani royal decrees, laws, and ministerial decisions monitoring will be available here.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="kuwait" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇰🇼 Kuwait Legislation - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          Kuwaiti laws, decrees, and National Assembly proceedings monitoring will be available here.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="bahrain" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇧🇭 Bahrain Legislation - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          Bahraini laws, royal decrees, and parliamentary proceedings monitoring will be available here.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="qatar" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇶🇦 Qatar Legislation - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          Qatari laws, emiri decrees, and regulations monitoring will be available here.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            )}
+
+            {/* EU Section */}
+            {selectedCountry === "eu" && (
+              <Tabs value={euSubTab} onValueChange={(v) => setEuSubTab(v as "regulations" | "directives" | "parliament" | "council")} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 mb-6 glass-card p-1 gap-1">
+                  <TabsTrigger value="regulations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Regulations
+                  </TabsTrigger>
+                  <TabsTrigger value="directives" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Directives
+                  </TabsTrigger>
+                  <TabsTrigger value="parliament" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Parliament
+                  </TabsTrigger>
+                  <TabsTrigger value="council" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Council
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="regulations" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇪🇺 EU Regulations - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          EU Regulations are directly applicable across all member states. Track new regulations, amendments, and implementation timelines from the Official Journal of the European Union.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="directives" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <FileText className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇪🇺 EU Directives - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          EU Directives set goals for member states but leave implementation to national law. Monitor directive proposals, transposition deadlines, and national implementation status.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="parliament" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <Building2 className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇪🇺 European Parliament - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          Track European Parliament proceedings, legislative reports, committee activities, and MEP voting records on key legislation.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="council" className="space-y-6 mt-6">
+                  <div className="bg-info/10 border border-info rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <Building2 className="h-5 w-5 text-info" />
+                      <div>
+                        <p className="font-semibold">🇪🇺 Council of the EU - Coming Soon</p>
+                        <p className="text-sm text-muted-foreground">
+                          Monitor Council of the European Union meetings, decisions, and legislative positions from the rotating presidency and working groups.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </TabsContent>
               </Tabs>
             )}
