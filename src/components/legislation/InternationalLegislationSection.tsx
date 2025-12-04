@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { FileText, Gavel, LayoutList, Map } from "lucide-react";
 import { USStatesMap, CanadaProvincesMap, GCCRegionMap, GlobalJurisdictionMap } from "@/components/maps";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { LegislationAdvancedFilters, LegislationFilters, defaultLegislationFilters } from "./LegislationAdvancedFilters";
 
 interface InternationalLegislationSectionProps {
   legislation: InternationalLegislation[];
@@ -32,8 +33,72 @@ export function InternationalLegislationSection({
 }: InternationalLegislationSectionProps) {
   const [categoryFilter, setCategoryFilter] = useState<LegislativeCategory | "all">("all");
   const [mapsOpen, setMapsOpen] = useState(true);
+  const [advancedFilters, setAdvancedFilters] = useState<LegislationFilters>(defaultLegislationFilters);
   
-  const filteredLegislation = filterByLegislativeCategory(legislation, categoryFilter);
+  // Apply all filters
+  const filteredLegislation = useMemo(() => {
+    let result = filterByLegislativeCategory(legislation, categoryFilter);
+    
+    // Search filter
+    if (advancedFilters.search) {
+      const searchLower = advancedFilters.search.toLowerCase();
+      result = result.filter(
+        (l) =>
+          l.title.toLowerCase().includes(searchLower) ||
+          l.summary.toLowerCase().includes(searchLower) ||
+          l.regulatoryBody.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Regulatory category filter
+    if (advancedFilters.regulatoryCategories.length > 0) {
+      result = result.filter((l) =>
+        advancedFilters.regulatoryCategories.includes(l.regulatoryCategory)
+      );
+    }
+    
+    // Risk level filter
+    if (advancedFilters.riskLevels.length > 0) {
+      result = result.filter((l) => advancedFilters.riskLevels.includes(l.riskLevel));
+    }
+    
+    // Risk score range filter
+    result = result.filter(
+      (l) =>
+        l.riskScore >= advancedFilters.riskScoreRange[0] &&
+        l.riskScore <= advancedFilters.riskScoreRange[1]
+    );
+    
+    // Has deadline filter
+    if (advancedFilters.hasDeadline !== null) {
+      result = result.filter((l) =>
+        advancedFilters.hasDeadline
+          ? !!l.complianceDeadline
+          : !l.complianceDeadline
+      );
+    }
+    
+    // Sorting
+    result = [...result].sort((a, b) => {
+      let comparison = 0;
+      switch (advancedFilters.sortBy) {
+        case "date":
+          comparison = new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime();
+          break;
+        case "risk":
+          comparison = b.riskScore - a.riskScore;
+          break;
+        case "deadline":
+          const aDeadline = a.complianceDeadline ? new Date(a.complianceDeadline).getTime() : Infinity;
+          const bDeadline = b.complianceDeadline ? new Date(b.complianceDeadline).getTime() : Infinity;
+          comparison = aDeadline - bDeadline;
+          break;
+      }
+      return advancedFilters.sortOrder === "asc" ? -comparison : comparison;
+    });
+    
+    return result;
+  }, [legislation, categoryFilter, advancedFilters]);
   
   const kpis = {
     total: filteredLegislation.length,
@@ -56,7 +121,7 @@ export function InternationalLegislationSection({
             <div>
               <p className="font-semibold">Smart Kettle & Espresso Machine Compliance</p>
               <p className="text-sm text-muted-foreground">
-                Legislation filtered for relevance to smart kettles and espresso machine manufacturers.
+                Monitoring: Radio, Product Safety, Cybersecurity, Battery & Food Contact Material regulations.
               </p>
             </div>
           </div>
@@ -82,6 +147,14 @@ export function InternationalLegislationSection({
           </TabsList>
         </Tabs>
       )}
+
+      {/* Advanced Filters */}
+      <LegislationAdvancedFilters
+        filters={advancedFilters}
+        onFiltersChange={setAdvancedFilters}
+        totalCount={legislation.length}
+        filteredCount={filteredLegislation.length}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
