@@ -120,11 +120,12 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button
-                        variant="ghost"
-                        size="icon"
+                        variant="outline"
+                        size="sm"
                         onClick={() => navigate(`/certificates/${cert.id}`)}
                       >
                         <Eye className="h-4 w-4" />
+                        Details
                       </Button>
                       {isAdmin && (
                         <Button
