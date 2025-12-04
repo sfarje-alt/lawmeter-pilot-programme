@@ -3,88 +3,65 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { InternationalLegislation } from "@/data/mockInternationalLegislation";
 import { Globe } from "lucide-react";
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
+import { useState } from "react";
+
+const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 interface WorldMapProps {
   legislation: InternationalLegislation[];
+  onSelectRegion?: (region: string) => void;
 }
 
-// Simplified world country paths (stylized but recognizable shapes)
-const countryPaths: Record<string, { d: string; name: string; cx: number; cy: number }> = {
-  USA: {
-    d: "M45,85 L120,85 L125,95 L130,90 L135,95 L120,110 L100,115 L80,110 L45,105 Z M20,90 L35,85 L40,95 L30,100 Z",
-    name: "United States",
-    cx: 85, cy: 98
-  },
-  Canada: {
-    d: "M45,40 L140,40 L145,55 L140,70 L120,75 L100,70 L80,75 L60,70 L45,75 L40,60 Z",
-    name: "Canada",
-    cx: 92, cy: 57
-  },
-  "Costa Rica": {
-    d: "M95,130 L102,128 L105,135 L100,140 L93,137 Z",
-    name: "Costa Rica",
-    cx: 99, cy: 134
-  },
-  EU: {
-    d: "M245,60 L280,55 L290,65 L285,85 L275,95 L260,95 L250,85 L245,70 Z",
-    name: "European Union",
-    cx: 267, cy: 75
-  },
-  Japan: {
-    d: "M390,85 L400,80 L405,90 L400,105 L392,100 L388,90 Z",
-    name: "Japan",
-    cx: 396, cy: 92
-  },
-  Korea: {
-    d: "M375,90 L382,85 L387,95 L382,105 L375,100 Z",
-    name: "South Korea",
-    cx: 380, cy: 95
-  },
-  Taiwan: {
-    d: "M382,115 L388,112 L390,122 L385,128 L380,122 Z",
-    name: "Taiwan",
-    cx: 385, cy: 120
-  },
-  UAE: {
-    d: "M310,115 L325,112 L330,120 L325,128 L312,125 Z",
-    name: "UAE",
-    cx: 320, cy: 120
-  },
-  "Saudi Arabia": {
-    d: "M285,100 L320,95 L330,110 L320,135 L295,140 L280,125 L280,110 Z",
-    name: "Saudi Arabia",
-    cx: 302, cy: 118
-  },
-  Kuwait: {
-    d: "M305,98 L312,95 L315,102 L310,105 Z",
-    name: "Kuwait",
-    cx: 310, cy: 100
-  },
-  Qatar: {
-    d: "M318,108 L323,105 L325,115 L320,118 Z",
-    name: "Qatar",
-    cx: 321, cy: 111
-  },
-  Bahrain: {
-    d: "M314,105 L318,103 L319,108 L315,110 Z",
-    name: "Bahrain",
-    cx: 316, cy: 106
-  },
-  Oman: {
-    d: "M325,120 L340,115 L345,135 L335,145 L325,135 Z",
-    name: "Oman",
-    cx: 335, cy: 130
-  },
+// Map country names to our jurisdiction names (world-atlas uses country names)
+const countryNameToJurisdiction: Record<string, string> = {
+  "United States of America": "usa",
+  "United States": "usa",
+  "Canada": "canada",
+  "Japan": "japan",
+  "South Korea": "korea",
+  "Korea": "korea",
+  "Taiwan": "taiwan",
+  "United Arab Emirates": "gcc",
+  "Saudi Arabia": "gcc",
+  "Kuwait": "gcc",
+  "Bahrain": "gcc",
+  "Qatar": "gcc",
+  "Oman": "gcc",
+  "Costa Rica": "costa-rica",
+  // EU countries
+  "Germany": "eu", "Austria": "eu", "Belgium": "eu", "Bulgaria": "eu", 
+  "Croatia": "eu", "Cyprus": "eu", "Czechia": "eu", "Czech Republic": "eu",
+  "Denmark": "eu", "Estonia": "eu", "Finland": "eu", "France": "eu", 
+  "Greece": "eu", "Hungary": "eu", "Ireland": "eu", "Italy": "eu", 
+  "Latvia": "eu", "Lithuania": "eu", "Luxembourg": "eu", "Malta": "eu", 
+  "Netherlands": "eu", "Poland": "eu", "Portugal": "eu", "Romania": "eu", 
+  "Slovakia": "eu", "Slovenia": "eu", "Spain": "eu", "Sweden": "eu",
+};
+
+// Map jurisdiction to display name for stats
+const jurisdictionToDataKey: Record<string, string[]> = {
+  usa: ["USA"],
+  canada: ["Canada"],
+  japan: ["Japan"],
+  korea: ["Korea"],
+  taiwan: ["Taiwan"],
+  gcc: ["UAE", "Saudi Arabia", "Kuwait", "Bahrain", "Qatar", "Oman"],
+  "costa-rica": ["Costa Rica"],
+  eu: ["EU"],
 };
 
 function getAlertFillColor(high: number, medium: number, low: number): string {
-  if (high > 0) return "hsl(0, 75%, 55%)";
-  if (medium > 0) return "hsl(35, 85%, 55%)";
-  if (low > 0) return "hsl(142, 60%, 45%)";
-  return "hsl(220, 30%, 20%)";
+  if (high > 0) return "#ef4444"; // red
+  if (medium > 0) return "#f59e0b"; // amber
+  if (low > 0) return "#22c55e"; // green
+  return "#374151"; // gray for tracked but no alerts
 }
 
-export function WorldMap({ legislation }: WorldMapProps) {
+export function WorldMap({ legislation, onSelectRegion }: WorldMapProps) {
+  const [tooltipContent, setTooltipContent] = useState<{name: string; stats: any} | null>(null);
+  
+  // Aggregate stats by our jurisdiction keys
   const stats = new Map<string, { total: number; high: number; medium: number; low: number }>();
   
   legislation.forEach(item => {
@@ -96,76 +73,112 @@ export function WorldMap({ legislation }: WorldMapProps) {
     else existing.low++;
     stats.set(key, existing);
   });
-  
+
+  const getJurisdictionStats = (jurisdiction: string) => {
+    const dataKeys = jurisdictionToDataKey[jurisdiction] || [];
+    let total = 0, high = 0, medium = 0, low = 0;
+    dataKeys.forEach(key => {
+      const s = stats.get(key);
+      if (s) { total += s.total; high += s.high; medium += s.medium; low += s.low; }
+    });
+    return total > 0 ? { total, high, medium, low } : null;
+  };
+
+  const handleClick = (countryName: string) => {
+    const jurisdiction = countryNameToJurisdiction[countryName];
+    if (jurisdiction && onSelectRegion) {
+      onSelectRegion(jurisdiction);
+    }
+  };
+
+  const getCountryColor = (countryName: string) => {
+    const jurisdiction = countryNameToJurisdiction[countryName];
+    if (!jurisdiction) return "#1f2937"; // dark gray for non-tracked
+    
+    const jurisdictionStats = getJurisdictionStats(jurisdiction);
+    if (!jurisdictionStats) return "#374151"; // tracked but no data
+    
+    return getAlertFillColor(jurisdictionStats.high, jurisdictionStats.medium, jurisdictionStats.low);
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <Globe className="w-4 h-4" />
           National / Federal Alert Distribution
+          <span className="text-xs text-muted-foreground ml-2">(Click a highlighted country to navigate)</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2">
         <TooltipProvider>
-          <svg viewBox="0 0 450 200" className="w-full h-auto">
-            {/* Ocean background */}
-            <rect x="0" y="0" width="450" height="200" fill="hsl(210, 50%, 15%)" rx="8" />
-            
-            {/* Grid lines for map feel */}
-            {[40, 80, 120, 160].map(y => (
-              <line key={`h${y}`} x1="0" y1={y} x2="450" y2={y} stroke="hsl(210, 30%, 20%)" strokeWidth="0.5" strokeDasharray="4,4" />
-            ))}
-            {[90, 180, 270, 360].map(x => (
-              <line key={`v${x}`} x1={x} y1="0" x2={x} y2="200" stroke="hsl(210, 30%, 20%)" strokeWidth="0.5" strokeDasharray="4,4" />
-            ))}
-            
-            {/* Countries */}
-            {Object.entries(countryPaths).map(([code, { d, name, cx, cy }]) => {
-              const stat = stats.get(code);
-              const fillColor = stat ? getAlertFillColor(stat.high, stat.medium, stat.low) : "hsl(220, 25%, 25%)";
-              
-              return (
-                <Tooltip key={code}>
-                  <TooltipTrigger asChild>
-                    <g className="cursor-pointer transition-all hover:opacity-80">
-                      <path
-                        d={d}
-                        fill={fillColor}
-                        stroke="hsl(220, 20%, 35%)"
-                        strokeWidth="1"
-                        className="transition-all"
-                      />
-                      {stat && stat.total > 0 && (
-                        <>
-                          <circle cx={cx} cy={cy} r={10} fill="hsl(220, 40%, 8%)" stroke="hsl(210, 40%, 98%)" strokeWidth="1.5" />
-                          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fill="hsl(210, 40%, 98%)" fontSize="8" fontWeight="bold">
-                            {stat.total}
-                          </text>
-                        </>
-                      )}
-                    </g>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="font-semibold">{name}</p>
-                    {stat ? (
-                      <div className="flex gap-2 mt-1">
-                        <Badge variant="destructive" className="text-xs">{stat.high} High</Badge>
-                        <Badge className="bg-risk-medium text-xs">{stat.medium} Med</Badge>
-                        <Badge className="bg-risk-low text-foreground text-xs">{stat.low} Low</Badge>
-                      </div>
-                    ) : <p className="text-muted-foreground">No alerts</p>}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </svg>
+          <div className="w-full relative" style={{ aspectRatio: "2.2/1" }}>
+            <ComposableMap
+              projection="geoMercator"
+              projectionConfig={{
+                scale: 130,
+                center: [20, 35],
+              }}
+              style={{ width: "100%", height: "100%", background: "hsl(210, 50%, 12%)", borderRadius: "8px" }}
+            >
+              <Geographies geography={geoUrl}>
+                {({ geographies }) =>
+                  geographies.map((geo) => {
+                    const countryName = geo.properties.name;
+                    const jurisdiction = countryNameToJurisdiction[countryName];
+                    const isClickable = !!jurisdiction;
+                    const jurisdictionStats = jurisdiction ? getJurisdictionStats(jurisdiction) : null;
+                    
+                    return (
+                      <Tooltip key={geo.rsmKey}>
+                        <TooltipTrigger asChild>
+                          <Geography
+                            geography={geo}
+                            fill={getCountryColor(countryName)}
+                            stroke="#334155"
+                            strokeWidth={0.5}
+                            style={{
+                              default: { outline: "none", cursor: isClickable ? "pointer" : "default" },
+                              hover: { 
+                                fill: isClickable ? "#3b82f6" : getCountryColor(countryName), 
+                                outline: "none", 
+                                cursor: isClickable ? "pointer" : "default" 
+                              },
+                              pressed: { fill: isClickable ? "#2563eb" : getCountryColor(countryName), outline: "none" },
+                            }}
+                            onClick={() => isClickable && handleClick(countryName)}
+                          />
+                        </TooltipTrigger>
+                        {isClickable && (
+                          <TooltipContent>
+                            <p className="font-semibold">{countryName}</p>
+                            {jurisdictionStats ? (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Total: {jurisdictionStats.total} alerts</p>
+                                <div className="flex gap-2">
+                                  <Badge variant="destructive" className="text-xs">{jurisdictionStats.high} High</Badge>
+                                  <Badge className="bg-risk-medium text-xs">{jurisdictionStats.medium} Med</Badge>
+                                  <Badge className="bg-risk-low text-foreground text-xs">{jurisdictionStats.low} Low</Badge>
+                                </div>
+                                <p className="text-xs text-primary mt-1">Click to view</p>
+                              </div>
+                            ) : <p className="text-xs text-muted-foreground">Click to view</p>}
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    );
+                  })
+                }
+              </Geographies>
+            </ComposableMap>
+          </div>
         </TooltipProvider>
         
-        <div className="flex gap-4 mt-4 justify-center text-xs flex-wrap">
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-risk-high" /><span>High Risk</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-risk-medium" /><span>Medium Risk</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-risk-low" /><span>Low Risk</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "hsl(220, 25%, 25%)"}} /><span>No Alerts</span></div>
+        <div className="flex gap-4 mt-2 justify-center text-xs flex-wrap">
+          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#ef4444"}} /><span>High Risk</span></div>
+          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#f59e0b"}} /><span>Medium Risk</span></div>
+          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#22c55e"}} /><span>Low Risk</span></div>
+          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#374151"}} /><span>Tracked</span></div>
         </div>
       </CardContent>
     </Card>

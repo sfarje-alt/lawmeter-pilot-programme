@@ -270,23 +270,26 @@ export default function LawMeterDashboard() {
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
             {/* World Map - National/Federal Overview */}
-            <WorldMap legislation={[
-              ...usStateBills,
-              ...canadaLegislation,
-              ...japanLegislation,
-              ...koreaLegislation,
-              ...taiwanLegislation,
-              ...euRegulations,
-              ...euDirectives,
-              ...euParliament,
-              ...euCouncil,
-              ...uaeLegislation,
-              ...saudiLegislation,
-              ...omanLegislation,
-              ...kuwaitLegislation,
-              ...bahrainLegislation,
-              ...qatarLegislation
-            ]} />
+            <WorldMap 
+              legislation={[
+                ...usStateBills,
+                ...canadaLegislation,
+                ...japanLegislation,
+                ...koreaLegislation,
+                ...taiwanLegislation,
+                ...euRegulations,
+                ...euDirectives,
+                ...euParliament,
+                ...euCouncil,
+                ...uaeLegislation,
+                ...saudiLegislation,
+                ...omanLegislation,
+                ...kuwaitLegislation,
+                ...bahrainLegislation,
+                ...qatarLegislation
+              ]} 
+              onSelectRegion={(region) => setSelectedCountry(region as typeof selectedCountry)}
+            />
 
             {/* Country Selector */}
             <div className="flex items-center gap-4 mb-6 flex-wrap">
