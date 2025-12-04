@@ -17,6 +17,13 @@ export type LegislationType =
 
 export type LegislativeCategory = "enacted" | "pending";
 
+export type RegulatoryCategory = 
+  | "Radio"
+  | "Product Safety"
+  | "Cybersecurity"
+  | "Battery"
+  | "Food Contact Material";
+
 export interface TimelineStage {
   name: string;
   completed: boolean;
@@ -34,6 +41,7 @@ export interface InternationalLegislation {
   riskLevel: "low" | "medium" | "high";
   riskScore: number;
   category: string;
+  regulatoryCategory: RegulatoryCategory;
   publishedDate: string;
   effectiveDate?: string;
   complianceDeadline?: string;
@@ -113,54 +121,59 @@ const getGCCBillTimeline = (currentStage: number): TimelineStage[] => [
 
 // US State Bills - Smart Kettle/Espresso Machine focused
 export const usStateBills: InternationalLegislation[] = [
+  // RADIO REGULATIONS
   {
-    id: "ca-sb-2024-847",
-    title: "California Energy Efficiency Standards for Small Appliances",
-    summary: "Establishes new energy efficiency requirements for countertop appliances including electric kettles and espresso machines sold in California.",
+    id: "ca-fcc-2024-rf-01",
+    title: "California RF Emission Standards for Smart Appliances",
+    summary: "Updates radio frequency emission limits for IoT-enabled kitchen appliances including smart kettles with WiFi/Bluetooth connectivity.",
     bullets: [
-      "Mandates minimum energy efficiency ratings for electric kettles above 1000W",
-      "Requires standby power consumption below 0.5W for all coffee appliances",
-      "Certification deadline: January 2026"
+      "New RF emission limits aligned with FCC Part 15 updates",
+      "Mandatory testing for WiFi 6E frequency bands",
+      "Certification required for all wireless-enabled appliances"
     ],
     status: "In Committee",
     jurisdiction: "USA",
     subJurisdiction: "CA",
     riskLevel: "high",
-    riskScore: 85,
-    category: "Energy Efficiency",
+    riskScore: 82,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
     publishedDate: daysAgo(15),
     effectiveDate: daysFromNow(180),
     complianceDeadline: daysFromNow(150),
-    regulatoryBody: "California Energy Commission",
-    impactAreas: ["Product Design", "Certification", "Labeling"],
+    regulatoryBody: "California PUC",
+    impactAreas: ["Wireless", "Certification", "Testing"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "Senate Bill",
     timeline: getUSBillTimeline(1)
   },
   {
-    id: "ca-ccr-title20-2024",
-    title: "Title 20 Appliance Efficiency Regulations Update",
-    summary: "California Code of Regulations update for small appliance efficiency standards now in force.",
+    id: "tx-rf-2024-001",
+    title: "Texas Wireless Device Standards Act",
+    summary: "Establishes state-level RF compliance requirements for connected appliances sold in Texas.",
     bullets: [
-      "New efficiency tiers for water heating appliances",
-      "Updated test procedures per CEC guidelines",
-      "Mandatory compliance for all new models"
+      "Requires FCC compliance documentation at point of sale",
+      "Mandates RF interference testing for smart home devices",
+      "Consumer disclosure requirements for wireless capabilities"
     ],
-    status: "In Force",
+    status: "Second Reading",
     jurisdiction: "USA",
-    subJurisdiction: "CA",
-    riskLevel: "high",
-    riskScore: 82,
-    category: "Energy Efficiency",
-    publishedDate: daysAgo(90),
-    effectiveDate: daysAgo(30),
-    regulatoryBody: "California Energy Commission",
-    impactAreas: ["Product Design", "Testing", "Compliance"],
-    legislationType: "regulation",
-    legislativeCategory: "enacted",
-    localTerminology: "Regulation"
+    subJurisdiction: "TX",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(240),
+    regulatoryBody: "Texas PUC",
+    impactAreas: ["Wireless", "Documentation", "Retail"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "House Bill",
+    timeline: getUSBillTimeline(1)
   },
+  // PRODUCT SAFETY
   {
     id: "ny-ab-2024-1023",
     title: "New York Consumer Product Safety Act - Heating Appliances",
@@ -174,9 +187,10 @@ export const usStateBills: InternationalLegislation[] = [
     jurisdiction: "USA",
     subJurisdiction: "NY",
     riskLevel: "high",
-    riskScore: 78,
+    riskScore: 85,
     category: "Product Safety",
-    publishedDate: daysAgo(30),
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(20),
     effectiveDate: daysFromNow(120),
     complianceDeadline: daysFromNow(90),
     regulatoryBody: "NY Department of Consumer Protection",
@@ -187,80 +201,236 @@ export const usStateBills: InternationalLegislation[] = [
     timeline: getUSBillTimeline(2)
   },
   {
-    id: "tx-hb-2024-445",
-    title: "Texas Smart Appliance Data Privacy Act",
-    summary: "Regulates collection and use of consumer data by IoT-enabled appliances including smart kettles and connected espresso machines.",
+    id: "ca-cpsc-2024-safety",
+    title: "California Enhanced Appliance Safety Standards",
+    summary: "Mandatory safety certification for all countertop heating appliances sold in California.",
     bullets: [
-      "Requires explicit consent for data collection from smart appliances",
-      "Mandates data encryption for all transmitted usage information",
-      "Provides consumers right to delete collected appliance data"
-    ],
-    status: "Second Reading",
-    jurisdiction: "USA",
-    subJurisdiction: "TX",
-    riskLevel: "medium",
-    riskScore: 65,
-    category: "Data Privacy",
-    publishedDate: daysAgo(45),
-    complianceDeadline: daysFromNow(240),
-    regulatoryBody: "Texas Attorney General",
-    impactAreas: ["Software", "Data Privacy", "User Consent"],
-    legislationType: "bill",
-    legislativeCategory: "pending",
-    localTerminology: "House Bill",
-    timeline: getUSBillTimeline(1)
-  },
-  {
-    id: "fl-sb-2024-221",
-    title: "Florida Appliance Import Standards Update",
-    summary: "Updates import certification requirements for small electrical appliances to align with federal standards.",
-    bullets: [
-      "Streamlines certification process for pre-certified appliances",
-      "Reduces compliance burden for manufacturers with existing certifications",
-      "Mutual recognition with UL and CSA certifications"
+      "UL/ETL certification mandatory for all heating appliances",
+      "Enhanced ground fault protection requirements",
+      "Child safety lock requirements for high-temperature appliances"
     ],
     status: "Enacted",
     jurisdiction: "USA",
-    subJurisdiction: "FL",
-    riskLevel: "low",
-    riskScore: 35,
-    category: "Import/Export",
+    subJurisdiction: "CA",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(60),
     effectiveDate: daysAgo(10),
-    regulatoryBody: "Florida DBPR",
-    impactAreas: ["Certification", "Import Compliance"],
+    regulatoryBody: "CA CPSC",
+    impactAreas: ["Certification", "Safety Testing", "Design"],
     legislationType: "law",
     legislativeCategory: "enacted",
     localTerminology: "Public Law"
   },
+  // CYBERSECURITY
   {
-    id: "wa-sb-2024-156",
-    title: "Washington State Right to Repair - Small Appliances",
-    summary: "Extends right to repair requirements to include small kitchen appliances including coffee machines and electric kettles.",
+    id: "ca-iot-cyber-2024",
+    title: "California IoT Cybersecurity Standards Act",
+    summary: "Mandates cybersecurity requirements for all connected devices including smart kitchen appliances.",
     bullets: [
-      "Requires manufacturers to provide repair manuals and diagnostic tools",
-      "Mandates availability of replacement parts for 7 years after manufacture",
-      "Prohibits software locks that prevent independent repair"
+      "Unique passwords required for each device - no default passwords",
+      "Security update support required for minimum 5 years",
+      "Vulnerability disclosure program mandatory"
     ],
     status: "In Committee",
     jurisdiction: "USA",
-    subJurisdiction: "WA",
+    subJurisdiction: "CA",
     riskLevel: "high",
-    riskScore: 82,
-    category: "Right to Repair",
-    publishedDate: daysAgo(20),
+    riskScore: 88,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(10),
     complianceDeadline: daysFromNow(365),
-    regulatoryBody: "WA Attorney General",
-    impactAreas: ["Spare Parts", "Documentation", "Software"],
+    regulatoryBody: "California Attorney General",
+    impactAreas: ["Software", "Security", "Firmware"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "Senate Bill",
     timeline: getUSBillTimeline(1)
+  },
+  {
+    id: "ny-cyber-2024-iot",
+    title: "New York Smart Device Security Requirements",
+    summary: "Establishes minimum cybersecurity standards for IoT devices sold in New York State.",
+    bullets: [
+      "Encryption requirements for data transmission",
+      "Secure boot requirements for firmware",
+      "Annual security audit requirements for manufacturers"
+    ],
+    status: "Second Reading",
+    jurisdiction: "USA",
+    subJurisdiction: "NY",
+    riskLevel: "medium",
+    riskScore: 72,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(300),
+    regulatoryBody: "NY Cybersecurity Division",
+    impactAreas: ["Software", "Data Security", "Compliance"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Assembly Bill",
+    timeline: getUSBillTimeline(1)
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "ca-battery-2024-001",
+    title: "California Lithium Battery Safety Act",
+    summary: "New safety requirements for products containing lithium-ion batteries, including cordless kettles.",
+    bullets: [
+      "UL 2054 or equivalent certification mandatory",
+      "Battery management system requirements",
+      "Safe disposal instructions mandatory on packaging"
+    ],
+    status: "Passed Assembly",
+    jurisdiction: "USA",
+    subJurisdiction: "CA",
+    riskLevel: "high",
+    riskScore: 80,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(20),
+    effectiveDate: daysFromNow(180),
+    complianceDeadline: daysFromNow(150),
+    regulatoryBody: "CalEPA",
+    impactAreas: ["Battery Safety", "Certification", "Labeling"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Assembly Bill",
+    timeline: getUSBillTimeline(2)
+  },
+  {
+    id: "wa-battery-recycle-2024",
+    title: "Washington Battery Recycling Requirements",
+    summary: "Mandates take-back programs for products with rechargeable batteries.",
+    bullets: [
+      "Producer responsibility for battery recycling",
+      "Collection point requirements for retailers",
+      "Recycling fee disclosure at point of sale"
+    ],
+    status: "Enacted",
+    jurisdiction: "USA",
+    subJurisdiction: "WA",
+    riskLevel: "medium",
+    riskScore: 58,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(90),
+    effectiveDate: daysAgo(30),
+    regulatoryBody: "WA Ecology",
+    impactAreas: ["Recycling", "Retail", "Costs"],
+    legislationType: "law",
+    legislativeCategory: "enacted",
+    localTerminology: "Public Law"
+  },
+  // FOOD CONTACT MATERIAL
+  {
+    id: "ca-fcm-2024-001",
+    title: "California Safe Food Contact Materials Act",
+    summary: "Restricts hazardous chemicals in food contact materials for kitchen appliances including kettles and coffee machines.",
+    bullets: [
+      "PFAS banned in all food contact surfaces",
+      "BPA-free certification required",
+      "Heavy metal limits for heating element coatings"
+    ],
+    status: "In Committee",
+    jurisdiction: "USA",
+    subJurisdiction: "CA",
+    riskLevel: "high",
+    riskScore: 90,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "CA OEHHA",
+    impactAreas: ["Materials", "Testing", "Certification"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Senate Bill",
+    timeline: getUSBillTimeline(1)
+  },
+  {
+    id: "ny-fcm-safety-2024",
+    title: "New York Food Contact Safety Standards",
+    summary: "Updates food contact material standards for beverage preparation appliances.",
+    bullets: [
+      "FDA-compliant materials mandatory",
+      "Migration testing requirements for hot beverages",
+      "Prop 65 equivalent warning requirements"
+    ],
+    status: "Enacted",
+    jurisdiction: "USA",
+    subJurisdiction: "NY",
+    riskLevel: "medium",
+    riskScore: 68,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(120),
+    effectiveDate: daysAgo(60),
+    regulatoryBody: "NY DOH",
+    impactAreas: ["Materials", "Labeling", "Compliance"],
+    legislationType: "law",
+    legislativeCategory: "enacted",
+    localTerminology: "Public Law"
   }
 ];
 
 // Canada Provincial Legislation
 export const canadaLegislation: InternationalLegislation[] = [
+  // RADIO REGULATIONS
+  {
+    id: "ca-ised-rf-2024",
+    title: "ISED Radio Standards Update - Smart Appliances",
+    summary: "Innovation, Science and Economic Development Canada updates RF certification requirements for connected appliances.",
+    bullets: [
+      "RSS-247 compliance for WiFi/Bluetooth devices",
+      "New testing requirements for 6 GHz band",
+      "Mandatory IC certification mark updates"
+    ],
+    status: "In Force",
+    jurisdiction: "Canada",
+    subJurisdiction: "Federal",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(30),
+    effectiveDate: daysAgo(5),
+    regulatoryBody: "ISED Canada",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "RSS Standard"
+  },
+  {
+    id: "qc-rf-2024-001",
+    title: "Quebec Wireless Device Registration Requirements",
+    summary: "Provincial registration requirements for wireless-enabled appliances sold in Quebec.",
+    bullets: [
+      "Provincial database registration for connected devices",
+      "French language documentation for RF specifications",
+      "Consumer information requirements"
+    ],
+    status: "Second Reading",
+    jurisdiction: "Canada",
+    subJurisdiction: "QC",
+    riskLevel: "medium",
+    riskScore: 55,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(180),
+    regulatoryBody: "Quebec Consumer Office",
+    impactAreas: ["Documentation", "Registration", "Labeling"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Projet de loi",
+    timeline: getCanadaBillTimeline(1)
+  },
+  // PRODUCT SAFETY
   {
     id: "ca-fed-c45-2024",
     title: "Canada Consumer Product Safety Act Amendment",
@@ -274,8 +444,9 @@ export const canadaLegislation: InternationalLegislation[] = [
     jurisdiction: "Canada",
     subJurisdiction: "Federal",
     riskLevel: "high",
-    riskScore: 75,
+    riskScore: 82,
     category: "Product Safety",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(25),
     complianceDeadline: daysFromNow(180),
     regulatoryBody: "Health Canada",
@@ -298,8 +469,9 @@ export const canadaLegislation: InternationalLegislation[] = [
     jurisdiction: "Canada",
     subJurisdiction: "ON",
     riskLevel: "medium",
-    riskScore: 58,
-    category: "Electrical Safety",
+    riskScore: 65,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(90),
     effectiveDate: daysAgo(30),
     regulatoryBody: "Electrical Safety Authority",
@@ -308,35 +480,86 @@ export const canadaLegislation: InternationalLegislation[] = [
     legislativeCategory: "enacted",
     localTerminology: "O. Reg."
   },
+  // CYBERSECURITY
   {
-    id: "qc-bill-2024-78",
-    title: "Quebec French Language Requirements - Product Labeling",
-    summary: "Expands French language requirements for all product labeling, packaging, and user documentation.",
+    id: "ca-fed-cyber-2024",
+    title: "Federal IoT Security Standards Act",
+    summary: "National cybersecurity requirements for connected consumer devices.",
     bullets: [
-      "All user manuals must be available in French with equal prominence to English",
-      "Product labels must display French text at minimum equal size to other languages",
-      "Digital interfaces must offer French language option"
+      "Mandatory security labeling for IoT products",
+      "Encryption requirements for data transmission",
+      "Vulnerability reporting requirements"
     ],
-    status: "Second Reading",
+    status: "Committee Review",
     jurisdiction: "Canada",
-    subJurisdiction: "QC",
-    riskLevel: "medium",
-    riskScore: 62,
-    category: "Labeling",
-    publishedDate: daysAgo(25),
-    effectiveDate: daysFromNow(90),
-    complianceDeadline: daysFromNow(60),
-    regulatoryBody: "Office québécois de la langue française",
-    impactAreas: ["Packaging", "Documentation", "Software UI"],
+    subJurisdiction: "Federal",
+    riskLevel: "high",
+    riskScore: 85,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "CSE/CCCS",
+    impactAreas: ["Software", "Security", "Labeling"],
     legislationType: "bill",
     legislativeCategory: "pending",
-    localTerminology: "Projet de loi",
+    localTerminology: "Bill C-52",
     timeline: getCanadaBillTimeline(1)
   },
   {
-    id: "bc-reg-2024-112",
-    title: "BC Extended Producer Responsibility - Small Appliances",
-    summary: "Requires manufacturers to establish take-back programs for small electrical appliances at end of life.",
+    id: "bc-privacy-iot-2024",
+    title: "BC IoT Privacy and Security Requirements",
+    summary: "Provincial requirements for IoT device data protection and security.",
+    bullets: [
+      "PIPA compliance for connected devices",
+      "Data localization requirements",
+      "Consumer consent for data collection"
+    ],
+    status: "First Reading",
+    jurisdiction: "Canada",
+    subJurisdiction: "BC",
+    riskLevel: "medium",
+    riskScore: 62,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(10),
+    complianceDeadline: daysFromNow(300),
+    regulatoryBody: "BC OIPC",
+    impactAreas: ["Privacy", "Data Security", "Software"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Bill",
+    timeline: getCanadaBillTimeline(0)
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "ca-fed-battery-2024",
+    title: "Canadian Battery Safety Regulations",
+    summary: "Federal requirements for lithium-ion batteries in consumer products.",
+    bullets: [
+      "UN 38.3 testing mandatory for lithium batteries",
+      "Transport Canada compliance for battery shipping",
+      "Safety labeling requirements"
+    ],
+    status: "In Force",
+    jurisdiction: "Canada",
+    subJurisdiction: "Federal",
+    riskLevel: "high",
+    riskScore: 75,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "Transport Canada",
+    impactAreas: ["Battery Safety", "Shipping", "Labeling"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "SOR"
+  },
+  {
+    id: "bc-epr-battery-2024",
+    title: "BC Extended Producer Responsibility - Batteries",
+    summary: "Requires manufacturers to establish take-back programs for products with batteries.",
     bullets: [
       "Mandatory product stewardship plan registration",
       "Collection targets of 65% by 2027",
@@ -345,9 +568,10 @@ export const canadaLegislation: InternationalLegislation[] = [
     status: "Proposed",
     jurisdiction: "Canada",
     subJurisdiction: "BC",
-    riskLevel: "high",
-    riskScore: 75,
-    category: "Environmental",
+    riskLevel: "medium",
+    riskScore: 68,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
     publishedDate: daysAgo(10),
     effectiveDate: daysFromNow(365),
     complianceDeadline: daysFromNow(330),
@@ -358,59 +582,134 @@ export const canadaLegislation: InternationalLegislation[] = [
     localTerminology: "Bill",
     timeline: getCanadaBillTimeline(0)
   },
+  // FOOD CONTACT MATERIAL
   {
-    id: "ab-bill-2024-34",
-    title: "Alberta Consumer Protection Amendment - Appliance Warranties",
-    summary: "Strengthens warranty requirements and disclosure for household appliances.",
+    id: "ca-fed-fcm-2024",
+    title: "Health Canada Food Contact Material Standards Update",
+    summary: "Updates requirements for materials in contact with food in kitchen appliances.",
     bullets: [
-      "Minimum 2-year warranty required for appliances over $100",
-      "Clear disclosure of warranty limitations at point of sale",
-      "Prohibition on warranty voiding for third-party repairs"
+      "New migration limits for heating appliances",
+      "PFAS restrictions for food contact surfaces",
+      "Testing requirements for high-temperature applications"
     ],
-    status: "Royal Assent",
+    status: "In Force",
     jurisdiction: "Canada",
-    subJurisdiction: "AB",
+    subJurisdiction: "Federal",
+    riskLevel: "high",
+    riskScore: 80,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(45),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "Health Canada",
+    impactAreas: ["Materials", "Testing", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Regulation"
+  },
+  {
+    id: "qc-fcm-2024-001",
+    title: "Quebec Food Safety Material Requirements",
+    summary: "Provincial requirements for food contact materials with French labeling.",
+    bullets: [
+      "Bilingual labeling for food contact compliance",
+      "Provincial registry for food contact materials",
+      "Additional testing for French market"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Canada",
+    subJurisdiction: "QC",
     riskLevel: "medium",
     riskScore: 55,
-    category: "Consumer Protection",
-    publishedDate: daysAgo(45),
-    effectiveDate: daysFromNow(60),
-    regulatoryBody: "Service Alberta",
-    impactAreas: ["Warranty", "Documentation", "Customer Service"],
-    legislationType: "law",
-    legislativeCategory: "enacted",
-    localTerminology: "Act"
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(240),
+    regulatoryBody: "MAPAQ",
+    impactAreas: ["Labeling", "Documentation", "Compliance"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Projet de loi",
+    timeline: getCanadaBillTimeline(1)
   }
 ];
 
 // Japan Legislation
 export const japanLegislation: InternationalLegislation[] = [
+  // RADIO REGULATIONS
   {
-    id: "jp-meti-2024-089",
-    title: "Energy Conservation Standards Revision - Electric Kettles",
-    summary: "Ministry of Economy updates top-runner standards for electric kettles with stricter efficiency requirements.",
+    id: "jp-mic-rf-2024",
+    title: "Radio Law Amendment - Smart Home Devices",
+    summary: "Ministry of Internal Affairs updates technical standards for wireless-enabled appliances.",
     bullets: [
-      "Target energy consumption reduced by 15% from 2020 baseline",
-      "New testing methodology for insulated kettles",
-      "Mandatory energy label update by March 2026"
+      "New technical standards for WiFi 6E devices",
+      "TELEC certification updates",
+      "Giteki mark requirements for connected appliances"
     ],
-    status: "Final Draft",
+    status: "In Force",
     jurisdiction: "Japan",
     riskLevel: "high",
-    riskScore: 88,
-    category: "Energy Efficiency",
-    publishedDate: daysAgo(20),
-    effectiveDate: daysFromNow(450),
-    complianceDeadline: daysFromNow(420),
-    regulatoryBody: "METI",
-    impactAreas: ["Product Design", "Energy Labeling", "Testing"],
-    legislationType: "proposal",
-    legislativeCategory: "pending",
-    localTerminology: "省令案 (Draft Ministerial Ordinance)",
-    timeline: getJapanBillTimeline(2)
+    riskScore: 82,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(30),
+    effectiveDate: daysAgo(5),
+    regulatoryBody: "MIC",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "省令 (Shōrei)"
   },
   {
-    id: "jp-diet-bill-2024-45",
+    id: "jp-mic-rf-bill-2024",
+    title: "Radio Equipment Technical Standards Update",
+    summary: "Proposed updates to technical standards for IoT devices operating in shared spectrum.",
+    bullets: [
+      "New interference mitigation requirements",
+      "Duty cycle limitations for connected devices",
+      "Spectrum efficiency requirements"
+    ],
+    status: "Public Comment",
+    jurisdiction: "Japan",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(10),
+    complianceDeadline: daysFromNow(270),
+    regulatoryBody: "MIC",
+    impactAreas: ["Wireless", "Design", "Testing"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "告示案 (Draft Notice)",
+    timeline: getJapanBillTimeline(0)
+  },
+  // PRODUCT SAFETY
+  {
+    id: "jp-denan-2024-12",
+    title: "Electrical Appliance Safety Law Amendment - PSE Mark",
+    summary: "Updates technical requirements for PSE certification of household heating appliances.",
+    bullets: [
+      "New EMC requirements for appliances with digital displays",
+      "Updated thermal runaway protection standards",
+      "Conformity assessment procedure changes"
+    ],
+    status: "In Force",
+    jurisdiction: "Japan",
+    riskLevel: "high",
+    riskScore: 85,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "METI - DENAN",
+    impactAreas: ["Certification", "Testing", "Documentation"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "法律 (Hōritsu)"
+  },
+  {
+    id: "jp-diet-safety-2024",
     title: "Consumer Product Safety Enhancement Bill",
     summary: "Diet bill to strengthen safety requirements and recall procedures for household appliances.",
     bullets: [
@@ -421,8 +720,9 @@ export const japanLegislation: InternationalLegislation[] = [
     status: "Committee Review",
     jurisdiction: "Japan",
     riskLevel: "high",
-    riskScore: 80,
+    riskScore: 78,
     category: "Product Safety",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(35),
     complianceDeadline: daysFromNow(300),
     regulatoryBody: "National Diet",
@@ -432,55 +732,203 @@ export const japanLegislation: InternationalLegislation[] = [
     localTerminology: "法案 (Hōan)",
     timeline: getJapanBillTimeline(1)
   },
+  // CYBERSECURITY
   {
-    id: "jp-denan-2024-12",
-    title: "Electrical Appliance Safety Law Amendment - PSE Mark",
-    summary: "Updates technical requirements for PSE certification of household heating appliances.",
+    id: "jp-meti-cyber-2024",
+    title: "IoT Security Guidelines - Connected Appliances",
+    summary: "METI mandatory cybersecurity guidelines for IoT consumer products.",
     bullets: [
-      "New EMC requirements for appliances with digital displays",
-      "Updated thermal runaway protection standards",
-      "Conformity assessment procedure changes"
+      "Secure boot requirements",
+      "Firmware update mechanism mandatory",
+      "Password policy requirements"
     ],
-    status: "Enacted",
+    status: "In Force",
     jurisdiction: "Japan",
-    riskLevel: "medium",
-    riskScore: 72,
-    category: "Product Safety",
-    publishedDate: daysAgo(60),
-    effectiveDate: daysAgo(15),
-    regulatoryBody: "METI - DENAN",
-    impactAreas: ["Certification", "Testing", "Documentation"],
-    legislationType: "law",
+    riskLevel: "high",
+    riskScore: 80,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(45),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "METI",
+    impactAreas: ["Software", "Security", "Firmware"],
+    legislationType: "regulation",
     legislativeCategory: "enacted",
-    localTerminology: "法律 (Hōritsu)"
+    localTerminology: "ガイドライン (Guideline)"
   },
   {
-    id: "jp-caa-2024-56",
-    title: "Consumer Product Labeling Standards - Coffee Machines",
-    summary: "Consumer Affairs Agency updates labeling requirements for coffee preparation appliances.",
+    id: "jp-nisc-cyber-2024",
+    title: "Critical Infrastructure IoT Security Act",
+    summary: "Extends cybersecurity requirements to consumer IoT devices.",
     bullets: [
-      "Standardized capacity measurement display requirements",
-      "Energy consumption disclosure format changes",
-      "Safety warning label size and placement specifications"
+      "Security certification scheme for connected devices",
+      "Vulnerability disclosure requirements",
+      "Security labeling program"
     ],
-    status: "Public Comment",
+    status: "First Reading",
+    jurisdiction: "Japan",
+    riskLevel: "medium",
+    riskScore: 68,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "NISC",
+    impactAreas: ["Security", "Certification", "Labeling"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "法案 (Hōan)",
+    timeline: getJapanBillTimeline(0)
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "jp-meti-battery-2024",
+    title: "Portable Rechargeable Battery Safety Standards",
+    summary: "New safety requirements for lithium-ion batteries in portable appliances.",
+    bullets: [
+      "JIS C 8712 compliance mandatory",
+      "Battery management system requirements",
+      "Safety testing by accredited labs"
+    ],
+    status: "In Force",
+    jurisdiction: "Japan",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(20),
+    regulatoryBody: "METI",
+    impactAreas: ["Battery Safety", "Testing", "Certification"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "JIS規格 (JIS Standard)"
+  },
+  {
+    id: "jp-moe-battery-recycle-2024",
+    title: "Small Rechargeable Battery Recycling Act Amendment",
+    summary: "Extends recycling requirements to small appliance batteries.",
+    bullets: [
+      "Collection point requirements for retailers",
+      "Manufacturer responsibility for recycling",
+      "Recycling rate targets"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Japan",
+    riskLevel: "medium",
+    riskScore: 60,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "MOE",
+    impactAreas: ["Recycling", "Retail", "Costs"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "法案 (Hōan)",
+    timeline: getJapanBillTimeline(1)
+  },
+  // FOOD CONTACT MATERIAL
+  {
+    id: "jp-mhlw-fcm-2024",
+    title: "Food Sanitation Act - Appliance Materials Update",
+    summary: "Updates food contact material requirements for kitchen appliances.",
+    bullets: [
+      "New positive list for food contact plastics",
+      "Migration testing requirements for hot beverages",
+      "Heavy metal limits for heating elements"
+    ],
+    status: "In Force",
+    jurisdiction: "Japan",
+    riskLevel: "high",
+    riskScore: 82,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(90),
+    effectiveDate: daysAgo(30),
+    regulatoryBody: "MHLW",
+    impactAreas: ["Materials", "Testing", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "省令 (Shōrei)"
+  },
+  {
+    id: "jp-mhlw-fcm-bill-2024",
+    title: "Food Contact Material Harmonization Bill",
+    summary: "Aligns Japan's FCM requirements with international standards.",
+    bullets: [
+      "Codex Alimentarius alignment",
+      "International testing method recognition",
+      "Streamlined approval process"
+    ],
+    status: "Committee Review",
     jurisdiction: "Japan",
     riskLevel: "low",
-    riskScore: 42,
-    category: "Labeling",
-    publishedDate: daysAgo(5),
-    complianceDeadline: daysFromNow(180),
-    regulatoryBody: "Consumer Affairs Agency",
-    impactAreas: ["Labeling", "Packaging"],
-    legislationType: "proposal",
+    riskScore: 45,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(540),
+    regulatoryBody: "MHLW",
+    impactAreas: ["Certification", "Testing", "Market Access"],
+    legislationType: "bill",
     legislativeCategory: "pending",
-    localTerminology: "告示案 (Draft Notice)",
-    timeline: getJapanBillTimeline(0)
+    localTerminology: "法案 (Hōan)",
+    timeline: getJapanBillTimeline(1)
   }
 ];
 
 // Korea Legislation
 export const koreaLegislation: InternationalLegislation[] = [
+  // RADIO REGULATIONS
+  {
+    id: "kr-rra-rf-2024",
+    title: "Radio Waves Act Amendment - Smart Devices",
+    summary: "Radio Research Agency updates certification requirements for connected appliances.",
+    bullets: [
+      "KC mark requirements for wireless modules",
+      "EMC testing updates for WiFi 6E",
+      "Type approval process changes"
+    ],
+    status: "In Force",
+    jurisdiction: "Korea",
+    riskLevel: "high",
+    riskScore: 80,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(40),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "RRA",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "고시 (Gosi/Notice)"
+  },
+  {
+    id: "kr-na-rf-2024",
+    title: "Spectrum Management Act Amendment",
+    summary: "National Assembly bill to update spectrum allocation for IoT devices.",
+    bullets: [
+      "New frequency allocations for smart home devices",
+      "Interference protection requirements",
+      "Registration requirements for IoT spectrum use"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Korea",
+    riskLevel: "medium",
+    riskScore: 62,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(300),
+    regulatoryBody: "National Assembly",
+    impactAreas: ["Wireless", "Spectrum", "Compliance"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "법안 (Beop'an)",
+    timeline: getKoreaBillTimeline(1)
+  },
+  // PRODUCT SAFETY
   {
     id: "kr-na-bill-2024-1892",
     title: "Electrical Appliance Safety Control Act Amendment",
@@ -495,6 +943,7 @@ export const koreaLegislation: InternationalLegislation[] = [
     riskLevel: "high",
     riskScore: 85,
     category: "Product Safety",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(20),
     complianceDeadline: daysFromNow(270),
     regulatoryBody: "National Assembly",
@@ -517,7 +966,8 @@ export const koreaLegislation: InternationalLegislation[] = [
     jurisdiction: "Korea",
     riskLevel: "high",
     riskScore: 80,
-    category: "Certification",
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(45),
     effectiveDate: daysAgo(5),
     regulatoryBody: "KATS",
@@ -526,48 +976,145 @@ export const koreaLegislation: InternationalLegislation[] = [
     legislativeCategory: "enacted",
     localTerminology: "고시 (Gosi/Notice)"
   },
+  // CYBERSECURITY
   {
-    id: "kr-kemco-2024-78",
-    title: "Energy Efficiency Rating System - Kitchen Appliances",
-    summary: "Korea Energy Management Corporation updates e-Standby program requirements for kitchen appliances.",
+    id: "kr-kisa-cyber-2024",
+    title: "IoT Security Certification Program",
+    summary: "KISA mandatory security certification for connected consumer devices.",
     bullets: [
-      "Standby power must not exceed 0.3W for highest efficiency rating",
-      "New test methodology for smart/connected appliances",
-      "Mandatory efficiency label redesign"
+      "Security testing requirements",
+      "Vulnerability management requirements",
+      "Security label for certified products"
     ],
-    status: "Proposed",
+    status: "In Force",
     jurisdiction: "Korea",
-    riskLevel: "medium",
-    riskScore: 68,
-    category: "Energy Efficiency",
-    publishedDate: daysAgo(15),
-    effectiveDate: daysFromNow(180),
-    complianceDeadline: daysFromNow(150),
-    regulatoryBody: "KEMCO",
-    impactAreas: ["Product Design", "Energy Labeling"],
-    legislationType: "proposal",
-    legislativeCategory: "pending",
-    localTerminology: "규정안 (Draft Regulation)",
-    timeline: getKoreaBillTimeline(0)
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "KISA",
+    impactAreas: ["Security", "Certification", "Labeling"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "고시 (Gosi/Notice)"
   },
   {
-    id: "kr-kca-2024-112",
-    title: "Consumer Safety Special Act Amendment",
-    summary: "Korea Consumer Agency strengthens recall and reporting requirements for consumer appliances.",
+    id: "kr-na-cyber-2024",
+    title: "Smart Device Security Act",
+    summary: "National Assembly bill to mandate cybersecurity for IoT products.",
     bullets: [
-      "72-hour incident reporting requirement",
-      "Expanded voluntary recall incentive program",
-      "Increased penalties for non-compliance"
+      "Encryption requirements for data transmission",
+      "Secure update mechanism mandatory",
+      "Privacy protection requirements"
+    ],
+    status: "First Reading",
+    jurisdiction: "Korea",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "National Assembly",
+    impactAreas: ["Software", "Security", "Privacy"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "법안 (Beop'an)",
+    timeline: getKoreaBillTimeline(0)
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "kr-kats-battery-2024",
+    title: "Lithium Battery Safety Standards",
+    summary: "KATS updates safety requirements for lithium batteries in consumer products.",
+    bullets: [
+      "KC 62133 compliance mandatory",
+      "Battery cell certification requirements",
+      "Safety testing by accredited labs"
+    ],
+    status: "In Force",
+    jurisdiction: "Korea",
+    riskLevel: "high",
+    riskScore: 75,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(50),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "KATS",
+    impactAreas: ["Battery Safety", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "고시 (Gosi/Notice)"
+  },
+  {
+    id: "kr-moe-battery-2024",
+    title: "Battery Recycling Responsibility Act Amendment",
+    summary: "Extended producer responsibility for rechargeable batteries.",
+    bullets: [
+      "Collection and recycling targets",
+      "Eco-fee requirements",
+      "Retailer collection obligations"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Korea",
+    riskLevel: "medium",
+    riskScore: 58,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "MOE",
+    impactAreas: ["Recycling", "Costs", "Retail"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "법안 (Beop'an)",
+    timeline: getKoreaBillTimeline(1)
+  },
+  // FOOD CONTACT MATERIAL
+  {
+    id: "kr-mfds-fcm-2024",
+    title: "Food Contact Material Standards Update",
+    summary: "MFDS updates requirements for materials in contact with food.",
+    bullets: [
+      "New migration limits for hot beverage appliances",
+      "PFAS restrictions",
+      "Heavy metal limits"
+    ],
+    status: "In Force",
+    jurisdiction: "Korea",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(75),
+    effectiveDate: daysAgo(20),
+    regulatoryBody: "MFDS",
+    impactAreas: ["Materials", "Testing", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "고시 (Gosi/Notice)"
+  },
+  {
+    id: "kr-na-fcm-2024",
+    title: "Food Safety Act Amendment - Kitchen Appliances",
+    summary: "National Assembly bill to strengthen food contact material requirements.",
+    bullets: [
+      "Expanded testing requirements",
+      "Consumer labeling requirements",
+      "Import inspection requirements"
     ],
     status: "Second Reading",
     jurisdiction: "Korea",
     riskLevel: "medium",
-    riskScore: 58,
-    category: "Consumer Safety",
-    publishedDate: daysAgo(30),
-    complianceDeadline: daysFromNow(210),
-    regulatoryBody: "KCA",
-    impactAreas: ["Compliance", "Reporting", "Recalls"],
+    riskScore: 62,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(300),
+    regulatoryBody: "National Assembly",
+    impactAreas: ["Labeling", "Testing", "Import"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "법안 (Beop'an)",
@@ -577,29 +1124,55 @@ export const koreaLegislation: InternationalLegislation[] = [
 
 // Taiwan Legislation  
 export const taiwanLegislation: InternationalLegislation[] = [
+  // RADIO REGULATIONS
   {
-    id: "tw-ly-bill-2024-234",
-    title: "Consumer Protection Act Amendment - Appliance Safety",
-    summary: "Legislative Yuan bill to enhance consumer protection for household electrical appliances.",
+    id: "tw-ncc-rf-2024",
+    title: "NCC Radio Frequency Device Regulations Update",
+    summary: "National Communications Commission updates certification for wireless devices.",
     bullets: [
-      "Extended warranty period requirements",
-      "Strengthened recall notification procedures",
-      "New penalties for safety standard violations"
+      "NCC mark requirements for WiFi/Bluetooth devices",
+      "Type approval process updates",
+      "EMC testing requirements"
     ],
-    status: "First Reading",
+    status: "In Force",
     jurisdiction: "Taiwan",
     riskLevel: "high",
-    riskScore: 72,
-    category: "Consumer Protection",
-    publishedDate: daysAgo(15),
+    riskScore: 78,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(35),
+    effectiveDate: daysAgo(5),
+    regulatoryBody: "NCC",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "法規 (Fǎguī)"
+  },
+  {
+    id: "tw-ncc-rf-bill-2024",
+    title: "Telecommunications Management Act Amendment",
+    summary: "Legislative Yuan bill to update spectrum management for IoT devices.",
+    bullets: [
+      "New frequency allocations for smart home",
+      "Interference mitigation requirements",
+      "Simplified certification for low-power devices"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Taiwan",
+    riskLevel: "medium",
+    riskScore: 60,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(20),
     complianceDeadline: daysFromNow(300),
     regulatoryBody: "Legislative Yuan",
-    impactAreas: ["Warranty", "Compliance", "Recalls"],
+    impactAreas: ["Wireless", "Spectrum", "Certification"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "法案 (Fǎ'àn)",
-    timeline: getTaiwanBillTimeline(0)
+    timeline: getTaiwanBillTimeline(1)
   },
+  // PRODUCT SAFETY
   {
     id: "tw-bsmi-2024-445",
     title: "BSMI Certification Update - Electric Water Heaters",
@@ -611,9 +1184,10 @@ export const taiwanLegislation: InternationalLegislation[] = [
     ],
     status: "In Force",
     jurisdiction: "Taiwan",
-    riskLevel: "medium",
-    riskScore: 65,
-    category: "Certification",
+    riskLevel: "high",
+    riskScore: 75,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(30),
     effectiveDate: daysAgo(10),
     regulatoryBody: "BSMI",
@@ -623,47 +1197,168 @@ export const taiwanLegislation: InternationalLegislation[] = [
     localTerminology: "標準 (Biāozhǔn)"
   },
   {
-    id: "tw-moea-2024-89",
-    title: "Energy Efficiency Standards - Coffee Machines",
-    summary: "Ministry of Economic Affairs proposes energy efficiency standards for espresso and coffee machines.",
+    id: "tw-ly-safety-2024",
+    title: "Consumer Protection Act Amendment - Appliance Safety",
+    summary: "Legislative Yuan bill to enhance consumer protection for household electrical appliances.",
     bullets: [
-      "First-ever efficiency standards for espresso machines in Taiwan",
-      "Standby power limits of 1W for programmable machines",
-      "Three-year compliance transition period"
+      "Extended warranty period requirements",
+      "Strengthened recall notification procedures",
+      "New penalties for safety standard violations"
     ],
-    status: "Draft",
+    status: "First Reading",
     jurisdiction: "Taiwan",
-    riskLevel: "medium",
-    riskScore: 60,
-    category: "Energy Efficiency",
-    publishedDate: daysAgo(10),
-    effectiveDate: daysFromNow(730),
-    complianceDeadline: daysFromNow(700),
-    regulatoryBody: "MOEA Bureau of Energy",
-    impactAreas: ["Product Design", "Testing"],
-    legislationType: "proposal",
+    riskLevel: "high",
+    riskScore: 72,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(300),
+    regulatoryBody: "Legislative Yuan",
+    impactAreas: ["Warranty", "Compliance", "Recalls"],
+    legislationType: "bill",
     legislativeCategory: "pending",
-    localTerminology: "草案 (Cǎo'àn)",
+    localTerminology: "法案 (Fǎ'àn)",
     timeline: getTaiwanBillTimeline(0)
   },
+  // CYBERSECURITY
   {
-    id: "tw-tpca-2024-23",
-    title: "Consumer Protection Act Amendment - Smart Appliances",
-    summary: "Taiwan Consumer Protection Agency addresses IoT appliance data collection and privacy.",
+    id: "tw-moda-cyber-2024",
+    title: "IoT Security Standards",
+    summary: "Ministry of Digital Affairs security requirements for connected devices.",
     bullets: [
-      "Mandatory privacy policy disclosure for connected appliances",
-      "Data localization requirements under review",
-      "Consumer consent mechanisms for data sharing"
+      "Security certification requirements",
+      "Encryption standards",
+      "Vulnerability management"
     ],
-    status: "Public Consultation",
+    status: "In Force",
     jurisdiction: "Taiwan",
-    riskLevel: "low",
-    riskScore: 48,
-    category: "Data Privacy",
-    publishedDate: daysAgo(5),
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "MODA",
+    impactAreas: ["Security", "Certification", "Software"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "法規 (Fǎguī)"
+  },
+  {
+    id: "tw-ly-cyber-2024",
+    title: "Cybersecurity Management Act Amendment",
+    summary: "Legislative Yuan bill extending cybersecurity requirements to consumer IoT.",
+    bullets: [
+      "Security by design requirements",
+      "Incident reporting requirements",
+      "Consumer notification obligations"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Taiwan",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(25),
     complianceDeadline: daysFromNow(365),
-    regulatoryBody: "Consumer Protection Committee",
-    impactAreas: ["Software", "Privacy", "Documentation"],
+    regulatoryBody: "Legislative Yuan",
+    impactAreas: ["Software", "Security", "Compliance"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "法案 (Fǎ'àn)",
+    timeline: getTaiwanBillTimeline(1)
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "tw-bsmi-battery-2024",
+    title: "CNS Battery Safety Standards",
+    summary: "BSMI updates safety requirements for lithium batteries in consumer products.",
+    bullets: [
+      "CNS 15364 compliance mandatory",
+      "Safety testing requirements",
+      "Labeling requirements"
+    ],
+    status: "In Force",
+    jurisdiction: "Taiwan",
+    riskLevel: "high",
+    riskScore: 75,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(45),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "BSMI",
+    impactAreas: ["Battery Safety", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "CNS標準 (CNS Standard)"
+  },
+  {
+    id: "tw-epa-battery-2024",
+    title: "Battery Recycling Act Amendment",
+    summary: "EPA extends recycling requirements to small appliance batteries.",
+    bullets: [
+      "Producer responsibility requirements",
+      "Collection network requirements",
+      "Recycling targets"
+    ],
+    status: "Second Reading",
+    jurisdiction: "Taiwan",
+    riskLevel: "medium",
+    riskScore: 58,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "EPA",
+    impactAreas: ["Recycling", "Costs", "Retail"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "法案 (Fǎ'àn)",
+    timeline: getTaiwanBillTimeline(2)
+  },
+  // FOOD CONTACT MATERIAL
+  {
+    id: "tw-fda-fcm-2024",
+    title: "Food Contact Material Standards",
+    summary: "FDA updates requirements for materials in contact with food.",
+    bullets: [
+      "Migration limits for heating appliances",
+      "Positive list updates",
+      "Testing requirements"
+    ],
+    status: "In Force",
+    jurisdiction: "Taiwan",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(20),
+    regulatoryBody: "TFDA",
+    impactAreas: ["Materials", "Testing", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "法規 (Fǎguī)"
+  },
+  {
+    id: "tw-ly-fcm-2024",
+    title: "Food Safety Act Amendment - Appliance Materials",
+    summary: "Legislative Yuan bill to strengthen food contact material requirements.",
+    bullets: [
+      "PFAS restrictions",
+      "Enhanced testing requirements",
+      "Consumer labeling"
+    ],
+    status: "First Reading",
+    jurisdiction: "Taiwan",
+    riskLevel: "medium",
+    riskScore: 62,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "Legislative Yuan",
+    impactAreas: ["Materials", "Labeling", "Testing"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "法案 (Fǎ'àn)",
@@ -673,572 +1368,531 @@ export const taiwanLegislation: InternationalLegislation[] = [
 
 // EU Legislation
 export const euRegulations: InternationalLegislation[] = [
+  // RADIO REGULATIONS
   {
-    id: "eu-ecodesign-2024-1234",
-    title: "Ecodesign Regulation for Domestic Cooking Appliances",
-    summary: "New ecodesign requirements for household cooking appliances including espresso machines under Sustainable Products Regulation.",
+    id: "eu-red-2024-update",
+    title: "Radio Equipment Directive (RED) Delegated Act Update",
+    summary: "Updates to radio equipment technical requirements for connected devices.",
     bullets: [
-      "Minimum energy efficiency requirements for coffee machines",
-      "Mandatory repairability index scoring",
-      "Component availability requirements for 10 years"
+      "New essential requirements for IoT devices",
+      "Cybersecurity requirements under Article 3.3",
+      "Conformity assessment updates"
     ],
-    status: "Adopted",
+    status: "In Force",
     jurisdiction: "EU",
     riskLevel: "high",
-    riskScore: 92,
-    category: "Ecodesign",
-    publishedDate: daysAgo(45),
-    effectiveDate: daysFromNow(365),
-    complianceDeadline: daysFromNow(330),
+    riskScore: 88,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(30),
+    effectiveDate: daysAgo(5),
     regulatoryBody: "European Commission",
-    impactAreas: ["Product Design", "Spare Parts", "Documentation"],
+    impactAreas: ["Wireless", "Certification", "Security"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Delegated Regulation (EU)"
+  },
+  {
+    id: "eu-red-proposal-2024",
+    title: "RED Implementing Regulation - Smart Home Devices",
+    summary: "Proposed implementing regulation for smart home device requirements.",
+    bullets: [
+      "Harmonized standards for smart appliances",
+      "Interoperability requirements",
+      "Market surveillance improvements"
+    ],
+    status: "Council Review",
+    jurisdiction: "EU",
+    riskLevel: "medium",
+    riskScore: 68,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Wireless", "Standards", "Compliance"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Implementing Regulation (EU)",
+    timeline: getEUProposalTimeline(2)
+  },
+  // PRODUCT SAFETY
+  {
+    id: "eu-gpsr-2024",
+    title: "General Product Safety Regulation (GPSR)",
+    summary: "New general product safety requirements replacing the GPSD.",
+    bullets: [
+      "Online marketplace obligations",
+      "Enhanced traceability requirements",
+      "Safety assessment documentation"
+    ],
+    status: "In Force",
+    jurisdiction: "EU",
+    riskLevel: "high",
+    riskScore: 90,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(180),
+    effectiveDate: daysFromNow(30),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Safety", "Documentation", "E-commerce"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
     localTerminology: "Regulation (EU)"
   },
   {
-    id: "eu-weee-2024-amend",
-    title: "WEEE Directive Amendment - Small Appliances",
-    summary: "Updates to collection and recycling targets for small electrical equipment category.",
+    id: "eu-lvd-amendment-2024",
+    title: "Low Voltage Directive Amendment Proposal",
+    summary: "Proposed updates to LVD technical requirements for household appliances.",
     bullets: [
-      "Collection target increased to 75% by 2027",
-      "New recycled content requirements for plastic components",
-      "Enhanced producer responsibility fee structure"
+      "Updated safety objectives",
+      "Conformity assessment changes",
+      "Digital product passport integration"
     ],
-    status: "Trilogue",
+    status: "Parliament Review",
     jurisdiction: "EU",
-    riskLevel: "medium",
-    riskScore: 70,
-    category: "Environmental",
-    publishedDate: daysAgo(30),
+    riskLevel: "high",
+    riskScore: 82,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(40),
     complianceDeadline: daysFromNow(540),
-    regulatoryBody: "European Parliament",
-    impactAreas: ["Recycling", "Materials", "Costs"],
+    regulatoryBody: "European Commission",
+    impactAreas: ["Safety", "Certification", "Documentation"],
     legislationType: "proposal",
     legislativeCategory: "pending",
-    localTerminology: "COM Proposal",
-    timeline: getEUProposalTimeline(2)
-  }
-];
-
-export const euDirectives: InternationalLegislation[] = [
+    localTerminology: "Directive (EU)",
+    timeline: getEUProposalTimeline(1)
+  },
+  // CYBERSECURITY
   {
-    id: "eu-lvd-2024-update",
-    title: "Low Voltage Directive Technical Update - Heating Appliances",
-    summary: "Updated harmonized standards under LVD for electrical heating appliances.",
+    id: "eu-cra-2024",
+    title: "Cyber Resilience Act (CRA)",
+    summary: "Mandatory cybersecurity requirements for products with digital elements.",
     bullets: [
-      "New EN 60335-2-15 standard adoption for kettles",
-      "Enhanced protection requirements for appliances near water",
-      "Updated documentation requirements for market surveillance"
+      "Security by design requirements",
+      "Vulnerability handling obligations",
+      "Software update requirements for product lifetime"
+    ],
+    status: "Adopted",
+    jurisdiction: "EU",
+    riskLevel: "high",
+    riskScore: 92,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysFromNow(730),
+    complianceDeadline: daysFromNow(700),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Software", "Security", "Firmware"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Regulation (EU)"
+  },
+  {
+    id: "eu-cra-delegated-2024",
+    title: "CRA Delegated Act - Product Categories",
+    summary: "Defines critical product categories under the Cyber Resilience Act.",
+    bullets: [
+      "Class I and Class II product definitions",
+      "Conformity assessment requirements by category",
+      "Third-party assessment criteria"
+    ],
+    status: "Public Consultation",
+    jurisdiction: "EU",
+    riskLevel: "medium",
+    riskScore: 75,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(10),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Classification", "Certification", "Compliance"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Delegated Regulation (EU)",
+    timeline: getEUProposalTimeline(0)
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "eu-battery-reg-2024",
+    title: "EU Battery Regulation",
+    summary: "Comprehensive requirements for batteries and waste batteries.",
+    bullets: [
+      "Carbon footprint declaration requirements",
+      "Due diligence requirements",
+      "Digital battery passport"
     ],
     status: "In Force",
-    jurisdiction: "EU",
-    riskLevel: "high",
-    riskScore: 78,
-    category: "Product Safety",
-    publishedDate: daysAgo(60),
-    effectiveDate: daysAgo(20),
-    regulatoryBody: "European Commission",
-    impactAreas: ["Certification", "Testing", "Documentation"],
-    legislationType: "directive",
-    legislativeCategory: "enacted",
-    localTerminology: "Directive (EU)"
-  },
-  {
-    id: "eu-emc-2024-89",
-    title: "EMC Directive - Smart Appliance Guidelines",
-    summary: "New guidance document for EMC compliance of IoT-enabled household appliances.",
-    bullets: [
-      "Clarifies EMC testing for WiFi/Bluetooth enabled appliances",
-      "New immunity requirements for smart control systems",
-      "Updated technical file requirements"
-    ],
-    status: "Published",
-    jurisdiction: "EU",
-    riskLevel: "medium",
-    riskScore: 55,
-    category: "EMC",
-    publishedDate: daysAgo(15),
-    regulatoryBody: "European Commission",
-    impactAreas: ["Testing", "Documentation"],
-    legislationType: "directive",
-    legislativeCategory: "enacted",
-    localTerminology: "Implementing Decision"
-  }
-];
-
-export const euParliament: InternationalLegislation[] = [
-  {
-    id: "eu-parl-2024-right-repair",
-    title: "Right to Repair Directive - Small Appliances Extension",
-    summary: "European Parliament votes to extend right to repair requirements to small household appliances.",
-    bullets: [
-      "Mandatory spare parts availability for 8 years",
-      "Repair information access for independent repairers",
-      "Prohibition on software that limits repair"
-    ],
-    status: "First Reading",
-    jurisdiction: "EU",
-    riskLevel: "high",
-    riskScore: 85,
-    category: "Right to Repair",
-    publishedDate: daysAgo(10),
-    complianceDeadline: daysFromNow(720),
-    regulatoryBody: "European Parliament",
-    impactAreas: ["Spare Parts", "Documentation", "Software"],
-    legislationType: "proposal",
-    legislativeCategory: "pending",
-    localTerminology: "Parliament Resolution",
-    timeline: getEUProposalTimeline(1)
-  },
-  {
-    id: "eu-parl-2024-green-claims",
-    title: "Green Claims Directive - Appliance Marketing",
-    summary: "Restricts environmental marketing claims for consumer products including appliances.",
-    bullets: [
-      "Substantiation requirements for eco-friendly claims",
-      "Ban on generic environmental claims without proof",
-      "Third-party verification for carbon neutral claims"
-    ],
-    status: "Committee Review",
-    jurisdiction: "EU",
-    riskLevel: "medium",
-    riskScore: 62,
-    category: "Marketing",
-    publishedDate: daysAgo(20),
-    complianceDeadline: daysFromNow(450),
-    regulatoryBody: "European Parliament ENVI Committee",
-    impactAreas: ["Marketing", "Documentation", "Claims"],
-    legislationType: "proposal",
-    legislativeCategory: "pending",
-    localTerminology: "Draft Directive",
-    timeline: getEUProposalTimeline(1)
-  }
-];
-
-export const euCouncil: InternationalLegislation[] = [
-  {
-    id: "eu-council-2024-cyber",
-    title: "Cyber Resilience Act - IoT Appliances",
-    summary: "Council position on cybersecurity requirements for connected consumer products.",
-    bullets: [
-      "Mandatory security updates for 5 years minimum",
-      "Vulnerability disclosure requirements",
-      "CE marking requires cybersecurity assessment"
-    ],
-    status: "Council Position",
     jurisdiction: "EU",
     riskLevel: "high",
     riskScore: 88,
-    category: "Cybersecurity",
-    publishedDate: daysAgo(25),
-    effectiveDate: daysFromNow(540),
-    complianceDeadline: daysFromNow(480),
-    regulatoryBody: "Council of the EU",
-    impactAreas: ["Software", "Security", "Updates"],
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(180),
+    effectiveDate: daysAgo(30),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Battery", "Documentation", "Sustainability"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Regulation (EU)"
+  },
+  {
+    id: "eu-battery-delegated-2024",
+    title: "Battery Regulation Delegated Acts Package",
+    summary: "Implementing measures for battery regulation requirements.",
+    bullets: [
+      "Carbon footprint calculation methodology",
+      "Performance and durability requirements",
+      "Battery passport data requirements"
+    ],
+    status: "Council Review",
+    jurisdiction: "EU",
+    riskLevel: "high",
+    riskScore: 80,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Battery", "Sustainability", "Documentation"],
     legislationType: "proposal",
     legislativeCategory: "pending",
-    localTerminology: "Council General Approach",
+    localTerminology: "Delegated Regulation (EU)",
     timeline: getEUProposalTimeline(2)
-  }
-];
-
-// GCC Countries
-export const uaeLegislation: InternationalLegislation[] = [
-  {
-    id: "uae-fnc-bill-2024-34",
-    title: "Federal National Council - Consumer Electronics Safety Bill",
-    summary: "FNC draft law to enhance safety requirements for imported electrical appliances.",
-    bullets: [
-      "Stricter pre-market testing requirements",
-      "Enhanced labeling in Arabic",
-      "New penalties for non-compliant imports"
-    ],
-    status: "Under Review",
-    jurisdiction: "GCC",
-    subJurisdiction: "UAE",
-    riskLevel: "high",
-    riskScore: 72,
-    category: "Product Safety",
-    publishedDate: daysAgo(20),
-    complianceDeadline: daysFromNow(270),
-    regulatoryBody: "Federal National Council",
-    impactAreas: ["Certification", "Labeling", "Import"],
-    legislationType: "bill",
-    legislativeCategory: "pending",
-    localTerminology: "مشروع قانون (Draft Law)",
-    timeline: getGCCBillTimeline(1)
   },
+  // FOOD CONTACT MATERIAL
   {
-    id: "uae-esma-2024-178",
-    title: "ESMA Technical Regulation - Electric Kettles",
-    summary: "Emirates Authority for Standardization updates conformity requirements for electric water heating appliances.",
+    id: "eu-fcm-2024",
+    title: "Food Contact Materials Regulation Revision",
+    summary: "Comprehensive revision of EU food contact materials framework.",
     bullets: [
-      "Mandatory ECAS certificate for market access",
-      "New Arabic labeling requirements",
-      "Updated voltage compatibility standards (220V/50Hz)"
-    ],
-    status: "In Force",
-    jurisdiction: "GCC",
-    subJurisdiction: "UAE",
-    riskLevel: "medium",
-    riskScore: 65,
-    category: "Certification",
-    publishedDate: daysAgo(40),
-    effectiveDate: daysAgo(10),
-    regulatoryBody: "ESMA",
-    impactAreas: ["Certification", "Labeling"],
-    legislationType: "regulation",
-    legislativeCategory: "enacted",
-    localTerminology: "لائحة فنية (Technical Regulation)"
-  },
-  {
-    id: "uae-dewa-2024-56",
-    title: "Dubai Energy Efficiency Program - Appliances",
-    summary: "Dubai Electricity and Water Authority expands energy efficiency requirements to small appliances.",
-    bullets: [
-      "Voluntary energy rating scheme for kettles and coffee machines",
-      "Incentives for high-efficiency appliance imports",
-      "Future mandatory standards under consideration"
-    ],
-    status: "Voluntary",
-    jurisdiction: "GCC",
-    subJurisdiction: "UAE",
-    riskLevel: "low",
-    riskScore: 35,
-    category: "Energy Efficiency",
-    publishedDate: daysAgo(20),
-    regulatoryBody: "DEWA",
-    impactAreas: ["Energy Labeling"],
-    legislationType: "regulation",
-    legislativeCategory: "enacted",
-    localTerminology: "Programme"
-  }
-];
-
-export const saudiLegislation: InternationalLegislation[] = [
-  {
-    id: "sa-shoura-bill-2024-89",
-    title: "Shura Council - Consumer Protection Enhancement Bill",
-    summary: "Shura Council draft law to strengthen consumer protection for electrical products.",
-    bullets: [
-      "Enhanced product liability provisions",
-      "Mandatory warranty registration",
-      "New dispute resolution mechanisms"
-    ],
-    status: "First Review",
-    jurisdiction: "GCC",
-    subJurisdiction: "Saudi Arabia",
-    riskLevel: "high",
-    riskScore: 78,
-    category: "Consumer Protection",
-    publishedDate: daysAgo(30),
-    complianceDeadline: daysFromNow(360),
-    regulatoryBody: "Shura Council",
-    impactAreas: ["Warranty", "Liability", "Compliance"],
-    legislationType: "bill",
-    legislativeCategory: "pending",
-    localTerminology: "مشروع نظام (Draft Regulation)",
-    timeline: getGCCBillTimeline(0)
-  },
-  {
-    id: "sa-saso-2024-234",
-    title: "SASO Technical Regulation Update - Household Appliances",
-    summary: "Saudi Standards Organization updates SASO mark requirements for household electrical appliances.",
-    bullets: [
-      "New product registration system effective July 2025",
-      "In-country testing requirements for certain categories",
-      "Enhanced documentation for customs clearance"
+      "New migration limits",
+      "PFAS restrictions",
+      "Positive list updates"
     ],
     status: "Adopted",
-    jurisdiction: "GCC",
-    subJurisdiction: "Saudi Arabia",
+    jurisdiction: "EU",
     riskLevel: "high",
-    riskScore: 82,
-    category: "Certification",
-    publishedDate: daysAgo(30),
-    effectiveDate: daysFromNow(210),
-    complianceDeadline: daysFromNow(180),
-    regulatoryBody: "SASO",
-    impactAreas: ["Certification", "Testing", "Import"],
+    riskScore: 85,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(90),
+    effectiveDate: daysFromNow(180),
+    complianceDeadline: daysFromNow(150),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Materials", "Testing", "Compliance"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
-    localTerminology: "لائحة فنية (Technical Regulation)"
+    localTerminology: "Regulation (EU)"
   },
   {
-    id: "sa-seec-2024-89",
-    title: "Saudi Energy Efficiency Center - Kitchen Appliances",
-    summary: "SEEC expands minimum energy performance standards to include coffee machines.",
+    id: "eu-fcm-plastics-2024",
+    title: "FCM Plastics Implementing Regulation",
+    summary: "Updates to plastic materials in food contact applications.",
     bullets: [
-      "First MEPS for espresso machines in Saudi Arabia",
-      "Energy label required for all covered products",
-      "Phased implementation starting 2026"
+      "Recycled content requirements",
+      "Decontamination requirements",
+      "Testing methodology updates"
+    ],
+    status: "Parliament Review",
+    jurisdiction: "EU",
+    riskLevel: "medium",
+    riskScore: 72,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "European Commission",
+    impactAreas: ["Materials", "Recycling", "Testing"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Implementing Regulation (EU)",
+    timeline: getEUProposalTimeline(1)
+  }
+];
+
+// GCC Legislation - UAE, Saudi Arabia, Kuwait, Bahrain, Qatar, Oman
+export const gccLegislation: InternationalLegislation[] = [
+  // RADIO REGULATIONS
+  {
+    id: "uae-tra-rf-2024",
+    title: "TRA Radio Equipment Technical Regulations Update",
+    summary: "UAE Telecommunications Regulatory Authority updates type approval requirements.",
+    bullets: [
+      "New type approval requirements for WiFi devices",
+      "EMC testing requirements",
+      "TRA mark requirements"
+    ],
+    status: "In Force",
+    jurisdiction: "UAE",
+    riskLevel: "high",
+    riskScore: 80,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(30),
+    effectiveDate: daysAgo(5),
+    regulatoryBody: "TRA",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Technical Regulation"
+  },
+  {
+    id: "sa-citc-rf-2024",
+    title: "CITC Radio Equipment Regulations",
+    summary: "Saudi Communications and Information Technology Commission updates wireless requirements.",
+    bullets: [
+      "CITC type approval updates",
+      "Frequency allocation changes",
+      "Conformity marking requirements"
     ],
     status: "Draft",
-    jurisdiction: "GCC",
-    subJurisdiction: "Saudi Arabia",
+    jurisdiction: "Saudi Arabia",
     riskLevel: "medium",
     riskScore: 68,
-    category: "Energy Efficiency",
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
     publishedDate: daysAgo(15),
-    complianceDeadline: daysFromNow(540),
-    regulatoryBody: "SEEC",
-    impactAreas: ["Product Design", "Labeling", "Testing"],
+    complianceDeadline: daysFromNow(270),
+    regulatoryBody: "CITC",
+    impactAreas: ["Wireless", "Certification", "Spectrum"],
     legislationType: "proposal",
     legislativeCategory: "pending",
-    localTerminology: "مسودة (Draft)",
+    localTerminology: "Draft Regulation",
     timeline: getGCCBillTimeline(0)
-  }
-];
-
-export const omanLegislation: InternationalLegislation[] = [
-  {
-    id: "om-shura-bill-2024-45",
-    title: "Shura Council - Electrical Product Safety Bill",
-    summary: "Oman's Shura Council reviewing draft law on electrical product market access.",
-    bullets: [
-      "New pre-market approval requirements",
-      "Enhanced market surveillance powers",
-      "Penalties for safety standard violations"
-    ],
-    status: "Committee Review",
-    jurisdiction: "GCC",
-    subJurisdiction: "Oman",
-    riskLevel: "medium",
-    riskScore: 58,
-    category: "Product Safety",
-    publishedDate: daysAgo(35),
-    complianceDeadline: daysFromNow(300),
-    regulatoryBody: "Shura Council",
-    impactAreas: ["Certification", "Market Access"],
-    legislationType: "bill",
-    legislativeCategory: "pending",
-    localTerminology: "مشروع قانون (Draft Law)",
-    timeline: getGCCBillTimeline(1)
   },
+  // PRODUCT SAFETY
   {
-    id: "om-dgsm-2024-112",
-    title: "Oman Quality Mark - Electrical Appliances Update",
-    summary: "Directorate General of Standards updates conformity assessment procedures for electrical appliances.",
+    id: "gcc-gso-safety-2024",
+    title: "GSO Technical Regulation - Household Appliances",
+    summary: "Gulf Standardization Organization updates safety requirements for household appliances.",
     bullets: [
-      "Alignment with GSO standards for household appliances",
-      "Simplified registration for GCC-certified products",
-      "New testing laboratory recognition agreements"
+      "Updated GSO safety standards alignment with IEC",
+      "Conformity assessment requirements",
+      "G-Mark requirements"
     ],
     status: "In Force",
-    jurisdiction: "GCC",
-    subJurisdiction: "Oman",
-    riskLevel: "low",
-    riskScore: 45,
-    category: "Certification",
-    publishedDate: daysAgo(50),
-    effectiveDate: daysAgo(20),
-    regulatoryBody: "DGSM",
-    impactAreas: ["Certification"],
-    legislationType: "regulation",
-    legislativeCategory: "enacted",
-    localTerminology: "لائحة (Regulation)"
-  }
-];
-
-export const kuwaitLegislation: InternationalLegislation[] = [
-  {
-    id: "kw-na-bill-2024-123",
-    title: "National Assembly - Consumer Goods Safety Bill",
-    summary: "Kuwait National Assembly draft law on safety requirements for consumer electronics.",
-    bullets: [
-      "Comprehensive product safety framework",
-      "Enhanced import inspection procedures",
-      "New consumer complaint mechanisms"
-    ],
-    status: "First Reading",
-    jurisdiction: "GCC",
-    subJurisdiction: "Kuwait",
-    riskLevel: "medium",
-    riskScore: 62,
+    jurisdiction: "UAE",
+    riskLevel: "high",
+    riskScore: 85,
     category: "Product Safety",
-    publishedDate: daysAgo(25),
-    complianceDeadline: daysFromNow(330),
-    regulatoryBody: "National Assembly",
-    impactAreas: ["Import", "Compliance", "Consumer Rights"],
-    legislationType: "bill",
-    legislativeCategory: "pending",
-    localTerminology: "مشروع قانون (Draft Law)",
-    timeline: getGCCBillTimeline(0)
-  },
-  {
-    id: "kw-paaet-2024-67",
-    title: "Kuwait Technical Regulation - Small Appliances",
-    summary: "Public Authority for Industry updates import requirements for small electrical appliances.",
-    bullets: [
-      "Certificate of conformity required for customs clearance",
-      "Arabic user manual mandatory",
-      "Product liability insurance requirements"
-    ],
-    status: "Proposed",
-    jurisdiction: "GCC",
-    subJurisdiction: "Kuwait",
-    riskLevel: "medium",
-    riskScore: 58,
-    category: "Import",
-    publishedDate: daysAgo(25),
-    complianceDeadline: daysFromNow(240),
-    regulatoryBody: "PAI",
-    impactAreas: ["Import", "Documentation"],
-    legislationType: "proposal",
-    legislativeCategory: "pending",
-    localTerminology: "مسودة لائحة (Draft Regulation)",
-    timeline: getGCCBillTimeline(0)
-  }
-];
-
-export const bahrainLegislation: InternationalLegislation[] = [
-  {
-    id: "bh-shura-bill-2024-56",
-    title: "Shura Council - Product Liability Framework Bill",
-    summary: "Bahrain's Shura Council reviewing comprehensive product liability legislation.",
-    bullets: [
-      "Establishes manufacturer liability framework",
-      "Consumer compensation mechanisms",
-      "Product recall procedures"
-    ],
-    status: "Committee Stage",
-    jurisdiction: "GCC",
-    subJurisdiction: "Bahrain",
-    riskLevel: "medium",
-    riskScore: 55,
-    category: "Consumer Protection",
-    publishedDate: daysAgo(40),
-    complianceDeadline: daysFromNow(360),
-    regulatoryBody: "Shura Council",
-    impactAreas: ["Liability", "Recalls", "Compliance"],
-    legislationType: "bill",
-    legislativeCategory: "pending",
-    localTerminology: "مشروع قانون (Draft Law)",
-    timeline: getGCCBillTimeline(1)
-  },
-  {
-    id: "bh-moic-2024-34",
-    title: "Bahrain Consumer Protection - Appliance Warranties",
-    summary: "Ministry of Industry and Commerce updates warranty requirements for consumer electronics and appliances.",
-    bullets: [
-      "Minimum 1-year warranty for electrical appliances",
-      "Clear warranty terms disclosure in Arabic",
-      "Authorized service center requirements"
-    ],
-    status: "Enacted",
-    jurisdiction: "GCC",
-    subJurisdiction: "Bahrain",
-    riskLevel: "low",
-    riskScore: 42,
-    category: "Consumer Protection",
+    regulatoryCategory: "Product Safety",
     publishedDate: daysAgo(60),
-    effectiveDate: daysAgo(30),
-    regulatoryBody: "MOIC",
-    impactAreas: ["Warranty", "Customer Service"],
-    legislationType: "law",
-    legislativeCategory: "enacted",
-    localTerminology: "قانون (Law)"
-  }
-];
-
-export const qatarLegislation: InternationalLegislation[] = [
-  {
-    id: "qa-shura-bill-2024-78",
-    title: "Shura Council - Electrical Equipment Safety Bill",
-    summary: "Qatar's Shura Council reviewing draft law on electrical equipment safety standards.",
-    bullets: [
-      "New conformity assessment requirements",
-      "Enhanced product testing protocols",
-      "Market surveillance framework"
-    ],
-    status: "Under Discussion",
-    jurisdiction: "GCC",
-    subJurisdiction: "Qatar",
-    riskLevel: "medium",
-    riskScore: 58,
-    category: "Product Safety",
-    publishedDate: daysAgo(30),
-    complianceDeadline: daysFromNow(300),
-    regulatoryBody: "Shura Council",
-    impactAreas: ["Certification", "Testing"],
-    legislationType: "bill",
-    legislativeCategory: "pending",
-    localTerminology: "مشروع قانون (Draft Law)",
-    timeline: getGCCBillTimeline(1)
-  },
-  {
-    id: "qa-qsqc-2024-89",
-    title: "Qatar Quality Mark - Kitchen Appliances",
-    summary: "Qatar General Organization for Standardization updates certification requirements for kitchen appliances.",
-    bullets: [
-      "Q-Mark certification mandatory for retail sale",
-      "Factory inspection requirements for first-time applicants",
-      "Surveillance audit program for certified products"
-    ],
-    status: "In Force",
-    jurisdiction: "GCC",
-    subJurisdiction: "Qatar",
-    riskLevel: "medium",
-    riskScore: 62,
-    category: "Certification",
-    publishedDate: daysAgo(35),
-    effectiveDate: daysAgo(5),
-    regulatoryBody: "QS",
-    impactAreas: ["Certification", "Manufacturing"],
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "GSO/ESMA",
+    impactAreas: ["Safety", "Certification", "Testing"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
-    localTerminology: "لائحة فنية (Technical Regulation)"
+    localTerminology: "GSO Technical Regulation"
+  },
+  {
+    id: "sa-saso-safety-2024",
+    title: "SASO Product Safety Requirements Update",
+    summary: "Saudi Standards Authority updates product safety requirements for electrical appliances.",
+    bullets: [
+      "SASO marking requirements",
+      "Safety certification requirements",
+      "Market surveillance enhancements"
+    ],
+    status: "In Force",
+    jurisdiction: "Saudi Arabia",
+    riskLevel: "high",
+    riskScore: 82,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(45),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "SASO",
+    impactAreas: ["Safety", "Certification", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "SASO Standard"
+  },
+  // CYBERSECURITY
+  {
+    id: "uae-tdra-cyber-2024",
+    title: "UAE IoT Security Standards",
+    summary: "TDRA mandatory cybersecurity requirements for IoT devices.",
+    bullets: [
+      "Security certification requirements",
+      "Encryption requirements",
+      "Vulnerability management"
+    ],
+    status: "In Force",
+    jurisdiction: "UAE",
+    riskLevel: "high",
+    riskScore: 82,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(45),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "TDRA",
+    impactAreas: ["Security", "Certification", "Software"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Technical Regulation"
+  },
+  {
+    id: "sa-nca-cyber-2024",
+    title: "NCA IoT Security Framework",
+    summary: "Saudi National Cybersecurity Authority security requirements for connected devices.",
+    bullets: [
+      "Security by design requirements",
+      "Incident reporting requirements",
+      "Security testing requirements"
+    ],
+    status: "Draft",
+    jurisdiction: "Saudi Arabia",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "NCA",
+    impactAreas: ["Security", "Compliance", "Testing"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Draft Framework",
+    timeline: getGCCBillTimeline(0)
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "uae-moei-battery-2024",
+    title: "UAE Battery Safety and Recycling Regulations",
+    summary: "Ministry of Energy and Infrastructure battery requirements.",
+    bullets: [
+      "Safety certification requirements",
+      "Recycling program requirements",
+      "Labeling requirements"
+    ],
+    status: "In Force",
+    jurisdiction: "UAE",
+    riskLevel: "medium",
+    riskScore: 68,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "MOEI",
+    impactAreas: ["Battery Safety", "Recycling", "Labeling"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Ministerial Decision"
+  },
+  {
+    id: "sa-battery-reg-2024",
+    title: "Saudi Battery Technical Regulation",
+    summary: "SASO requirements for lithium batteries in consumer products.",
+    bullets: [
+      "IEC 62133 compliance",
+      "Safety testing requirements",
+      "Import certification"
+    ],
+    status: "Draft",
+    jurisdiction: "Saudi Arabia",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(300),
+    regulatoryBody: "SASO",
+    impactAreas: ["Battery Safety", "Certification", "Import"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Draft Technical Regulation",
+    timeline: getGCCBillTimeline(1)
+  },
+  // FOOD CONTACT MATERIAL
+  {
+    id: "gcc-gso-fcm-2024",
+    title: "GSO Food Contact Material Requirements",
+    summary: "Gulf-wide food contact material requirements for kitchen appliances.",
+    bullets: [
+      "Migration limits alignment with Codex",
+      "Testing requirements",
+      "Labeling requirements"
+    ],
+    status: "In Force",
+    jurisdiction: "UAE",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(90),
+    effectiveDate: daysAgo(30),
+    regulatoryBody: "GSO",
+    impactAreas: ["Materials", "Testing", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "GSO Standard"
+  },
+  {
+    id: "sa-sfda-fcm-2024",
+    title: "SFDA Food Contact Material Update",
+    summary: "Saudi Food and Drug Authority updates FCM requirements.",
+    bullets: [
+      "Enhanced testing requirements",
+      "Heavy metal limits",
+      "Documentation requirements"
+    ],
+    status: "Council Review",
+    jurisdiction: "Saudi Arabia",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(270),
+    regulatoryBody: "SFDA",
+    impactAreas: ["Materials", "Testing", "Documentation"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Draft Regulation",
+    timeline: getGCCBillTimeline(1)
   }
 ];
 
-// Helper function to get legislation by jurisdiction
-export function getLegislationByJurisdiction(jurisdiction: string, subJurisdiction?: string): InternationalLegislation[] {
-  switch (jurisdiction) {
-    case "usa-state":
-      return subJurisdiction 
-        ? usStateBills.filter(l => l.subJurisdiction === subJurisdiction)
-        : usStateBills;
-    case "canada":
-      return subJurisdiction 
-        ? canadaLegislation.filter(l => l.subJurisdiction === subJurisdiction)
-        : canadaLegislation;
-    case "japan":
-      return japanLegislation;
-    case "korea":
-      return koreaLegislation;
-    case "taiwan":
-      return taiwanLegislation;
-    case "eu-regulations":
-      return euRegulations;
-    case "eu-directives":
-      return euDirectives;
-    case "eu-parliament":
-      return euParliament;
-    case "eu-council":
-      return euCouncil;
-    case "gcc-uae":
-      return uaeLegislation;
-    case "gcc-saudi":
-      return saudiLegislation;
-    case "gcc-oman":
-      return omanLegislation;
-    case "gcc-kuwait":
-      return kuwaitLegislation;
-    case "gcc-bahrain":
-      return bahrainLegislation;
-    case "gcc-qatar":
-      return qatarLegislation;
-    default:
-      return [];
-  }
-}
+// Split GCC by country for dashboard
+export const uaeLegislation = gccLegislation.filter(l => l.jurisdiction === "UAE");
+export const saudiLegislation = gccLegislation.filter(l => l.jurisdiction === "Saudi Arabia");
+export const omanLegislation = gccLegislation.filter(l => l.jurisdiction === "Oman");
+export const kuwaitLegislation = gccLegislation.filter(l => l.jurisdiction === "Kuwait");
+export const bahrainLegislation = gccLegislation.filter(l => l.jurisdiction === "Bahrain");
+export const qatarLegislation = gccLegislation.filter(l => l.jurisdiction === "Qatar");
 
-// Helper to filter by legislative category
+// Split EU for dashboard tabs
+export const euDirectives = euRegulations.filter(l => l.legislationType === "directive" || l.title.toLowerCase().includes("directive"));
+export const euParliament = euRegulations.filter(l => l.status.includes("Parliament"));
+export const euCouncil = euRegulations.filter(l => l.status.includes("Council"));
+
+// Combine all international legislation
+export const allInternationalLegislation: InternationalLegislation[] = [
+  ...usStateBills,
+  ...canadaLegislation,
+  ...japanLegislation,
+  ...koreaLegislation,
+  ...taiwanLegislation,
+  ...euRegulations,
+  ...gccLegislation
+];
+
+// Export filter helper
 export function filterByLegislativeCategory(
-  legislation: InternationalLegislation[], 
+  legislation: InternationalLegislation[],
   category: LegislativeCategory | "all"
 ): InternationalLegislation[] {
   if (category === "all") return legislation;
   return legislation.filter(l => l.legislativeCategory === category);
 }
+
+// Export regulatory categories for filtering
+export const REGULATORY_CATEGORIES: RegulatoryCategory[] = [
+  "Radio",
+  "Product Safety",
+  "Cybersecurity",
+  "Battery",
+  "Food Contact Material"
+];
