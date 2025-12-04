@@ -8,20 +8,45 @@ interface GCCRegionMapProps {
   legislation: InternationalLegislation[];
 }
 
-const gccPositions: Record<string, { x: number; y: number; name: string; width?: number; height?: number }> = {
-  Kuwait: { x: 1, y: 0, name: "Kuwait" },
-  Bahrain: { x: 2, y: 1, name: "Bahrain" },
-  Qatar: { x: 2, y: 2, name: "Qatar" },
-  UAE: { x: 2, y: 3, name: "United Arab Emirates", width: 1.5 },
-  Oman: { x: 3.5, y: 2, name: "Oman", height: 2 },
-  "Saudi Arabia": { x: 0, y: 1, name: "Saudi Arabia", width: 2, height: 3 },
+// Simplified GCC region paths (Arabian Peninsula)
+const gccPaths: Record<string, { d: string; name: string; cx: number; cy: number }> = {
+  "Saudi Arabia": { 
+    d: "M30,50 L120,30 L180,60 L200,120 L180,180 L120,200 L60,180 L20,130 L15,80 Z", 
+    name: "Saudi Arabia", 
+    cx: 105, cy: 115 
+  },
+  Kuwait: { 
+    d: "M145,25 L165,20 L175,40 L160,50 L145,45 Z", 
+    name: "Kuwait", 
+    cx: 160, cy: 35 
+  },
+  Bahrain: { 
+    d: "M185,58 L195,55 L200,70 L190,75 Z", 
+    name: "Bahrain", 
+    cx: 192, cy: 65 
+  },
+  Qatar: { 
+    d: "M195,75 L210,70 L215,95 L200,100 Z", 
+    name: "Qatar", 
+    cx: 205, cy: 85 
+  },
+  UAE: { 
+    d: "M200,100 L250,90 L265,130 L240,145 L205,140 Z", 
+    name: "United Arab Emirates", 
+    cx: 230, cy: 118 
+  },
+  Oman: { 
+    d: "M240,145 L265,130 L290,150 L280,200 L230,210 L200,180 L205,155 Z", 
+    name: "Oman", 
+    cx: 245, cy: 175 
+  },
 };
 
 function getAlertFillColor(high: number, medium: number, low: number): string {
   if (high > 0) return "hsl(0, 75%, 55%)";
   if (medium > 0) return "hsl(35, 85%, 55%)";
   if (low > 0) return "hsl(142, 60%, 45%)";
-  return "hsl(220, 30%, 15%)";
+  return "hsl(220, 30%, 20%)";
 }
 
 export function GCCRegionMap({ legislation }: GCCRegionMapProps) {
@@ -37,10 +62,6 @@ export function GCCRegionMap({ legislation }: GCCRegionMapProps) {
     stats.set(item.jurisdiction, existing);
   });
   
-  const cellSize = 60;
-  const cellHeight = 50;
-  const padding = 6;
-  
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -51,31 +72,30 @@ export function GCCRegionMap({ legislation }: GCCRegionMapProps) {
       </CardHeader>
       <CardContent>
         <TooltipProvider>
-          <svg viewBox="-10 -10 320 260" className="w-full h-auto max-w-[300px] mx-auto">
-            {Object.entries(gccPositions).map(([code, pos]) => {
+          <svg viewBox="0 0 320 240" className="w-full h-auto max-w-[350px] mx-auto">
+            {/* Persian Gulf water */}
+            <rect x="0" y="0" width="320" height="240" fill="hsl(210, 50%, 15%)" rx="8" />
+            <path d="M140,20 L200,15 L220,50 L210,80 L195,55 L180,60 L165,50 L145,25 Z" fill="hsl(200, 60%, 25%)" opacity="0.5" />
+            
+            {Object.entries(gccPaths).map(([code, { d, name, cx, cy }]) => {
               const stat = stats.get(code);
-              const fillColor = stat ? getAlertFillColor(stat.high, stat.medium, stat.low) : "hsl(220, 30%, 15%)";
-              const width = (pos.width || 1) * cellSize + (pos.width ? (pos.width - 1) * padding : 0);
-              const height = (pos.height || 1) * cellHeight + (pos.height ? (pos.height - 1) * padding : 0);
+              const fillColor = stat ? getAlertFillColor(stat.high, stat.medium, stat.low) : "hsl(220, 25%, 25%)";
               
               return (
                 <Tooltip key={code}>
                   <TooltipTrigger asChild>
-                    <g className="cursor-pointer hover:opacity-80 transition-opacity">
-                      <rect x={pos.x * (cellSize + padding)} y={pos.y * (cellHeight + padding)} width={width} height={height} rx={6} fill={fillColor} stroke="hsl(220, 40%, 8%)" strokeWidth={2} />
-                      <text x={pos.x * (cellSize + padding) + width / 2} y={pos.y * (cellHeight + padding) + height / 2} textAnchor="middle" dominantBaseline="middle" className="fill-foreground text-[10px] font-medium">
-                        {code.length > 6 ? code.split(" ").map(w => w[0]).join("") : code}
-                      </text>
+                    <g className="cursor-pointer transition-all hover:opacity-80">
+                      <path d={d} fill={fillColor} stroke="hsl(220, 20%, 35%)" strokeWidth="1.5" />
                       {stat && stat.total > 0 && (
                         <>
-                          <circle cx={pos.x * (cellSize + padding) + width - 10} cy={pos.y * (cellHeight + padding) + 10} r={12} className="fill-background stroke-foreground" strokeWidth={1} />
-                          <text x={pos.x * (cellSize + padding) + width - 10} y={pos.y * (cellHeight + padding) + 10} textAnchor="middle" dominantBaseline="middle" className="fill-foreground text-[10px] font-bold">{stat.total}</text>
+                          <circle cx={cx} cy={cy} r={12} fill="hsl(220, 40%, 8%)" stroke="hsl(210, 40%, 98%)" strokeWidth="1.5" />
+                          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fill="hsl(210, 40%, 98%)" fontSize="10" fontWeight="bold">{stat.total}</text>
                         </>
                       )}
                     </g>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="font-semibold">{pos.name}</p>
+                    <p className="font-semibold">{name}</p>
                     {stat ? (
                       <div className="flex gap-2 mt-1">
                         <Badge variant="destructive" className="text-xs">{stat.high} High</Badge>
@@ -89,11 +109,12 @@ export function GCCRegionMap({ legislation }: GCCRegionMapProps) {
             })}
           </svg>
         </TooltipProvider>
+        
         <div className="flex gap-4 mt-4 justify-center text-xs">
           <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-risk-high" /><span>High</span></div>
           <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-risk-medium" /><span>Medium</span></div>
           <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-risk-low" /><span>Low</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-muted/30" /><span>None</span></div>
+          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "hsl(220, 25%, 25%)"}} /><span>None</span></div>
         </div>
       </CardContent>
     </Card>

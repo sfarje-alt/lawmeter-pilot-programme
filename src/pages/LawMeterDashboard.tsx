@@ -39,7 +39,7 @@ import { useCertificates } from '@/hooks/useCertificates';
 import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
 import { Download, Plus } from "lucide-react";
 import { InternationalLegislationSection } from "@/components/legislation/InternationalLegislationSection";
-import { GCCRegionMap } from "@/components/maps";
+import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { 
   usStateBills, 
   canadaLegislation, 
@@ -269,6 +269,25 @@ export default function LawMeterDashboard() {
           </TabsList>
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
+            {/* World Map - National/Federal Overview */}
+            <WorldMap legislation={[
+              ...usStateBills,
+              ...canadaLegislation,
+              ...japanLegislation,
+              ...koreaLegislation,
+              ...taiwanLegislation,
+              ...euRegulations,
+              ...euDirectives,
+              ...euParliament,
+              ...euCouncil,
+              ...uaeLegislation,
+              ...saudiLegislation,
+              ...omanLegislation,
+              ...kuwaitLegislation,
+              ...bahrainLegislation,
+              ...qatarLegislation
+            ]} />
+
             {/* Country Selector */}
             <div className="flex items-center gap-4 mb-6 flex-wrap">
               <span className="text-sm font-medium text-muted-foreground">Select Region:</span>
