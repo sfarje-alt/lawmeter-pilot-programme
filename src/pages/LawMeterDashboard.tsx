@@ -39,6 +39,7 @@ import { useCertificates } from '@/hooks/useCertificates';
 import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
 import { Download, Plus } from "lucide-react";
 import { InternationalLegislationSection } from "@/components/legislation/InternationalLegislationSection";
+import { GCCRegionMap } from "@/components/maps";
 import { 
   usStateBills, 
   canadaLegislation, 
@@ -408,6 +409,8 @@ export default function LawMeterDashboard() {
                       ? usStateBills.filter(l => selectedStates.includes(l.subJurisdiction || ""))
                       : usStateBills
                     }
+                    showMaps={true}
+                    mapType="usa"
                   />
                 </TabsContent>
               </Tabs>
@@ -783,13 +786,18 @@ export default function LawMeterDashboard() {
                     ? canadaLegislation.filter(l => selectedProvinces.includes(l.subJurisdiction || ""))
                     : canadaLegislation
                   }
+                  showMaps={true}
+                  mapType="canada"
                 />
               </div>
             )}
 
             {/* GCC Section */}
             {selectedCountry === "gcc" && (
-              <Tabs value={gccSubTab} onValueChange={(v) => setGccSubTab(v as "uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar")} className="w-full">
+              <div className="space-y-6">
+                <GCCRegionMap legislation={[...uaeLegislation, ...saudiLegislation, ...omanLegislation, ...kuwaitLegislation, ...bahrainLegislation, ...qatarLegislation]} />
+                
+                <Tabs value={gccSubTab} onValueChange={(v) => setGccSubTab(v as "uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar")} className="w-full">
                 <TabsList className="grid w-full grid-cols-6 mb-6 glass-card p-1 gap-1">
                   <TabsTrigger value="uae" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                     🇦🇪 UAE
@@ -835,6 +843,7 @@ export default function LawMeterDashboard() {
                   <InternationalLegislationSection legislation={qatarLegislation} />
                 </TabsContent>
               </Tabs>
+              </div>
             )}
 
             {/* EU Section */}
