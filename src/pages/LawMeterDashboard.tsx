@@ -38,6 +38,24 @@ import { CertificateTable } from '@/components/certificates/CertificateTable';
 import { useCertificates } from '@/hooks/useCertificates';
 import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
 import { Download, Plus } from "lucide-react";
+import { InternationalLegislationSection } from "@/components/legislation/InternationalLegislationSection";
+import { 
+  usStateBills, 
+  canadaLegislation, 
+  japanLegislation, 
+  koreaLegislation, 
+  taiwanLegislation,
+  euRegulations,
+  euDirectives,
+  euParliament,
+  euCouncil,
+  uaeLegislation,
+  saudiLegislation,
+  omanLegislation,
+  kuwaitLegislation,
+  bahrainLegislation,
+  qatarLegislation
+} from "@/data/mockInternationalLegislation";
 
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
@@ -385,17 +403,12 @@ export default function LawMeterDashboard() {
                     )}
                   </div>
                   
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">State Bills - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          State legislation tracking will be available here. Select one or more states to filter bills from specific state legislatures.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection 
+                    legislation={selectedStates.length > 0 
+                      ? usStateBills.filter(l => selectedStates.includes(l.subJurisdiction || ""))
+                      : usStateBills
+                    }
+                  />
                 </TabsContent>
               </Tabs>
             )}
@@ -693,53 +706,17 @@ export default function LawMeterDashboard() {
 
             {/* Japan Section */}
             {selectedCountry === "japan" && (
-              <div className="space-y-6">
-                <div className="bg-info/10 border border-info rounded-lg p-4">
-                  <div className="flex gap-2">
-                    <FileText className="h-5 w-5 text-info" />
-                    <div>
-                      <p className="font-semibold">🇯🇵 Japan Legislation - Coming Soon</p>
-                      <p className="text-sm text-muted-foreground">
-                        Japanese legislation tracking including Diet proceedings, laws, and regulations will be available here.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <InternationalLegislationSection legislation={japanLegislation} />
             )}
 
             {/* Korea Section */}
             {selectedCountry === "korea" && (
-              <div className="space-y-6">
-                <div className="bg-info/10 border border-info rounded-lg p-4">
-                  <div className="flex gap-2">
-                    <FileText className="h-5 w-5 text-info" />
-                    <div>
-                      <p className="font-semibold">🇰🇷 Korea Legislation - Coming Soon</p>
-                      <p className="text-sm text-muted-foreground">
-                        Korean legislation tracking including National Assembly bills, laws, and regulations will be available here.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <InternationalLegislationSection legislation={koreaLegislation} />
             )}
 
             {/* Taiwan Section */}
             {selectedCountry === "taiwan" && (
-              <div className="space-y-6">
-                <div className="bg-info/10 border border-info rounded-lg p-4">
-                  <div className="flex gap-2">
-                    <FileText className="h-5 w-5 text-info" />
-                    <div>
-                      <p className="font-semibold">🇹🇼 Taiwan Legislation - Coming Soon</p>
-                      <p className="text-sm text-muted-foreground">
-                        Taiwan legislation tracking including Legislative Yuan bills, laws, and regulations will be available here.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <InternationalLegislationSection legislation={taiwanLegislation} />
             )}
 
             {/* Canada Section */}
@@ -801,17 +778,12 @@ export default function LawMeterDashboard() {
                   )}
                 </div>
                 
-                <div className="bg-info/10 border border-info rounded-lg p-4">
-                  <div className="flex gap-2">
-                    <FileText className="h-5 w-5 text-info" />
-                    <div>
-                      <p className="font-semibold">🇨🇦 Canada Legislation - Coming Soon</p>
-                      <p className="text-sm text-muted-foreground">
-                        Canadian federal and provincial legislation tracking will be available here. Select one or more provinces to filter bills from specific provincial legislatures.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <InternationalLegislationSection 
+                  legislation={selectedProvinces.length > 0 
+                    ? canadaLegislation.filter(l => selectedProvinces.includes(l.subJurisdiction || ""))
+                    : canadaLegislation
+                  }
+                />
               </div>
             )}
 
@@ -840,87 +812,27 @@ export default function LawMeterDashboard() {
                 </TabsList>
 
                 <TabsContent value="uae" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇦🇪 UAE Legislation - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          UAE federal laws, decrees, and regulations monitoring will be available here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={uaeLegislation} />
                 </TabsContent>
 
                 <TabsContent value="saudi" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇸🇦 Saudi Arabia Legislation - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          Saudi Arabian royal decrees, regulations, and ministry directives monitoring will be available here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={saudiLegislation} />
                 </TabsContent>
 
                 <TabsContent value="oman" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇴🇲 Oman Legislation - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          Omani royal decrees, laws, and ministerial decisions monitoring will be available here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={omanLegislation} />
                 </TabsContent>
 
                 <TabsContent value="kuwait" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇰🇼 Kuwait Legislation - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          Kuwaiti laws, decrees, and National Assembly proceedings monitoring will be available here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={kuwaitLegislation} />
                 </TabsContent>
 
                 <TabsContent value="bahrain" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇧🇭 Bahrain Legislation - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          Bahraini laws, royal decrees, and parliamentary proceedings monitoring will be available here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={bahrainLegislation} />
                 </TabsContent>
 
                 <TabsContent value="qatar" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇶🇦 Qatar Legislation - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          Qatari laws, emiri decrees, and regulations monitoring will be available here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={qatarLegislation} />
                 </TabsContent>
               </Tabs>
             )}
@@ -948,59 +860,19 @@ export default function LawMeterDashboard() {
                 </TabsList>
 
                 <TabsContent value="regulations" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇪🇺 EU Regulations - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          EU Regulations are directly applicable across all member states. Track new regulations, amendments, and implementation timelines from the Official Journal of the European Union.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={euRegulations} />
                 </TabsContent>
 
                 <TabsContent value="directives" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <FileText className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇪🇺 EU Directives - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          EU Directives set goals for member states but leave implementation to national law. Monitor directive proposals, transposition deadlines, and national implementation status.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={euDirectives} />
                 </TabsContent>
 
                 <TabsContent value="parliament" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <Building2 className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇪🇺 European Parliament - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          Track European Parliament proceedings, legislative reports, committee activities, and MEP voting records on key legislation.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={euParliament} />
                 </TabsContent>
 
                 <TabsContent value="council" className="space-y-6 mt-6">
-                  <div className="bg-info/10 border border-info rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <Building2 className="h-5 w-5 text-info" />
-                      <div>
-                        <p className="font-semibold">🇪🇺 Council of the EU - Coming Soon</p>
-                        <p className="text-sm text-muted-foreground">
-                          Monitor Council of the European Union meetings, decisions, and legislative positions from the rotating presidency and working groups.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <InternationalLegislationSection legislation={euCouncil} />
                 </TabsContent>
               </Tabs>
             )}
