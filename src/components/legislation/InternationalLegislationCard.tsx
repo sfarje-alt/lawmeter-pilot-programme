@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, Calendar, Building2, ExternalLink } from "lucide-react";
+import { AlertTriangle, Calendar, Building2, MapPin } from "lucide-react";
 import { InternationalLegislation } from "@/data/mockInternationalLegislation";
 
 interface InternationalLegislationCardProps {
@@ -45,6 +44,12 @@ export function InternationalLegislationCard({ legislation }: InternationalLegis
             <CardTitle className="text-base font-semibold leading-tight">
               {legislation.title}
             </CardTitle>
+            {legislation.subJurisdiction && (
+              <Badge variant="outline" className="mt-2 bg-primary/10 text-primary border-primary/30">
+                <MapPin className="w-3 h-3 mr-1" />
+                {legislation.subJurisdiction}
+              </Badge>
+            )}
           </div>
         </div>
       </CardHeader>
