@@ -1,24 +1,42 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { InternationalLegislation } from "@/data/mockInternationalLegislation";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InternationalLegislation, LegislativeCategory, filterByLegislativeCategory } from "@/data/mockInternationalLegislation";
 import { InternationalLegislationCard } from "./InternationalLegislationCard";
+import { FileText, Gavel, LayoutList } from "lucide-react";
 
 interface InternationalLegislationSectionProps {
   legislation: InternationalLegislation[];
   title?: string;
   showDemo?: boolean;
+  showCategoryFilter?: boolean;
+  pendingLabel?: string;
+  enactedLabel?: string;
 }
 
 export function InternationalLegislationSection({ 
   legislation, 
   title,
-  showDemo = true 
+  showDemo = true,
+  showCategoryFilter = true,
+  pendingLabel = "Pending Bills",
+  enactedLabel = "Enacted Laws"
 }: InternationalLegislationSectionProps) {
+  const [categoryFilter, setCategoryFilter] = useState<LegislativeCategory | "all">("all");
+  
+  const filteredLegislation = filterByLegislativeCategory(legislation, categoryFilter);
+  
   const kpis = {
-    total: legislation.length,
-    high: legislation.filter(l => l.riskLevel === "high").length,
-    medium: legislation.filter(l => l.riskLevel === "medium").length,
-    low: legislation.filter(l => l.riskLevel === "low").length,
+    total: filteredLegislation.length,
+    high: filteredLegislation.filter(l => l.riskLevel === "high").length,
+    medium: filteredLegislation.filter(l => l.riskLevel === "medium").length,
+    low: filteredLegislation.filter(l => l.riskLevel === "low").length,
+  };
+
+  const categoryStats = {
+    pending: legislation.filter(l => l.legislativeCategory === "pending").length,
+    enacted: legislation.filter(l => l.legislativeCategory === "enacted").length,
   };
 
   return (
@@ -35,6 +53,26 @@ export function InternationalLegislationSection({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Category Filter Tabs */}
+      {showCategoryFilter && (
+        <Tabs value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as LegislativeCategory | "all")} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsTrigger value="all" className="gap-2">
+              <LayoutList className="w-4 h-4" />
+              All ({legislation.length})
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="gap-2">
+              <FileText className="w-4 h-4" />
+              {pendingLabel} ({categoryStats.pending})
+            </TabsTrigger>
+            <TabsTrigger value="enacted" className="gap-2">
+              <Gavel className="w-4 h-4" />
+              {enactedLabel} ({categoryStats.enacted})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -73,14 +111,14 @@ export function InternationalLegislationSection({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {legislation.map((item) => (
+        {filteredLegislation.map((item) => (
           <InternationalLegislationCard key={item.id} legislation={item} />
         ))}
       </div>
 
-      {legislation.length === 0 && (
+      {filteredLegislation.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          No legislation found for this jurisdiction.
+          No legislation found for this filter.
         </div>
       )}
     </div>

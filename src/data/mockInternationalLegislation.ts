@@ -15,6 +15,14 @@ export type LegislationType =
   | "directive"     // EU directive
   | "proposal";     // EU/regulatory proposal
 
+export type LegislativeCategory = "enacted" | "pending";
+
+export interface TimelineStage {
+  name: string;
+  completed: boolean;
+  date?: string;
+}
+
 export interface InternationalLegislation {
   id: string;
   title: string;
@@ -28,10 +36,13 @@ export interface InternationalLegislation {
   category: string;
   publishedDate: string;
   effectiveDate?: string;
+  complianceDeadline?: string;
   regulatoryBody: string;
   impactAreas: string[];
   legislationType: LegislationType;
-  localTerminology?: string; // e.g., "法案", "Proyecto de Ley", "Royal Decree"
+  legislativeCategory: LegislativeCategory;
+  localTerminology?: string;
+  timeline?: TimelineStage[];
 }
 
 function daysAgo(days: number): string {
@@ -45,6 +56,60 @@ function daysFromNow(days: number): string {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+// Timeline templates by jurisdiction
+const getUSBillTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "Introduced", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(30) : undefined },
+  { name: "Committee", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(20) : undefined },
+  { name: "Passed Chamber", completed: currentStage >= 2, date: currentStage >= 2 ? daysAgo(10) : undefined },
+  { name: "Other Chamber", completed: currentStage >= 3 },
+  { name: "Signed into Law", completed: currentStage >= 4 },
+];
+
+const getCanadaBillTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "First Reading", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(45) : undefined },
+  { name: "Second Reading", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(30) : undefined },
+  { name: "Committee", completed: currentStage >= 2, date: currentStage >= 2 ? daysAgo(15) : undefined },
+  { name: "Third Reading", completed: currentStage >= 3 },
+  { name: "Royal Assent", completed: currentStage >= 4 },
+];
+
+const getJapanBillTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "Submitted", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(40) : undefined },
+  { name: "Committee Review", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(25) : undefined },
+  { name: "House Vote", completed: currentStage >= 2, date: currentStage >= 2 ? daysAgo(10) : undefined },
+  { name: "Council Vote", completed: currentStage >= 3 },
+  { name: "Promulgated", completed: currentStage >= 4 },
+];
+
+const getKoreaBillTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "Proposed", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(35) : undefined },
+  { name: "Committee Review", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(20) : undefined },
+  { name: "Plenary Session", completed: currentStage >= 2, date: currentStage >= 2 ? daysAgo(5) : undefined },
+  { name: "Promulgation", completed: currentStage >= 3 },
+];
+
+const getTaiwanBillTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "Proposed", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(30) : undefined },
+  { name: "Committee Review", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(15) : undefined },
+  { name: "Second/Third Reading", completed: currentStage >= 2 },
+  { name: "Presidential Promulgation", completed: currentStage >= 3 },
+];
+
+const getEUProposalTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "Commission Proposal", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(60) : undefined },
+  { name: "Parliament 1st Reading", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(30) : undefined },
+  { name: "Council Position", completed: currentStage >= 2 },
+  { name: "Parliament 2nd Reading", completed: currentStage >= 3 },
+  { name: "Adopted", completed: currentStage >= 4 },
+];
+
+const getGCCBillTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "Draft", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(45) : undefined },
+  { name: "Council Review", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(20) : undefined },
+  { name: "Royal/Emiri Decree", completed: currentStage >= 2 },
+  { name: "Published", completed: currentStage >= 3 },
+];
 
 // US State Bills - Smart Kettle/Espresso Machine focused
 export const usStateBills: InternationalLegislation[] = [
@@ -65,10 +130,13 @@ export const usStateBills: InternationalLegislation[] = [
     category: "Energy Efficiency",
     publishedDate: daysAgo(15),
     effectiveDate: daysFromNow(180),
+    complianceDeadline: daysFromNow(150),
     regulatoryBody: "California Energy Commission",
     impactAreas: ["Product Design", "Certification", "Labeling"],
     legislationType: "bill",
-    localTerminology: "Senate Bill"
+    legislativeCategory: "pending",
+    localTerminology: "Senate Bill",
+    timeline: getUSBillTimeline(1)
   },
   {
     id: "ca-ccr-title20-2024",
@@ -90,6 +158,7 @@ export const usStateBills: InternationalLegislation[] = [
     regulatoryBody: "California Energy Commission",
     impactAreas: ["Product Design", "Testing", "Compliance"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "Regulation"
   },
   {
@@ -109,10 +178,13 @@ export const usStateBills: InternationalLegislation[] = [
     category: "Product Safety",
     publishedDate: daysAgo(30),
     effectiveDate: daysFromNow(120),
+    complianceDeadline: daysFromNow(90),
     regulatoryBody: "NY Department of Consumer Protection",
     impactAreas: ["Product Safety", "Manufacturing", "Labeling"],
     legislationType: "bill",
-    localTerminology: "Assembly Bill"
+    legislativeCategory: "pending",
+    localTerminology: "Assembly Bill",
+    timeline: getUSBillTimeline(2)
   },
   {
     id: "tx-hb-2024-445",
@@ -130,10 +202,13 @@ export const usStateBills: InternationalLegislation[] = [
     riskScore: 65,
     category: "Data Privacy",
     publishedDate: daysAgo(45),
+    complianceDeadline: daysFromNow(240),
     regulatoryBody: "Texas Attorney General",
     impactAreas: ["Software", "Data Privacy", "User Consent"],
     legislationType: "bill",
-    localTerminology: "House Bill"
+    legislativeCategory: "pending",
+    localTerminology: "House Bill",
+    timeline: getUSBillTimeline(1)
   },
   {
     id: "fl-sb-2024-221",
@@ -155,6 +230,7 @@ export const usStateBills: InternationalLegislation[] = [
     regulatoryBody: "Florida DBPR",
     impactAreas: ["Certification", "Import Compliance"],
     legislationType: "law",
+    legislativeCategory: "enacted",
     localTerminology: "Public Law"
   },
   {
@@ -173,10 +249,13 @@ export const usStateBills: InternationalLegislation[] = [
     riskScore: 82,
     category: "Right to Repair",
     publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(365),
     regulatoryBody: "WA Attorney General",
     impactAreas: ["Spare Parts", "Documentation", "Software"],
     legislationType: "bill",
-    localTerminology: "Senate Bill"
+    legislativeCategory: "pending",
+    localTerminology: "Senate Bill",
+    timeline: getUSBillTimeline(1)
   }
 ];
 
@@ -198,10 +277,13 @@ export const canadaLegislation: InternationalLegislation[] = [
     riskScore: 75,
     category: "Product Safety",
     publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(180),
     regulatoryBody: "Health Canada",
     impactAreas: ["Compliance", "Reporting", "Import"],
     legislationType: "bill",
-    localTerminology: "Bill C-45"
+    legislativeCategory: "pending",
+    localTerminology: "Bill C-45",
+    timeline: getCanadaBillTimeline(1)
   },
   {
     id: "on-reg-2024-445",
@@ -223,6 +305,7 @@ export const canadaLegislation: InternationalLegislation[] = [
     regulatoryBody: "Electrical Safety Authority",
     impactAreas: ["Product Safety", "Certification"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "O. Reg."
   },
   {
@@ -242,10 +325,13 @@ export const canadaLegislation: InternationalLegislation[] = [
     category: "Labeling",
     publishedDate: daysAgo(25),
     effectiveDate: daysFromNow(90),
+    complianceDeadline: daysFromNow(60),
     regulatoryBody: "Office québécois de la langue française",
     impactAreas: ["Packaging", "Documentation", "Software UI"],
     legislationType: "bill",
-    localTerminology: "Projet de loi"
+    legislativeCategory: "pending",
+    localTerminology: "Projet de loi",
+    timeline: getCanadaBillTimeline(1)
   },
   {
     id: "bc-reg-2024-112",
@@ -264,10 +350,13 @@ export const canadaLegislation: InternationalLegislation[] = [
     category: "Environmental",
     publishedDate: daysAgo(10),
     effectiveDate: daysFromNow(365),
+    complianceDeadline: daysFromNow(330),
     regulatoryBody: "BC Ministry of Environment",
     impactAreas: ["Recycling", "Product Stewardship", "Costs"],
     legislationType: "bill",
-    localTerminology: "Bill"
+    legislativeCategory: "pending",
+    localTerminology: "Bill",
+    timeline: getCanadaBillTimeline(0)
   },
   {
     id: "ab-bill-2024-34",
@@ -289,6 +378,7 @@ export const canadaLegislation: InternationalLegislation[] = [
     regulatoryBody: "Service Alberta",
     impactAreas: ["Warranty", "Documentation", "Customer Service"],
     legislationType: "law",
+    legislativeCategory: "enacted",
     localTerminology: "Act"
   }
 ];
@@ -311,10 +401,13 @@ export const japanLegislation: InternationalLegislation[] = [
     category: "Energy Efficiency",
     publishedDate: daysAgo(20),
     effectiveDate: daysFromNow(450),
+    complianceDeadline: daysFromNow(420),
     regulatoryBody: "METI",
     impactAreas: ["Product Design", "Energy Labeling", "Testing"],
     legislationType: "proposal",
-    localTerminology: "省令案 (Draft Ministerial Ordinance)"
+    legislativeCategory: "pending",
+    localTerminology: "省令案 (Draft Ministerial Ordinance)",
+    timeline: getJapanBillTimeline(2)
   },
   {
     id: "jp-diet-bill-2024-45",
@@ -331,10 +424,13 @@ export const japanLegislation: InternationalLegislation[] = [
     riskScore: 80,
     category: "Product Safety",
     publishedDate: daysAgo(35),
+    complianceDeadline: daysFromNow(300),
     regulatoryBody: "National Diet",
     impactAreas: ["Certification", "Compliance", "Recalls"],
     legislationType: "bill",
-    localTerminology: "法案 (Hōan)"
+    legislativeCategory: "pending",
+    localTerminology: "法案 (Hōan)",
+    timeline: getJapanBillTimeline(1)
   },
   {
     id: "jp-denan-2024-12",
@@ -355,6 +451,7 @@ export const japanLegislation: InternationalLegislation[] = [
     regulatoryBody: "METI - DENAN",
     impactAreas: ["Certification", "Testing", "Documentation"],
     legislationType: "law",
+    legislativeCategory: "enacted",
     localTerminology: "法律 (Hōritsu)"
   },
   {
@@ -372,10 +469,13 @@ export const japanLegislation: InternationalLegislation[] = [
     riskScore: 42,
     category: "Labeling",
     publishedDate: daysAgo(5),
+    complianceDeadline: daysFromNow(180),
     regulatoryBody: "Consumer Affairs Agency",
     impactAreas: ["Labeling", "Packaging"],
     legislationType: "proposal",
-    localTerminology: "告示案 (Draft Notice)"
+    legislativeCategory: "pending",
+    localTerminology: "告示案 (Draft Notice)",
+    timeline: getJapanBillTimeline(0)
   }
 ];
 
@@ -396,10 +496,13 @@ export const koreaLegislation: InternationalLegislation[] = [
     riskScore: 85,
     category: "Product Safety",
     publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(270),
     regulatoryBody: "National Assembly",
     impactAreas: ["Certification", "E-commerce", "Compliance"],
     legislationType: "bill",
-    localTerminology: "법안 (Beop'an)"
+    legislativeCategory: "pending",
+    localTerminology: "법안 (Beop'an)",
+    timeline: getKoreaBillTimeline(1)
   },
   {
     id: "kr-kats-2024-234",
@@ -420,6 +523,7 @@ export const koreaLegislation: InternationalLegislation[] = [
     regulatoryBody: "KATS",
     impactAreas: ["Certification", "Manufacturing", "Testing"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "고시 (Gosi/Notice)"
   },
   {
@@ -438,10 +542,13 @@ export const koreaLegislation: InternationalLegislation[] = [
     category: "Energy Efficiency",
     publishedDate: daysAgo(15),
     effectiveDate: daysFromNow(180),
+    complianceDeadline: daysFromNow(150),
     regulatoryBody: "KEMCO",
     impactAreas: ["Product Design", "Energy Labeling"],
     legislationType: "proposal",
-    localTerminology: "규정안 (Draft Regulation)"
+    legislativeCategory: "pending",
+    localTerminology: "규정안 (Draft Regulation)",
+    timeline: getKoreaBillTimeline(0)
   },
   {
     id: "kr-kca-2024-112",
@@ -458,10 +565,13 @@ export const koreaLegislation: InternationalLegislation[] = [
     riskScore: 58,
     category: "Consumer Safety",
     publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(210),
     regulatoryBody: "KCA",
     impactAreas: ["Compliance", "Reporting", "Recalls"],
     legislationType: "bill",
-    localTerminology: "법안 (Beop'an)"
+    legislativeCategory: "pending",
+    localTerminology: "법안 (Beop'an)",
+    timeline: getKoreaBillTimeline(2)
   }
 ];
 
@@ -482,10 +592,13 @@ export const taiwanLegislation: InternationalLegislation[] = [
     riskScore: 72,
     category: "Consumer Protection",
     publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(300),
     regulatoryBody: "Legislative Yuan",
     impactAreas: ["Warranty", "Compliance", "Recalls"],
     legislationType: "bill",
-    localTerminology: "法案 (Fǎ'àn)"
+    legislativeCategory: "pending",
+    localTerminology: "法案 (Fǎ'àn)",
+    timeline: getTaiwanBillTimeline(0)
   },
   {
     id: "tw-bsmi-2024-445",
@@ -506,6 +619,7 @@ export const taiwanLegislation: InternationalLegislation[] = [
     regulatoryBody: "BSMI",
     impactAreas: ["Certification", "Testing", "Labeling"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "標準 (Biāozhǔn)"
   },
   {
@@ -524,10 +638,13 @@ export const taiwanLegislation: InternationalLegislation[] = [
     category: "Energy Efficiency",
     publishedDate: daysAgo(10),
     effectiveDate: daysFromNow(730),
+    complianceDeadline: daysFromNow(700),
     regulatoryBody: "MOEA Bureau of Energy",
     impactAreas: ["Product Design", "Testing"],
     legislationType: "proposal",
-    localTerminology: "草案 (Cǎo'àn)"
+    legislativeCategory: "pending",
+    localTerminology: "草案 (Cǎo'àn)",
+    timeline: getTaiwanBillTimeline(0)
   },
   {
     id: "tw-tpca-2024-23",
@@ -544,10 +661,13 @@ export const taiwanLegislation: InternationalLegislation[] = [
     riskScore: 48,
     category: "Data Privacy",
     publishedDate: daysAgo(5),
+    complianceDeadline: daysFromNow(365),
     regulatoryBody: "Consumer Protection Committee",
     impactAreas: ["Software", "Privacy", "Documentation"],
     legislationType: "bill",
-    localTerminology: "法案 (Fǎ'àn)"
+    legislativeCategory: "pending",
+    localTerminology: "法案 (Fǎ'àn)",
+    timeline: getTaiwanBillTimeline(0)
   }
 ];
 
@@ -569,9 +689,11 @@ export const euRegulations: InternationalLegislation[] = [
     category: "Ecodesign",
     publishedDate: daysAgo(45),
     effectiveDate: daysFromNow(365),
+    complianceDeadline: daysFromNow(330),
     regulatoryBody: "European Commission",
     impactAreas: ["Product Design", "Spare Parts", "Documentation"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "Regulation (EU)"
   },
   {
@@ -589,10 +711,13 @@ export const euRegulations: InternationalLegislation[] = [
     riskScore: 70,
     category: "Environmental",
     publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(540),
     regulatoryBody: "European Parliament",
     impactAreas: ["Recycling", "Materials", "Costs"],
     legislationType: "proposal",
-    localTerminology: "COM Proposal"
+    legislativeCategory: "pending",
+    localTerminology: "COM Proposal",
+    timeline: getEUProposalTimeline(2)
   }
 ];
 
@@ -616,6 +741,7 @@ export const euDirectives: InternationalLegislation[] = [
     regulatoryBody: "European Commission",
     impactAreas: ["Certification", "Testing", "Documentation"],
     legislationType: "directive",
+    legislativeCategory: "enacted",
     localTerminology: "Directive (EU)"
   },
   {
@@ -636,6 +762,7 @@ export const euDirectives: InternationalLegislation[] = [
     regulatoryBody: "European Commission",
     impactAreas: ["Testing", "Documentation"],
     legislationType: "directive",
+    legislativeCategory: "enacted",
     localTerminology: "Implementing Decision"
   }
 ];
@@ -656,10 +783,13 @@ export const euParliament: InternationalLegislation[] = [
     riskScore: 85,
     category: "Right to Repair",
     publishedDate: daysAgo(10),
+    complianceDeadline: daysFromNow(720),
     regulatoryBody: "European Parliament",
     impactAreas: ["Spare Parts", "Documentation", "Software"],
     legislationType: "proposal",
-    localTerminology: "Parliament Resolution"
+    legislativeCategory: "pending",
+    localTerminology: "Parliament Resolution",
+    timeline: getEUProposalTimeline(1)
   },
   {
     id: "eu-parl-2024-green-claims",
@@ -676,10 +806,13 @@ export const euParliament: InternationalLegislation[] = [
     riskScore: 62,
     category: "Marketing",
     publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(450),
     regulatoryBody: "European Parliament ENVI Committee",
     impactAreas: ["Marketing", "Documentation", "Claims"],
     legislationType: "proposal",
-    localTerminology: "Draft Directive"
+    legislativeCategory: "pending",
+    localTerminology: "Draft Directive",
+    timeline: getEUProposalTimeline(1)
   }
 ];
 
@@ -700,10 +833,13 @@ export const euCouncil: InternationalLegislation[] = [
     category: "Cybersecurity",
     publishedDate: daysAgo(25),
     effectiveDate: daysFromNow(540),
+    complianceDeadline: daysFromNow(480),
     regulatoryBody: "Council of the EU",
     impactAreas: ["Software", "Security", "Updates"],
     legislationType: "proposal",
-    localTerminology: "Council General Approach"
+    legislativeCategory: "pending",
+    localTerminology: "Council General Approach",
+    timeline: getEUProposalTimeline(2)
   }
 ];
 
@@ -725,10 +861,13 @@ export const uaeLegislation: InternationalLegislation[] = [
     riskScore: 72,
     category: "Product Safety",
     publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(270),
     regulatoryBody: "Federal National Council",
     impactAreas: ["Certification", "Labeling", "Import"],
     legislationType: "bill",
-    localTerminology: "مشروع قانون (Draft Law)"
+    legislativeCategory: "pending",
+    localTerminology: "مشروع قانون (Draft Law)",
+    timeline: getGCCBillTimeline(1)
   },
   {
     id: "uae-esma-2024-178",
@@ -750,6 +889,7 @@ export const uaeLegislation: InternationalLegislation[] = [
     regulatoryBody: "ESMA",
     impactAreas: ["Certification", "Labeling"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "لائحة فنية (Technical Regulation)"
   },
   {
@@ -771,6 +911,7 @@ export const uaeLegislation: InternationalLegislation[] = [
     regulatoryBody: "DEWA",
     impactAreas: ["Energy Labeling"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "Programme"
   }
 ];
@@ -792,10 +933,13 @@ export const saudiLegislation: InternationalLegislation[] = [
     riskScore: 78,
     category: "Consumer Protection",
     publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(360),
     regulatoryBody: "Shura Council",
     impactAreas: ["Warranty", "Liability", "Compliance"],
     legislationType: "bill",
-    localTerminology: "مشروع نظام (Draft Regulation)"
+    legislativeCategory: "pending",
+    localTerminology: "مشروع نظام (Draft Regulation)",
+    timeline: getGCCBillTimeline(0)
   },
   {
     id: "sa-saso-2024-234",
@@ -814,9 +958,11 @@ export const saudiLegislation: InternationalLegislation[] = [
     category: "Certification",
     publishedDate: daysAgo(30),
     effectiveDate: daysFromNow(210),
+    complianceDeadline: daysFromNow(180),
     regulatoryBody: "SASO",
     impactAreas: ["Certification", "Testing", "Import"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "لائحة فنية (Technical Regulation)"
   },
   {
@@ -835,10 +981,13 @@ export const saudiLegislation: InternationalLegislation[] = [
     riskScore: 68,
     category: "Energy Efficiency",
     publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(540),
     regulatoryBody: "SEEC",
     impactAreas: ["Product Design", "Labeling", "Testing"],
     legislationType: "proposal",
-    localTerminology: "مسودة (Draft)"
+    legislativeCategory: "pending",
+    localTerminology: "مسودة (Draft)",
+    timeline: getGCCBillTimeline(0)
   }
 ];
 
@@ -859,10 +1008,13 @@ export const omanLegislation: InternationalLegislation[] = [
     riskScore: 58,
     category: "Product Safety",
     publishedDate: daysAgo(35),
+    complianceDeadline: daysFromNow(300),
     regulatoryBody: "Shura Council",
     impactAreas: ["Certification", "Market Access"],
     legislationType: "bill",
-    localTerminology: "مشروع قانون (Draft Law)"
+    legislativeCategory: "pending",
+    localTerminology: "مشروع قانون (Draft Law)",
+    timeline: getGCCBillTimeline(1)
   },
   {
     id: "om-dgsm-2024-112",
@@ -884,6 +1036,7 @@ export const omanLegislation: InternationalLegislation[] = [
     regulatoryBody: "DGSM",
     impactAreas: ["Certification"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "لائحة (Regulation)"
   }
 ];
@@ -905,10 +1058,13 @@ export const kuwaitLegislation: InternationalLegislation[] = [
     riskScore: 62,
     category: "Product Safety",
     publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(330),
     regulatoryBody: "National Assembly",
     impactAreas: ["Import", "Compliance", "Consumer Rights"],
     legislationType: "bill",
-    localTerminology: "مشروع قانون (Draft Law)"
+    legislativeCategory: "pending",
+    localTerminology: "مشروع قانون (Draft Law)",
+    timeline: getGCCBillTimeline(0)
   },
   {
     id: "kw-paaet-2024-67",
@@ -926,10 +1082,13 @@ export const kuwaitLegislation: InternationalLegislation[] = [
     riskScore: 58,
     category: "Import",
     publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(240),
     regulatoryBody: "PAI",
     impactAreas: ["Import", "Documentation"],
     legislationType: "proposal",
-    localTerminology: "مسودة لائحة (Draft Regulation)"
+    legislativeCategory: "pending",
+    localTerminology: "مسودة لائحة (Draft Regulation)",
+    timeline: getGCCBillTimeline(0)
   }
 ];
 
@@ -950,10 +1109,13 @@ export const bahrainLegislation: InternationalLegislation[] = [
     riskScore: 55,
     category: "Consumer Protection",
     publishedDate: daysAgo(40),
+    complianceDeadline: daysFromNow(360),
     regulatoryBody: "Shura Council",
     impactAreas: ["Liability", "Recalls", "Compliance"],
     legislationType: "bill",
-    localTerminology: "مشروع قانون (Draft Law)"
+    legislativeCategory: "pending",
+    localTerminology: "مشروع قانون (Draft Law)",
+    timeline: getGCCBillTimeline(1)
   },
   {
     id: "bh-moic-2024-34",
@@ -975,6 +1137,7 @@ export const bahrainLegislation: InternationalLegislation[] = [
     regulatoryBody: "MOIC",
     impactAreas: ["Warranty", "Customer Service"],
     legislationType: "law",
+    legislativeCategory: "enacted",
     localTerminology: "قانون (Law)"
   }
 ];
@@ -996,10 +1159,13 @@ export const qatarLegislation: InternationalLegislation[] = [
     riskScore: 58,
     category: "Product Safety",
     publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(300),
     regulatoryBody: "Shura Council",
     impactAreas: ["Certification", "Testing"],
     legislationType: "bill",
-    localTerminology: "مشروع قانون (Draft Law)"
+    legislativeCategory: "pending",
+    localTerminology: "مشروع قانون (Draft Law)",
+    timeline: getGCCBillTimeline(1)
   },
   {
     id: "qa-qsqc-2024-89",
@@ -1021,6 +1187,7 @@ export const qatarLegislation: InternationalLegislation[] = [
     regulatoryBody: "QS",
     impactAreas: ["Certification", "Manufacturing"],
     legislationType: "regulation",
+    legislativeCategory: "enacted",
     localTerminology: "لائحة فنية (Technical Regulation)"
   }
 ];
@@ -1033,7 +1200,7 @@ export function getLegislationByJurisdiction(jurisdiction: string, subJurisdicti
         ? usStateBills.filter(l => l.subJurisdiction === subJurisdiction)
         : usStateBills;
     case "canada":
-      return subJurisdiction
+      return subJurisdiction 
         ? canadaLegislation.filter(l => l.subJurisdiction === subJurisdiction)
         : canadaLegislation;
     case "japan":
@@ -1065,4 +1232,13 @@ export function getLegislationByJurisdiction(jurisdiction: string, subJurisdicti
     default:
       return [];
   }
+}
+
+// Helper to filter by legislative category
+export function filterByLegislativeCategory(
+  legislation: InternationalLegislation[], 
+  category: LegislativeCategory | "all"
+): InternationalLegislation[] {
+  if (category === "all") return legislation;
+  return legislation.filter(l => l.legislativeCategory === category);
 }
