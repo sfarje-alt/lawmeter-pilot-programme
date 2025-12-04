@@ -1,3 +1,20 @@
+// Legislation types by jurisdiction:
+// USA: Laws (enacted), Bills (pending) - H.R. (House), S. (Senate)
+// Canada: Acts (enacted), Bills (pending) - C- (Commons), S- (Senate)
+// Japan: 法律/Laws (enacted), 法案/Bills (pending)
+// Korea: 법률/Laws (enacted), 법안/Bills (pending)
+// Taiwan: 法律/Laws (enacted), 法案/Bills (pending)
+// EU: Regulations/Directives (enacted), Proposals (pending)
+// GCC: Laws/Decrees (enacted), Draft Laws (pending)
+
+export type LegislationType = 
+  | "law"           // Enacted legislation
+  | "regulation"    // Enacted regulatory rules
+  | "bill"          // Pending bill/proposal
+  | "decree"        // Executive/Royal decree
+  | "directive"     // EU directive
+  | "proposal";     // EU/regulatory proposal
+
 export interface InternationalLegislation {
   id: string;
   title: string;
@@ -13,6 +30,8 @@ export interface InternationalLegislation {
   effectiveDate?: string;
   regulatoryBody: string;
   impactAreas: string[];
+  legislationType: LegislationType;
+  localTerminology?: string; // e.g., "法案", "Proyecto de Ley", "Royal Decree"
 }
 
 function daysAgo(days: number): string {
@@ -47,7 +66,31 @@ export const usStateBills: InternationalLegislation[] = [
     publishedDate: daysAgo(15),
     effectiveDate: daysFromNow(180),
     regulatoryBody: "California Energy Commission",
-    impactAreas: ["Product Design", "Certification", "Labeling"]
+    impactAreas: ["Product Design", "Certification", "Labeling"],
+    legislationType: "bill",
+    localTerminology: "Senate Bill"
+  },
+  {
+    id: "ca-ccr-title20-2024",
+    title: "Title 20 Appliance Efficiency Regulations Update",
+    summary: "California Code of Regulations update for small appliance efficiency standards now in force.",
+    bullets: [
+      "New efficiency tiers for water heating appliances",
+      "Updated test procedures per CEC guidelines",
+      "Mandatory compliance for all new models"
+    ],
+    status: "In Force",
+    jurisdiction: "USA",
+    subJurisdiction: "CA",
+    riskLevel: "high",
+    riskScore: 82,
+    category: "Energy Efficiency",
+    publishedDate: daysAgo(90),
+    effectiveDate: daysAgo(30),
+    regulatoryBody: "California Energy Commission",
+    impactAreas: ["Product Design", "Testing", "Compliance"],
+    legislationType: "regulation",
+    localTerminology: "Regulation"
   },
   {
     id: "ny-ab-2024-1023",
@@ -67,7 +110,9 @@ export const usStateBills: InternationalLegislation[] = [
     publishedDate: daysAgo(30),
     effectiveDate: daysFromNow(120),
     regulatoryBody: "NY Department of Consumer Protection",
-    impactAreas: ["Product Safety", "Manufacturing", "Labeling"]
+    impactAreas: ["Product Safety", "Manufacturing", "Labeling"],
+    legislationType: "bill",
+    localTerminology: "Assembly Bill"
   },
   {
     id: "tx-hb-2024-445",
@@ -86,7 +131,9 @@ export const usStateBills: InternationalLegislation[] = [
     category: "Data Privacy",
     publishedDate: daysAgo(45),
     regulatoryBody: "Texas Attorney General",
-    impactAreas: ["Software", "Data Privacy", "User Consent"]
+    impactAreas: ["Software", "Data Privacy", "User Consent"],
+    legislationType: "bill",
+    localTerminology: "House Bill"
   },
   {
     id: "fl-sb-2024-221",
@@ -106,7 +153,9 @@ export const usStateBills: InternationalLegislation[] = [
     publishedDate: daysAgo(60),
     effectiveDate: daysAgo(10),
     regulatoryBody: "Florida DBPR",
-    impactAreas: ["Certification", "Import Compliance"]
+    impactAreas: ["Certification", "Import Compliance"],
+    legislationType: "law",
+    localTerminology: "Public Law"
   },
   {
     id: "wa-sb-2024-156",
@@ -125,12 +174,35 @@ export const usStateBills: InternationalLegislation[] = [
     category: "Right to Repair",
     publishedDate: daysAgo(20),
     regulatoryBody: "WA Attorney General",
-    impactAreas: ["Spare Parts", "Documentation", "Software"]
+    impactAreas: ["Spare Parts", "Documentation", "Software"],
+    legislationType: "bill",
+    localTerminology: "Senate Bill"
   }
 ];
 
 // Canada Provincial Legislation
 export const canadaLegislation: InternationalLegislation[] = [
+  {
+    id: "ca-fed-c45-2024",
+    title: "Canada Consumer Product Safety Act Amendment",
+    summary: "Federal bill to strengthen safety requirements for electrical household appliances.",
+    bullets: [
+      "Enhanced recall powers for Health Canada",
+      "Mandatory incident reporting within 48 hours",
+      "New penalties for non-compliant importers"
+    ],
+    status: "Second Reading",
+    jurisdiction: "Canada",
+    subJurisdiction: "Federal",
+    riskLevel: "high",
+    riskScore: 75,
+    category: "Product Safety",
+    publishedDate: daysAgo(25),
+    regulatoryBody: "Health Canada",
+    impactAreas: ["Compliance", "Reporting", "Import"],
+    legislationType: "bill",
+    localTerminology: "Bill C-45"
+  },
   {
     id: "on-reg-2024-445",
     title: "Ontario Electrical Safety Code Amendment - Kitchen Appliances",
@@ -149,7 +221,9 @@ export const canadaLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(90),
     effectiveDate: daysAgo(30),
     regulatoryBody: "Electrical Safety Authority",
-    impactAreas: ["Product Safety", "Certification"]
+    impactAreas: ["Product Safety", "Certification"],
+    legislationType: "regulation",
+    localTerminology: "O. Reg."
   },
   {
     id: "qc-bill-2024-78",
@@ -169,7 +243,9 @@ export const canadaLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(25),
     effectiveDate: daysFromNow(90),
     regulatoryBody: "Office québécois de la langue française",
-    impactAreas: ["Packaging", "Documentation", "Software UI"]
+    impactAreas: ["Packaging", "Documentation", "Software UI"],
+    legislationType: "bill",
+    localTerminology: "Projet de loi"
   },
   {
     id: "bc-reg-2024-112",
@@ -189,7 +265,9 @@ export const canadaLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(10),
     effectiveDate: daysFromNow(365),
     regulatoryBody: "BC Ministry of Environment",
-    impactAreas: ["Recycling", "Product Stewardship", "Costs"]
+    impactAreas: ["Recycling", "Product Stewardship", "Costs"],
+    legislationType: "bill",
+    localTerminology: "Bill"
   },
   {
     id: "ab-bill-2024-34",
@@ -209,7 +287,9 @@ export const canadaLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(45),
     effectiveDate: daysFromNow(60),
     regulatoryBody: "Service Alberta",
-    impactAreas: ["Warranty", "Documentation", "Customer Service"]
+    impactAreas: ["Warranty", "Documentation", "Customer Service"],
+    legislationType: "law",
+    localTerminology: "Act"
   }
 ];
 
@@ -232,7 +312,29 @@ export const japanLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(20),
     effectiveDate: daysFromNow(450),
     regulatoryBody: "METI",
-    impactAreas: ["Product Design", "Energy Labeling", "Testing"]
+    impactAreas: ["Product Design", "Energy Labeling", "Testing"],
+    legislationType: "proposal",
+    localTerminology: "省令案 (Draft Ministerial Ordinance)"
+  },
+  {
+    id: "jp-diet-bill-2024-45",
+    title: "Consumer Product Safety Enhancement Bill",
+    summary: "Diet bill to strengthen safety requirements and recall procedures for household appliances.",
+    bullets: [
+      "Expanded definition of serious product incidents",
+      "Enhanced penalties for safety violations",
+      "New mandatory certification categories"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Japan",
+    riskLevel: "high",
+    riskScore: 80,
+    category: "Product Safety",
+    publishedDate: daysAgo(35),
+    regulatoryBody: "National Diet",
+    impactAreas: ["Certification", "Compliance", "Recalls"],
+    legislationType: "bill",
+    localTerminology: "法案 (Hōan)"
   },
   {
     id: "jp-denan-2024-12",
@@ -251,7 +353,9 @@ export const japanLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(60),
     effectiveDate: daysAgo(15),
     regulatoryBody: "METI - DENAN",
-    impactAreas: ["Certification", "Testing", "Documentation"]
+    impactAreas: ["Certification", "Testing", "Documentation"],
+    legislationType: "law",
+    localTerminology: "法律 (Hōritsu)"
   },
   {
     id: "jp-caa-2024-56",
@@ -269,12 +373,34 @@ export const japanLegislation: InternationalLegislation[] = [
     category: "Labeling",
     publishedDate: daysAgo(5),
     regulatoryBody: "Consumer Affairs Agency",
-    impactAreas: ["Labeling", "Packaging"]
+    impactAreas: ["Labeling", "Packaging"],
+    legislationType: "proposal",
+    localTerminology: "告示案 (Draft Notice)"
   }
 ];
 
 // Korea Legislation
 export const koreaLegislation: InternationalLegislation[] = [
+  {
+    id: "kr-na-bill-2024-1892",
+    title: "Electrical Appliance Safety Control Act Amendment",
+    summary: "National Assembly bill to strengthen safety certification and market surveillance for electrical appliances.",
+    bullets: [
+      "Expanded scope of mandatory KC certification",
+      "New online marketplace compliance requirements",
+      "Enhanced penalties for non-certified products"
+    ],
+    status: "Committee Review",
+    jurisdiction: "Korea",
+    riskLevel: "high",
+    riskScore: 85,
+    category: "Product Safety",
+    publishedDate: daysAgo(20),
+    regulatoryBody: "National Assembly",
+    impactAreas: ["Certification", "E-commerce", "Compliance"],
+    legislationType: "bill",
+    localTerminology: "법안 (Beop'an)"
+  },
   {
     id: "kr-kats-2024-234",
     title: "KC Mark Requirements Update - Heating Appliances",
@@ -292,7 +418,9 @@ export const koreaLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(45),
     effectiveDate: daysAgo(5),
     regulatoryBody: "KATS",
-    impactAreas: ["Certification", "Manufacturing", "Testing"]
+    impactAreas: ["Certification", "Manufacturing", "Testing"],
+    legislationType: "regulation",
+    localTerminology: "고시 (Gosi/Notice)"
   },
   {
     id: "kr-kemco-2024-78",
@@ -311,11 +439,13 @@ export const koreaLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(15),
     effectiveDate: daysFromNow(180),
     regulatoryBody: "KEMCO",
-    impactAreas: ["Product Design", "Energy Labeling"]
+    impactAreas: ["Product Design", "Energy Labeling"],
+    legislationType: "proposal",
+    localTerminology: "규정안 (Draft Regulation)"
   },
   {
     id: "kr-kca-2024-112",
-    title: "Consumer Safety Special Act Amendment - Small Appliances",
+    title: "Consumer Safety Special Act Amendment",
     summary: "Korea Consumer Agency strengthens recall and reporting requirements for consumer appliances.",
     bullets: [
       "72-hour incident reporting requirement",
@@ -329,12 +459,34 @@ export const koreaLegislation: InternationalLegislation[] = [
     category: "Consumer Safety",
     publishedDate: daysAgo(30),
     regulatoryBody: "KCA",
-    impactAreas: ["Compliance", "Reporting", "Recalls"]
+    impactAreas: ["Compliance", "Reporting", "Recalls"],
+    legislationType: "bill",
+    localTerminology: "법안 (Beop'an)"
   }
 ];
 
 // Taiwan Legislation  
 export const taiwanLegislation: InternationalLegislation[] = [
+  {
+    id: "tw-ly-bill-2024-234",
+    title: "Consumer Protection Act Amendment - Appliance Safety",
+    summary: "Legislative Yuan bill to enhance consumer protection for household electrical appliances.",
+    bullets: [
+      "Extended warranty period requirements",
+      "Strengthened recall notification procedures",
+      "New penalties for safety standard violations"
+    ],
+    status: "First Reading",
+    jurisdiction: "Taiwan",
+    riskLevel: "high",
+    riskScore: 72,
+    category: "Consumer Protection",
+    publishedDate: daysAgo(15),
+    regulatoryBody: "Legislative Yuan",
+    impactAreas: ["Warranty", "Compliance", "Recalls"],
+    legislationType: "bill",
+    localTerminology: "法案 (Fǎ'àn)"
+  },
   {
     id: "tw-bsmi-2024-445",
     title: "BSMI Certification Update - Electric Water Heaters",
@@ -352,7 +504,9 @@ export const taiwanLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(30),
     effectiveDate: daysAgo(10),
     regulatoryBody: "BSMI",
-    impactAreas: ["Certification", "Testing", "Labeling"]
+    impactAreas: ["Certification", "Testing", "Labeling"],
+    legislationType: "regulation",
+    localTerminology: "標準 (Biāozhǔn)"
   },
   {
     id: "tw-moea-2024-89",
@@ -371,7 +525,9 @@ export const taiwanLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(10),
     effectiveDate: daysFromNow(730),
     regulatoryBody: "MOEA Bureau of Energy",
-    impactAreas: ["Product Design", "Testing"]
+    impactAreas: ["Product Design", "Testing"],
+    legislationType: "proposal",
+    localTerminology: "草案 (Cǎo'àn)"
   },
   {
     id: "tw-tpca-2024-23",
@@ -389,7 +545,9 @@ export const taiwanLegislation: InternationalLegislation[] = [
     category: "Data Privacy",
     publishedDate: daysAgo(5),
     regulatoryBody: "Consumer Protection Committee",
-    impactAreas: ["Software", "Privacy", "Documentation"]
+    impactAreas: ["Software", "Privacy", "Documentation"],
+    legislationType: "bill",
+    localTerminology: "法案 (Fǎ'àn)"
   }
 ];
 
@@ -412,7 +570,9 @@ export const euRegulations: InternationalLegislation[] = [
     publishedDate: daysAgo(45),
     effectiveDate: daysFromNow(365),
     regulatoryBody: "European Commission",
-    impactAreas: ["Product Design", "Spare Parts", "Documentation"]
+    impactAreas: ["Product Design", "Spare Parts", "Documentation"],
+    legislationType: "regulation",
+    localTerminology: "Regulation (EU)"
   },
   {
     id: "eu-weee-2024-amend",
@@ -430,7 +590,9 @@ export const euRegulations: InternationalLegislation[] = [
     category: "Environmental",
     publishedDate: daysAgo(30),
     regulatoryBody: "European Parliament",
-    impactAreas: ["Recycling", "Materials", "Costs"]
+    impactAreas: ["Recycling", "Materials", "Costs"],
+    legislationType: "proposal",
+    localTerminology: "COM Proposal"
   }
 ];
 
@@ -452,7 +614,9 @@ export const euDirectives: InternationalLegislation[] = [
     publishedDate: daysAgo(60),
     effectiveDate: daysAgo(20),
     regulatoryBody: "European Commission",
-    impactAreas: ["Certification", "Testing", "Documentation"]
+    impactAreas: ["Certification", "Testing", "Documentation"],
+    legislationType: "directive",
+    localTerminology: "Directive (EU)"
   },
   {
     id: "eu-emc-2024-89",
@@ -470,7 +634,9 @@ export const euDirectives: InternationalLegislation[] = [
     category: "EMC",
     publishedDate: daysAgo(15),
     regulatoryBody: "European Commission",
-    impactAreas: ["Testing", "Documentation"]
+    impactAreas: ["Testing", "Documentation"],
+    legislationType: "directive",
+    localTerminology: "Implementing Decision"
   }
 ];
 
@@ -491,7 +657,9 @@ export const euParliament: InternationalLegislation[] = [
     category: "Right to Repair",
     publishedDate: daysAgo(10),
     regulatoryBody: "European Parliament",
-    impactAreas: ["Spare Parts", "Documentation", "Software"]
+    impactAreas: ["Spare Parts", "Documentation", "Software"],
+    legislationType: "proposal",
+    localTerminology: "Parliament Resolution"
   },
   {
     id: "eu-parl-2024-green-claims",
@@ -509,7 +677,9 @@ export const euParliament: InternationalLegislation[] = [
     category: "Marketing",
     publishedDate: daysAgo(20),
     regulatoryBody: "European Parliament ENVI Committee",
-    impactAreas: ["Marketing", "Documentation", "Claims"]
+    impactAreas: ["Marketing", "Documentation", "Claims"],
+    legislationType: "proposal",
+    localTerminology: "Draft Directive"
   }
 ];
 
@@ -531,12 +701,35 @@ export const euCouncil: InternationalLegislation[] = [
     publishedDate: daysAgo(25),
     effectiveDate: daysFromNow(540),
     regulatoryBody: "Council of the EU",
-    impactAreas: ["Software", "Security", "Updates"]
+    impactAreas: ["Software", "Security", "Updates"],
+    legislationType: "proposal",
+    localTerminology: "Council General Approach"
   }
 ];
 
 // GCC Countries
 export const uaeLegislation: InternationalLegislation[] = [
+  {
+    id: "uae-fnc-bill-2024-34",
+    title: "Federal National Council - Consumer Electronics Safety Bill",
+    summary: "FNC draft law to enhance safety requirements for imported electrical appliances.",
+    bullets: [
+      "Stricter pre-market testing requirements",
+      "Enhanced labeling in Arabic",
+      "New penalties for non-compliant imports"
+    ],
+    status: "Under Review",
+    jurisdiction: "GCC",
+    subJurisdiction: "UAE",
+    riskLevel: "high",
+    riskScore: 72,
+    category: "Product Safety",
+    publishedDate: daysAgo(20),
+    regulatoryBody: "Federal National Council",
+    impactAreas: ["Certification", "Labeling", "Import"],
+    legislationType: "bill",
+    localTerminology: "مشروع قانون (Draft Law)"
+  },
   {
     id: "uae-esma-2024-178",
     title: "ESMA Technical Regulation - Electric Kettles",
@@ -555,7 +748,9 @@ export const uaeLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(40),
     effectiveDate: daysAgo(10),
     regulatoryBody: "ESMA",
-    impactAreas: ["Certification", "Labeling"]
+    impactAreas: ["Certification", "Labeling"],
+    legislationType: "regulation",
+    localTerminology: "لائحة فنية (Technical Regulation)"
   },
   {
     id: "uae-dewa-2024-56",
@@ -574,11 +769,34 @@ export const uaeLegislation: InternationalLegislation[] = [
     category: "Energy Efficiency",
     publishedDate: daysAgo(20),
     regulatoryBody: "DEWA",
-    impactAreas: ["Energy Labeling"]
+    impactAreas: ["Energy Labeling"],
+    legislationType: "regulation",
+    localTerminology: "Programme"
   }
 ];
 
 export const saudiLegislation: InternationalLegislation[] = [
+  {
+    id: "sa-shoura-bill-2024-89",
+    title: "Shura Council - Consumer Protection Enhancement Bill",
+    summary: "Shura Council draft law to strengthen consumer protection for electrical products.",
+    bullets: [
+      "Enhanced product liability provisions",
+      "Mandatory warranty registration",
+      "New dispute resolution mechanisms"
+    ],
+    status: "First Review",
+    jurisdiction: "GCC",
+    subJurisdiction: "Saudi Arabia",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Consumer Protection",
+    publishedDate: daysAgo(30),
+    regulatoryBody: "Shura Council",
+    impactAreas: ["Warranty", "Liability", "Compliance"],
+    legislationType: "bill",
+    localTerminology: "مشروع نظام (Draft Regulation)"
+  },
   {
     id: "sa-saso-2024-234",
     title: "SASO Technical Regulation Update - Household Appliances",
@@ -597,7 +815,9 @@ export const saudiLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(30),
     effectiveDate: daysFromNow(210),
     regulatoryBody: "SASO",
-    impactAreas: ["Certification", "Testing", "Import"]
+    impactAreas: ["Certification", "Testing", "Import"],
+    legislationType: "regulation",
+    localTerminology: "لائحة فنية (Technical Regulation)"
   },
   {
     id: "sa-seec-2024-89",
@@ -616,11 +836,34 @@ export const saudiLegislation: InternationalLegislation[] = [
     category: "Energy Efficiency",
     publishedDate: daysAgo(15),
     regulatoryBody: "SEEC",
-    impactAreas: ["Product Design", "Labeling", "Testing"]
+    impactAreas: ["Product Design", "Labeling", "Testing"],
+    legislationType: "proposal",
+    localTerminology: "مسودة (Draft)"
   }
 ];
 
 export const omanLegislation: InternationalLegislation[] = [
+  {
+    id: "om-shura-bill-2024-45",
+    title: "Shura Council - Electrical Product Safety Bill",
+    summary: "Oman's Shura Council reviewing draft law on electrical product market access.",
+    bullets: [
+      "New pre-market approval requirements",
+      "Enhanced market surveillance powers",
+      "Penalties for safety standard violations"
+    ],
+    status: "Committee Review",
+    jurisdiction: "GCC",
+    subJurisdiction: "Oman",
+    riskLevel: "medium",
+    riskScore: 58,
+    category: "Product Safety",
+    publishedDate: daysAgo(35),
+    regulatoryBody: "Shura Council",
+    impactAreas: ["Certification", "Market Access"],
+    legislationType: "bill",
+    localTerminology: "مشروع قانون (Draft Law)"
+  },
   {
     id: "om-dgsm-2024-112",
     title: "Oman Quality Mark - Electrical Appliances Update",
@@ -639,15 +882,38 @@ export const omanLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(50),
     effectiveDate: daysAgo(20),
     regulatoryBody: "DGSM",
-    impactAreas: ["Certification"]
+    impactAreas: ["Certification"],
+    legislationType: "regulation",
+    localTerminology: "لائحة (Regulation)"
   }
 ];
 
 export const kuwaitLegislation: InternationalLegislation[] = [
   {
+    id: "kw-na-bill-2024-123",
+    title: "National Assembly - Consumer Goods Safety Bill",
+    summary: "Kuwait National Assembly draft law on safety requirements for consumer electronics.",
+    bullets: [
+      "Comprehensive product safety framework",
+      "Enhanced import inspection procedures",
+      "New consumer complaint mechanisms"
+    ],
+    status: "First Reading",
+    jurisdiction: "GCC",
+    subJurisdiction: "Kuwait",
+    riskLevel: "medium",
+    riskScore: 62,
+    category: "Product Safety",
+    publishedDate: daysAgo(25),
+    regulatoryBody: "National Assembly",
+    impactAreas: ["Import", "Compliance", "Consumer Rights"],
+    legislationType: "bill",
+    localTerminology: "مشروع قانون (Draft Law)"
+  },
+  {
     id: "kw-paaet-2024-67",
     title: "Kuwait Technical Regulation - Small Appliances",
-    summary: "Public Authority for Applied Education updates import requirements for small electrical appliances.",
+    summary: "Public Authority for Industry updates import requirements for small electrical appliances.",
     bullets: [
       "Certificate of conformity required for customs clearance",
       "Arabic user manual mandatory",
@@ -661,11 +927,34 @@ export const kuwaitLegislation: InternationalLegislation[] = [
     category: "Import",
     publishedDate: daysAgo(25),
     regulatoryBody: "PAI",
-    impactAreas: ["Import", "Documentation"]
+    impactAreas: ["Import", "Documentation"],
+    legislationType: "proposal",
+    localTerminology: "مسودة لائحة (Draft Regulation)"
   }
 ];
 
 export const bahrainLegislation: InternationalLegislation[] = [
+  {
+    id: "bh-shura-bill-2024-56",
+    title: "Shura Council - Product Liability Framework Bill",
+    summary: "Bahrain's Shura Council reviewing comprehensive product liability legislation.",
+    bullets: [
+      "Establishes manufacturer liability framework",
+      "Consumer compensation mechanisms",
+      "Product recall procedures"
+    ],
+    status: "Committee Stage",
+    jurisdiction: "GCC",
+    subJurisdiction: "Bahrain",
+    riskLevel: "medium",
+    riskScore: 55,
+    category: "Consumer Protection",
+    publishedDate: daysAgo(40),
+    regulatoryBody: "Shura Council",
+    impactAreas: ["Liability", "Recalls", "Compliance"],
+    legislationType: "bill",
+    localTerminology: "مشروع قانون (Draft Law)"
+  },
   {
     id: "bh-moic-2024-34",
     title: "Bahrain Consumer Protection - Appliance Warranties",
@@ -684,11 +973,34 @@ export const bahrainLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(60),
     effectiveDate: daysAgo(30),
     regulatoryBody: "MOIC",
-    impactAreas: ["Warranty", "Customer Service"]
+    impactAreas: ["Warranty", "Customer Service"],
+    legislationType: "law",
+    localTerminology: "قانون (Law)"
   }
 ];
 
 export const qatarLegislation: InternationalLegislation[] = [
+  {
+    id: "qa-shura-bill-2024-78",
+    title: "Shura Council - Electrical Equipment Safety Bill",
+    summary: "Qatar's Shura Council reviewing draft law on electrical equipment safety standards.",
+    bullets: [
+      "New conformity assessment requirements",
+      "Enhanced product testing protocols",
+      "Market surveillance framework"
+    ],
+    status: "Under Discussion",
+    jurisdiction: "GCC",
+    subJurisdiction: "Qatar",
+    riskLevel: "medium",
+    riskScore: 58,
+    category: "Product Safety",
+    publishedDate: daysAgo(30),
+    regulatoryBody: "Shura Council",
+    impactAreas: ["Certification", "Testing"],
+    legislationType: "bill",
+    localTerminology: "مشروع قانون (Draft Law)"
+  },
   {
     id: "qa-qsqc-2024-89",
     title: "Qatar Quality Mark - Kitchen Appliances",
@@ -707,7 +1019,9 @@ export const qatarLegislation: InternationalLegislation[] = [
     publishedDate: daysAgo(35),
     effectiveDate: daysAgo(5),
     regulatoryBody: "QS",
-    impactAreas: ["Certification", "Manufacturing"]
+    impactAreas: ["Certification", "Manufacturing"],
+    legislationType: "regulation",
+    localTerminology: "لائحة فنية (Technical Regulation)"
   }
 ];
 
