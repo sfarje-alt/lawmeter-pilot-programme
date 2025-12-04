@@ -1,10 +1,1 @@
-project_id = "ysjurjtlwugoaaawgklz"
-
-[functions.email-bill-updates]
-verify_jwt = false
-
-[functions.scrape-bill-statuses]
-verify_jwt = false
-
-[functions.analyze-bill]
-verify_jwt = false
+project_id = "znufqelcglmvkggypybw"
