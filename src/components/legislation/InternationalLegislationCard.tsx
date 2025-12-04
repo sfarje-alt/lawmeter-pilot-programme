@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Calendar, Building2, MapPin, FileText, Gavel, ScrollText } from "lucide-react";
-import { InternationalLegislation, LegislationType } from "@/data/mockInternationalLegislation";
+import { AlertTriangle, Calendar, Building2, MapPin, FileText, Gavel, ScrollText, Clock, CheckCircle2, Circle } from "lucide-react";
+import { InternationalLegislation, LegislationType, TimelineStage } from "@/data/mockInternationalLegislation";
 
 interface InternationalLegislationCardProps {
   legislation: InternationalLegislation;
@@ -18,10 +18,10 @@ export function InternationalLegislationCard({ legislation }: InternationalLegis
   };
 
   const getStatusColor = (status: string) => {
-    if (status.includes("In Force") || status.includes("Enacted") || status.includes("Adopted") || status.includes("Royal Assent")) {
+    if (status.includes("In Force") || status.includes("Enacted") || status.includes("Adopted") || status.includes("Royal Assent") || status.includes("Published")) {
       return "bg-success/20 text-success border-success/30";
     }
-    if (status.includes("Draft") || status.includes("Proposed") || status.includes("Public") || status.includes("Voluntary")) {
+    if (status.includes("Draft") || status.includes("Proposed") || status.includes("Public") || status.includes("Voluntary") || status.includes("First")) {
       return "bg-info/20 text-info border-info/30";
     }
     return "bg-warning/20 text-warning border-warning/30";
@@ -41,6 +41,22 @@ export function InternationalLegislationCard({ legislation }: InternationalLegis
 
   const typeInfo = getLegislationTypeInfo(legislation.legislationType);
   const TypeIcon = typeInfo.icon;
+  const isPending = legislation.legislativeCategory === "pending";
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getDaysUntil = (dateString: string) => {
+    const target = new Date(dateString);
+    const today = new Date();
+    const diff = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
 
   return (
     <Card className="glass-card hover:shadow-lg transition-all duration-200 border-white/10">
@@ -86,6 +102,32 @@ export function InternationalLegislationCard({ legislation }: InternationalLegis
           ))}
         </div>
 
+        {/* Timeline for pending legislation */}
+        {isPending && legislation.timeline && legislation.timeline.length > 0 && (
+          <div className="pt-2 border-t border-white/10">
+            <div className="text-xs text-muted-foreground mb-2 font-medium">Legislative Progress</div>
+            <div className="flex items-center gap-1">
+              {legislation.timeline.map((stage, idx) => (
+                <div key={idx} className="flex items-center">
+                  <div className="flex flex-col items-center">
+                    {stage.completed ? (
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                    ) : (
+                      <Circle className="w-4 h-4 text-muted-foreground/40" />
+                    )}
+                    <span className={`text-[10px] mt-1 text-center max-w-[50px] leading-tight ${stage.completed ? 'text-foreground' : 'text-muted-foreground/60'}`}>
+                      {stage.name}
+                    </span>
+                  </div>
+                  {idx < legislation.timeline!.length - 1 && (
+                    <div className={`h-0.5 w-4 mx-0.5 ${stage.completed ? 'bg-success' : 'bg-muted-foreground/20'}`} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2 pt-2">
           <Badge variant="secondary" className="text-xs">
             <Building2 className="w-3 h-3 mr-1" />
@@ -96,14 +138,32 @@ export function InternationalLegislationCard({ legislation }: InternationalLegis
           </Badge>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-white/10">
+        {/* Dates section */}
+        <div className="grid grid-cols-1 gap-1 text-xs text-muted-foreground pt-2 border-t border-white/10">
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            Published: {legislation.publishedDate}
+            <span>Published: {formatDate(legislation.publishedDate)}</span>
           </div>
           {legislation.effectiveDate && (
             <div className="flex items-center gap-1">
-              <span>Effective: {legislation.effectiveDate}</span>
+              <Clock className="w-3 h-3" />
+              <span>Effective: {formatDate(legislation.effectiveDate)}</span>
+              {getDaysUntil(legislation.effectiveDate) > 0 && (
+                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">
+                  in {getDaysUntil(legislation.effectiveDate)} days
+                </Badge>
+              )}
+            </div>
+          )}
+          {legislation.complianceDeadline && (
+            <div className="flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3 text-warning" />
+              <span className="text-warning">Compliance Deadline: {formatDate(legislation.complianceDeadline)}</span>
+              {getDaysUntil(legislation.complianceDeadline) > 0 && getDaysUntil(legislation.complianceDeadline) <= 90 && (
+                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 border-warning text-warning">
+                  {getDaysUntil(legislation.complianceDeadline)} days left
+                </Badge>
+              )}
             </div>
           )}
         </div>
