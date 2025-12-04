@@ -262,7 +262,7 @@ export default function CertificateForm() {
                     <FormItem>
                       <FormLabel>Certificate Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. FCC Certificate – Router X" {...field} />
+                        <Input placeholder="e.g. FCC Certificate – Smart Kettle Pro" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -277,7 +277,7 @@ export default function CertificateForm() {
                       <FormItem>
                         <FormLabel>Product Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Product name" {...field} />
+                          <Input placeholder="e.g. Smart Kettle Pro, Espresso Master X1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -291,7 +291,7 @@ export default function CertificateForm() {
                       <FormItem>
                         <FormLabel>Product Model</FormLabel>
                         <FormControl>
-                          <Input placeholder="Model number" {...field} />
+                          <Input placeholder="e.g. SK-2024, EM-X1-PRO" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -306,9 +306,30 @@ export default function CertificateForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Country/Region *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. USA, EU, China" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select market" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="USA">USA</SelectItem>
+                            <SelectItem value="Canada">Canada</SelectItem>
+                            <SelectItem value="EU">European Union</SelectItem>
+                            <SelectItem value="UK">United Kingdom</SelectItem>
+                            <SelectItem value="Japan">Japan</SelectItem>
+                            <SelectItem value="Korea">Korea</SelectItem>
+                            <SelectItem value="Taiwan">Taiwan</SelectItem>
+                            <SelectItem value="UAE">UAE</SelectItem>
+                            <SelectItem value="Saudi Arabia">Saudi Arabia</SelectItem>
+                            <SelectItem value="GCC">GCC (Other)</SelectItem>
+                            <SelectItem value="Australia">Australia</SelectItem>
+                            <SelectItem value="China">China</SelectItem>
+                            <SelectItem value="Mexico">Mexico</SelectItem>
+                            <SelectItem value="Brazil">Brazil</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -321,7 +342,7 @@ export default function CertificateForm() {
                       <FormItem>
                         <FormLabel>Regulatory Standard</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. EN 55032, FCC Part 15" {...field} />
+                          <Input placeholder="e.g. IEC 60335-2-15, FCC Part 15, EN 55014" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
