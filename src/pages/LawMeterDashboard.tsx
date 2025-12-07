@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2, Shield } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2, Shield, Maximize2, Minimize2, Mail } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -74,6 +74,7 @@ export default function LawMeterDashboard() {
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [starredFilter, setStarredFilter] = useState<"all" | "acts" | "bills">("all");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Independent state for Acts
   const [actsFilters, setActsFilters] = useState<FilterState>({
@@ -200,63 +201,91 @@ export default function LawMeterDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
-      <header className="border-b border-white/10 sticky top-0 z-10 glass-card shadow-lg">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center justify-between gap-12">
-            {/* Left side - Title */}
-            <div className="flex items-center gap-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground leading-tight">Intelligence Hub</h1>
+      {!isFullscreen && (
+        <header className="border-b border-white/10 sticky top-0 z-10 glass-card shadow-lg">
+          <div className="container mx-auto px-4 py-1.5">
+            <div className="flex items-center justify-between gap-6">
+              {/* Left side - Title */}
+              <div className="flex items-center gap-4">
+                <div>
+                  <h1 className="text-lg font-bold text-foreground leading-tight">Intelligence Hub</h1>
+                </div>
+                
+                {/* Separator */}
+                <div className="border-l border-white/20 h-7"></div>
+                
+                {/* Powered by */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Developed by</span>
+                  <img src={lawmeterLogo} alt="LawMeter" className="h-16" />
+                </div>
               </div>
-              
-              {/* Separator */}
-              <div className="border-l border-white/20 h-14"></div>
-              
-              {/* Powered by */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Developed by</span>
-                <img src={lawmeterLogo} alt="LawMeter" className="h-32" />
-              </div>
-            </div>
 
-            {/* Right side - Buttons and Badge */}
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate("/business-intelligence")}
-                className="gap-2 hover:bg-white/10"
-              >
-                <Users className="w-4 h-4" />
-                Business Intelligence
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate("/documentation")}
-                className="gap-2 hover:bg-white/10"
-              >
-                <BookOpen className="w-4 h-4" />
-                Documentation
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setSettingsOpen(true)}
-                className="gap-2 hover:bg-white/10"
-              >
-                <Settings className="w-4 h-4" />
-                Alert Settings
-              </Button>
-              <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground">
-                <Clock className="h-3 w-3 mr-1" />
-                Updated: Now
-              </Badge>
+              {/* Right side - Buttons and Badge */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate("/documentation")}
+                  className="gap-2 hover:bg-white/10"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Documentation
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSettingsOpen(true)}
+                  className="gap-2 hover:bg-white/10"
+                >
+                  <Settings className="w-4 h-4" />
+                  Alert Settings
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setActiveTab("contact")}
+                  className="gap-2 hover:bg-white/10"
+                >
+                  <Mail className="w-4 h-4" />
+                  Contact
+                </Button>
+                <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground text-xs">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Updated: Now
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsFullscreen(true)}
+                  className="hover:bg-white/10"
+                  title="Enter fullscreen"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
+        </header>
+      )}
+
+      {isFullscreen && (
+        <div className="fixed top-2 right-2 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsFullscreen(false)}
+            className="gap-2 bg-background/80 backdrop-blur-sm"
+          >
+            <Minimize2 className="w-4 h-4" />
+            Exit Fullscreen
+          </Button>
         </div>
-      </header>
+      )}
 
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-9 mb-8 glass-card p-1 gap-1">
+          <TabsList className="grid w-full grid-cols-8 mb-8 glass-card p-1 gap-1">
             <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislation</TabsTrigger>
             <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
@@ -265,7 +294,6 @@ export default function LawMeterDashboard() {
             <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
             <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Tenders</TabsTrigger>
-            <TabsTrigger value="contact" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
           </TabsList>
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
@@ -1089,17 +1117,19 @@ export default function LawMeterDashboard() {
         onOpenChange={setSettingsOpen} 
       />
 
-      <footer className="border-t bg-card mt-12">
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-center">
-            <img 
-              src={lawmeterLogo} 
-              alt="LawMeter - Legal Tech" 
-              className="h-56 opacity-90 hover:opacity-100 transition-opacity"
-            />
+      {!isFullscreen && (
+        <footer className="border-t bg-card mt-12">
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex items-center justify-center">
+              <img 
+                src={lawmeterLogo} 
+                alt="LawMeter - Legal Tech" 
+                className="h-56 opacity-90 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
