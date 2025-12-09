@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +16,12 @@ import {
   Handshake,
   Landmark,
   Filter,
-  Home,
   Scale,
   Loader2
 } from "lucide-react";
 import { usaLegislationData } from "@/data/usaLegislationMockData";
-import { USALegislationCard } from "./USALegislationCard";
+import { UnifiedAlertCard } from "./UnifiedAlertCard";
 import { USALegislationDrawer } from "./USALegislationDrawer";
-import { CongressBillCard } from "@/components/congress/CongressBillCard";
 import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import { useStarredBills } from "@/hooks/useStarredBills";
@@ -495,7 +493,7 @@ export function USALegislationSection() {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2">
-              <Home className="h-4 w-4" />
+              <Building2 className="h-4 w-4" />
               Chamber
               {selectedChamber.length > 0 && (
                 <Badge variant="secondary">{selectedChamber.length}</Badge>
@@ -683,29 +681,36 @@ export function USALegislationSection() {
         </div>
       ) : (
         <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-          {filteredData.map((item, index) => {
+          {filteredData.map((item) => {
             if (item.type === "mock") {
+              const itemId = item.data.id;
               return (
-                <USALegislationCard
-                  key={item.data.id}
-                  item={item.data}
-                  isRead={isRead(item.data.id)}
-                  isStarred={isStarred(item.data.id)}
-                  isGridView={viewMode === "grid"}
-                  onMarkRead={() => toggleRead(item.data.id)}
-                  onToggleStar={() => toggleStar(item.data.id)}
-                  onDelete={() => handleDelete(item.data.id)}
-                  onRefresh={() => handleRefresh(item.data.id)}
-                  onReport={() => handleReport(item.data.id)}
+                <UnifiedAlertCard
+                  key={itemId}
+                  mockItem={item.data}
+                  isRead={isRead(itemId)}
+                  isStarred={isStarred(itemId)}
+                  onMarkRead={() => toggleRead(itemId)}
+                  onToggleStar={() => toggleStar(itemId)}
+                  onDelete={() => handleDelete(itemId)}
+                  onRefresh={() => handleRefresh(itemId)}
+                  onReport={() => handleReport(itemId)}
                   onViewDetails={() => handleViewMockDetails(item.data)}
                 />
               );
             } else {
-              // Congress bill - use the rich CongressBillCard
+              const billId = `${item.data.congress}-${item.data.type}-${item.data.number}`;
               return (
-                <CongressBillCard
-                  key={`congress-${item.data.congress}-${item.data.type}-${item.data.number}`}
-                  bill={item.data}
+                <UnifiedAlertCard
+                  key={billId}
+                  congressBill={item.data}
+                  isRead={isRead(billId)}
+                  isStarred={isStarred(billId)}
+                  onMarkRead={() => toggleRead(billId)}
+                  onToggleStar={() => toggleStar(billId)}
+                  onDelete={() => handleDelete(billId)}
+                  onRefresh={() => handleRefresh(billId)}
+                  onReport={() => handleReport(billId)}
                   onViewDetails={() => handleViewCongressDetails(item.data)}
                 />
               );

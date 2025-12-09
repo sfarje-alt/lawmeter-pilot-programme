@@ -14,6 +14,16 @@ export type Authority =
   | "state"          // State legislatures
   | "city";          // City/Municipal governments
 
+export interface AISummary {
+  whatChanges: string;
+  whoImpacted: string;
+  keyDeadline: string;
+  generatedAt: string;
+  riskScore?: number;
+  riskCategory?: string;
+  comparedToPrevious?: string;
+}
+
 export interface USLegislationItem {
   id: string;
   title: string;
@@ -37,6 +47,7 @@ export interface USLegislationItem {
   status: string;
   localTerminology?: string;
   isRead?: boolean;         // For read/unread tracking
+  aiSummary?: AISummary;    // Cached AI-generated summary
 }
 
 // Helper to determine lifecycle status
