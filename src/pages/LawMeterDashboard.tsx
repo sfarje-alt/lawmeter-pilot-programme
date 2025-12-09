@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import lawmeterLogo from "@/assets/logo-legal-tech.png";
 import { useLegislationData, useFilteredAlerts } from "@/hooks/useLegislationData";
 import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
@@ -25,7 +24,6 @@ import { BillCard } from "@/components/bills/BillCard";
 import { BillDrawer } from "@/components/bills/BillDrawer";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { LegislativeSessionsCalendar } from "@/components/calendar/LegislativeSessionsCalendar";
-import { useNavigate as useReactRouterNavigate } from "react-router-dom";
 import { ContactForm } from "@/components/ContactForm";
 import { TendersSection } from "@/components/tenders/TendersSection";
 import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
@@ -57,6 +55,8 @@ import {
   bahrainLegislation,
   qatarLegislation
 } from "@/data/mockInternationalLegislation";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
@@ -199,74 +199,22 @@ export default function LawMeterDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
-      <header className="border-b border-white/10 sticky top-0 z-10 glass-card shadow-lg">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center justify-between gap-12">
-            {/* Left side - Title */}
-            <div className="flex items-center gap-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground leading-tight">Intelligence Hub</h1>
-              </div>
-              
-              {/* Separator */}
-              <div className="border-l border-white/20 h-14"></div>
-              
-              {/* Powered by */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Developed by</span>
-                <img src={lawmeterLogo} alt="LawMeter" className="h-32" />
-              </div>
-            </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
+        <AppSidebar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+          onSettingsOpen={() => setSettingsOpen(true)} 
+        />
+        
+        <SidebarInset className="bg-transparent">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-4 border-b border-white/10 bg-[hsl(220,40%,8%)]/80 backdrop-blur-sm px-4">
+            <SidebarTrigger className="text-foreground hover:bg-white/10" />
+            <span className="text-sm font-medium text-muted-foreground capitalize">{activeTab}</span>
+          </header>
 
-            {/* Right side - Buttons and Badge */}
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate("/business-intelligence")}
-                className="gap-2 hover:bg-white/10"
-              >
-                <Users className="w-4 h-4" />
-                Business Intelligence
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate("/documentation")}
-                className="gap-2 hover:bg-white/10"
-              >
-                <BookOpen className="w-4 h-4" />
-                Documentation
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setSettingsOpen(true)}
-                className="gap-2 hover:bg-white/10"
-              >
-                <Settings className="w-4 h-4" />
-                Alert Settings
-              </Button>
-              <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground">
-                <Clock className="h-3 w-3 mr-1" />
-                Updated: Now
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-6 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-9 mb-8 glass-card p-1 gap-1">
-            <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislation</TabsTrigger>
-            <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
-            <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
-            <TabsTrigger value="starred" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Star className="h-4 w-4 mr-2" />Starred</TabsTrigger>
-            <TabsTrigger value="certificates" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Shield className="h-4 w-4 mr-2" />Certificates</TabsTrigger>
-            <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
-            <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Tenders</TabsTrigger>
-            <TabsTrigger value="contact" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
-          </TabsList>
+          <div className="container mx-auto px-6 py-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
             {/* World Map - National/Federal Overview */}
@@ -1061,45 +1009,35 @@ export default function LawMeterDashboard() {
             <ContactForm />
           </TabsContent>
         </Tabs>
-      </div>
-
-      <AlertActDrawer
-        alert={selectedAlert}
-        isOpen={!!selectedAlert}
-        onClose={() => setSelectedAlert(null)}
-        comments={selectedAlert ? starredHooks.getComments("ACTS", selectedAlert.title_id) : []}
-        onAddComment={(vis, body) => selectedAlert && starredHooks.addComment("ACTS", selectedAlert.title_id, vis, body)}
-        onDeleteComment={(id) => selectedAlert && starredHooks.deleteComment("ACTS", selectedAlert.title_id, id)}
-        isStarred={selectedAlert ? starredHooks.isStarred("ACTS", selectedAlert.title_id) : false}
-        onMarkPronouncementsRead={(ids) => selectedAlert && starredHooks.markPronouncementsAsRead("ACTS", selectedAlert.title_id, ids)}
-        isPronouncementRead={(id) => selectedAlert ? starredHooks.isPronouncementRead("ACTS", selectedAlert.title_id, id) : false}
-      />
-
-      <BillDrawer
-        bill={selectedBill}
-        isOpen={!!selectedBill}
-        onClose={() => setSelectedBill(null)}
-        comments={selectedBill ? starredHooks.getComments("BILLS", selectedBill.id) : []}
-        onAddComment={(vis, body) => selectedBill && starredHooks.addComment("BILLS", selectedBill.id, vis, body)}
-        onDeleteComment={(id) => selectedBill && starredHooks.deleteComment("BILLS", selectedBill.id, id)}
-      />
-
-      <AlertSettingsDialog 
-        open={settingsOpen} 
-        onOpenChange={setSettingsOpen} 
-      />
-
-      <footer className="border-t bg-card mt-12">
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-center">
-            <img 
-              src={lawmeterLogo} 
-              alt="LawMeter - Legal Tech" 
-              className="h-56 opacity-90 hover:opacity-100 transition-opacity"
-            />
           </div>
-        </div>
-      </footer>
-    </div>
+
+          <AlertActDrawer
+            alert={selectedAlert}
+            isOpen={!!selectedAlert}
+            onClose={() => setSelectedAlert(null)}
+            comments={selectedAlert ? starredHooks.getComments("ACTS", selectedAlert.title_id) : []}
+            onAddComment={(vis, body) => selectedAlert && starredHooks.addComment("ACTS", selectedAlert.title_id, vis, body)}
+            onDeleteComment={(id) => selectedAlert && starredHooks.deleteComment("ACTS", selectedAlert.title_id, id)}
+            isStarred={selectedAlert ? starredHooks.isStarred("ACTS", selectedAlert.title_id) : false}
+            onMarkPronouncementsRead={(ids) => selectedAlert && starredHooks.markPronouncementsAsRead("ACTS", selectedAlert.title_id, ids)}
+            isPronouncementRead={(id) => selectedAlert ? starredHooks.isPronouncementRead("ACTS", selectedAlert.title_id, id) : false}
+          />
+
+          <BillDrawer
+            bill={selectedBill}
+            isOpen={!!selectedBill}
+            onClose={() => setSelectedBill(null)}
+            comments={selectedBill ? starredHooks.getComments("BILLS", selectedBill.id) : []}
+            onAddComment={(vis, body) => selectedBill && starredHooks.addComment("BILLS", selectedBill.id, vis, body)}
+            onDeleteComment={(id) => selectedBill && starredHooks.deleteComment("BILLS", selectedBill.id, id)}
+          />
+
+          <AlertSettingsDialog 
+            open={settingsOpen} 
+            onOpenChange={setSettingsOpen} 
+          />
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
