@@ -163,8 +163,8 @@ export function USALegislationCard({
                 </Badge>
               )}
               {!isRead && (
-                <Badge className="bg-primary text-primary-foreground animate-pulse">
-                  UNREAD
+                <Badge className="bg-primary/80 text-primary-foreground">
+                  NEW
                 </Badge>
               )}
             </div>
