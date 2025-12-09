@@ -12,7 +12,8 @@ import {
   MapPin,
   ExternalLink,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  Tag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertActionMenu } from "./AlertActionMenu";
@@ -21,7 +22,6 @@ import { USLegislationItem } from "@/types/usaLegislation";
 import { CongressBill } from "@/types/congress";
 
 interface UnifiedAlertCardProps {
-  // Common props
   isRead: boolean;
   isStarred: boolean;
   onMarkRead: () => void;
@@ -30,7 +30,6 @@ interface UnifiedAlertCardProps {
   onRefresh: () => void;
   onReport: () => void;
   onViewDetails: () => void;
-  // Either mock item or congress bill
   mockItem?: USLegislationItem;
   congressBill?: CongressBill;
 }
@@ -44,6 +43,108 @@ const docTypeIcons: Record<string, string> = {
   ordinance: "🏛️"
 };
 
+// Normalize data from both sources to a common structure
+interface NormalizedAlertData {
+  id: string;
+  title: string;
+  documentType: string;
+  billTextUrl?: string;
+  policyArea: string;
+  jurisdictionLevel: "Federal" | "State" | "Local";
+  jurisdictionLocation: string;
+  authority: string;
+  chamber?: string;
+  lifecycle: "In Force" | "Pipeline";
+  isInForce: boolean;
+  stage: string;
+  stages?: string[];
+  currentStageIndex?: number;
+  riskLevel: "high" | "medium" | "low";
+  riskScore: number;
+  keyDate: string;
+  keyDateLabel: string;
+  deadline?: string;
+  effectiveDate?: string;
+  publishedDate?: string;
+  isCongressBill: boolean;
+  congressBillUrl?: string;
+}
+
+function normalizeData(mockItem?: USLegislationItem, congressBill?: CongressBill): NormalizedAlertData | null {
+  if (mockItem) {
+    const jurisdictionLevel = mockItem.authority === "city" 
+      ? "Local" 
+      : mockItem.subJurisdiction ? "State" : "Federal";
+    
+    return {
+      id: mockItem.id,
+      title: mockItem.title,
+      documentType: mockItem.documentType,
+      policyArea: mockItem.regulatoryCategory,
+      jurisdictionLevel,
+      jurisdictionLocation: mockItem.subJurisdiction || "US",
+      authority: mockItem.regulatoryBody,
+      lifecycle: mockItem.isInForce ? "In Force" : "Pipeline",
+      isInForce: mockItem.isInForce,
+      stage: mockItem.status,
+      riskLevel: mockItem.riskLevel,
+      riskScore: mockItem.riskScore,
+      keyDate: mockItem.effectiveDate || mockItem.publishedDate,
+      keyDateLabel: mockItem.effectiveDate ? "Effective" : "Published",
+      deadline: mockItem.complianceDeadline,
+      effectiveDate: mockItem.effectiveDate,
+      publishedDate: mockItem.publishedDate,
+      isCongressBill: false
+    };
+  }
+  
+  if (congressBill) {
+    const stages = ["Introduced", "Passed House", "Passed Senate", "To President", "Became Law"];
+    let currentStageIndex = 0;
+
+    if (congressBill.latestAction) {
+      const text = congressBill.latestAction.text.toLowerCase();
+      if (text.includes("became public law") || text.includes("signed by president")) {
+        currentStageIndex = 4;
+      } else if (text.includes("presented to president") || text.includes("sent to president")) {
+        currentStageIndex = 3;
+      } else if (text.includes("passed") && text.includes("senate")) {
+        currentStageIndex = 2;
+      } else if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) {
+        currentStageIndex = 1;
+      }
+    }
+
+    const isInForce = currentStageIndex === 4;
+    
+    return {
+      id: `${congressBill.congress}-${congressBill.type}-${congressBill.number}`,
+      title: congressBill.title,
+      documentType: "bill",
+      billTextUrl: `https://www.congress.gov/bill/${congressBill.congress}th-congress/${congressBill.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${congressBill.number}/text`,
+      policyArea: congressBill.policyArea?.name || "Legislation",
+      jurisdictionLevel: "Federal",
+      jurisdictionLocation: "US",
+      authority: "U.S. Congress",
+      chamber: congressBill.originChamber,
+      lifecycle: isInForce ? "In Force" : "Pipeline",
+      isInForce,
+      stage: stages[currentStageIndex],
+      stages,
+      currentStageIndex,
+      riskLevel: "medium",
+      riskScore: 50,
+      keyDate: congressBill.latestAction?.actionDate || congressBill.introducedDate || "",
+      keyDateLabel: congressBill.latestAction ? "Last Action" : "Introduced",
+      publishedDate: congressBill.introducedDate,
+      isCongressBill: true,
+      congressBillUrl: `https://www.congress.gov/bill/${congressBill.congress}th-congress/${congressBill.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${congressBill.number}`
+    };
+  }
+  
+  return null;
+}
+
 export function UnifiedAlertCard({
   isRead,
   isStarred,
@@ -56,41 +157,27 @@ export function UnifiedAlertCard({
   mockItem,
   congressBill
 }: UnifiedAlertCardProps) {
-  // Determine which type of item we're displaying
-  const isMock = !!mockItem;
-  const item = mockItem || congressBill;
+  const data = useMemo(() => normalizeData(mockItem, congressBill), [mockItem, congressBill]);
   
-  if (!item) return null;
-
-  // Extract common properties
-  const id = isMock 
-    ? mockItem!.id 
-    : `${congressBill!.congress}-${congressBill!.type}-${congressBill!.number}`;
-  
-  const title = isMock ? mockItem!.title : congressBill!.title;
-  
-  const documentType = isMock ? mockItem!.documentType : "bill";
-  
-  const billTextUrl = !isMock && congressBill 
-    ? `https://www.congress.gov/bill/${congressBill.congress}th-congress/${congressBill.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${congressBill.number}/text`
-    : undefined;
-  
-  const policyArea = isMock 
-    ? mockItem!.regulatoryCategory 
-    : congressBill?.policyArea?.name;
+  if (!data) return null;
 
   // AI Summary hook
   const { summary, isGenerating, generateSummary } = useAISummary(
-    id,
-    title,
-    billTextUrl,
-    policyArea
+    data.id,
+    data.title,
+    data.billTextUrl,
+    data.policyArea,
+    {
+      effectiveDate: data.effectiveDate,
+      deadline: data.deadline,
+      publishedDate: data.publishedDate,
+      isInForce: data.isInForce
+    }
   );
 
   // Auto-generate summary if not cached
   useEffect(() => {
     if (!summary && !isGenerating) {
-      // Delay to avoid too many simultaneous requests
       const timer = setTimeout(() => {
         generateSummary();
       }, Math.random() * 2000);
@@ -98,58 +185,7 @@ export function UnifiedAlertCard({
     }
   }, [summary, isGenerating, generateSummary]);
 
-  // Build jurisdiction line
-  const jurisdictionLine = useMemo(() => {
-    if (isMock) {
-      const level = mockItem!.subJurisdiction 
-        ? (mockItem!.authority === "city" ? "Local" : "State")
-        : "Federal";
-      const location = mockItem!.subJurisdiction || "US";
-      const authority = mockItem!.regulatoryBody;
-      return `${level} · ${location} · ${authority}`;
-    } else {
-      const chamber = congressBill!.originChamber;
-      return `Federal · US · Congress · ${chamber}`;
-    }
-  }, [isMock, mockItem, congressBill]);
-
-  // Status/Stage info
-  const statusInfo = useMemo(() => {
-    if (isMock) {
-      return {
-        lifecycle: mockItem!.isInForce ? "In Force" : "Pipeline",
-        isInForce: mockItem!.isInForce,
-        stage: mockItem!.status
-      };
-    } else {
-      // Parse Congress bill status
-      const stages = ["Introduced", "Passed House", "Passed Senate", "To President", "Became Law"];
-      let currentStageIndex = 0;
-
-      if (congressBill!.latestAction) {
-        const text = congressBill!.latestAction.text.toLowerCase();
-        if (text.includes("became public law") || text.includes("signed by president")) {
-          currentStageIndex = 4;
-        } else if (text.includes("presented to president") || text.includes("sent to president")) {
-          currentStageIndex = 3;
-        } else if (text.includes("passed") && text.includes("senate")) {
-          currentStageIndex = 2;
-        } else if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) {
-          currentStageIndex = 1;
-        }
-      }
-
-      return {
-        lifecycle: currentStageIndex === 4 ? "In Force" : "Pipeline",
-        isInForce: currentStageIndex === 4,
-        stage: stages[currentStageIndex],
-        stages,
-        currentStageIndex
-      };
-    }
-  }, [isMock, mockItem, congressBill]);
-
-  // Risk info
+  // Get risk info from summary or data
   const riskInfo = useMemo(() => {
     if (summary) {
       return {
@@ -158,26 +194,15 @@ export function UnifiedAlertCard({
         level: summary.riskScore >= 70 ? "high" : summary.riskScore >= 40 ? "medium" : "low"
       };
     }
-    if (isMock) {
-      return {
-        score: mockItem!.riskScore,
-        category: mockItem!.riskLevel.charAt(0).toUpperCase() + mockItem!.riskLevel.slice(1),
-        level: mockItem!.riskLevel
-      };
-    }
-    return { score: 50, category: "Medium", level: "medium" };
-  }, [summary, isMock, mockItem]);
+    return {
+      score: data.riskScore,
+      category: data.riskLevel.charAt(0).toUpperCase() + data.riskLevel.slice(1),
+      level: data.riskLevel
+    };
+  }, [summary, data]);
 
-  // Dates
-  const keyDate = isMock 
-    ? mockItem!.effectiveDate || mockItem!.publishedDate
-    : congressBill!.latestAction?.actionDate;
-  
-  const deadline = isMock ? mockItem!.complianceDeadline : undefined;
-  
-  const category = isMock 
-    ? mockItem!.regulatoryCategory 
-    : congressBill?.policyArea?.name || "Legislation";
+  // Build jurisdiction line
+  const jurisdictionLine = `${data.jurisdictionLevel} · ${data.jurisdictionLocation} · ${data.authority}${data.chamber ? ` · ${data.chamber}` : ""}`;
 
   // Format date helper
   const formatDate = (dateString?: string) => {
@@ -219,33 +244,26 @@ export function UnifiedAlertCard({
               variant="outline" 
               className={cn(
                 "text-xs font-medium",
-                statusInfo.isInForce 
+                data.isInForce 
                   ? "bg-success/10 text-success border-success/30" 
                   : "bg-warning/10 text-warning border-warning/30"
               )}
             >
-              {statusInfo.isInForce ? (
+              {data.isInForce ? (
                 <CheckCircle className="h-3 w-3 mr-1" />
               ) : (
                 <Clock className="h-3 w-3 mr-1" />
               )}
-              {statusInfo.lifecycle}
+              {data.lifecycle}
             </Badge>
             
             {/* Stage badge */}
             <Badge variant="secondary" className="text-xs">
-              {statusInfo.stage}
+              {data.stage}
             </Badge>
-
-            {/* NEW indicator */}
-            {!isRead && (
-              <Badge className="bg-primary text-primary-foreground text-xs animate-pulse">
-                NEW
-              </Badge>
-            )}
           </div>
 
-          {/* Consolidated Action Menu */}
+          {/* Consolidated Action Menu (click to open) */}
           <div onClick={(e) => e.stopPropagation()}>
             <AlertActionMenu
               isRead={isRead}
@@ -259,17 +277,17 @@ export function UnifiedAlertCard({
           </div>
         </div>
 
-        {/* Row 2: Document type icon + Title */}
+        {/* Row 2: Document type icon + Full Title (no truncation) */}
         <div className="flex items-start gap-2">
-          <span className="text-xl flex-shrink-0">{docTypeIcons[documentType] || "📄"}</span>
-          <h3 className="text-base font-semibold leading-tight line-clamp-2 hover:text-primary transition-colors">
-            {title}
+          <span className="text-xl flex-shrink-0">{docTypeIcons[data.documentType] || "📄"}</span>
+          <h3 className="text-base font-semibold leading-tight hover:text-primary transition-colors">
+            {data.title}
           </h3>
         </div>
 
         {/* Row 3: Jurisdiction line */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
-          {isMock && mockItem!.subJurisdiction ? (
+          {data.jurisdictionLevel !== "Federal" ? (
             <MapPin className="h-3 w-3" />
           ) : (
             <Building2 className="h-3 w-3" />
@@ -317,11 +335,11 @@ export function UnifiedAlertCard({
           )}
         </div>
 
-        {/* Congress Bill Status Timeline (only for Congress bills) */}
-        {!isMock && statusInfo.stages && (
+        {/* Congress Bill Status Timeline */}
+        {data.stages && data.currentStageIndex !== undefined && (
           <div className="bg-muted/20 p-2 rounded-md">
             <div className="flex items-center gap-1">
-              {statusInfo.stages.map((stage, index) => (
+              {data.stages.map((stage, index) => (
                 <div key={`stage-${index}`} className="flex items-center gap-0.5 flex-1">
                   {index > 0 && (
                     <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
@@ -329,11 +347,11 @@ export function UnifiedAlertCard({
                   <div className="flex flex-col items-center flex-1">
                     <div className={cn(
                       "w-full h-1.5 rounded-full transition-colors",
-                      index <= (statusInfo.currentStageIndex || 0) ? "bg-primary" : "bg-muted"
+                      index <= data.currentStageIndex! ? "bg-primary" : "bg-muted"
                     )} />
                     <span className={cn(
                       "text-[10px] mt-1 text-center leading-tight",
-                      index === statusInfo.currentStageIndex ? "text-foreground font-medium" : "text-muted-foreground"
+                      index === data.currentStageIndex ? "text-foreground font-medium" : "text-muted-foreground"
                     )}>
                       {stage}
                     </span>
@@ -344,42 +362,41 @@ export function UnifiedAlertCard({
           </div>
         )}
 
-        {/* Footer Row: Date + Deadline + Category + Risk */}
+        {/* Footer Row: Date + Deadline + Policy Area + Risk */}
         <div className="flex items-center justify-between gap-2 flex-wrap text-xs pt-1">
-          <div className="flex items-center gap-3 text-muted-foreground">
+          <div className="flex items-center gap-3 text-muted-foreground flex-wrap">
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              <span>{formatDate(keyDate)}</span>
+              <span>{data.keyDateLabel}: {formatDate(data.keyDate)}</span>
             </div>
             
-            {deadline && (
+            {data.deadline && (
               <div className="flex items-center gap-1 text-warning">
                 <AlertTriangle className="h-3 w-3" />
-                <span>Due: {formatDate(deadline)}</span>
+                <span>Due: {formatDate(data.deadline)}</span>
               </div>
             )}
             
-            <Badge variant="outline" className="text-xs py-0">
-              {category}
+            {/* Policy Area badge - always show */}
+            <Badge variant="outline" className="text-xs py-0 gap-1">
+              <Tag className="h-2.5 w-2.5" />
+              {data.policyArea}
             </Badge>
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge className={cn("text-xs", getRiskBadgeClass(riskInfo.level))}>
+            <Badge className={cn("text-xs", getRiskBadgeClass(riskInfo.level as string))}>
               {riskInfo.category} {riskInfo.score}
             </Badge>
             
-            {!isMock && (
+            {data.isCongressBill && data.congressBillUrl && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-6 px-2 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(
-                    `https://www.congress.gov/bill/${congressBill!.congress}th-congress/${congressBill!.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${congressBill!.number}`,
-                    "_blank"
-                  );
+                  window.open(data.congressBillUrl, "_blank");
                 }}
               >
                 <ExternalLink className="h-3 w-3 mr-1" />
