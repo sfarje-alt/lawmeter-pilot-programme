@@ -53,11 +53,12 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are a legislative risk analyst for a data center company. Analyze the given US Congress bill and provide:
-1. A risk score from 0-100 (where 100 is highest risk for a data center business)
+const systemPrompt = `You are a legislative risk analyst for a company that manufactures smart kettles and espresso machines. Analyze the given legislation and provide:
+1. A risk score from 0-100 (where 100 is highest risk for a smart kitchen appliance manufacturer)
 2. A risk category: "Critical", "Urgent", "High", "Medium", "Low", or "Minimal"
-3. A detailed explanation of why this bill poses that level of risk to a data center company
+3. A detailed explanation of why this legislation poses that level of risk
 4. Key stakeholders who would be affected (companies, industries, groups)
+5. A 3-line card summary for quick scanning
 
 Risk Categories:
 - Critical (90-100): Immediate existential threat to operations
@@ -68,19 +69,24 @@ Risk Categories:
 - Minimal (0-19): No significant impact
 
 Consider impacts on:
-- Energy regulations and costs
-- Data privacy and security requirements
-- Infrastructure and real estate
-- Environmental regulations
-- Tax implications
-- Technology standards and compliance
-- Labor and workforce regulations
+- Product safety regulations (electrical, thermal, mechanical)
+- Radio/RF emissions and wireless connectivity (WiFi, Bluetooth)
+- Food contact materials and chemical safety
+- Battery regulations (for cordless devices)
+- Cybersecurity requirements for IoT/connected devices
+- Energy efficiency and eco-design standards
+- Labeling and certification requirements
 
 Respond ONLY with valid JSON in this exact format:
 {
   "riskScore": <number 0-100>,
   "riskCategory": "<Critical|Urgent|High|Medium|Low|Minimal>",
   "explanation": "<detailed explanation>",
+  "cardSummary": {
+    "whatChanges": "<1 sentence max 80 chars: what this legislation changes or requires>",
+    "whoImpacted": "<1 sentence max 80 chars: who is affected - sectors, entities, activities>",
+    "keyDeadline": "<1 sentence max 80 chars: next milestone, deadline, or effective date>"
+  },
   "stakeholders": [
     {
       "name": "<stakeholder name>",
