@@ -57,7 +57,8 @@ import {
 } from "@/data/mockInternationalLegislation";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-
+import { GlobalLegislationSearch } from "@/components/search/GlobalLegislationSearch";
+import { USALegislationSection } from "@/components/usa/USALegislationSection";
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
