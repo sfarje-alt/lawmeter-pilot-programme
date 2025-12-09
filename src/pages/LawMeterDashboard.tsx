@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2, Shield, Maximize2, Minimize2, Mail } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2, Shield } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -63,9 +63,7 @@ export default function LawMeterDashboard() {
   const [searchParams] = useSearchParams();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("legislation");
-  const [selectedRegion, setSelectedRegion] = useState<"nam" | "latam" | "eu" | "gcc" | "japan" | "apac">("nam");
-  const [namSubTab, setNamSubTab] = useState<"usa" | "canada">("usa");
-  const [apacSubTab, setApacSubTab] = useState<"korea" | "taiwan">("korea");
+  const [selectedCountry, setSelectedCountry] = useState<"usa" | "costa-rica" | "japan" | "korea" | "taiwan" | "canada" | "gcc" | "eu">("usa");
   const [usaSubTab, setUsaSubTab] = useState<"federal" | "state">("federal");
   const [costaRicaSubTab, setCostaRicaSubTab] = useState<"normas" | "proyectos">("normas");
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
@@ -76,7 +74,6 @@ export default function LawMeterDashboard() {
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [starredFilter, setStarredFilter] = useState<"all" | "acts" | "bills">("all");
-  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Independent state for Acts
   const [actsFilters, setActsFilters] = useState<FilterState>({
@@ -203,82 +200,63 @@ export default function LawMeterDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
-      {!isFullscreen && (
-        <header className="border-b border-white/10 sticky top-0 z-10 glass-card shadow-lg">
-          <div className="container mx-auto px-4 py-1">
-            <div className="flex items-center justify-between gap-4">
-              {/* Left side - Logo prominent */}
-              <div className="flex items-center gap-3">
-                <img src={lawmeterLogo} alt="LawMeter" className="h-12" />
-                <div className="border-l border-white/20 h-6"></div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Intelligence Hub</span>
+      <header className="border-b border-white/10 sticky top-0 z-10 glass-card shadow-lg">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center justify-between gap-12">
+            {/* Left side - Title */}
+            <div className="flex items-center gap-6">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground leading-tight">Intelligence Hub</h1>
               </div>
-
-              {/* Right side - Compact buttons */}
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => navigate("/documentation")}
-                  className="gap-1.5 hover:bg-white/10 text-xs px-2"
-                >
-                  <BookOpen className="w-3 h-3" />
-                  Docs
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setSettingsOpen(true)}
-                  className="gap-1.5 hover:bg-white/10 text-xs px-2"
-                >
-                  <Settings className="w-3 h-3" />
-                  Alerts
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setActiveTab("contact")}
-                  className="gap-1.5 hover:bg-white/10 text-xs px-2"
-                >
-                  <Mail className="w-3 h-3" />
-                  Contact
-                </Button>
-                <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground text-[10px] px-1.5 py-0.5">
-                  <Clock className="h-2.5 w-2.5 mr-0.5" />
-                  Now
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsFullscreen(true)}
-                  className="hover:bg-white/10 h-7 w-7"
-                  title="Enter fullscreen"
-                >
-                  <Maximize2 className="w-3 h-3" />
-                </Button>
+              
+              {/* Separator */}
+              <div className="border-l border-white/20 h-14"></div>
+              
+              {/* Powered by */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Developed by</span>
+                <img src={lawmeterLogo} alt="LawMeter" className="h-32" />
               </div>
             </div>
-          </div>
-        </header>
-      )}
 
-      {isFullscreen && (
-        <div className="fixed top-2 right-2 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFullscreen(false)}
-            className="gap-2 bg-background/80 backdrop-blur-sm"
-          >
-            <Minimize2 className="w-4 h-4" />
-            Exit Fullscreen
-          </Button>
+            {/* Right side - Buttons and Badge */}
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/business-intelligence")}
+                className="gap-2 hover:bg-white/10"
+              >
+                <Users className="w-4 h-4" />
+                Business Intelligence
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/documentation")}
+                className="gap-2 hover:bg-white/10"
+              >
+                <BookOpen className="w-4 h-4" />
+                Documentation
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setSettingsOpen(true)}
+                className="gap-2 hover:bg-white/10"
+              >
+                <Settings className="w-4 h-4" />
+                Alert Settings
+              </Button>
+              <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground">
+                <Clock className="h-3 w-3 mr-1" />
+                Updated: Now
+              </Badge>
+            </div>
+          </div>
         </div>
-      )}
+      </header>
 
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 mb-8 glass-card p-1 gap-1">
+          <TabsList className="grid w-full grid-cols-9 mb-8 glass-card p-1 gap-1">
             <TabsTrigger value="legislation" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Legislation</TabsTrigger>
             <TabsTrigger value="media" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><FileText className="h-4 w-4 mr-2" />Media</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Social</TabsTrigger>
@@ -287,6 +265,7 @@ export default function LawMeterDashboard() {
             <TabsTrigger value="calendar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Calendar className="h-4 w-4 mr-2" />Calendar</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><BarChart3 className="h-4 w-4 mr-2" />Analytics</TabsTrigger>
             <TabsTrigger value="tenders" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Receipt className="h-4 w-4 mr-2" />Tenders</TabsTrigger>
+            <TabsTrigger value="contact" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"><Users className="h-4 w-4 mr-2" />Contact</TabsTrigger>
           </TabsList>
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
@@ -309,170 +288,101 @@ export default function LawMeterDashboard() {
                 ...bahrainLegislation,
                 ...qatarLegislation
               ]} 
-              onSelectRegion={(region) => {
-                // Map country clicks to the appropriate region
-                if (region === "usa" || region === "canada") setSelectedRegion("nam");
-                else if (region === "costa-rica") setSelectedRegion("latam");
-                else if (region === "japan") setSelectedRegion("japan");
-                else if (region === "korea" || region === "taiwan") setSelectedRegion("apac");
-                else if (region === "eu") setSelectedRegion("eu");
-                else if (region === "gcc") setSelectedRegion("gcc");
-              }}
+              onSelectRegion={(region) => setSelectedCountry(region as typeof selectedCountry)}
             />
 
-            {/* Region Selector */}
+            {/* Country Selector */}
             <div className="flex items-center gap-4 mb-6 flex-wrap">
               <span className="text-sm font-medium text-muted-foreground">Select Region:</span>
               <div className="flex gap-2 flex-wrap">
                 <Button
-                  variant={selectedRegion === "nam" ? "default" : "outline"}
-                  onClick={() => setSelectedRegion("nam")}
+                  variant={selectedCountry === "usa" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("usa")}
                   className="gap-2"
                 >
-                  🌎 NAM
+                  🇺🇸 USA
                 </Button>
                 <Button
-                  variant={selectedRegion === "latam" ? "default" : "outline"}
-                  onClick={() => setSelectedRegion("latam")}
+                  variant={selectedCountry === "canada" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("canada")}
                   className="gap-2"
                 >
-                  🌎 LATAM
+                  🇨🇦 Canada
                 </Button>
                 <Button
-                  variant={selectedRegion === "eu" ? "default" : "outline"}
-                  onClick={() => setSelectedRegion("eu")}
+                  variant={selectedCountry === "costa-rica" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("costa-rica")}
+                  className="gap-2"
+                >
+                  🇨🇷 Costa Rica
+                </Button>
+                <Button
+                  variant={selectedCountry === "eu" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("eu")}
                   className="gap-2"
                 >
                   🇪🇺 EU
                 </Button>
                 <Button
-                  variant={selectedRegion === "gcc" ? "default" : "outline"}
-                  onClick={() => setSelectedRegion("gcc")}
+                  variant={selectedCountry === "gcc" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("gcc")}
                   className="gap-2"
                 >
                   🏛️ GCC
                 </Button>
                 <Button
-                  variant={selectedRegion === "japan" ? "default" : "outline"}
-                  onClick={() => setSelectedRegion("japan")}
+                  variant={selectedCountry === "japan" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("japan")}
                   className="gap-2"
                 >
-                  🇯🇵 JAPAN
+                  🇯🇵 Japan
                 </Button>
                 <Button
-                  variant={selectedRegion === "apac" ? "default" : "outline"}
-                  onClick={() => setSelectedRegion("apac")}
+                  variant={selectedCountry === "korea" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("korea")}
                   className="gap-2"
                 >
-                  🌏 APAC
+                  🇰🇷 Korea
+                </Button>
+                <Button
+                  variant={selectedCountry === "taiwan" ? "default" : "outline"}
+                  onClick={() => setSelectedCountry("taiwan")}
+                  className="gap-2"
+                >
+                  🇹🇼 Taiwan
                 </Button>
               </div>
             </div>
 
-            {/* NAM Section (USA + Canada) */}
-            {selectedRegion === "nam" && (
-              <Tabs value={namSubTab} onValueChange={(v) => setNamSubTab(v as "usa" | "canada")} className="w-full">
+            {/* USA Section */}
+            {selectedCountry === "usa" && (
+              <Tabs value={usaSubTab} onValueChange={(v) => setUsaSubTab(v as "federal" | "state")} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
-                  <TabsTrigger value="usa" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇺🇸 USA
+                  <TabsTrigger value="federal" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    US Federal Bills
                   </TabsTrigger>
-                  <TabsTrigger value="canada" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇨🇦 Canada
+                  <TabsTrigger value="state" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <FileText className="h-4 w-4 mr-2" />
+                    State Bills
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="usa" className="space-y-6 mt-6">
-                  <Tabs value={usaSubTab} onValueChange={(v) => setUsaSubTab(v as "federal" | "state")} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
-                      <TabsTrigger value="federal" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                        <Building2 className="h-4 w-4 mr-2" />
-                        US Federal Bills
-                      </TabsTrigger>
-                      <TabsTrigger value="state" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                        <FileText className="h-4 w-4 mr-2" />
-                        State Bills
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="federal" className="space-y-6 mt-6">
-                      <CongressBillsSection />
-                    </TabsContent>
-
-                    <TabsContent value="state" className="space-y-6 mt-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <span className="text-sm font-medium">Filter by State:</span>
-                        <Select
-                          value={selectedStates.length === 1 ? selectedStates[0] : ""}
-                          onValueChange={(value) => {
-                            if (value === "all") {
-                              setSelectedStates([]);
-                            } else {
-                              setSelectedStates(prev => 
-                                prev.includes(value) 
-                                  ? prev.filter(s => s !== value)
-                                  : [...prev, value]
-                              );
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder={selectedStates.length > 0 ? `${selectedStates.length} selected` : "All States"} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background border border-border">
-                            <SelectItem value="all">All States</SelectItem>
-                            <SelectItem value="CA">California</SelectItem>
-                            <SelectItem value="TX">Texas</SelectItem>
-                            <SelectItem value="NY">New York</SelectItem>
-                            <SelectItem value="FL">Florida</SelectItem>
-                            <SelectItem value="IL">Illinois</SelectItem>
-                            <SelectItem value="PA">Pennsylvania</SelectItem>
-                            <SelectItem value="OH">Ohio</SelectItem>
-                            <SelectItem value="GA">Georgia</SelectItem>
-                            <SelectItem value="NC">North Carolina</SelectItem>
-                            <SelectItem value="MI">Michigan</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {selectedStates.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {selectedStates.map(state => (
-                              <Badge 
-                                key={state} 
-                                variant="secondary" 
-                                className="cursor-pointer"
-                                onClick={() => setSelectedStates(prev => prev.filter(s => s !== state))}
-                              >
-                                {state} ×
-                              </Badge>
-                            ))}
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedStates([])}>
-                              Clear all
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <InternationalLegislationSection 
-                        legislation={selectedStates.length > 0 
-                          ? usStateBills.filter(l => selectedStates.includes(l.subJurisdiction || ""))
-                          : usStateBills
-                        }
-                        showMaps={true}
-                        mapType="usa"
-                      />
-                    </TabsContent>
-                  </Tabs>
+                <TabsContent value="federal" className="space-y-6 mt-6">
+                  <CongressBillsSection />
                 </TabsContent>
 
-                <TabsContent value="canada" className="space-y-6 mt-6">
-                  <div className="flex items-center gap-4 mb-4 flex-wrap">
-                    <span className="text-sm font-medium">Filter by Province:</span>
+                <TabsContent value="state" className="space-y-6 mt-6">
+                  {/* State Filter */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-sm font-medium">Filter by State:</span>
                     <Select
-                      value={selectedProvinces.length === 1 ? selectedProvinces[0] : ""}
+                      value={selectedStates.length === 1 ? selectedStates[0] : ""}
                       onValueChange={(value) => {
                         if (value === "all") {
-                          setSelectedProvinces([]);
+                          setSelectedStates([]);
                         } else {
-                          setSelectedProvinces(prev => 
+                          setSelectedStates(prev => 
                             prev.includes(value) 
                               ? prev.filter(s => s !== value)
                               : [...prev, value]
@@ -480,39 +390,36 @@ export default function LawMeterDashboard() {
                         }
                       }}
                     >
-                      <SelectTrigger className="w-[220px]">
-                        <SelectValue placeholder={selectedProvinces.length > 0 ? `${selectedProvinces.length} selected` : "All Provinces/Territories"} />
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder={selectedStates.length > 0 ? `${selectedStates.length} selected` : "All States"} />
                       </SelectTrigger>
                       <SelectContent className="bg-background border border-border">
-                        <SelectItem value="all">All Provinces/Territories</SelectItem>
-                        <SelectItem value="AB">Alberta</SelectItem>
-                        <SelectItem value="BC">British Columbia</SelectItem>
-                        <SelectItem value="MB">Manitoba</SelectItem>
-                        <SelectItem value="NB">New Brunswick</SelectItem>
-                        <SelectItem value="NL">Newfoundland and Labrador</SelectItem>
-                        <SelectItem value="NS">Nova Scotia</SelectItem>
-                        <SelectItem value="NT">Northwest Territories</SelectItem>
-                        <SelectItem value="NU">Nunavut</SelectItem>
-                        <SelectItem value="ON">Ontario</SelectItem>
-                        <SelectItem value="PE">Prince Edward Island</SelectItem>
-                        <SelectItem value="QC">Quebec</SelectItem>
-                        <SelectItem value="SK">Saskatchewan</SelectItem>
-                        <SelectItem value="YT">Yukon</SelectItem>
+                        <SelectItem value="all">All States</SelectItem>
+                        <SelectItem value="CA">California</SelectItem>
+                        <SelectItem value="TX">Texas</SelectItem>
+                        <SelectItem value="NY">New York</SelectItem>
+                        <SelectItem value="FL">Florida</SelectItem>
+                        <SelectItem value="IL">Illinois</SelectItem>
+                        <SelectItem value="PA">Pennsylvania</SelectItem>
+                        <SelectItem value="OH">Ohio</SelectItem>
+                        <SelectItem value="GA">Georgia</SelectItem>
+                        <SelectItem value="NC">North Carolina</SelectItem>
+                        <SelectItem value="MI">Michigan</SelectItem>
                       </SelectContent>
                     </Select>
-                    {selectedProvinces.length > 0 && (
+                    {selectedStates.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {selectedProvinces.map(prov => (
+                        {selectedStates.map(state => (
                           <Badge 
-                            key={prov} 
+                            key={state} 
                             variant="secondary" 
                             className="cursor-pointer"
-                            onClick={() => setSelectedProvinces(prev => prev.filter(s => s !== prov))}
+                            onClick={() => setSelectedStates(prev => prev.filter(s => s !== state))}
                           >
-                            {prov} ×
+                            {state} ×
                           </Badge>
                         ))}
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedProvinces([])}>
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedStates([])}>
                           Clear all
                         </Button>
                       </div>
@@ -520,19 +427,19 @@ export default function LawMeterDashboard() {
                   </div>
                   
                   <InternationalLegislationSection 
-                    legislation={selectedProvinces.length > 0 
-                      ? canadaLegislation.filter(l => selectedProvinces.includes(l.subJurisdiction || ""))
-                      : canadaLegislation
+                    legislation={selectedStates.length > 0 
+                      ? usStateBills.filter(l => selectedStates.includes(l.subJurisdiction || ""))
+                      : usStateBills
                     }
                     showMaps={true}
-                    mapType="canada"
+                    mapType="usa"
                   />
                 </TabsContent>
               </Tabs>
             )}
 
             {/* Costa Rica Section */}
-            {selectedRegion === "latam" && (
+            {selectedCountry === "costa-rica" && (
               <Tabs value={costaRicaSubTab} onValueChange={(v) => setCostaRicaSubTab(v as "normas" | "proyectos")} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
                   <TabsTrigger value="normas" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
@@ -823,35 +730,92 @@ export default function LawMeterDashboard() {
             )}
 
             {/* Japan Section */}
-            {selectedRegion === "japan" && (
+            {selectedCountry === "japan" && (
               <InternationalLegislationSection legislation={japanLegislation} />
             )}
 
-            {/* APAC Section (Korea + Taiwan) */}
-            {selectedRegion === "apac" && (
-              <Tabs value={apacSubTab} onValueChange={(v) => setApacSubTab(v as "korea" | "taiwan")} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
-                  <TabsTrigger value="korea" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇰🇷 Korea
-                  </TabsTrigger>
-                  <TabsTrigger value="taiwan" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇹🇼 Taiwan
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="korea" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={koreaLegislation} />
-                </TabsContent>
-
-                <TabsContent value="taiwan" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={taiwanLegislation} />
-                </TabsContent>
-              </Tabs>
+            {/* Korea Section */}
+            {selectedCountry === "korea" && (
+              <InternationalLegislationSection legislation={koreaLegislation} />
             )}
 
+            {/* Taiwan Section */}
+            {selectedCountry === "taiwan" && (
+              <InternationalLegislationSection legislation={taiwanLegislation} />
+            )}
+
+            {/* Canada Section */}
+            {selectedCountry === "canada" && (
+              <div className="space-y-6">
+                {/* Province Filter */}
+                <div className="flex items-center gap-4 mb-4 flex-wrap">
+                  <span className="text-sm font-medium">Filter by Province:</span>
+                  <Select
+                    value={selectedProvinces.length === 1 ? selectedProvinces[0] : ""}
+                    onValueChange={(value) => {
+                      if (value === "all") {
+                        setSelectedProvinces([]);
+                      } else {
+                        setSelectedProvinces(prev => 
+                          prev.includes(value) 
+                            ? prev.filter(s => s !== value)
+                            : [...prev, value]
+                        );
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder={selectedProvinces.length > 0 ? `${selectedProvinces.length} selected` : "All Provinces/Territories"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border">
+                      <SelectItem value="all">All Provinces/Territories</SelectItem>
+                      <SelectItem value="AB">Alberta</SelectItem>
+                      <SelectItem value="BC">British Columbia</SelectItem>
+                      <SelectItem value="MB">Manitoba</SelectItem>
+                      <SelectItem value="NB">New Brunswick</SelectItem>
+                      <SelectItem value="NL">Newfoundland and Labrador</SelectItem>
+                      <SelectItem value="NS">Nova Scotia</SelectItem>
+                      <SelectItem value="NT">Northwest Territories</SelectItem>
+                      <SelectItem value="NU">Nunavut</SelectItem>
+                      <SelectItem value="ON">Ontario</SelectItem>
+                      <SelectItem value="PE">Prince Edward Island</SelectItem>
+                      <SelectItem value="QC">Quebec</SelectItem>
+                      <SelectItem value="SK">Saskatchewan</SelectItem>
+                      <SelectItem value="YT">Yukon</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {selectedProvinces.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProvinces.map(prov => (
+                        <Badge 
+                          key={prov} 
+                          variant="secondary" 
+                          className="cursor-pointer"
+                          onClick={() => setSelectedProvinces(prev => prev.filter(s => s !== prov))}
+                        >
+                          {prov} ×
+                        </Badge>
+                      ))}
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedProvinces([])}>
+                        Clear all
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <InternationalLegislationSection 
+                  legislation={selectedProvinces.length > 0 
+                    ? canadaLegislation.filter(l => selectedProvinces.includes(l.subJurisdiction || ""))
+                    : canadaLegislation
+                  }
+                  showMaps={true}
+                  mapType="canada"
+                />
+              </div>
+            )}
 
             {/* GCC Section */}
-            {selectedRegion === "gcc" && (
+            {selectedCountry === "gcc" && (
               <div className="space-y-6">
                 <GCCRegionMap legislation={[...uaeLegislation, ...saudiLegislation, ...omanLegislation, ...kuwaitLegislation, ...bahrainLegislation, ...qatarLegislation]} />
                 
@@ -905,7 +869,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* EU Section */}
-            {selectedRegion === "eu" && (
+            {selectedCountry === "eu" && (
               <Tabs value={euSubTab} onValueChange={(v) => setEuSubTab(v as "regulations" | "directives" | "parliament" | "council")} className="w-full">
                 <TabsList className="grid w-full grid-cols-4 mb-6 glass-card p-1 gap-1">
                   <TabsTrigger value="regulations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
@@ -1125,19 +1089,17 @@ export default function LawMeterDashboard() {
         onOpenChange={setSettingsOpen} 
       />
 
-      {!isFullscreen && (
-        <footer className="border-t bg-card mt-12">
-          <div className="container mx-auto px-6 py-8">
-            <div className="flex items-center justify-center">
-              <img 
-                src={lawmeterLogo} 
-                alt="LawMeter - Legal Tech" 
-                className="h-56 opacity-90 hover:opacity-100 transition-opacity"
-              />
-            </div>
+      <footer className="border-t bg-card mt-12">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex items-center justify-center">
+            <img 
+              src={lawmeterLogo} 
+              alt="LawMeter - Legal Tech" 
+              className="h-56 opacity-90 hover:opacity-100 transition-opacity"
+            />
           </div>
-        </footer>
-      )}
+        </div>
+      </footer>
     </div>
   );
 }
