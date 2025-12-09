@@ -299,7 +299,7 @@ export function AlertActDrawer({
                   return (
                     <div key={idx} className="bg-background rounded-lg p-4 space-y-2 border relative">
                       {isNew && (
-                        <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground animate-pulse">
+                        <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground">
                           NUEVO
                         </Badge>
                       )}
