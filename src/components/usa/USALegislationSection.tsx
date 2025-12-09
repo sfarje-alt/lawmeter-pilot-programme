@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,27 +16,26 @@ import {
   Handshake,
   Landmark,
   Filter,
-  ChevronDown,
   Home,
-  Scale
+  Scale,
+  Loader2
 } from "lucide-react";
 import { usaLegislationData } from "@/data/usaLegislationMockData";
 import { USALegislationCard } from "./USALegislationCard";
 import { USALegislationDrawer } from "./USALegislationDrawer";
+import { CongressBillCard } from "@/components/congress/CongressBillCard";
+import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import { useStarredBills } from "@/hooks/useStarredBills";
 import { useToast } from "@/hooks/use-toast";
+import { useCongressBills } from "@/hooks/useCongressBills";
 import { LifecycleStatus, USDocumentType, Authority, USLegislationItem, documentTypeLabels, authorityLabels } from "@/types/usaLegislation";
+import { CongressBill } from "@/types/congress";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 const lifecycleIcons = {
   all: <FileText className="h-4 w-4" />,
@@ -73,6 +72,11 @@ const usStates = [
   { code: "WI", name: "Wisconsin" }, { code: "WY", name: "Wyoming" }, { code: "DC", name: "District of Columbia" }
 ];
 
+// Union type for combined items
+type CombinedLegislationItem = 
+  | { type: "mock"; data: USLegislationItem }
+  | { type: "congress"; data: CongressBill };
+
 export function USALegislationSection() {
   const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleStatus>("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -82,57 +86,125 @@ export function USALegislationSection() {
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const [selectedChamber, setSelectedChamber] = useState<string[]>([]);
   const [jurisdictionLevel, setJurisdictionLevel] = useState<"all" | "federal" | "state">("all");
-  const [selectedItem, setSelectedItem] = useState<USLegislationItem | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  // Separate states for different drawer types
+  const [selectedMockItem, setSelectedMockItem] = useState<USLegislationItem | null>(null);
+  const [selectedCongressBill, setSelectedCongressBill] = useState<CongressBill | null>(null);
+  const [mockDrawerOpen, setMockDrawerOpen] = useState(false);
+  const [congressDrawerOpen, setCongressDrawerOpen] = useState(false);
   
   const { markAsRead, toggleRead, isRead, getUnreadCount, deleteAlert, isDeleted } = useReadAlerts();
   const { isStarred, toggleStar } = useStarredBills();
   const { toast } = useToast();
+  
+  // Fetch Congress bills
+  const { bills: congressBills, loading: congressLoading, error: congressError } = useCongressBills("latestAction-desc");
 
-  // Filter data
+  // Combine mock data with Congress API data
+  const combinedData = useMemo((): CombinedLegislationItem[] => {
+    // Mock data items (non-bill types mainly)
+    const mockItems: CombinedLegislationItem[] = usaLegislationData
+      .filter(item => !isDeleted(item.id))
+      .map(item => ({ type: "mock" as const, data: item }));
+    
+    // Congress bills (real API data)
+    const congressItems: CombinedLegislationItem[] = congressBills.map(bill => ({
+      type: "congress" as const,
+      data: bill
+    }));
+    
+    return [...mockItems, ...congressItems];
+  }, [congressBills, isDeleted]);
+
+  // Filter combined data
   const filteredData = useMemo(() => {
-    return usaLegislationData.filter(item => {
-      // Exclude deleted items
-      if (isDeleted(item.id)) return false;
+    return combinedData.filter(item => {
+      if (item.type === "mock") {
+        const mockItem = item.data;
+        
+        // Lifecycle filter
+        if (lifecycleFilter === "in-force" && !mockItem.isInForce) return false;
+        if (lifecycleFilter === "pipeline" && !mockItem.isPipeline) return false;
 
-      // Lifecycle filter
-      if (lifecycleFilter === "in-force" && !item.isInForce) return false;
-      if (lifecycleFilter === "pipeline" && !item.isPipeline) return false;
+        // Document type filter
+        if (selectedDocTypes.length > 0 && !selectedDocTypes.includes(mockItem.documentType)) return false;
 
-      // Document type filter
-      if (selectedDocTypes.length > 0 && !selectedDocTypes.includes(item.documentType)) return false;
+        // Authority filter
+        if (selectedAuthorities.length > 0 && !selectedAuthorities.includes(mockItem.authority)) return false;
 
-      // Authority filter
-      if (selectedAuthorities.length > 0 && !selectedAuthorities.includes(item.authority)) return false;
+        // Regulatory category filter
+        if (selectedCategories.length > 0 && !selectedCategories.includes(mockItem.regulatoryCategory)) return false;
 
-      // Regulatory category filter
-      if (selectedCategories.length > 0 && !selectedCategories.includes(item.regulatoryCategory)) return false;
+        // Jurisdiction level filter
+        if (jurisdictionLevel === "federal" && mockItem.subJurisdiction) return false;
+        if (jurisdictionLevel === "state" && !mockItem.subJurisdiction) return false;
 
-      // Jurisdiction level filter
-      if (jurisdictionLevel === "federal" && item.subJurisdiction) return false;
-      if (jurisdictionLevel === "state" && !item.subJurisdiction) return false;
+        // State filter
+        if (selectedStates.length > 0 && mockItem.subJurisdiction && !selectedStates.includes(mockItem.subJurisdiction)) return false;
 
-      // State filter
-      if (selectedStates.length > 0 && item.subJurisdiction && !selectedStates.includes(item.subJurisdiction)) return false;
+        // Chamber filter (for bills)
+        if (selectedChamber.length > 0 && mockItem.documentType === "bill") {
+          const chamberMatch = selectedChamber.some(chamber => {
+            if (chamber === "house") return mockItem.regulatoryBody?.toLowerCase().includes("house");
+            if (chamber === "senate") return mockItem.regulatoryBody?.toLowerCase().includes("senate");
+            return false;
+          });
+          if (!chamberMatch) return false;
+        }
 
-      // Chamber filter (for bills)
-      if (selectedChamber.length > 0 && item.documentType === "bill") {
-        const chamberMatch = selectedChamber.some(chamber => {
-          if (chamber === "house") return item.regulatoryBody?.toLowerCase().includes("house");
-          if (chamber === "senate") return item.regulatoryBody?.toLowerCase().includes("senate");
-          return false;
-        });
-        if (!chamberMatch) return false;
+        return true;
+      } else {
+        // Congress bill
+        const bill = item.data;
+        
+        // Congress bills are always in pipeline (not enacted yet as laws)
+        if (lifecycleFilter === "in-force") return false;
+        
+        // Document type filter - Congress bills are "bill" type
+        if (selectedDocTypes.length > 0 && !selectedDocTypes.includes("bill")) return false;
+        
+        // Authority filter - Congress bills are from "congress"
+        if (selectedAuthorities.length > 0 && !selectedAuthorities.includes("congress")) return false;
+        
+        // Jurisdiction level - Congress bills are federal
+        if (jurisdictionLevel === "state") return false;
+        
+        // Chamber filter
+        if (selectedChamber.length > 0) {
+          const chamberMatch = selectedChamber.some(chamber => {
+            if (chamber === "house") return bill.originChamber === "House";
+            if (chamber === "senate") return bill.originChamber === "Senate";
+            return false;
+          });
+          if (!chamberMatch) return false;
+        }
+        
+        // Regulatory category filter - check policy area
+        if (selectedCategories.length > 0 && bill.policyArea) {
+          // Map Congress policy areas to our regulatory categories
+          const policyName = bill.policyArea.name.toLowerCase();
+          const categoryMatch = selectedCategories.some(cat => {
+            const catLower = cat.toLowerCase();
+            return policyName.includes(catLower) || 
+                   (catLower === "product safety" && policyName.includes("consumer")) ||
+                   (catLower === "cybersecurity" && (policyName.includes("science") || policyName.includes("technology"))) ||
+                   (catLower === "radio" && policyName.includes("communications"));
+          });
+          if (!categoryMatch) return false;
+        }
+        
+        return true;
       }
-
-      return true;
     });
-  }, [lifecycleFilter, selectedDocTypes, selectedAuthorities, selectedCategories, jurisdictionLevel, selectedStates, selectedChamber, isDeleted]);
+  }, [combinedData, lifecycleFilter, selectedDocTypes, selectedAuthorities, selectedCategories, jurisdictionLevel, selectedStates, selectedChamber]);
 
-  // Count by lifecycle
-  const allIds = usaLegislationData.filter(i => !isDeleted(i.id)).map(i => i.id);
-  const inForceIds = usaLegislationData.filter(i => i.isInForce && !isDeleted(i.id)).map(i => i.id);
-  const pipelineIds = usaLegislationData.filter(i => i.isPipeline && !isDeleted(i.id)).map(i => i.id);
+  // Count totals
+  const totalMock = usaLegislationData.filter(i => !isDeleted(i.id)).length;
+  const totalCongress = congressBills.length;
+  const allCount = totalMock + totalCongress;
+  
+  const inForceCount = usaLegislationData.filter(i => i.isInForce && !isDeleted(i.id)).length;
+  const pipelineCount = usaLegislationData.filter(i => i.isPipeline && !isDeleted(i.id)).length + totalCongress;
 
   // Toggle filters
   const toggleDocType = (type: USDocumentType) => {
@@ -189,13 +261,48 @@ export function USALegislationSection() {
     toast({ title: "Deleted", description: "Item has been removed from your view." });
   };
 
-  const handleViewDetails = (item: USLegislationItem) => {
+  const handleViewMockDetails = (item: USLegislationItem) => {
     markAsRead(item.id);
-    setSelectedItem(item);
-    setDrawerOpen(true);
+    setSelectedMockItem(item);
+    setMockDrawerOpen(true);
+  };
+
+  const handleViewCongressDetails = (bill: CongressBill) => {
+    const billId = `${bill.congress}-${bill.type}-${bill.number}`;
+    markAsRead(billId);
+    setSelectedCongressBill(bill);
+    setCongressDrawerOpen(true);
   };
 
   const regulatoryCategories = ["Radio", "Product Safety", "Cybersecurity", "Battery", "Food Contact Material"];
+
+  // Calculate risk counts from filtered data
+  const riskCounts = useMemo(() => {
+    let high = 0, medium = 0, low = 0;
+    
+    filteredData.forEach(item => {
+      if (item.type === "mock") {
+        if (item.data.riskLevel === "high") high++;
+        else if (item.data.riskLevel === "medium") medium++;
+        else if (item.data.riskLevel === "low") low++;
+      } else {
+        // For Congress bills, check cached analysis
+        const billId = `${item.data.congress}-${item.data.type}-${item.data.number}`;
+        const cached = localStorage.getItem(`bill_analysis_${billId}`);
+        if (cached) {
+          const analysis = JSON.parse(cached);
+          const score = analysis.riskScore;
+          if (score >= 70) high++;
+          else if (score >= 40) medium++;
+          else low++;
+        } else {
+          medium++; // Default to medium if no analysis
+        }
+      }
+    });
+    
+    return { high, medium, low };
+  }, [filteredData]);
 
   return (
     <div className="space-y-6">
@@ -205,7 +312,7 @@ export function USALegislationSection() {
           🇺🇸 USA Legislation
         </h2>
         <p className="text-muted-foreground">
-          All document types: Bills, Statutes, Regulations, Treaties, and Local Ordinances
+          {congressLoading ? "Loading Congress bills..." : `${allCount} items: ${totalCongress} Congress bills + ${totalMock} other documents`}
         </p>
       </div>
 
@@ -219,7 +326,7 @@ export function USALegislationSection() {
             {lifecycleIcons.all}
             <span>All</span>
             <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border">
-              {allIds.length}
+              {allCount}
             </Badge>
           </TabsTrigger>
           <TabsTrigger 
@@ -229,7 +336,7 @@ export function USALegislationSection() {
             {lifecycleIcons["in-force"]}
             <span>In Force</span>
             <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border">
-              {inForceIds.length}
+              {inForceCount}
             </Badge>
           </TabsTrigger>
           <TabsTrigger 
@@ -239,7 +346,7 @@ export function USALegislationSection() {
             {lifecycleIcons.pipeline}
             <span>Pipeline</span>
             <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border">
-              {pipelineIds.length}
+              {pipelineCount}
             </Badge>
           </TabsTrigger>
         </TabsList>
@@ -523,7 +630,7 @@ export function USALegislationSection() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-risk-high">
-              {filteredData.filter(i => i.riskLevel === "high").length}
+              {riskCounts.high}
             </div>
           </CardContent>
         </Card>
@@ -533,7 +640,7 @@ export function USALegislationSection() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-risk-medium">
-              {filteredData.filter(i => i.riskLevel === "medium").length}
+              {riskCounts.medium}
             </div>
           </CardContent>
         </Card>
@@ -543,48 +650,85 @@ export function USALegislationSection() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-risk-low">
-              {filteredData.filter(i => i.riskLevel === "low").length}
+              {riskCounts.low}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Results */}
+      {/* Loading State */}
+      {congressLoading && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Loading Congress bills...</span>
+        </div>
+      )}
+
+      {/* Error State */}
+      {congressError && (
+        <div className="text-center py-4 text-destructive">
+          Error loading Congress bills: {congressError}
+        </div>
+      )}
+
+      {/* Results Count */}
       <div className="text-sm text-muted-foreground">
-        Showing {filteredData.length} items ({getUnreadCount(filteredData.map(i => i.id))} unread)
+        Showing {filteredData.length} items
       </div>
 
       {/* Cards */}
-      {filteredData.length === 0 ? (
+      {filteredData.length === 0 && !congressLoading ? (
         <div className="text-center py-12 text-muted-foreground">
           No items match your filters
         </div>
       ) : (
-        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" : "space-y-4"}>
-          {filteredData.map(item => (
-            <USALegislationCard
-              key={item.id}
-              item={item}
-              isRead={isRead(item.id)}
-              isStarred={isStarred(item.id)}
-              isGridView={viewMode === "grid"}
-              onMarkRead={() => toggleRead(item.id)}
-              onToggleStar={() => toggleStar(item.id)}
-              onDelete={() => handleDelete(item.id)}
-              onRefresh={() => handleRefresh(item.id)}
-              onReport={() => handleReport(item.id)}
-              onViewDetails={() => handleViewDetails(item)}
-            />
-          ))}
+        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
+          {filteredData.map((item, index) => {
+            if (item.type === "mock") {
+              return (
+                <USALegislationCard
+                  key={item.data.id}
+                  item={item.data}
+                  isRead={isRead(item.data.id)}
+                  isStarred={isStarred(item.data.id)}
+                  isGridView={viewMode === "grid"}
+                  onMarkRead={() => toggleRead(item.data.id)}
+                  onToggleStar={() => toggleStar(item.data.id)}
+                  onDelete={() => handleDelete(item.data.id)}
+                  onRefresh={() => handleRefresh(item.data.id)}
+                  onReport={() => handleReport(item.data.id)}
+                  onViewDetails={() => handleViewMockDetails(item.data)}
+                />
+              );
+            } else {
+              // Congress bill - use the rich CongressBillCard
+              return (
+                <CongressBillCard
+                  key={`congress-${item.data.congress}-${item.data.type}-${item.data.number}`}
+                  bill={item.data}
+                  onViewDetails={() => handleViewCongressDetails(item.data)}
+                />
+              );
+            }
+          })}
         </div>
       )}
 
-      {/* Detail Drawer */}
+      {/* Mock Data Detail Drawer */}
       <USALegislationDrawer
-        item={selectedItem}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        item={selectedMockItem}
+        open={mockDrawerOpen}
+        onClose={() => setMockDrawerOpen(false)}
       />
+
+      {/* Congress Bill Detail Drawer (with 7 tabs) */}
+      {selectedCongressBill && (
+        <CongressBillDrawer
+          bill={selectedCongressBill}
+          open={congressDrawerOpen}
+          onOpenChange={setCongressDrawerOpen}
+        />
+      )}
     </div>
   );
 }
