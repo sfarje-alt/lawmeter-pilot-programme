@@ -312,7 +312,7 @@ export default function LawMeterDashboard() {
                     variant={selectedCountry === "usa" ? "secondary" : "ghost"}
                     onClick={() => setSelectedCountry("usa")}
                     size="sm"
-                    className="gap-2"
+                    className="gap-2 flex-1 max-w-[150px]"
                   >
                     🇺🇸 USA
                   </Button>
@@ -320,7 +320,7 @@ export default function LawMeterDashboard() {
                     variant={selectedCountry === "canada" ? "secondary" : "ghost"}
                     onClick={() => setSelectedCountry("canada")}
                     size="sm"
-                    className="gap-2"
+                    className="gap-2 flex-1 max-w-[150px]"
                   >
                     🇨🇦 Canada
                   </Button>

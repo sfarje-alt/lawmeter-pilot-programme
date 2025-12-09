@@ -14,7 +14,7 @@ import {
 
 // Jurisdiction flags and labels
 const jurisdictions = [
-  { id: "all", label: "All Jurisdictions", flag: "🌍" },
+  { id: "all", label: "All Jurisdictions", flag: "" },
   { id: "usa", label: "USA", flag: "🇺🇸" },
   { id: "canada", label: "Canada", flag: "🇨🇦" },
   { id: "costa-rica", label: "Costa Rica", flag: "🇨🇷" },
