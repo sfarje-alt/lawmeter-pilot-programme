@@ -24,14 +24,22 @@ interface CachedSummary {
   version: number;
 }
 
+interface DateContext {
+  effectiveDate?: string;
+  deadline?: string;
+  publishedDate?: string;
+  isInForce?: boolean;
+}
+
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-const CACHE_VERSION = 2; // Increment when format changes
+const CACHE_VERSION = 3; // Increment when format changes
 
 export function useAISummary(
   itemId: string,
   title: string,
   billTextUrl?: string,
-  policyArea?: string
+  policyArea?: string,
+  dateContext?: DateContext
 ): UseAISummaryResult {
   const [summary, setSummary] = useState<AISummary | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -85,7 +93,8 @@ export function useAISummary(
           billTextUrl,
           billTitle: title,
           policyArea,
-          generateSummary: true
+          generateSummary: true,
+          dateContext: dateContext || {}
         }
       });
 
@@ -101,11 +110,28 @@ export function useAISummary(
           }
         }
 
+        // Generate timeline text with dates
+        let keyDeadline = data.cardSummary?.keyDeadline || "Check details for timeline";
+        
+        // Enhance with actual dates if available
+        if (dateContext) {
+          if (dateContext.isInForce && dateContext.effectiveDate) {
+            const effDate = new Date(dateContext.effectiveDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            keyDeadline = `Effective since ${effDate}`;
+          } else if (dateContext.deadline) {
+            const deadlineDate = new Date(dateContext.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            keyDeadline = `Compliance required by ${deadlineDate}`;
+          } else if (dateContext.publishedDate && !dateContext.isInForce) {
+            const pubDate = new Date(dateContext.publishedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            keyDeadline = `Introduced ${pubDate} - timeline pending`;
+          }
+        }
+
         // Extract summary from AI response
         const newSummary: AISummary = {
           whatChanges: data.cardSummary?.whatChanges || extractWhatChanges(data.explanation),
           whoImpacted: data.cardSummary?.whoImpacted || extractWhoImpacted(data.stakeholders, data.explanation),
-          keyDeadline: data.cardSummary?.keyDeadline || "Check details for timeline",
+          keyDeadline,
           generatedAt: new Date().toISOString(),
           riskScore: data.riskScore,
           riskCategory: data.riskCategory,
@@ -137,7 +163,7 @@ export function useAISummary(
     } finally {
       setIsGenerating(false);
     }
-  }, [itemId, title, billTextUrl, policyArea, cacheKey, isGenerating]);
+  }, [itemId, title, billTextUrl, policyArea, dateContext, cacheKey, isGenerating]);
 
   return { summary, isGenerating, error, generateSummary };
 }

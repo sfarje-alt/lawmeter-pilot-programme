@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Grid, 
   List, 
@@ -17,7 +18,10 @@ import {
   Landmark,
   Filter,
   Scale,
-  Loader2
+  Loader2,
+  ChevronDown,
+  SlidersHorizontal,
+  Home
 } from "lucide-react";
 import { usaLegislationData } from "@/data/usaLegislationMockData";
 import { UnifiedAlertCard } from "./UnifiedAlertCard";
@@ -70,22 +74,31 @@ const usStates = [
   { code: "WI", name: "Wisconsin" }, { code: "WY", name: "Wyoming" }, { code: "DC", name: "District of Columbia" }
 ];
 
+type JurisdictionLevel = "all" | "federal" | "state" | "local";
+type RiskLevel = "high" | "medium" | "low";
+
 // Union type for combined items
 type CombinedLegislationItem = 
   | { type: "mock"; data: USLegislationItem }
   | { type: "congress"; data: CongressBill };
 
 export function USALegislationSection() {
+  // Primary Filters
   const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleStatus>("all");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [selectedDocTypes, setSelectedDocTypes] = useState<USDocumentType[]>([]);
-  const [selectedAuthorities, setSelectedAuthorities] = useState<Authority[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [jurisdictionLevel, setJurisdictionLevel] = useState<JurisdictionLevel>("all");
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
-  const [selectedChamber, setSelectedChamber] = useState<string[]>([]);
-  const [jurisdictionLevel, setJurisdictionLevel] = useState<"all" | "federal" | "state">("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedDocTypes, setSelectedDocTypes] = useState<USDocumentType[]>([]);
   
-  // Separate states for different drawer types
+  // Advanced Filters (collapsible)
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [selectedAuthorities, setSelectedAuthorities] = useState<Authority[]>([]);
+  const [selectedChamber, setSelectedChamber] = useState<string[]>([]);
+  const [selectedRiskLevels, setSelectedRiskLevels] = useState<RiskLevel[]>([]);
+  
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  
+  // Drawer states
   const [selectedMockItem, setSelectedMockItem] = useState<USLegislationItem | null>(null);
   const [selectedCongressBill, setSelectedCongressBill] = useState<CongressBill | null>(null);
   const [mockDrawerOpen, setMockDrawerOpen] = useState(false);
@@ -100,12 +113,10 @@ export function USALegislationSection() {
 
   // Combine mock data with Congress API data
   const combinedData = useMemo((): CombinedLegislationItem[] => {
-    // Mock data items (non-bill types mainly)
     const mockItems: CombinedLegislationItem[] = usaLegislationData
       .filter(item => !isDeleted(item.id))
       .map(item => ({ type: "mock" as const, data: item }));
     
-    // Congress bills (real API data)
     const congressItems: CombinedLegislationItem[] = congressBills.map(bill => ({
       type: "congress" as const,
       data: bill
@@ -114,33 +125,47 @@ export function USALegislationSection() {
     return [...mockItems, ...congressItems];
   }, [congressBills, isDeleted]);
 
-  // Filter combined data
+  // Get jurisdiction level for mock item
+  const getMockJurisdictionLevel = (item: USLegislationItem): JurisdictionLevel => {
+    if (item.authority === "city") return "local";
+    if (item.subJurisdiction) return "state";
+    return "federal";
+  };
+
+  // Filter combined data with smart dependencies
   const filteredData = useMemo(() => {
     return combinedData.filter(item => {
       if (item.type === "mock") {
         const mockItem = item.data;
+        const itemLevel = getMockJurisdictionLevel(mockItem);
         
         // Lifecycle filter
         if (lifecycleFilter === "in-force" && !mockItem.isInForce) return false;
         if (lifecycleFilter === "pipeline" && !mockItem.isPipeline) return false;
 
+        // Jurisdiction Level filter
+        if (jurisdictionLevel !== "all" && itemLevel !== jurisdictionLevel) return false;
+
+        // Geography filter (states) - only applies to state/local level
+        if (selectedStates.length > 0) {
+          if (itemLevel === "federal") return false;
+          // Extract state code from subJurisdiction (e.g., "San Francisco, CA" -> "CA")
+          const stateCode = mockItem.subJurisdiction?.includes(",") 
+            ? mockItem.subJurisdiction.split(",").pop()?.trim()
+            : mockItem.subJurisdiction;
+          if (!stateCode || !selectedStates.includes(stateCode)) return false;
+        }
+
         // Document type filter
         if (selectedDocTypes.length > 0 && !selectedDocTypes.includes(mockItem.documentType)) return false;
-
-        // Authority filter
-        if (selectedAuthorities.length > 0 && !selectedAuthorities.includes(mockItem.authority)) return false;
 
         // Regulatory category filter
         if (selectedCategories.length > 0 && !selectedCategories.includes(mockItem.regulatoryCategory)) return false;
 
-        // Jurisdiction level filter
-        if (jurisdictionLevel === "federal" && mockItem.subJurisdiction) return false;
-        if (jurisdictionLevel === "state" && !mockItem.subJurisdiction) return false;
+        // Advanced: Authority filter
+        if (selectedAuthorities.length > 0 && !selectedAuthorities.includes(mockItem.authority)) return false;
 
-        // State filter
-        if (selectedStates.length > 0 && mockItem.subJurisdiction && !selectedStates.includes(mockItem.subJurisdiction)) return false;
-
-        // Chamber filter (for bills)
+        // Advanced: Chamber filter (for bills)
         if (selectedChamber.length > 0 && mockItem.documentType === "bill") {
           const chamberMatch = selectedChamber.some(chamber => {
             if (chamber === "house") return mockItem.regulatoryBody?.toLowerCase().includes("house");
@@ -150,6 +175,9 @@ export function USALegislationSection() {
           if (!chamberMatch) return false;
         }
 
+        // Advanced: Risk level filter
+        if (selectedRiskLevels.length > 0 && !selectedRiskLevels.includes(mockItem.riskLevel)) return false;
+
         return true;
       } else {
         // Congress bill
@@ -158,14 +186,17 @@ export function USALegislationSection() {
         // Congress bills are always in pipeline (not enacted yet as laws)
         if (lifecycleFilter === "in-force") return false;
         
+        // Congress bills are federal
+        if (jurisdictionLevel === "state" || jurisdictionLevel === "local") return false;
+
+        // Geography filter doesn't apply to federal
+        if (selectedStates.length > 0) return false;
+        
         // Document type filter - Congress bills are "bill" type
         if (selectedDocTypes.length > 0 && !selectedDocTypes.includes("bill")) return false;
         
         // Authority filter - Congress bills are from "congress"
         if (selectedAuthorities.length > 0 && !selectedAuthorities.includes("congress")) return false;
-        
-        // Jurisdiction level - Congress bills are federal
-        if (jurisdictionLevel === "state") return false;
         
         // Chamber filter
         if (selectedChamber.length > 0) {
@@ -179,7 +210,6 @@ export function USALegislationSection() {
         
         // Regulatory category filter - check policy area
         if (selectedCategories.length > 0 && bill.policyArea) {
-          // Map Congress policy areas to our regulatory categories
           const policyName = bill.policyArea.name.toLowerCase();
           const categoryMatch = selectedCategories.some(cat => {
             const catLower = cat.toLowerCase();
@@ -190,11 +220,29 @@ export function USALegislationSection() {
           });
           if (!categoryMatch) return false;
         }
+
+        // Advanced: Risk level filter (check cached analysis)
+        if (selectedRiskLevels.length > 0) {
+          const billId = `${bill.congress}-${bill.type}-${bill.number}`;
+          const cached = localStorage.getItem(`ai_summary_v3_${billId}`);
+          if (cached) {
+            try {
+              const analysis = JSON.parse(cached);
+              const score = analysis.summary?.riskScore || 50;
+              const level: RiskLevel = score >= 70 ? "high" : score >= 40 ? "medium" : "low";
+              if (!selectedRiskLevels.includes(level)) return false;
+            } catch {
+              if (!selectedRiskLevels.includes("medium")) return false;
+            }
+          } else {
+            if (!selectedRiskLevels.includes("medium")) return false;
+          }
+        }
         
         return true;
       }
     });
-  }, [combinedData, lifecycleFilter, selectedDocTypes, selectedAuthorities, selectedCategories, jurisdictionLevel, selectedStates, selectedChamber]);
+  }, [combinedData, lifecycleFilter, jurisdictionLevel, selectedStates, selectedDocTypes, selectedAuthorities, selectedCategories, selectedChamber, selectedRiskLevels]);
 
   // Count totals
   const totalMock = usaLegislationData.filter(i => !isDeleted(i.id)).length;
@@ -235,16 +283,24 @@ export function USALegislationSection() {
     );
   };
 
+  const toggleRiskLevel = (level: RiskLevel) => {
+    setSelectedRiskLevels(prev =>
+      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
+    );
+  };
+
   const clearFilters = () => {
     setSelectedDocTypes([]);
     setSelectedAuthorities([]);
     setSelectedCategories([]);
     setSelectedStates([]);
     setSelectedChamber([]);
+    setSelectedRiskLevels([]);
     setJurisdictionLevel("all");
   };
 
-  const hasActiveFilters = selectedDocTypes.length > 0 || selectedAuthorities.length > 0 || selectedCategories.length > 0 || selectedStates.length > 0 || selectedChamber.length > 0 || jurisdictionLevel !== "all";
+  const hasActiveFilters = selectedDocTypes.length > 0 || selectedAuthorities.length > 0 || selectedCategories.length > 0 || selectedStates.length > 0 || selectedChamber.length > 0 || selectedRiskLevels.length > 0 || jurisdictionLevel !== "all";
+  const hasAdvancedFilters = selectedAuthorities.length > 0 || selectedChamber.length > 0 || selectedRiskLevels.length > 0;
 
   const handleReport = (id: string) => {
     toast({ title: "Reported", description: "This item has been flagged for review." });
@@ -284,23 +340,44 @@ export function USALegislationSection() {
         else if (item.data.riskLevel === "medium") medium++;
         else if (item.data.riskLevel === "low") low++;
       } else {
-        // For Congress bills, check cached analysis
         const billId = `${item.data.congress}-${item.data.type}-${item.data.number}`;
-        const cached = localStorage.getItem(`bill_analysis_${billId}`);
+        const cached = localStorage.getItem(`ai_summary_v3_${billId}`);
         if (cached) {
-          const analysis = JSON.parse(cached);
-          const score = analysis.riskScore;
-          if (score >= 70) high++;
-          else if (score >= 40) medium++;
-          else low++;
+          try {
+            const analysis = JSON.parse(cached);
+            const score = analysis.summary?.riskScore || 50;
+            if (score >= 70) high++;
+            else if (score >= 40) medium++;
+            else low++;
+          } catch {
+            medium++;
+          }
         } else {
-          medium++; // Default to medium if no analysis
+          medium++;
         }
       }
     });
     
     return { high, medium, low };
   }, [filteredData]);
+
+  // Smart filter: get available authorities based on jurisdiction level
+  const availableAuthorities = useMemo((): Authority[] => {
+    if (jurisdictionLevel === "federal") return ["congress", "federal-agency"];
+    if (jurisdictionLevel === "state") return ["state"];
+    if (jurisdictionLevel === "local") return ["city"];
+    return ["congress", "federal-agency", "state", "city"];
+  }, [jurisdictionLevel]);
+
+  // Smart filter: chamber only shows for bills at federal/state level
+  const showChamberFilter = useMemo(() => {
+    if (selectedDocTypes.length > 0 && !selectedDocTypes.includes("bill")) return false;
+    if (jurisdictionLevel === "local") return false;
+    return true;
+  }, [selectedDocTypes, jurisdictionLevel]);
+
+  // Smart filter: geography only shows for state/local or all
+  const showGeographyFilter = jurisdictionLevel !== "federal";
 
   return (
     <div className="space-y-6">
@@ -314,299 +391,362 @@ export function USALegislationSection() {
         </p>
       </div>
 
-      {/* Lifecycle Tabs - Macro Filter */}
-      <Tabs value={lifecycleFilter} onValueChange={(v) => setLifecycleFilter(v as LifecycleStatus)} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50 p-1">
-          <TabsTrigger 
-            value="all" 
-            className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            {lifecycleIcons.all}
-            <span>All</span>
-            <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border">
-              {allCount}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="in-force" 
-            className="gap-2 data-[state=active]:bg-success data-[state=active]:text-success-foreground"
-          >
-            {lifecycleIcons["in-force"]}
-            <span>In Force</span>
-            <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border">
-              {inForceCount}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="pipeline" 
-            className="gap-2 data-[state=active]:bg-warning data-[state=active]:text-warning-foreground"
-          >
-            {lifecycleIcons.pipeline}
-            <span>Pipeline</span>
-            <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border">
-              {pipelineCount}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* PRIMARY FILTER ROW */}
+      <div className="space-y-4">
+        {/* Row 1: Lifecycle + Level segmented controls */}
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Lifecycle Tabs */}
+          <Tabs value={lifecycleFilter} onValueChange={(v) => setLifecycleFilter(v as LifecycleStatus)} className="flex-shrink-0">
+            <TabsList className="bg-muted/50 p-1">
+              <TabsTrigger 
+                value="all" 
+                className="gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                {lifecycleIcons.all}
+                All
+                <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border text-[10px] px-1">
+                  {allCount}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="in-force" 
+                className="gap-1.5 text-xs data-[state=active]:bg-success data-[state=active]:text-success-foreground"
+              >
+                {lifecycleIcons["in-force"]}
+                In Force
+                <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border text-[10px] px-1">
+                  {inForceCount}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="pipeline" 
+                className="gap-1.5 text-xs data-[state=active]:bg-warning data-[state=active]:text-warning-foreground"
+              >
+                {lifecycleIcons.pipeline}
+                Pipeline
+                <Badge variant="outline" className="ml-1 bg-background/50 text-foreground border-border text-[10px] px-1">
+                  {pipelineCount}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-      {/* Secondary Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Jurisdiction Level Filter */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Scale className="h-4 w-4" />
-              Level
-              {jurisdictionLevel !== "all" && (
-                <Badge variant="secondary">1</Badge>
-              )}
+          {/* Jurisdiction Level Tabs */}
+          <Tabs value={jurisdictionLevel} onValueChange={(v) => setJurisdictionLevel(v as JurisdictionLevel)} className="flex-shrink-0">
+            <TabsList className="bg-muted/50 p-1">
+              <TabsTrigger value="all" className="gap-1.5 text-xs">
+                <Scale className="h-3.5 w-3.5" />
+                All
+              </TabsTrigger>
+              <TabsTrigger value="federal" className="gap-1.5 text-xs">
+                <Building2 className="h-3.5 w-3.5" />
+                Federal
+              </TabsTrigger>
+              <TabsTrigger value="state" className="gap-1.5 text-xs">
+                <MapPin className="h-3.5 w-3.5" />
+                State
+              </TabsTrigger>
+              <TabsTrigger value="local" className="gap-1.5 text-xs">
+                <Home className="h-3.5 w-3.5" />
+                Local
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* View Toggle */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-4 w-4" />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 bg-background border border-border">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="level-all"
-                  checked={jurisdictionLevel === "all"}
-                  onCheckedChange={() => setJurisdictionLevel("all")}
-                />
-                <label htmlFor="level-all" className="text-sm cursor-pointer">All Levels</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="level-federal"
-                  checked={jurisdictionLevel === "federal"}
-                  onCheckedChange={() => setJurisdictionLevel("federal")}
-                />
-                <label htmlFor="level-federal" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Federal
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="level-state"
-                  checked={jurisdictionLevel === "state"}
-                  onCheckedChange={() => setJurisdictionLevel("state")}
-                />
-                <label htmlFor="level-state" className="text-sm cursor-pointer flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  State
-                </label>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+            <Button
+              variant={viewMode === "grid" ? "default" : "outline"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("grid")}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
-        {/* State Filter (shows when state level selected) */}
-        {(jurisdictionLevel === "state" || jurisdictionLevel === "all") && (
+        {/* Row 2: Filter dropdowns */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Geography Filter (States) - shows when level is state/local/all */}
+          {showGeographyFilter && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 h-8">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Geography
+                  {selectedStates.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] px-1">{selectedStates.length}</Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 bg-background border border-border max-h-80 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-1">
+                  {usStates.map(state => (
+                    <div key={state.code} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`state-${state.code}`}
+                        checked={selectedStates.includes(state.code)}
+                        onCheckedChange={() => toggleState(state.code)}
+                      />
+                      <label htmlFor={`state-${state.code}`} className="text-xs cursor-pointer">
+                        {state.code} - {state.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {/* Category Filter */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <MapPin className="h-4 w-4" />
-                States
-                {selectedStates.length > 0 && (
-                  <Badge variant="secondary">{selectedStates.length}</Badge>
+              <Button variant="outline" size="sm" className="gap-2 h-8">
+                <Filter className="h-3.5 w-3.5" />
+                Category
+                {selectedCategories.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] px-1">{selectedCategories.length}</Badge>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 bg-background border border-border max-h-80 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-1">
-                {usStates.map(state => (
-                  <div key={state.code} className="flex items-center gap-2">
+            <PopoverContent className="w-56 bg-background border border-border">
+              <div className="space-y-2">
+                {regulatoryCategories.map(cat => (
+                  <div key={cat} className="flex items-center gap-2">
                     <Checkbox
-                      id={`state-${state.code}`}
-                      checked={selectedStates.includes(state.code)}
-                      onCheckedChange={() => toggleState(state.code)}
+                      id={`cat-${cat}`}
+                      checked={selectedCategories.includes(cat)}
+                      onCheckedChange={() => toggleCategory(cat)}
                     />
-                    <label htmlFor={`state-${state.code}`} className="text-xs cursor-pointer">
-                      {state.code} - {state.name}
+                    <label htmlFor={`cat-${cat}`} className="text-sm cursor-pointer">
+                      {cat}
                     </label>
                   </div>
                 ))}
               </div>
             </PopoverContent>
           </Popover>
-        )}
 
-        {/* Document Type Filter */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <ScrollText className="h-4 w-4" />
-              Document Type
-              {selectedDocTypes.length > 0 && (
-                <Badge variant="secondary">{selectedDocTypes.length}</Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 bg-background border border-border">
-            <div className="space-y-2">
-              {(Object.keys(documentTypeLabels) as USDocumentType[]).map(type => (
-                <div key={type} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`doc-${type}`}
-                    checked={selectedDocTypes.includes(type)}
-                    onCheckedChange={() => toggleDocType(type)}
-                  />
-                  <label htmlFor={`doc-${type}`} className="text-sm flex items-center gap-2 cursor-pointer">
-                    {documentTypeIcons[type]}
-                    {documentTypeLabels[type]}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Authority Filter with nested options */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Building2 className="h-4 w-4" />
-              Authority
-              {selectedAuthorities.length > 0 && (
-                <Badge variant="secondary">{selectedAuthorities.length}</Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 bg-background border border-border">
-            <div className="space-y-3">
-              {(Object.keys(authorityLabels) as Authority[]).map(auth => (
-                <div key={auth} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`auth-${auth}`}
-                    checked={selectedAuthorities.includes(auth)}
-                    onCheckedChange={() => toggleAuthority(auth)}
-                  />
-                  <label htmlFor={`auth-${auth}`} className="text-sm cursor-pointer">
-                    {authorityLabels[auth]}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Chamber Filter (for Bills) */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Building2 className="h-4 w-4" />
-              Chamber
-              {selectedChamber.length > 0 && (
-                <Badge variant="secondary">{selectedChamber.length}</Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 bg-background border border-border">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="chamber-house"
-                  checked={selectedChamber.includes("house")}
-                  onCheckedChange={() => toggleChamber("house")}
-                />
-                <label htmlFor="chamber-house" className="text-sm cursor-pointer">House</label>
+          {/* Document Type Filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 h-8">
+                <ScrollText className="h-3.5 w-3.5" />
+                Document Type
+                {selectedDocTypes.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] px-1">{selectedDocTypes.length}</Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 bg-background border border-border">
+              <div className="space-y-2">
+                {(Object.keys(documentTypeLabels) as USDocumentType[]).map(type => (
+                  <div key={type} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`doc-${type}`}
+                      checked={selectedDocTypes.includes(type)}
+                      onCheckedChange={() => toggleDocType(type)}
+                    />
+                    <label htmlFor={`doc-${type}`} className="text-sm flex items-center gap-2 cursor-pointer">
+                      {documentTypeIcons[type]}
+                      {documentTypeLabels[type]}
+                    </label>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="chamber-senate"
-                  checked={selectedChamber.includes("senate")}
-                  onCheckedChange={() => toggleChamber("senate")}
-                />
-                <label htmlFor="chamber-senate" className="text-sm cursor-pointer">Senate</label>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
 
-        {/* Regulatory Category Filter */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Category
-              {selectedCategories.length > 0 && (
-                <Badge variant="secondary">{selectedCategories.length}</Badge>
-              )}
+          {/* More Filters Button (Advanced) */}
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant={hasAdvancedFilters ? "secondary" : "outline"} size="sm" className="gap-2 h-8">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                More Filters
+                {hasAdvancedFilters && (
+                  <Badge variant="secondary" className="text-[10px] px-1">
+                    {selectedAuthorities.length + selectedChamber.length + selectedRiskLevels.length}
+                  </Badge>
+                )}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${advancedOpen ? "rotate-180" : ""}`} />
+              </Button>
+            </CollapsibleTrigger>
+          </Collapsible>
+
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" className="h-8" onClick={clearFilters}>
+              Clear All
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 bg-background border border-border">
-            <div className="space-y-2">
-              {regulatoryCategories.map(cat => (
-                <div key={cat} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`cat-${cat}`}
-                    checked={selectedCategories.includes(cat)}
-                    onCheckedChange={() => toggleCategory(cat)}
-                  />
-                  <label htmlFor={`cat-${cat}`} className="text-sm cursor-pointer">
-                    {cat}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Clear Filters
-          </Button>
-        )}
-
-        {/* View Toggle */}
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="icon"
-            onClick={() => setViewMode("list")}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            size="icon"
-            onClick={() => setViewMode("grid")}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
+          )}
         </div>
+
+        {/* ADVANCED FILTER ROW (Collapsible) */}
+        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+          <CollapsibleContent>
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
+              {/* Authority Filter */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 h-8">
+                    <Building2 className="h-3.5 w-3.5" />
+                    Authority
+                    {selectedAuthorities.length > 0 && (
+                      <Badge variant="secondary" className="text-[10px] px-1">{selectedAuthorities.length}</Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 bg-background border border-border">
+                  <div className="space-y-2">
+                    {availableAuthorities.map(auth => (
+                      <div key={auth} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`auth-${auth}`}
+                          checked={selectedAuthorities.includes(auth)}
+                          onCheckedChange={() => toggleAuthority(auth)}
+                        />
+                        <label htmlFor={`auth-${auth}`} className="text-sm cursor-pointer">
+                          {authorityLabels[auth]}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Chamber Filter (only for bills) */}
+              {showChamberFilter && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2 h-8">
+                      <Landmark className="h-3.5 w-3.5" />
+                      Chamber
+                      {selectedChamber.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px] px-1">{selectedChamber.length}</Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 bg-background border border-border">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="chamber-house"
+                          checked={selectedChamber.includes("house")}
+                          onCheckedChange={() => toggleChamber("house")}
+                        />
+                        <label htmlFor="chamber-house" className="text-sm cursor-pointer">House</label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="chamber-senate"
+                          checked={selectedChamber.includes("senate")}
+                          onCheckedChange={() => toggleChamber("senate")}
+                        />
+                        <label htmlFor="chamber-senate" className="text-sm cursor-pointer">Senate</label>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+
+              {/* Risk Level Filter */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 h-8">
+                    <Scale className="h-3.5 w-3.5" />
+                    Risk Level
+                    {selectedRiskLevels.length > 0 && (
+                      <Badge variant="secondary" className="text-[10px] px-1">{selectedRiskLevels.length}</Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 bg-background border border-border">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="risk-high"
+                        checked={selectedRiskLevels.includes("high")}
+                        onCheckedChange={() => toggleRiskLevel("high")}
+                      />
+                      <label htmlFor="risk-high" className="text-sm cursor-pointer flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-risk-high" />
+                        High
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="risk-medium"
+                        checked={selectedRiskLevels.includes("medium")}
+                        onCheckedChange={() => toggleRiskLevel("medium")}
+                      />
+                      <label htmlFor="risk-medium" className="text-sm cursor-pointer flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-risk-medium" />
+                        Medium
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="risk-low"
+                        checked={selectedRiskLevels.includes("low")}
+                        onCheckedChange={() => toggleRiskLevel("low")}
+                      />
+                      <label htmlFor="risk-low" className="text-sm cursor-pointer flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-risk-low" />
+                        Low
+                      </label>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       {/* Active Filters Display */}
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2">
           {jurisdictionLevel !== "all" && (
-            <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setJurisdictionLevel("all")}>
-              {jurisdictionLevel === "federal" ? "Federal" : "State"} ×
+            <Badge variant="secondary" className="gap-1 cursor-pointer text-xs" onClick={() => setJurisdictionLevel("all")}>
+              {jurisdictionLevel.charAt(0).toUpperCase() + jurisdictionLevel.slice(1)} ×
             </Badge>
           )}
           {selectedStates.map(state => (
-            <Badge key={state} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleState(state)}>
+            <Badge key={state} variant="secondary" className="gap-1 cursor-pointer text-xs" onClick={() => toggleState(state)}>
               {state} ×
             </Badge>
           ))}
           {selectedDocTypes.map(type => (
-            <Badge key={type} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleDocType(type)}>
+            <Badge key={type} variant="secondary" className="gap-1 cursor-pointer text-xs" onClick={() => toggleDocType(type)}>
               {documentTypeLabels[type]} ×
             </Badge>
           ))}
+          {selectedCategories.map(cat => (
+            <Badge key={cat} variant="secondary" className="gap-1 cursor-pointer text-xs" onClick={() => toggleCategory(cat)}>
+              {cat} ×
+            </Badge>
+          ))}
           {selectedAuthorities.map(auth => (
-            <Badge key={auth} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleAuthority(auth)}>
+            <Badge key={auth} variant="secondary" className="gap-1 cursor-pointer text-xs" onClick={() => toggleAuthority(auth)}>
               {authorityLabels[auth]} ×
             </Badge>
           ))}
           {selectedChamber.map(chamber => (
-            <Badge key={chamber} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleChamber(chamber)}>
+            <Badge key={chamber} variant="secondary" className="gap-1 cursor-pointer text-xs" onClick={() => toggleChamber(chamber)}>
               {chamber === "house" ? "House" : "Senate"} ×
             </Badge>
           ))}
-          {selectedCategories.map(cat => (
-            <Badge key={cat} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleCategory(cat)}>
-              {cat} ×
+          {selectedRiskLevels.map(level => (
+            <Badge key={level} variant="secondary" className="gap-1 cursor-pointer text-xs" onClick={() => toggleRiskLevel(level)}>
+              {level.charAt(0).toUpperCase() + level.slice(1)} Risk ×
             </Badge>
           ))}
         </div>

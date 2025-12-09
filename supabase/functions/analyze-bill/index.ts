@@ -58,7 +58,7 @@ const systemPrompt = `You are a legislative risk analyst for a company that manu
 2. A risk category: "Critical", "Urgent", "High", "Medium", "Low", or "Minimal"
 3. A detailed explanation of why this legislation poses that level of risk
 4. Key stakeholders who would be affected (companies, industries, groups)
-5. A 3-line card summary for quick scanning
+5. A 3-line card summary for quick scanning - MUST include relevant dates
 
 Risk Categories:
 - Critical (90-100): Immediate existential threat to operations
@@ -77,6 +77,12 @@ Consider impacts on:
 - Energy efficiency and eco-design standards
 - Labeling and certification requirements
 
+IMPORTANT: The keyDeadline field MUST include specific dates when available. Use formats like:
+- "Effective since Jan 15, 2025" for enacted legislation
+- "Compliance required by Mar 1, 2025" for items with deadlines
+- "Expected vote by Q2 2025" for pipeline items
+- "Introduced Dec 2024 - timeline pending" when no deadline exists
+
 Respond ONLY with valid JSON in this exact format:
 {
   "riskScore": <number 0-100>,
@@ -85,7 +91,7 @@ Respond ONLY with valid JSON in this exact format:
   "cardSummary": {
     "whatChanges": "<1 sentence max 80 chars: what this legislation changes or requires>",
     "whoImpacted": "<1 sentence max 80 chars: who is affected - sectors, entities, activities>",
-    "keyDeadline": "<1 sentence max 80 chars: next milestone, deadline, or effective date>"
+    "keyDeadline": "<1 sentence max 80 chars: MUST include specific date - effective date, deadline, or expected timeline>"
   },
   "stakeholders": [
     {
