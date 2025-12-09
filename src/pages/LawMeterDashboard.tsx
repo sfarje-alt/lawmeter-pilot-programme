@@ -64,7 +64,8 @@ export default function LawMeterDashboard() {
   const [searchParams] = useSearchParams();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("legislation");
-  const [selectedCountry, setSelectedCountry] = useState<"usa" | "costa-rica" | "japan" | "korea" | "taiwan" | "canada" | "gcc" | "eu">("usa");
+  const [selectedRegion, setSelectedRegion] = useState<"nam" | "latam" | "eu" | "gcc" | "japan" | "apac">("nam");
+  const [selectedCountry, setSelectedCountry] = useState<"usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu">("usa");
   const [usaSubTab, setUsaSubTab] = useState<"federal" | "state">("federal");
   const [costaRicaSubTab, setCostaRicaSubTab] = useState<"normas" | "proyectos">("normas");
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
@@ -218,6 +219,11 @@ export default function LawMeterDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
+            {/* Global Search Bar */}
+            <GlobalLegislationSearch 
+              onSearch={(query, jurisdiction) => console.log("Search:", query, jurisdiction)}
+            />
+
             {/* World Map - National/Federal Overview */}
             <WorldMap 
               legislation={[
@@ -237,200 +243,218 @@ export default function LawMeterDashboard() {
                 ...bahrainLegislation,
                 ...qatarLegislation
               ]} 
-              onSelectRegion={(region) => setSelectedCountry(region as typeof selectedCountry)}
+              onSelectRegion={(region) => {
+                // Map region to our region groups
+                if (region === "usa" || region === "canada") setSelectedRegion("nam");
+                else if (region === "costa-rica" || region === "peru") setSelectedRegion("latam");
+                else if (region === "eu") setSelectedRegion("eu");
+                else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar"].includes(region)) setSelectedRegion("gcc");
+                else if (region === "japan") setSelectedRegion("japan");
+                else if (region === "korea" || region === "taiwan") setSelectedRegion("apac");
+                setSelectedCountry(region as typeof selectedCountry);
+              }}
             />
 
-            {/* Country Selector */}
-            <div className="flex items-center gap-4 mb-6 flex-wrap">
-              <span className="text-sm font-medium text-muted-foreground">Select Region:</span>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={selectedCountry === "usa" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("usa")}
-                  className="gap-2"
-                >
-                  🇺🇸 USA
-                </Button>
-                <Button
-                  variant={selectedCountry === "canada" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("canada")}
-                  className="gap-2"
-                >
-                  🇨🇦 Canada
-                </Button>
-                <Button
-                  variant={selectedCountry === "costa-rica" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("costa-rica")}
-                  className="gap-2"
-                >
-                  🇨🇷 Costa Rica
-                </Button>
-                <Button
-                  variant={selectedCountry === "eu" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("eu")}
-                  className="gap-2"
-                >
-                  🇪🇺 EU
-                </Button>
-                <Button
-                  variant={selectedCountry === "gcc" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("gcc")}
-                  className="gap-2"
-                >
-                  🏛️ GCC
-                </Button>
-                <Button
-                  variant={selectedCountry === "japan" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("japan")}
-                  className="gap-2"
-                >
-                  🇯🇵 Japan
-                </Button>
-                <Button
-                  variant={selectedCountry === "korea" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("korea")}
-                  className="gap-2"
-                >
-                  🇰🇷 Korea
-                </Button>
-                <Button
-                  variant={selectedCountry === "taiwan" ? "default" : "outline"}
-                  onClick={() => setSelectedCountry("taiwan")}
-                  className="gap-2"
-                >
-                  🇹🇼 Taiwan
-                </Button>
+            {/* Regional Selector */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 mb-4 flex-wrap">
+                <span className="text-sm font-medium text-muted-foreground">Select Region:</span>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant={selectedRegion === "nam" ? "default" : "outline"}
+                    onClick={() => { setSelectedRegion("nam"); setSelectedCountry("usa"); }}
+                    className="gap-2"
+                  >
+                    🌎 NAM
+                  </Button>
+                  <Button
+                    variant={selectedRegion === "latam" ? "default" : "outline"}
+                    onClick={() => { setSelectedRegion("latam"); setSelectedCountry("costa-rica"); }}
+                    className="gap-2"
+                  >
+                    🌎 LATAM
+                  </Button>
+                  <Button
+                    variant={selectedRegion === "eu" ? "default" : "outline"}
+                    onClick={() => { setSelectedRegion("eu"); setSelectedCountry("eu"); }}
+                    className="gap-2"
+                  >
+                    🇪🇺 EU
+                  </Button>
+                  <Button
+                    variant={selectedRegion === "gcc" ? "default" : "outline"}
+                    onClick={() => { setSelectedRegion("gcc"); setSelectedCountry("gcc"); }}
+                    className="gap-2"
+                  >
+                    🏛️ GCC
+                  </Button>
+                  <Button
+                    variant={selectedRegion === "japan" ? "default" : "outline"}
+                    onClick={() => { setSelectedRegion("japan"); setSelectedCountry("japan"); }}
+                    className="gap-2"
+                  >
+                    🇯🇵 JAPAN
+                  </Button>
+                  <Button
+                    variant={selectedRegion === "apac" ? "default" : "outline"}
+                    onClick={() => { setSelectedRegion("apac"); setSelectedCountry("korea"); }}
+                    className="gap-2"
+                  >
+                    🌏 APAC
+                  </Button>
+                </div>
               </div>
+
+              {/* Country Selector within Region */}
+              {selectedRegion === "nam" && (
+                <div className="flex gap-2 ml-8">
+                  <Button
+                    variant={selectedCountry === "usa" ? "secondary" : "ghost"}
+                    onClick={() => setSelectedCountry("usa")}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    🇺🇸 USA
+                  </Button>
+                  <Button
+                    variant={selectedCountry === "canada" ? "secondary" : "ghost"}
+                    onClick={() => setSelectedCountry("canada")}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    🇨🇦 Canada
+                  </Button>
+                </div>
+              )}
+
+              {selectedRegion === "latam" && (
+                <div className="flex gap-2 ml-8">
+                  <Button
+                    variant={selectedCountry === "costa-rica" ? "secondary" : "ghost"}
+                    onClick={() => setSelectedCountry("costa-rica")}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    🇨🇷 Costa Rica
+                  </Button>
+                  <Button
+                    variant={selectedCountry === "peru" ? "secondary" : "ghost"}
+                    onClick={() => setSelectedCountry("peru")}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    🇵🇪 Perú
+                  </Button>
+                </div>
+              )}
+
+              {selectedRegion === "apac" && (
+                <div className="flex gap-2 ml-8">
+                  <Button
+                    variant={selectedCountry === "korea" ? "secondary" : "ghost"}
+                    onClick={() => setSelectedCountry("korea")}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    🇰🇷 Korea
+                  </Button>
+                  <Button
+                    variant={selectedCountry === "taiwan" ? "secondary" : "ghost"}
+                    onClick={() => setSelectedCountry("taiwan")}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    🇹🇼 Taiwan
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {/* USA Section */}
+            {/* USA Section - New unified view */}
             {selectedCountry === "usa" && (
-              <Tabs value={usaSubTab} onValueChange={(v) => setUsaSubTab(v as "federal" | "state")} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
-                  <TabsTrigger value="federal" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    US Federal Bills
-                  </TabsTrigger>
-                  <TabsTrigger value="state" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <FileText className="h-4 w-4 mr-2" />
-                    State Bills
-                  </TabsTrigger>
-                </TabsList>
+              <USALegislationSection />
+            )}
 
-                <TabsContent value="federal" className="space-y-6 mt-6">
-                  <CongressBillsSection />
-                </TabsContent>
+            {/* Peru Section - Empty placeholder */}
+            {selectedCountry === "peru" && (
+              <Card className="p-12 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <span className="text-6xl">🇵🇪</span>
+                  <h3 className="text-xl font-semibold">Perú</h3>
+                  <p className="text-muted-foreground">
+                    Legislation monitoring for Perú is coming soon.
+                  </p>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </div>
+              </Card>
+            )}
 
-                <TabsContent value="state" className="space-y-6 mt-6">
-                  {/* State Filter */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="text-sm font-medium">Filter by State:</span>
-                    <Select
-                      value={selectedStates.length === 1 ? selectedStates[0] : ""}
-                      onValueChange={(value) => {
-                        if (value === "all") {
-                          setSelectedStates([]);
-                        } else {
-                          setSelectedStates(prev => 
-                            prev.includes(value) 
-                              ? prev.filter(s => s !== value)
-                              : [...prev, value]
-                          );
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder={selectedStates.length > 0 ? `${selectedStates.length} selected` : "All States"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border border-border">
-                        <SelectItem value="all">All States</SelectItem>
-                        <SelectItem value="CA">California</SelectItem>
-                        <SelectItem value="TX">Texas</SelectItem>
-                        <SelectItem value="NY">New York</SelectItem>
-                        <SelectItem value="FL">Florida</SelectItem>
-                        <SelectItem value="IL">Illinois</SelectItem>
-                        <SelectItem value="PA">Pennsylvania</SelectItem>
-                        <SelectItem value="OH">Ohio</SelectItem>
-                        <SelectItem value="GA">Georgia</SelectItem>
-                        <SelectItem value="NC">North Carolina</SelectItem>
-                        <SelectItem value="MI">Michigan</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {selectedStates.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedStates.map(state => (
-                          <Badge 
-                            key={state} 
-                            variant="secondary" 
-                            className="cursor-pointer"
-                            onClick={() => setSelectedStates(prev => prev.filter(s => s !== state))}
-                          >
-                            {state} ×
-                          </Badge>
-                        ))}
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedStates([])}>
-                          Clear all
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <InternationalLegislationSection 
-                    legislation={selectedStates.length > 0 
-                      ? usStateBills.filter(l => selectedStates.includes(l.subJurisdiction || ""))
-                      : usStateBills
-                    }
-                    showMaps={true}
-                    mapType="usa"
-                  />
-                </TabsContent>
-              </Tabs>
+            {/* Canada Section */}
+            {selectedCountry === "canada" && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🇨🇦</span>
+                  <h2 className="text-2xl font-bold">Canada Legislation</h2>
+                </div>
+                {/* Province Filter */}
+                <div className="flex items-center gap-4 mb-4 flex-wrap">
+                  <span className="text-sm font-medium">Filter by Province:</span>
+                  <Select
+                    value={selectedProvinces.length === 1 ? selectedProvinces[0] : ""}
+                    onValueChange={(value) => {
+                      if (value === "all") {
+                        setSelectedProvinces([]);
+                      } else {
+                        setSelectedProvinces(prev => 
+                          prev.includes(value) 
+                            ? prev.filter(s => s !== value)
+                            : [...prev, value]
+                        );
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder={selectedProvinces.length > 0 ? `${selectedProvinces.length} selected` : "All Provinces"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border">
+                      <SelectItem value="all">All Provinces</SelectItem>
+                      <SelectItem value="Federal">Federal</SelectItem>
+                      <SelectItem value="ON">Ontario</SelectItem>
+                      <SelectItem value="QC">Quebec</SelectItem>
+                      <SelectItem value="BC">British Columbia</SelectItem>
+                      <SelectItem value="AB">Alberta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <InternationalLegislationSection 
+                  legislation={selectedProvinces.length > 0 
+                    ? canadaLegislation.filter(l => selectedProvinces.includes(l.subJurisdiction || ""))
+                    : canadaLegislation
+                  }
+                  showMaps={true}
+                  mapType="canada"
+                />
+              </div>
             )}
 
             {/* Costa Rica Section */}
             {selectedCountry === "costa-rica" && (
-              <Tabs value={costaRicaSubTab} onValueChange={(v) => setCostaRicaSubTab(v as "normas" | "proyectos")} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
-                  <TabsTrigger value="normas" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Normas (Legislations)
-                  </TabsTrigger>
-                  <TabsTrigger value="proyectos" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Proyectos (Bills)
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Normas Filter Bar */}
-                {costaRicaSubTab === "normas" && (
-                  <FilterBar
-                    filters={actsFilters}
-                    onFiltersChange={setActsFilters}
-                    portfolios={portfolios}
-                    types={types}
-                    showPartyFilters={false}
-                    showRiskScore={true}
-                    searchData={alerts}
-                    searchType="acts"
-                    onSelectSearchItem={(item) => setSelectedAlert(item as Alert)}
-                  />
-                )}
-                
-                {/* Proyectos Filter Bar */}
-                {costaRicaSubTab === "proyectos" && (
-                  <FilterBar
-                    filters={billsFilters}
-                    onFiltersChange={setBillsFilters}
-                    portfolios={portfolios}
-                    types={types}
-                    parties={parties}
-                    showPartyFilters={true}
-                    showRiskScore={true}
-                    searchData={mockBills}
-                    searchType="bills"
-                    onSelectSearchItem={(item) => setSelectedBill(item as BillItem)}
-                  />
-                )}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🇨🇷</span>
+                  <h2 className="text-2xl font-bold">Costa Rica Legislation</h2>
+                </div>
+                <Tabs value={costaRicaSubTab} onValueChange={(v) => setCostaRicaSubTab(v as "normas" | "proyectos")} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
+                    <TabsTrigger value="normas" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Normas (Legislations)
+                    </TabsTrigger>
+                    <TabsTrigger value="proyectos" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Proyectos (Bills)
+                    </TabsTrigger>
+                  </TabsList>
 
                 <TabsContent value="normas" className="space-y-6 mt-6">
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -676,96 +700,16 @@ export default function LawMeterDashboard() {
                   )}
                 </TabsContent>
               </Tabs>
-            )}
-
-            {/* Japan Section */}
-            {selectedCountry === "japan" && (
-              <InternationalLegislationSection legislation={japanLegislation} />
-            )}
-
-            {/* Korea Section */}
-            {selectedCountry === "korea" && (
-              <InternationalLegislationSection legislation={koreaLegislation} />
-            )}
-
-            {/* Taiwan Section */}
-            {selectedCountry === "taiwan" && (
-              <InternationalLegislationSection legislation={taiwanLegislation} />
-            )}
-
-            {/* Canada Section */}
-            {selectedCountry === "canada" && (
-              <div className="space-y-6">
-                {/* Province Filter */}
-                <div className="flex items-center gap-4 mb-4 flex-wrap">
-                  <span className="text-sm font-medium">Filter by Province:</span>
-                  <Select
-                    value={selectedProvinces.length === 1 ? selectedProvinces[0] : ""}
-                    onValueChange={(value) => {
-                      if (value === "all") {
-                        setSelectedProvinces([]);
-                      } else {
-                        setSelectedProvinces(prev => 
-                          prev.includes(value) 
-                            ? prev.filter(s => s !== value)
-                            : [...prev, value]
-                        );
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[220px]">
-                      <SelectValue placeholder={selectedProvinces.length > 0 ? `${selectedProvinces.length} selected` : "All Provinces/Territories"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border">
-                      <SelectItem value="all">All Provinces/Territories</SelectItem>
-                      <SelectItem value="AB">Alberta</SelectItem>
-                      <SelectItem value="BC">British Columbia</SelectItem>
-                      <SelectItem value="MB">Manitoba</SelectItem>
-                      <SelectItem value="NB">New Brunswick</SelectItem>
-                      <SelectItem value="NL">Newfoundland and Labrador</SelectItem>
-                      <SelectItem value="NS">Nova Scotia</SelectItem>
-                      <SelectItem value="NT">Northwest Territories</SelectItem>
-                      <SelectItem value="NU">Nunavut</SelectItem>
-                      <SelectItem value="ON">Ontario</SelectItem>
-                      <SelectItem value="PE">Prince Edward Island</SelectItem>
-                      <SelectItem value="QC">Quebec</SelectItem>
-                      <SelectItem value="SK">Saskatchewan</SelectItem>
-                      <SelectItem value="YT">Yukon</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {selectedProvinces.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProvinces.map(prov => (
-                        <Badge 
-                          key={prov} 
-                          variant="secondary" 
-                          className="cursor-pointer"
-                          onClick={() => setSelectedProvinces(prev => prev.filter(s => s !== prov))}
-                        >
-                          {prov} ×
-                        </Badge>
-                      ))}
-                      <Button variant="ghost" size="sm" onClick={() => setSelectedProvinces([])}>
-                        Clear all
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                <InternationalLegislationSection 
-                  legislation={selectedProvinces.length > 0 
-                    ? canadaLegislation.filter(l => selectedProvinces.includes(l.subJurisdiction || ""))
-                    : canadaLegislation
-                  }
-                  showMaps={true}
-                  mapType="canada"
-                />
               </div>
             )}
 
             {/* GCC Section */}
             {selectedCountry === "gcc" && (
               <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🏛️</span>
+                  <h2 className="text-2xl font-bold">GCC Legislation</h2>
+                </div>
                 <GCCRegionMap legislation={[...uaeLegislation, ...saudiLegislation, ...omanLegislation, ...kuwaitLegislation, ...bahrainLegislation, ...qatarLegislation]} />
                 
                 <Tabs value={gccSubTab} onValueChange={(v) => setGccSubTab(v as "uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar")} className="w-full">
@@ -817,9 +761,47 @@ export default function LawMeterDashboard() {
               </div>
             )}
 
+            {/* Japan Section */}
+            {selectedCountry === "japan" && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🇯🇵</span>
+                  <h2 className="text-2xl font-bold">Japan Legislation</h2>
+                </div>
+                <InternationalLegislationSection legislation={japanLegislation} />
+              </div>
+            )}
+
+            {/* Korea Section */}
+            {selectedCountry === "korea" && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🇰🇷</span>
+                  <h2 className="text-2xl font-bold">Korea Legislation</h2>
+                </div>
+                <InternationalLegislationSection legislation={koreaLegislation} />
+              </div>
+            )}
+
+            {/* Taiwan Section */}
+            {selectedCountry === "taiwan" && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🇹🇼</span>
+                  <h2 className="text-2xl font-bold">Taiwan Legislation</h2>
+                </div>
+                <InternationalLegislationSection legislation={taiwanLegislation} />
+              </div>
+            )}
+
             {/* EU Section */}
             {selectedCountry === "eu" && (
-              <Tabs value={euSubTab} onValueChange={(v) => setEuSubTab(v as "regulations" | "directives" | "parliament" | "council")} className="w-full">
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🇪🇺</span>
+                  <h2 className="text-2xl font-bold">European Union Legislation</h2>
+                </div>
+                <Tabs value={euSubTab} onValueChange={(v) => setEuSubTab(v as "regulations" | "directives" | "parliament" | "council")} className="w-full">
                 <TabsList className="grid w-full grid-cols-4 mb-6 glass-card p-1 gap-1">
                   <TabsTrigger value="regulations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                     <FileText className="h-4 w-4 mr-2" />
@@ -855,6 +837,7 @@ export default function LawMeterDashboard() {
                   <InternationalLegislationSection legislation={euCouncil} />
                 </TabsContent>
               </Tabs>
+              </div>
             )}
           </TabsContent>
 
