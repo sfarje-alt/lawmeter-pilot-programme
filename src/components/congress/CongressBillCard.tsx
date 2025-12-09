@@ -160,7 +160,7 @@ export function CongressBillCard({ bill, onViewDetails, onRefresh, keywordHits }
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap flex-1">
             {hasEmailUpdate && (
-              <Badge className="bg-orange-500 text-white animate-pulse">
+              <Badge className="bg-orange-500 text-white">
                 <Bell className="h-3 w-3 mr-1" />
                 New Update
               </Badge>
