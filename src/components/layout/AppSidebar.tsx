@@ -9,7 +9,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
@@ -23,13 +22,13 @@ interface AppSidebarProps {
 
 const menuItems = [
   { id: "legislation", title: "Legislation", icon: FileText },
+  { id: "starred", title: "Starred", icon: Star },
   { id: "media", title: "Media", icon: FileText },
   { id: "social", title: "Social Listening", icon: Users },
-  { id: "starred", title: "Starred", icon: Star },
   { id: "certificates", title: "Certificates", icon: Shield },
+  { id: "tenders", title: "Tenders", icon: Receipt },
   { id: "calendar", title: "Calendar", icon: Calendar },
   { id: "analytics", title: "Analytics", icon: BarChart3 },
-  { id: "tenders", title: "Tenders", icon: Receipt },
   { id: "contact", title: "Contact", icon: MessageSquare },
 ];
 
@@ -42,18 +41,20 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
           {!isCollapsed && (
-            <>
-              <div>
-                <h1 className="text-lg font-bold text-foreground leading-tight">Intelligence Hub</h1>
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="text-[10px] text-muted-foreground">Developed by</span>
-                </div>
+            <div>
+              <h1 className="text-lg font-bold text-foreground leading-tight">Intelligence Hub</h1>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-muted-foreground">Developed by</span>
               </div>
-            </>
+            </div>
           )}
         </div>
         {!isCollapsed && (
-          <img src={lawmeterLogo} alt="LawMeter" className="h-20 mt-2" />
+          <img 
+            src={lawmeterLogo} 
+            alt="LawMeter" 
+            className="h-12 w-auto mt-2 object-contain" 
+          />
         )}
       </SidebarHeader>
 
