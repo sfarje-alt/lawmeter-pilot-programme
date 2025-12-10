@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { 
   Calendar,
   AlertTriangle,
-  CheckCircle,
-  Clock,
   Sparkles,
   Building2,
   MapPin,
   ExternalLink,
   Loader2,
   ChevronRight,
-  Tag
+  Tag,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertActionMenu } from "./AlertActionMenu";
@@ -43,9 +42,55 @@ const docTypeIcons: Record<string, string> = {
   ordinance: "🏛️"
 };
 
+// Pipeline stages for different document types
+const pipelineStages: Record<string, string[]> = {
+  bill: ["Introduced", "Committee", "Passed House", "Passed Senate", "To President", "Enacted"],
+  regulation: ["Draft", "Proposed", "Comment Period", "Final Rule", "Effective"],
+  treaty: ["Proposed", "Negotiation", "Signed", "Ratification", "In Force"],
+  ordinance: ["Proposed", "First Reading", "Public Comment", "Second Reading", "Adopted", "Effective"]
+};
+
+// Get stage index based on status
+function getStageIndex(status: string, docType: string): number {
+  const stages = pipelineStages[docType] || pipelineStages.bill;
+  const statusLower = status.toLowerCase();
+  
+  if (docType === "bill") {
+    if (statusLower.includes("introduced") || statusLower.includes("first")) return 0;
+    if (statusLower.includes("committee")) return 1;
+    if (statusLower.includes("passed house")) return 2;
+    if (statusLower.includes("passed senate")) return 3;
+    if (statusLower.includes("president")) return 4;
+    if (statusLower.includes("enacted") || statusLower.includes("law") || statusLower.includes("in force")) return 5;
+    if (statusLower.includes("second")) return 1;
+  } else if (docType === "regulation") {
+    if (statusLower.includes("draft")) return 0;
+    if (statusLower.includes("proposed") || statusLower.includes("nprm")) return 1;
+    if (statusLower.includes("comment")) return 2;
+    if (statusLower.includes("final")) return 3;
+    if (statusLower.includes("effective") || statusLower.includes("in force")) return 4;
+  } else if (docType === "treaty") {
+    if (statusLower.includes("proposed")) return 0;
+    if (statusLower.includes("negotiat")) return 1;
+    if (statusLower.includes("signed")) return 2;
+    if (statusLower.includes("ratif")) return 3;
+    if (statusLower.includes("in force")) return 4;
+  } else if (docType === "ordinance") {
+    if (statusLower.includes("proposed")) return 0;
+    if (statusLower.includes("first")) return 1;
+    if (statusLower.includes("comment") || statusLower.includes("public")) return 2;
+    if (statusLower.includes("second")) return 3;
+    if (statusLower.includes("adopted") || statusLower.includes("future")) return 4;
+    if (statusLower.includes("effective") || statusLower.includes("in force")) return 5;
+  }
+  
+  return 0;
+}
+
 // Normalize data from both sources to a common structure
 interface NormalizedAlertData {
   id: string;
+  identifier: string; // Bill/law number (e.g., "H.R. 1234", "S. 567", "P.L. 118-45")
   title: string;
   documentType: string;
   billTextUrl?: string;
@@ -57,8 +102,8 @@ interface NormalizedAlertData {
   lifecycle: "In Force" | "Pipeline";
   isInForce: boolean;
   stage: string;
-  stages?: string[];
-  currentStageIndex?: number;
+  stages: string[];
+  currentStageIndex: number;
   riskLevel: "high" | "medium" | "low";
   riskScore: number;
   keyDate: string;
@@ -76,8 +121,15 @@ function normalizeData(mockItem?: USLegislationItem, congressBill?: CongressBill
       ? "Local" 
       : mockItem.subJurisdiction ? "State" : "Federal";
     
+    const docType = mockItem.documentType;
+    const stages = pipelineStages[docType] || pipelineStages.bill;
+    const currentStageIndex = mockItem.isInForce 
+      ? stages.length - 1 
+      : getStageIndex(mockItem.status, docType);
+    
     return {
       id: mockItem.id,
+      identifier: mockItem.localTerminology || mockItem.id.toUpperCase(),
       title: mockItem.title,
       documentType: mockItem.documentType,
       policyArea: mockItem.regulatoryCategory,
@@ -87,6 +139,8 @@ function normalizeData(mockItem?: USLegislationItem, congressBill?: CongressBill
       lifecycle: mockItem.isInForce ? "In Force" : "Pipeline",
       isInForce: mockItem.isInForce,
       stage: mockItem.status,
+      stages,
+      currentStageIndex,
       riskLevel: mockItem.riskLevel,
       riskScore: mockItem.riskScore,
       keyDate: mockItem.effectiveDate || mockItem.publishedDate,
@@ -99,26 +153,30 @@ function normalizeData(mockItem?: USLegislationItem, congressBill?: CongressBill
   }
   
   if (congressBill) {
-    const stages = ["Introduced", "Passed House", "Passed Senate", "To President", "Became Law"];
+    const stages = ["Introduced", "Committee", "Passed House", "Passed Senate", "To President", "Enacted"];
     let currentStageIndex = 0;
 
     if (congressBill.latestAction) {
       const text = congressBill.latestAction.text.toLowerCase();
       if (text.includes("became public law") || text.includes("signed by president")) {
-        currentStageIndex = 4;
+        currentStageIndex = 5;
       } else if (text.includes("presented to president") || text.includes("sent to president")) {
-        currentStageIndex = 3;
+        currentStageIndex = 4;
       } else if (text.includes("passed") && text.includes("senate")) {
-        currentStageIndex = 2;
+        currentStageIndex = 3;
       } else if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) {
+        currentStageIndex = 2;
+      } else if (text.includes("committee") || text.includes("referred")) {
         currentStageIndex = 1;
       }
     }
 
-    const isInForce = currentStageIndex === 4;
+    const isInForce = currentStageIndex === 5;
+    const billTypeLabel = congressBill.type === "HR" ? "H.R." : congressBill.type === "S" ? "S." : congressBill.type;
     
     return {
       id: `${congressBill.congress}-${congressBill.type}-${congressBill.number}`,
+      identifier: `${billTypeLabel} ${congressBill.number}`,
       title: congressBill.title,
       documentType: "bill",
       billTextUrl: `https://www.congress.gov/bill/${congressBill.congress}th-congress/${congressBill.type.toLowerCase() === 'hr' ? 'house' : 'senate'}-bill/${congressBill.number}/text`,
@@ -236,7 +294,7 @@ export function UnifiedAlertCard({
       }}
     >
       <CardHeader className="pb-2 pt-3">
-        {/* Row 1: Status badges + Action Menu */}
+        {/* Row 1: Lifecycle badge + Bill Identifier + Action Menu */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Lifecycle badge */}
@@ -249,17 +307,13 @@ export function UnifiedAlertCard({
                   : "bg-warning/10 text-warning border-warning/30"
               )}
             >
-              {data.isInForce ? (
-                <CheckCircle className="h-3 w-3 mr-1" />
-              ) : (
-                <Clock className="h-3 w-3 mr-1" />
-              )}
               {data.lifecycle}
             </Badge>
             
-            {/* Stage badge */}
-            <Badge variant="secondary" className="text-xs">
-              {data.stage}
+            {/* Bill/Law Identifier (replaces status icon) */}
+            <Badge variant="secondary" className="text-xs font-mono gap-1">
+              <FileText className="h-3 w-3" />
+              {data.identifier}
             </Badge>
           </div>
 
@@ -335,10 +389,11 @@ export function UnifiedAlertCard({
           )}
         </div>
 
-        {/* Congress Bill Status Timeline */}
-        {data.stages && data.currentStageIndex !== undefined && (
-          <div className="bg-muted/20 p-2 rounded-md">
-            <div className="flex items-center gap-1">
+        {/* Legislative Status Tracker - Only for Pipeline items */}
+        {!data.isInForce && data.stages && (
+          <div className="bg-muted/20 p-3 rounded-md border border-border/30">
+            <div className="text-xs font-medium text-muted-foreground mb-2">Legislative Progress</div>
+            <div className="flex items-center gap-0.5">
               {data.stages.map((stage, index) => (
                 <div key={`stage-${index}`} className="flex items-center gap-0.5 flex-1">
                   {index > 0 && (
@@ -346,12 +401,20 @@ export function UnifiedAlertCard({
                   )}
                   <div className="flex flex-col items-center flex-1">
                     <div className={cn(
-                      "w-full h-1.5 rounded-full transition-colors",
-                      index <= data.currentStageIndex! ? "bg-primary" : "bg-muted"
+                      "w-full h-2 rounded-full transition-colors",
+                      index < data.currentStageIndex 
+                        ? "bg-primary" 
+                        : index === data.currentStageIndex 
+                          ? "bg-primary animate-pulse" 
+                          : "bg-muted"
                     )} />
                     <span className={cn(
-                      "text-[10px] mt-1 text-center leading-tight",
-                      index === data.currentStageIndex ? "text-foreground font-medium" : "text-muted-foreground"
+                      "text-[9px] mt-1 text-center leading-tight",
+                      index === data.currentStageIndex 
+                        ? "text-primary font-semibold" 
+                        : index < data.currentStageIndex 
+                          ? "text-foreground" 
+                          : "text-muted-foreground"
                     )}>
                       {stage}
                     </span>
