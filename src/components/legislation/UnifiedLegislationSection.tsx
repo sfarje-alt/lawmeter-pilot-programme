@@ -1,0 +1,261 @@
+import { useState, useMemo, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Grid, List, Loader2 } from "lucide-react";
+import { UnifiedLegislationCard } from "./UnifiedLegislationCard";
+import { UnifiedLegislationFilters } from "./UnifiedLegislationFilters";
+import { 
+  UnifiedLegislationItem, 
+  UnifiedFilterState, 
+  defaultFilterState,
+  UnifiedFilterPreset 
+} from "@/types/unifiedLegislation";
+import { JurisdictionConfig } from "@/config/jurisdictionConfig";
+import { RegionHeader } from "@/components/regions/RegionHeader";
+import { RegionEmptyState } from "@/components/regions/RegionEmptyState";
+import { useReadAlerts } from "@/hooks/useReadAlerts";
+import { useStarredBills } from "@/hooks/useStarredBills";
+import { cn } from "@/lib/utils";
+import { regionThemes } from "@/components/regions/RegionConfig";
+
+interface UnifiedLegislationSectionProps {
+  config: JurisdictionConfig;
+  items: UnifiedLegislationItem[];
+  loading?: boolean;
+  error?: string | null;
+  presets?: UnifiedFilterPreset[];
+  categories?: string[];
+  onItemClick?: (item: UnifiedLegislationItem) => void;
+  title?: string;
+  subtitle?: string;
+}
+
+export function UnifiedLegislationSection({
+  config,
+  items,
+  loading = false,
+  error = null,
+  presets = [],
+  categories = [],
+  onItemClick,
+  title,
+  subtitle
+}: UnifiedLegislationSectionProps) {
+  const [filters, setFilters] = useState<UnifiedFilterState>(defaultFilterState);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [activePresetId, setActivePresetId] = useState<string | undefined>();
+  
+  const { markAsRead, toggleRead, isRead, deleteAlert, isDeleted } = useReadAlerts();
+  const { isStarred, toggleStar } = useStarredBills();
+  
+  const theme = regionThemes[config.region];
+
+  // Apply preset
+  const applyPreset = useCallback((preset: UnifiedFilterPreset) => {
+    setActivePresetId(preset.id);
+    setFilters({
+      ...defaultFilterState,
+      ...preset.filters
+    });
+  }, []);
+
+  // Filter items based on current filters
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      if (isDeleted(item.id)) return false;
+      
+      // Lifecycle filter
+      if (filters.lifecycle === "in-force" && !item.isInForce) return false;
+      if (filters.lifecycle === "pipeline" && item.isInForce) return false;
+      
+      // Jurisdiction level filter
+      if (filters.jurisdictionLevel !== "all" && item.jurisdictionLevel !== filters.jurisdictionLevel) return false;
+      
+      // Instrument type filter
+      if (filters.instrumentTypes.length > 0 && !filters.instrumentTypes.includes(item.instrumentType)) return false;
+      
+      // Hierarchy level filter
+      if (filters.hierarchyLevels.length > 0 && !filters.hierarchyLevels.includes(item.hierarchyLevel)) return false;
+      
+      // Subnational unit filter
+      if (filters.subnationalUnits.length > 0) {
+        if (!item.subnationalUnit || !filters.subnationalUnits.includes(item.subnationalUnit)) return false;
+      }
+      
+      // Risk level filter
+      if (filters.riskLevels.length > 0 && !filters.riskLevels.includes(item.riskLevel)) return false;
+      
+      // Category filter
+      if (filters.categories.length > 0) {
+        const itemCat = item.policyArea || item.regulatoryCategory || "";
+        if (!filters.categories.some(cat => itemCat.toLowerCase().includes(cat.toLowerCase()))) return false;
+      }
+      
+      // Authority filter
+      if (filters.authorities.length > 0 && !filters.authorities.includes(item.authority)) return false;
+      
+      // Search query
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        const searchable = `${item.title} ${item.summary || ""} ${item.identifier}`.toLowerCase();
+        if (!searchable.includes(query)) return false;
+      }
+      
+      // Deadline filter
+      if (filters.deadlinePreset !== "none" && item.complianceDeadline) {
+        const deadline = new Date(item.complianceDeadline);
+        const now = new Date();
+        const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        switch (filters.deadlinePreset) {
+          case "next-30": if (diffDays < 0 || diffDays > 30) return false; break;
+          case "next-60": if (diffDays < 0 || diffDays > 60) return false; break;
+          case "next-90": if (diffDays < 0 || diffDays > 90) return false; break;
+          case "this-quarter": {
+            const quarterEnd = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3 + 3, 0);
+            if (deadline < now || deadline > quarterEnd) return false;
+            break;
+          }
+        }
+      }
+      
+      return true;
+    });
+  }, [items, filters, isDeleted]);
+
+  // Sort items
+  const sortedItems = useMemo(() => {
+    return [...filteredItems].sort((a, b) => {
+      const multiplier = filters.sortOrder === "asc" ? 1 : -1;
+      
+      switch (filters.sortBy) {
+        case "date":
+          const dateA = new Date(a.publishedDate || a.effectiveDate || "").getTime();
+          const dateB = new Date(b.publishedDate || b.effectiveDate || "").getTime();
+          return (dateB - dateA) * multiplier;
+        case "risk":
+          return (b.riskScore - a.riskScore) * multiplier;
+        case "deadline":
+          const deadlineA = a.complianceDeadline ? new Date(a.complianceDeadline).getTime() : Infinity;
+          const deadlineB = b.complianceDeadline ? new Date(b.complianceDeadline).getTime() : Infinity;
+          return (deadlineA - deadlineB) * multiplier;
+        default:
+          return 0;
+      }
+    });
+  }, [filteredItems, filters.sortBy, filters.sortOrder]);
+
+  // Counts for filter tabs
+  const counts = useMemo(() => ({
+    all: items.filter(i => !isDeleted(i.id)).length,
+    inForce: items.filter(i => !isDeleted(i.id) && i.isInForce).length,
+    pipeline: items.filter(i => !isDeleted(i.id) && !i.isInForce).length
+  }), [items, isDeleted]);
+
+  // Unread count
+  const unreadCount = useMemo(() => 
+    sortedItems.filter(i => !isRead(i.id)).length
+  , [sortedItems, isRead]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: theme.primaryColor }} />
+        <span className="ml-3 text-muted-foreground">Loading legislation...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        <p>Error loading legislation: {error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <RegionHeader 
+        region={config.region}
+        title={title}
+        subtitle={subtitle}
+        alertCount={unreadCount}
+      />
+
+      {/* Filters */}
+      <UnifiedLegislationFilters
+        config={config}
+        filters={filters}
+        onFiltersChange={setFilters}
+        counts={counts}
+        presets={presets}
+        activePresetId={activePresetId}
+        onApplyPreset={applyPreset}
+        categories={categories}
+      />
+
+      {/* View Mode Toggle + Results Count */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing <span className="font-medium text-foreground">{sortedItems.length}</span> results
+          {unreadCount > 0 && (
+            <span className="ml-2">
+              (<span style={{ color: theme.primaryColor }}>{unreadCount} unread</span>)
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "grid" ? "default" : "ghost"}
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={() => setViewMode("grid")}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Items */}
+      {sortedItems.length === 0 ? (
+        <RegionEmptyState region={config.region} />
+      ) : (
+        <div className={cn(
+          viewMode === "grid" 
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            : "space-y-4"
+        )}>
+          {sortedItems.map((item) => (
+            <UnifiedLegislationCard
+              key={item.id}
+              item={item}
+              config={config}
+              isRead={isRead(item.id)}
+              isStarred={isStarred(item.id)}
+              onMarkRead={() => toggleRead(item.id)}
+              onToggleStar={() => toggleStar(item.id)}
+              onDelete={() => deleteAlert(item.id)}
+              onViewDetails={() => {
+                markAsRead(item.id);
+                onItemClick?.(item);
+              }}
+              viewMode={viewMode}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default UnifiedLegislationSection;
