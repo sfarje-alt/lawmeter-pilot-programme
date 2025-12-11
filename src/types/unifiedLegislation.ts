@@ -65,14 +65,42 @@ export interface UnifiedLegislationItem {
     whatChanges: string;
     whoImpacted: string;
     keyDeadline: string;
-    generatedAt: string;
+    generatedAt?: string;
     riskScore?: number;
     riskCategory?: string;
+    riskExplanation?: string;
+    stakeholders?: string[];
   };
   
   // Source URLs
   sourceUrl?: string;
   textUrl?: string;
+  
+  // Enriched content for drawer
+  votingRecords?: Array<{
+    chamber: string;
+    date: string;
+    yea: number;
+    nay: number;
+    abstain: number;
+    passed: boolean;
+  }>;
+  sponsors?: Array<{
+    name: string;
+    party?: string;
+    state?: string;
+    role?: string;
+  }>;
+  actions?: Array<{
+    date: string;
+    description: string;
+    chamber?: string;
+  }>;
+  summaries?: Array<{
+    versionName?: string;
+    text: string;
+  }>;
+  fullText?: string;
 }
 
 // ========== UNIFIED FILTER STATE ==========
