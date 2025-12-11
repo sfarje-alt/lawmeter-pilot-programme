@@ -19,9 +19,10 @@ const usaCategories = [
 
 interface UnifiedCongressSectionProps {
   onItemClick?: (item: UnifiedLegislationItem) => void;
+  onCongressBillClick?: (bill: any) => void; // For opening CongressBillDrawer with original data
 }
 
-export function UnifiedCongressSection({ onItemClick }: UnifiedCongressSectionProps) {
+export function UnifiedCongressSection({ onItemClick, onCongressBillClick }: UnifiedCongressSectionProps) {
   const [sortBy] = useState<SortOption>("latestAction-desc");
   const { bills, loading, error } = useCongressBills(sortBy);
   
@@ -30,6 +31,16 @@ export function UnifiedCongressSection({ onItemClick }: UnifiedCongressSectionPr
     if (!bills || bills.length === 0) return [];
     return convertCongressBillsToUnified(bills);
   }, [bills]);
+  
+  // Handle item click - check if it's a real Congress bill
+  const handleItemClick = (item: UnifiedLegislationItem) => {
+    // If item has originalData (real Congress bill), use CongressBillDrawer
+    if (item.originalData && onCongressBillClick) {
+      onCongressBillClick(item.originalData);
+    } else if (onItemClick) {
+      onItemClick(item);
+    }
+  };
   
   // Use presets from config
   const presets = usaConfig.filterPresets || [];
@@ -55,7 +66,8 @@ export function UnifiedCongressSection({ onItemClick }: UnifiedCongressSectionPr
       categories={usaCategories}
       title="US Congress Bills"
       subtitle="Live data from Congress.gov API (119th Congress)"
-      onItemClick={onItemClick}
+      onItemClick={handleItemClick}
+      prioritizeRealData={true}
     />
   );
 }

@@ -27,6 +27,7 @@ interface UnifiedLegislationSectionProps {
   onItemClick?: (item: UnifiedLegislationItem) => void;
   title?: string;
   subtitle?: string;
+  prioritizeRealData?: boolean; // Sort items with originalData first
 }
 
 export function UnifiedLegislationSection({
@@ -38,7 +39,8 @@ export function UnifiedLegislationSection({
   categories = [],
   onItemClick,
   title,
-  subtitle
+  subtitle,
+  prioritizeRealData = false
 }: UnifiedLegislationSectionProps) {
   const [filters, setFilters] = useState<UnifiedFilterState>(defaultFilterState);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -122,9 +124,17 @@ export function UnifiedLegislationSection({
     });
   }, [items, filters, isDeleted]);
 
-  // Sort items
+  // Sort items - prioritize real data if enabled
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
+      // First, prioritize items with originalData (real API data) if enabled
+      if (prioritizeRealData) {
+        const aHasOriginal = !!a.originalData;
+        const bHasOriginal = !!b.originalData;
+        if (aHasOriginal && !bHasOriginal) return -1;
+        if (!aHasOriginal && bHasOriginal) return 1;
+      }
+      
       const multiplier = filters.sortOrder === "asc" ? 1 : -1;
       
       switch (filters.sortBy) {
@@ -142,7 +152,7 @@ export function UnifiedLegislationSection({
           return 0;
       }
     });
-  }, [filteredItems, filters.sortBy, filters.sortOrder]);
+  }, [filteredItems, filters.sortBy, filters.sortOrder, prioritizeRealData]);
 
   // Counts for filter tabs
   const counts = useMemo(() => ({
