@@ -52,6 +52,12 @@ export interface PipelineStageConfig {
 }
 
 // ========== JURISDICTION CONFIGURATION ==========
+export interface JurisdictionLevelOption {
+  id: "federal" | "state" | "local" | "supranational";
+  label: string;
+  enabled: boolean;
+}
+
 export interface JurisdictionConfig {
   code: string;
   name: string;
@@ -69,6 +75,9 @@ export interface JurisdictionConfig {
   
   // Subnational units (if applicable)
   subnationalUnits?: SubnationalUnitConfig;
+  
+  // Jurisdiction level options (customized per country)
+  jurisdictionLevels?: JurisdictionLevelOption[];
   
   // Authority/issuing body labels
   authorityLabels: Record<string, string>;
@@ -153,6 +162,11 @@ export const usaConfig: JurisdictionConfig = {
     ]
   },
   
+  jurisdictionLevels: [
+    { id: "federal", label: "Federal", enabled: true },
+    { id: "state", label: "State", enabled: true },
+    { id: "local", label: "Local", enabled: true }
+  ],
   authorityLabels: {
     congress: "U.S. Congress",
     "federal-agency": "Federal Agency",
@@ -462,7 +476,13 @@ export const japanConfig: JurisdictionConfig = {
     status: "Status",
     subnational: "Prefecture",
     authority: "Issuing Body"
-  }
+  },
+  
+  jurisdictionLevels: [
+    { id: "federal", label: "国 (National)", enabled: true },
+    { id: "state", label: "都道府県 (Prefecture)", enabled: true },
+    { id: "local", label: "市区町村 (Municipal)", enabled: true }
+  ]
 };
 
 // ========== APAC CONFIGURATION (Korea/Taiwan) ==========
