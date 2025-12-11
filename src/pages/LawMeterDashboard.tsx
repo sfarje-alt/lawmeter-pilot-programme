@@ -36,7 +36,7 @@ import { CertificateTable } from '@/components/certificates/CertificateTable';
 import { useCertificates } from '@/hooks/useCertificates';
 import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
 import { Download, Plus } from "lucide-react";
-import { InternationalLegislationSection } from "@/components/legislation/InternationalLegislationSection";
+import { UnifiedLegislationSection } from "@/components/legislation/UnifiedLegislationSection";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { 
   usStateBills, 
@@ -58,7 +58,6 @@ import {
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { GlobalLegislationSearch } from "@/components/search/GlobalLegislationSearch";
-import { USALegislationSection } from "@/components/usa/USALegislationSection";
 import { 
   RegionSelector, 
   RegionHeader, 
@@ -66,6 +65,28 @@ import {
   regionThemes 
 } from "@/components/regions";
 import type { RegionCode } from "@/components/regions/RegionConfig";
+import { 
+  usaConfig, 
+  euConfig, 
+  latamConfig, 
+  gccConfig, 
+  japanConfig, 
+  apacConfig, 
+  canadaConfig 
+} from "@/config/jurisdictionConfig";
+import {
+  unifiedUSACombinedData,
+  unifiedCanadaData,
+  unifiedJapanData,
+  unifiedKoreaData,
+  unifiedTaiwanData,
+  unifiedEUData,
+  unifiedGCCData,
+  regulatoryCategories,
+  defaultPresets,
+  convertInternationalToUnified
+} from "@/data/unifiedMockData";
+import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -73,12 +94,7 @@ export default function LawMeterDashboard() {
   const [activeTab, setActiveTab] = useState("legislation");
   const [selectedRegion, setSelectedRegion] = useState<RegionCode>("NAM");
   const [selectedCountry, setSelectedCountry] = useState<"usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu">("usa");
-  const [usaSubTab, setUsaSubTab] = useState<"federal" | "state">("federal");
   const [costaRicaSubTab, setCostaRicaSubTab] = useState<"normas" | "proyectos">("normas");
-  const [selectedStates, setSelectedStates] = useState<string[]>([]);
-  const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
-  const [gccSubTab, setGccSubTab] = useState<"uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar">("uae");
-  const [euSubTab, setEuSubTab] = useState<"regulations" | "directives" | "parliament" | "council">("regulations");
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -366,10 +382,14 @@ export default function LawMeterDashboard() {
 
             {/* USA Section - New unified view */}
             {selectedCountry === "usa" && (
-              <div className="space-y-4">
-                <RegionHeader region="NAM" title="USA Legislation" alertCount={268} />
-                <USALegislationSection />
-              </div>
+              <UnifiedLegislationSection
+                config={usaConfig}
+                items={unifiedUSACombinedData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="USA Legislation"
+                subtitle="Federal and State legislation monitoring"
+              />
             )}
 
             {/* Peru Section - Empty placeholder */}
@@ -385,47 +405,14 @@ export default function LawMeterDashboard() {
 
             {/* Canada Section */}
             {selectedCountry === "canada" && (
-              <div className="space-y-4">
-                <RegionHeader region="NAM" title="Canada Legislation" alertCount={canadaLegislation.length} />
-                {/* Province Filter */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  <span className="text-sm font-medium">Filter by Province:</span>
-                  <Select
-                    value={selectedProvinces.length === 1 ? selectedProvinces[0] : ""}
-                    onValueChange={(value) => {
-                      if (value === "all") {
-                        setSelectedProvinces([]);
-                      } else {
-                        setSelectedProvinces(prev => 
-                          prev.includes(value) 
-                            ? prev.filter(s => s !== value)
-                            : [...prev, value]
-                        );
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder={selectedProvinces.length > 0 ? `${selectedProvinces.length} selected` : "All Provinces"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border">
-                      <SelectItem value="all">All Provinces</SelectItem>
-                      <SelectItem value="Federal">Federal</SelectItem>
-                      <SelectItem value="ON">Ontario</SelectItem>
-                      <SelectItem value="QC">Quebec</SelectItem>
-                      <SelectItem value="BC">British Columbia</SelectItem>
-                      <SelectItem value="AB">Alberta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <InternationalLegislationSection 
-                  legislation={selectedProvinces.length > 0 
-                    ? canadaLegislation.filter(l => selectedProvinces.includes(l.subJurisdiction || ""))
-                    : canadaLegislation
-                  }
-                  showMaps={true}
-                  mapType="canada"
-                />
-              </div>
+              <UnifiedLegislationSection
+                config={canadaConfig}
+                items={unifiedCanadaData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="Canada Legislation"
+                subtitle="Federal and Provincial legislation monitoring"
+              />
             )}
 
             {/* Costa Rica Section */}
@@ -693,124 +680,62 @@ export default function LawMeterDashboard() {
 
             {/* GCC Section */}
             {selectedCountry === "gcc" && (
-              <div className="space-y-4">
-                <RegionHeader region="GCC" title="GCC Legislation" alertCount={uaeLegislation.length + saudiLegislation.length + omanLegislation.length + kuwaitLegislation.length + bahrainLegislation.length + qatarLegislation.length} />
-                <GCCRegionMap legislation={[...uaeLegislation, ...saudiLegislation, ...omanLegislation, ...kuwaitLegislation, ...bahrainLegislation, ...qatarLegislation]} />
-                
-                <Tabs value={gccSubTab} onValueChange={(v) => setGccSubTab(v as "uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar")} className="w-full">
-                <TabsList className="grid w-full grid-cols-6 mb-6 glass-card p-1 gap-1">
-                  <TabsTrigger value="uae" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇦🇪 UAE
-                  </TabsTrigger>
-                  <TabsTrigger value="saudi" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇸🇦 Saudi Arabia
-                  </TabsTrigger>
-                  <TabsTrigger value="oman" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇴🇲 Oman
-                  </TabsTrigger>
-                  <TabsTrigger value="kuwait" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇰🇼 Kuwait
-                  </TabsTrigger>
-                  <TabsTrigger value="bahrain" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇧🇭 Bahrain
-                  </TabsTrigger>
-                  <TabsTrigger value="qatar" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    🇶🇦 Qatar
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="uae" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={uaeLegislation} />
-                </TabsContent>
-
-                <TabsContent value="saudi" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={saudiLegislation} />
-                </TabsContent>
-
-                <TabsContent value="oman" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={omanLegislation} />
-                </TabsContent>
-
-                <TabsContent value="kuwait" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={kuwaitLegislation} />
-                </TabsContent>
-
-                <TabsContent value="bahrain" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={bahrainLegislation} />
-                </TabsContent>
-
-                <TabsContent value="qatar" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={qatarLegislation} />
-                </TabsContent>
-              </Tabs>
-              </div>
+              <UnifiedLegislationSection
+                config={gccConfig}
+                items={unifiedGCCData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="GCC Legislation"
+                subtitle="Gulf Cooperation Council regulatory monitoring"
+              />
             )}
 
             {/* Japan Section */}
             {selectedCountry === "japan" && (
-              <div className="space-y-4">
-                <RegionHeader region="JP" title="Japan Legislation" alertCount={japanLegislation.length} />
-                <InternationalLegislationSection legislation={japanLegislation} />
-              </div>
+              <UnifiedLegislationSection
+                config={japanConfig}
+                items={unifiedJapanData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="Japan Legislation"
+                subtitle="Japanese regulatory monitoring"
+              />
             )}
 
             {/* Korea Section */}
             {selectedCountry === "korea" && (
-              <div className="space-y-4">
-                <RegionHeader region="APAC" title="Korea Legislation" alertCount={koreaLegislation.length} />
-                <InternationalLegislationSection legislation={koreaLegislation} />
-              </div>
+              <UnifiedLegislationSection
+                config={apacConfig}
+                items={unifiedKoreaData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="Korea Legislation"
+                subtitle="South Korean regulatory monitoring"
+              />
             )}
 
             {/* Taiwan Section */}
             {selectedCountry === "taiwan" && (
-              <div className="space-y-4">
-                <RegionHeader region="APAC" title="Taiwan Legislation" alertCount={taiwanLegislation.length} />
-                <InternationalLegislationSection legislation={taiwanLegislation} />
-              </div>
+              <UnifiedLegislationSection
+                config={apacConfig}
+                items={unifiedTaiwanData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="Taiwan Legislation"
+                subtitle="Taiwanese regulatory monitoring"
+              />
             )}
 
             {/* EU Section */}
             {selectedCountry === "eu" && (
-              <div className="space-y-4">
-                <RegionHeader region="EU" title="European Union Legislation" alertCount={euRegulations.length + euDirectives.length + euParliament.length + euCouncil.length} />
-                <Tabs value={euSubTab} onValueChange={(v) => setEuSubTab(v as "regulations" | "directives" | "parliament" | "council")} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6 glass-card p-1 gap-1">
-                  <TabsTrigger value="regulations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Regulations
-                  </TabsTrigger>
-                  <TabsTrigger value="directives" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Directives
-                  </TabsTrigger>
-                  <TabsTrigger value="parliament" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Parliament
-                  </TabsTrigger>
-                  <TabsTrigger value="council" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Council
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="regulations" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={euRegulations} />
-                </TabsContent>
-
-                <TabsContent value="directives" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={euDirectives} />
-                </TabsContent>
-
-                <TabsContent value="parliament" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={euParliament} />
-                </TabsContent>
-
-                <TabsContent value="council" className="space-y-6 mt-6">
-                  <InternationalLegislationSection legislation={euCouncil} />
-                </TabsContent>
-              </Tabs>
-              </div>
+              <UnifiedLegislationSection
+                config={euConfig}
+                items={unifiedEUData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="European Union Legislation"
+                subtitle="EU regulations, directives, and decisions"
+              />
             )}
           </TabsContent>
 
