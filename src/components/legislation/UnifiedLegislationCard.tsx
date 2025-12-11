@@ -304,22 +304,25 @@ export function UnifiedLegislationCard({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Risk badge */}
-            <Badge className={cn("text-[10px]", getRiskBadgeClass(item.riskLevel))}>
+          <div className="flex items-center gap-3">
+            {/* Risk badge - larger and more visible */}
+            <Badge className={cn("text-sm font-semibold px-3 py-1", getRiskBadgeClass(item.riskLevel))}>
               {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)}
               {item.riskScore && ` (${item.riskScore})`}
             </Badge>
             
-            {/* Details button */}
+            {/* Details button - larger and always visible */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="h-6 px-2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: theme.primaryColor }}
+              className="h-8 px-4 text-sm font-medium border-2"
+              style={{ 
+                color: theme.primaryColor,
+                borderColor: theme.primaryColor
+              }}
               onClick={(e) => { e.stopPropagation(); onViewDetails(); }}
             >
-              <FileText className="h-3 w-3 mr-1" />
+              <FileText className="h-4 w-4 mr-1.5" />
               Details
             </Button>
           </div>
