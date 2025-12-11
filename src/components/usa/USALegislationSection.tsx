@@ -952,7 +952,7 @@ export function USALegislationSection() {
         <USALegislationDrawer
           item={selectedMockItem}
           open={mockDrawerOpen}
-          onOpenChange={setMockDrawerOpen}
+          onClose={() => setMockDrawerOpen(false)}
         />
       )}
 
