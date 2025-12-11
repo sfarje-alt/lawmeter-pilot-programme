@@ -39,32 +39,23 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
   return (
     <Sidebar collapsible="icon" className="border-r border-white/10 bg-gradient-to-b from-[hsl(220,40%,10%)] to-[hsl(220,45%,8%)]">
       <SidebarHeader className="p-4">
-        <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
           {!isCollapsed && (
-            <>
+            <div>
               <h1 className="text-lg font-bold text-foreground leading-tight">Intelligence Hub</h1>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-muted-foreground">Developed by</span>
-                <div className="bg-white rounded-lg p-2">
-                  <img 
-                    src={lawmeterLogo} 
-                    alt="LawMeter Legal Tech" 
-                    className="h-10 w-auto object-contain" 
-                  />
-                </div>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-muted-foreground">Developed by</span>
               </div>
-            </>
-          )}
-          {isCollapsed && (
-            <div className="bg-white rounded-md p-1">
-              <img 
-                src={lawmeterLogo} 
-                alt="LawMeter" 
-                className="h-8 w-8 object-contain" 
-              />
             </div>
           )}
         </div>
+        {!isCollapsed && (
+          <img 
+            src={lawmeterLogo} 
+            alt="LawMeter" 
+            className="h-12 w-auto mt-2 object-contain" 
+          />
+        )}
       </SidebarHeader>
 
       <SidebarSeparator className="bg-white/10" />
