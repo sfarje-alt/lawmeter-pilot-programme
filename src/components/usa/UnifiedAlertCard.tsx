@@ -390,21 +390,21 @@ export function UnifiedAlertCard({
           {summary ? (
             <div className="space-y-1.5 text-sm">
               <div className="flex items-start gap-2">
-                <span className="text-muted-foreground font-medium min-w-[60px]">Changes:</span>
-                <span className="text-foreground">{summary.whatChanges}</span>
+                <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Changes:</span>
+                <span className="text-foreground line-clamp-2">{summary.whatChanges}</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-muted-foreground font-medium min-w-[60px]">Impacts:</span>
-                <span className="text-foreground">{summary.whoImpacted}</span>
+                <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Impacts:</span>
+                <span className="text-foreground line-clamp-1">{summary.whoImpacted}</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-muted-foreground font-medium min-w-[60px]">Timeline:</span>
-                <span className="text-foreground">{summary.keyDeadline}</span>
+                <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Timeline:</span>
+                <span className="text-foreground line-clamp-2">{summary.keyDeadline}</span>
               </div>
               {summary.comparedToPrevious && (
                 <div className="flex items-center gap-2 mt-2 text-xs text-warning">
                   <AlertTriangle className="h-3 w-3" />
-                  <span>{summary.comparedToPrevious}</span>
+                  <span className="line-clamp-1">{summary.comparedToPrevious}</span>
                 </div>
               )}
             </div>
