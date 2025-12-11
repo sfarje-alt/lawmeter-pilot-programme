@@ -166,13 +166,22 @@ export function UnifiedLegislationCard({
           </div>
         </div>
 
-        {/* Row 2: Full Title */}
-        <h3 
-          className="text-base font-semibold leading-tight hover:text-primary transition-colors"
-          style={{ color: !isRead ? theme.primaryColor : undefined }}
-        >
-          {item.title}
-        </h3>
+        {/* Row 2: Title with truncation and hover tooltip */}
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h3 
+                className="text-base font-semibold leading-tight hover:text-primary transition-colors line-clamp-2 cursor-pointer"
+                style={{ color: !isRead ? theme.primaryColor : undefined }}
+              >
+                {item.title}
+              </h3>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-md text-sm p-3">
+              {item.title}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Row 3: Jurisdiction line */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
@@ -204,18 +213,41 @@ export function UnifiedLegislationCard({
           
           {item.aiSummary ? (
             <div className="space-y-1.5 text-sm">
-              <div className="flex items-start gap-2">
-                <span className="text-muted-foreground font-medium min-w-[60px]">Changes:</span>
-                <span className="text-foreground">{item.aiSummary.whatChanges}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-muted-foreground font-medium min-w-[60px]">Impacts:</span>
-                <span className="text-foreground">{item.aiSummary.whoImpacted}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-muted-foreground font-medium min-w-[60px]">Timeline:</span>
-                <span className="text-foreground">{item.aiSummary.keyDeadline}</span>
-              </div>
+              <TooltipProvider delayDuration={300}>
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Changes:</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-foreground line-clamp-1 cursor-pointer">{item.aiSummary.whatChanges}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-md text-sm p-3">
+                      {item.aiSummary.whatChanges}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Impacts:</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-foreground line-clamp-1 cursor-pointer">{item.aiSummary.whoImpacted}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-md text-sm p-3">
+                      {item.aiSummary.whoImpacted}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Timeline:</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-foreground line-clamp-1 cursor-pointer">{item.aiSummary.keyDeadline}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-md text-sm p-3">
+                      {item.aiSummary.keyDeadline}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TooltipProvider>
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">
