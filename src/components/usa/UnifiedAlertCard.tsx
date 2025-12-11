@@ -42,13 +42,13 @@ interface UnifiedAlertCardProps {
   viewMode?: "list" | "grid";
 }
 
-// Document type labels for badge
-const docTypeLabels: Record<string, string> = {
-  bill: "Bill",
-  statute: "Statute",
-  regulation: "Regulation",
-  treaty: "Treaty",
-  ordinance: "Ordinance"
+// Document type labels with emojis
+const docTypeLabels: Record<string, { label: string; emoji: string }> = {
+  bill: { label: "Bill", emoji: "📜" },
+  statute: { label: "Statute", emoji: "⚖️" },
+  regulation: { label: "Regulation", emoji: "📋" },
+  treaty: { label: "Treaty", emoji: "🤝" },
+  ordinance: { label: "Ordinance", emoji: "🏛️" }
 };
 
 // Pipeline stages for different document types
@@ -292,15 +292,18 @@ export function UnifiedAlertCard({
     }
   };
 
+  const docTypeInfo = docTypeLabels[data.documentType] || { label: data.documentType, emoji: "📄" };
+
   return (
     <Card 
       className={cn(
-        "transition-all hover:shadow-lg",
+        "transition-all hover:shadow-lg cursor-pointer",
         !isRead && "bg-primary/5 border-primary/20 border-l-4 border-l-primary"
       )}
+      onClick={onViewDetails}
     >
       <CardHeader className="pb-2 pt-3">
-        {/* Row 1: Lifecycle badge + Bill Identifier + Type Badge + Star + Action Menu */}
+        {/* Row 1: Lifecycle badge + Bill Identifier + Star + Action Menu */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Lifecycle badge */}
@@ -319,12 +322,6 @@ export function UnifiedAlertCard({
             {/* Bill/Law Identifier - neutral color */}
             <Badge variant="outline" className="text-xs font-mono text-muted-foreground">
               {data.identifier}
-            </Badge>
-
-            {/* Document Type Badge */}
-            <Badge variant="secondary" className="text-xs gap-1">
-              <FileText className="h-3 w-3" />
-              {docTypeLabels[data.documentType] || data.documentType}
             </Badge>
           </div>
 
@@ -367,8 +364,9 @@ export function UnifiedAlertCard({
           {data.title}
         </h3>
 
-        {/* Row 3: Jurisdiction line */}
+        {/* Row 3: Jurisdiction line with document type */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+          <span className="text-muted-foreground">{docTypeInfo.emoji}</span>
           {data.jurisdictionLevel !== "Federal" ? (
             <MapPin className="h-3 w-3" />
           ) : (
@@ -495,19 +493,19 @@ export function UnifiedAlertCard({
               </Button>
             )}
 
-            {/* Details Button */}
+            {/* Details Button - More prominent */}
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              className="h-6 px-2 text-xs gap-1"
+              className="h-7 px-3 text-xs gap-1.5 bg-primary hover:bg-primary/90"
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkRead();
                 onViewDetails();
               }}
             >
-              <Eye className="h-3 w-3" />
-              Details
+              <Eye className="h-3.5 w-3.5" />
+              View Details
             </Button>
           </div>
         </div>
