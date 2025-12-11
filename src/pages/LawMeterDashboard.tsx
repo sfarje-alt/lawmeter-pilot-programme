@@ -30,6 +30,8 @@ import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
 import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
 import { CongressBillsSection } from "@/components/congress/CongressBillsSection";
+import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
+import { CongressBill } from "@/types/congress";
 import { CertificateFilters as CertFilters } from '@/components/certificates/CertificateFilters';
 import { SummaryCards } from '@/components/certificates/SummaryCards';
 import { CertificateTable } from '@/components/certificates/CertificateTable';
@@ -119,6 +121,7 @@ export default function LawMeterDashboard() {
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [selectedUnifiedItem, setSelectedUnifiedItem] = useState<UnifiedLegislationItem | null>(null);
+  const [selectedCongressBill, setSelectedCongressBill] = useState<CongressBill | null>(null);
   const [unifiedDrawerConfig, setUnifiedDrawerConfig] = useState<any>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [starredFilter, setStarredFilter] = useState<"all" | "acts" | "bills">("all");
@@ -409,6 +412,9 @@ export default function LawMeterDashboard() {
                 onItemClick={(item) => {
                   setSelectedUnifiedItem(item);
                   setUnifiedDrawerConfig(usaConfig);
+                }}
+                onCongressBillClick={(bill) => {
+                  setSelectedCongressBill(bill);
                 }}
               />
             )}
@@ -732,6 +738,15 @@ export default function LawMeterDashboard() {
             open={!!selectedUnifiedItem}
             onOpenChange={(open) => !open && setSelectedUnifiedItem(null)}
           />
+
+          {/* Congress Bill Drawer for real US Congress bills with live API data */}
+          {selectedCongressBill && (
+            <CongressBillDrawer
+              bill={selectedCongressBill}
+              open={!!selectedCongressBill}
+              onOpenChange={(open) => !open && setSelectedCongressBill(null)}
+            />
+          )}
 
           <AlertSettingsDialog 
             open={settingsOpen} 
