@@ -57,24 +57,14 @@ export function UnifiedLegislationDrawer({
 }: UnifiedLegislationDrawerProps) {
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
-  if (!item) return null;
-
-  const theme = regionThemes[item.region];
-  const instrumentType = getInstrumentType(config, item.instrumentType);
-  const pipelineStages = getPipelineStages(config, item.instrumentType);
-
-  const copyToClipboard = async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedText(id);
-      setTimeout(() => setCopiedText(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy text:", err);
-    }
-  };
+  // All hooks must be called before any conditional returns
+  const theme = item ? regionThemes[item.region] : regionThemes.NAM;
+  const instrumentType = item ? getInstrumentType(config, item.instrumentType) : null;
+  const pipelineStages = item ? getPipelineStages(config, item.instrumentType) : [];
 
   // Calculate current stage index for pipeline items
   const currentStageIndex = useMemo(() => {
+    if (!item) return 0;
     if (item.isInForce) return pipelineStages.length - 1;
     if (item.currentStageIndex !== undefined) return item.currentStageIndex;
     
@@ -87,6 +77,7 @@ export function UnifiedLegislationDrawer({
 
   // Build jurisdiction line
   const jurisdictionLine = useMemo(() => {
+    if (!item) return "";
     const parts = [
       item.jurisdictionLevel.charAt(0).toUpperCase() + item.jurisdictionLevel.slice(1),
       item.subnationalUnit || config.code,
@@ -94,6 +85,19 @@ export function UnifiedLegislationDrawer({
     ].filter(Boolean);
     return parts.join(" · ");
   }, [item, config]);
+
+  // Early return after all hooks
+  if (!item) return null;
+
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedText(id);
+      setTimeout(() => setCopiedText(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+    }
+  };
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
