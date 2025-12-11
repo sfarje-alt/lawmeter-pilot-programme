@@ -74,8 +74,9 @@ export function USAFilterPresets({ onApplyPreset, activePresetId }: USAFilterPre
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-primary" />
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Quick Views</span>
+        <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">AI-Recommended Views</span>
+        <span className="text-[10px] text-muted-foreground/60 italic">Based on your activity</span>
       </div>
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-2 pb-2">

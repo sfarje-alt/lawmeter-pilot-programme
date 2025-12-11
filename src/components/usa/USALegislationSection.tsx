@@ -657,9 +657,6 @@ export function USALegislationSection() {
         <h2 className="text-2xl font-bold flex items-center gap-2">
           🇺🇸 USA Legislation
         </h2>
-        <p className="text-muted-foreground">
-          {congressLoading ? "Loading Congress bills..." : `${allCount} items: ${totalCongress} Congress bills + ${totalMock} other documents`}
-        </p>
       </div>
 
       {/* ========== PRESET QUICK VIEWS ========== */}
@@ -1177,41 +1174,6 @@ export function USALegislationSection() {
         </CollapsibleContent>
       </Collapsible>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{filteredData.length}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-risk-high/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">High Risk</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-risk-high">{riskCounts.high}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-risk-medium/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Medium Risk</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-risk-medium">{riskCounts.medium}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-risk-low/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Low Risk</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-risk-low">{riskCounts.low}</div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Loading State */}
       {congressLoading && (
