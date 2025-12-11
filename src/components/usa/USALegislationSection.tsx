@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,11 @@ import {
   ChevronDown,
   SlidersHorizontal,
   Home,
-  X
+  X,
+  GitBranch,
+  AlertTriangle,
+  Briefcase,
+  Calendar
 } from "lucide-react";
 import { usaLegislationData } from "@/data/usaLegislationMockData";
 import { UnifiedAlertCard } from "./UnifiedAlertCard";
@@ -31,7 +35,22 @@ import { useReadAlerts } from "@/hooks/useReadAlerts";
 import { useStarredBills } from "@/hooks/useStarredBills";
 import { useToast } from "@/hooks/use-toast";
 import { useCongressBills } from "@/hooks/useCongressBills";
-import { LifecycleStatus, USDocumentType, Authority, USLegislationItem, documentTypeLabels, authorityLabels } from "@/types/usaLegislation";
+import { 
+  LifecycleStatus, 
+  USDocumentType, 
+  Authority, 
+  USLegislationItem, 
+  documentTypeLabels, 
+  authorityLabels,
+  USBranch,
+  USInstrumentType,
+  CongressStage,
+  RulemakingStage,
+  DeadlinePreset,
+  JurisdictionLevel,
+  RiskLevel,
+  USFilterPreset
+} from "@/types/usaLegislation";
 import { CongressBill } from "@/types/congress";
 import {
   Popover,
@@ -39,19 +58,55 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { USAFilterPresets, DEFAULT_US_PRESETS } from "./USAFilterPresets";
+
+// ========== LABEL MAPPINGS ==========
+const branchLabels: Record<USBranch, string> = {
+  all: "All Branches",
+  legislative: "Legislative",
+  executive: "Executive",
+  judicial: "Judicial"
+};
+
+const instrumentTypeLabels: Record<USInstrumentType, string> = {
+  "congress-bill": "Congress Bills & Resolutions",
+  "public-law": "Public Laws / Statutes",
+  "agency-rulemaking": "Agency Rulemakings",
+  "guidance": "Guidance & Policy",
+  "executive-order": "Executive Orders"
+};
+
+const congressStageLabels: Record<CongressStage, string> = {
+  introduced: "Introduced",
+  "in-committee": "In Committee",
+  "on-calendar": "On Calendar",
+  "passed-chamber": "Passed Chamber",
+  "to-president": "To President",
+  enacted: "Enacted",
+  failed: "Failed"
+};
+
+const rulemakingStageLabels: Record<RulemakingStage, string> = {
+  draft: "Draft",
+  proposed: "Proposed",
+  "comment-open": "Comment Open",
+  "comment-closed": "Comment Closed",
+  final: "Final",
+  effective: "Effective"
+};
+
+const deadlinePresetLabels: Record<DeadlinePreset, string> = {
+  "next-30": "Next 30 Days",
+  "next-60": "Next 60 Days",
+  "next-90": "Next 90 Days",
+  "this-quarter": "This Quarter",
+  none: "No Filter"
+};
 
 const lifecycleIcons = {
   all: <FileText className="h-4 w-4" />,
   "in-force": <Gavel className="h-4 w-4" />,
   pipeline: <Clock className="h-4 w-4" />
-};
-
-const documentTypeIcons: Record<USDocumentType, JSX.Element> = {
-  bill: <ScrollText className="h-4 w-4" />,
-  statute: <Gavel className="h-4 w-4" />,
-  regulation: <FileText className="h-4 w-4" />,
-  treaty: <Handshake className="h-4 w-4" />,
-  ordinance: <Landmark className="h-4 w-4" />
 };
 
 // US States list
@@ -75,29 +130,33 @@ const usStates = [
   { code: "WI", name: "Wisconsin" }, { code: "WY", name: "Wyoming" }, { code: "DC", name: "District of Columbia" }
 ];
 
-type JurisdictionLevel = "all" | "federal" | "state" | "local";
-type RiskLevel = "high" | "medium" | "low";
-
 // Union type for combined items
 type CombinedLegislationItem = 
   | { type: "mock"; data: USLegislationItem }
   | { type: "congress"; data: CongressBill };
 
 export function USALegislationSection() {
-  // Primary Filters - Row 1 (Scope)
+  // ========== ROW 1: SCOPE FILTERS ==========
   const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleStatus>("all");
   const [jurisdictionLevel, setJurisdictionLevel] = useState<JurisdictionLevel>("all");
   
-  // Main Filters - Row 2
+  // ========== ROW 2: CORE FILTERS ==========
+  const [selectedBranch, setSelectedBranch] = useState<USBranch>("all");
+  const [selectedInstrumentTypes, setSelectedInstrumentTypes] = useState<USInstrumentType[]>([]);
+  const [selectedStages, setSelectedStages] = useState<(CongressStage | RulemakingStage)[]>([]);
+  const [selectedRiskLevels, setSelectedRiskLevels] = useState<RiskLevel[]>([]);
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedDocTypes, setSelectedDocTypes] = useState<USDocumentType[]>([]);
   
-  // Advanced Filters - Row 3 (collapsible)
+  // ========== ROW 3: ADVANCED FILTERS ==========
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [selectedAuthorities, setSelectedAuthorities] = useState<Authority[]>([]);
   const [selectedChamber, setSelectedChamber] = useState<string[]>([]);
-  const [selectedRiskLevels, setSelectedRiskLevels] = useState<RiskLevel[]>([]);
+  const [deadlinePreset, setDeadlinePreset] = useState<DeadlinePreset>("none");
+  const [selectedSponsorParty, setSelectedSponsorParty] = useState<string[]>([]);
+  
+  // Preset tracking
+  const [activePresetId, setActivePresetId] = useState<string | undefined>();
   
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   
@@ -114,7 +173,55 @@ export function USALegislationSection() {
   // Fetch Congress bills
   const { bills: congressBills, loading: congressLoading, error: congressError } = useCongressBills("latestAction-desc");
 
-  // Combine mock data with Congress API data
+  const regulatoryCategories = ["Radio", "Product Safety", "Cybersecurity", "Battery", "Food Contact Material"];
+
+  // ========== MAPPING FUNCTIONS ==========
+  const mapDocTypeToInstrumentType = (docType: USDocumentType, authority: Authority): USInstrumentType => {
+    if (docType === "bill") return "congress-bill";
+    if (docType === "statute") return "public-law";
+    if (docType === "regulation") return "agency-rulemaking";
+    if (docType === "treaty") return "guidance"; // Simplified mapping
+    if (docType === "ordinance") return "congress-bill"; // Local bills
+    return "congress-bill";
+  };
+
+  const getMockBranch = (item: USLegislationItem): USBranch => {
+    if (item.authority === "congress" || item.authority === "state" || item.authority === "city") return "legislative";
+    if (item.authority === "federal-agency") return "executive";
+    return "legislative";
+  };
+
+  const getMockStage = (item: USLegislationItem): CongressStage | RulemakingStage | null => {
+    const status = item.status.toLowerCase();
+    // Congress stages
+    if (status.includes("introduced")) return "introduced";
+    if (status.includes("committee")) return "in-committee";
+    if (status.includes("calendar")) return "on-calendar";
+    if (status.includes("passed")) return "passed-chamber";
+    if (status.includes("president")) return "to-president";
+    if (status.includes("enacted") || status === "in force") return "enacted";
+    if (status.includes("failed")) return "failed";
+    // Rulemaking stages
+    if (status.includes("draft")) return "draft";
+    if (status.includes("proposed")) return "proposed";
+    if (status.includes("comment open")) return "comment-open";
+    if (status.includes("comment closed")) return "comment-closed";
+    if (status.includes("final rule")) return "final";
+    if (status.includes("effective")) return "effective";
+    return null;
+  };
+
+  const getCongressStage = (bill: CongressBill): CongressStage => {
+    const action = bill.latestAction?.text?.toLowerCase() || "";
+    if (action.includes("became public law") || action.includes("signed by president")) return "enacted";
+    if (action.includes("presented to president") || action.includes("to president")) return "to-president";
+    if (action.includes("passed") && (action.includes("house") || action.includes("senate"))) return "passed-chamber";
+    if (action.includes("calendar")) return "on-calendar";
+    if (action.includes("committee")) return "in-committee";
+    return "introduced";
+  };
+
+  // ========== COMBINE DATA ==========
   const combinedData = useMemo((): CombinedLegislationItem[] => {
     const mockItems: CombinedLegislationItem[] = usaLegislationData
       .filter(item => !isDeleted(item.id))
@@ -128,19 +235,51 @@ export function USALegislationSection() {
     return [...mockItems, ...congressItems];
   }, [congressBills, isDeleted]);
 
-  // Get jurisdiction level for mock item
+  // ========== JURISDICTION LEVEL HELPER ==========
   const getMockJurisdictionLevel = (item: USLegislationItem): JurisdictionLevel => {
     if (item.authority === "city") return "local";
     if (item.subJurisdiction) return "state";
     return "federal";
   };
 
-  // Filter combined data with smart dependencies
+  // ========== DEADLINE FILTER HELPER ==========
+  const isWithinDeadlinePreset = (item: USLegislationItem | CongressBill, preset: DeadlinePreset): boolean => {
+    if (preset === "none") return true;
+    
+    let deadlineDate: Date | null = null;
+    
+    if ('complianceDeadline' in item && item.complianceDeadline) {
+      deadlineDate = new Date(item.complianceDeadline);
+    } else if ('effectiveDate' in item && item.effectiveDate) {
+      deadlineDate = new Date(item.effectiveDate);
+    }
+    
+    if (!deadlineDate) return false; // No deadline = doesn't match deadline filter
+    
+    const now = new Date();
+    const diffDays = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    switch (preset) {
+      case "next-30": return diffDays >= 0 && diffDays <= 30;
+      case "next-60": return diffDays >= 0 && diffDays <= 60;
+      case "next-90": return diffDays >= 0 && diffDays <= 90;
+      case "this-quarter": {
+        const quarterEnd = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3 + 3, 0);
+        return deadlineDate >= now && deadlineDate <= quarterEnd;
+      }
+      default: return true;
+    }
+  };
+
+  // ========== FILTERING LOGIC ==========
   const filteredData = useMemo(() => {
     return combinedData.filter(item => {
       if (item.type === "mock") {
         const mockItem = item.data;
         const itemLevel = getMockJurisdictionLevel(mockItem);
+        const itemBranch = getMockBranch(mockItem);
+        const itemInstrumentType = mapDocTypeToInstrumentType(mockItem.documentType, mockItem.authority);
+        const itemStage = getMockStage(mockItem);
         
         // Lifecycle filter
         if (lifecycleFilter === "in-force" && !mockItem.isInForce) return false;
@@ -149,7 +288,16 @@ export function USALegislationSection() {
         // Jurisdiction Level filter
         if (jurisdictionLevel !== "all" && itemLevel !== jurisdictionLevel) return false;
 
-        // Geography filter (states) - only applies to state/local level
+        // Branch filter
+        if (selectedBranch !== "all" && itemBranch !== selectedBranch) return false;
+
+        // Instrument type filter
+        if (selectedInstrumentTypes.length > 0 && !selectedInstrumentTypes.includes(itemInstrumentType)) return false;
+
+        // Stage filter
+        if (selectedStages.length > 0 && itemStage && !selectedStages.includes(itemStage)) return false;
+
+        // Geography filter (states)
         if (selectedStates.length > 0) {
           if (itemLevel === "federal") return false;
           const stateCode = mockItem.subJurisdiction?.includes(",") 
@@ -158,16 +306,16 @@ export function USALegislationSection() {
           if (!stateCode || !selectedStates.includes(stateCode)) return false;
         }
 
-        // Document type filter
-        if (selectedDocTypes.length > 0 && !selectedDocTypes.includes(mockItem.documentType)) return false;
-
         // Regulatory category filter
         if (selectedCategories.length > 0 && !selectedCategories.includes(mockItem.regulatoryCategory)) return false;
 
-        // Advanced: Authority filter
+        // Risk level filter
+        if (selectedRiskLevels.length > 0 && !selectedRiskLevels.includes(mockItem.riskLevel)) return false;
+
+        // Authority filter
         if (selectedAuthorities.length > 0 && !selectedAuthorities.includes(mockItem.authority)) return false;
 
-        // Advanced: Chamber filter (for bills)
+        // Chamber filter (for bills)
         if (selectedChamber.length > 0 && mockItem.documentType === "bill") {
           const chamberMatch = selectedChamber.some(chamber => {
             if (chamber === "house") return mockItem.regulatoryBody?.toLowerCase().includes("house");
@@ -177,27 +325,34 @@ export function USALegislationSection() {
           if (!chamberMatch) return false;
         }
 
-        // Advanced: Risk level filter
-        if (selectedRiskLevels.length > 0 && !selectedRiskLevels.includes(mockItem.riskLevel)) return false;
+        // Deadline preset filter
+        if (!isWithinDeadlinePreset(mockItem, deadlinePreset)) return false;
 
         return true;
       } else {
         // Congress bill
         const bill = item.data;
+        const billStage = getCongressStage(bill);
         
-        // Congress bills are always in pipeline (not enacted yet as laws)
+        // Congress bills are always in pipeline
         if (lifecycleFilter === "in-force") return false;
         
         // Congress bills are federal
         if (jurisdictionLevel === "state" || jurisdictionLevel === "local") return false;
 
+        // Branch filter - Congress bills are legislative
+        if (selectedBranch !== "all" && selectedBranch !== "legislative") return false;
+
         // Geography filter doesn't apply to federal
         if (selectedStates.length > 0) return false;
         
-        // Document type filter - Congress bills are "bill" type
-        if (selectedDocTypes.length > 0 && !selectedDocTypes.includes("bill")) return false;
+        // Instrument type filter
+        if (selectedInstrumentTypes.length > 0 && !selectedInstrumentTypes.includes("congress-bill")) return false;
         
-        // Authority filter - Congress bills are from "congress"
+        // Stage filter
+        if (selectedStages.length > 0 && !selectedStages.includes(billStage)) return false;
+        
+        // Authority filter
         if (selectedAuthorities.length > 0 && !selectedAuthorities.includes("congress")) return false;
         
         // Chamber filter
@@ -210,7 +365,7 @@ export function USALegislationSection() {
           if (!chamberMatch) return false;
         }
         
-        // Regulatory category filter - check policy area
+        // Category filter
         if (selectedCategories.length > 0 && bill.policyArea) {
           const policyName = bill.policyArea.name.toLowerCase();
           const categoryMatch = selectedCategories.some(cat => {
@@ -223,7 +378,7 @@ export function USALegislationSection() {
           if (!categoryMatch) return false;
         }
 
-        // Advanced: Risk level filter (check cached analysis)
+        // Risk level filter
         if (selectedRiskLevels.length > 0) {
           const billId = `${bill.congress}-${bill.type}-${bill.number}`;
           const cached = localStorage.getItem(`ai_summary_v3_${billId}`);
@@ -240,13 +395,24 @@ export function USALegislationSection() {
             if (!selectedRiskLevels.includes("medium")) return false;
           }
         }
+
+        // Sponsor party filter
+        if (selectedSponsorParty.length > 0 && bill.sponsors?.[0]?.party) {
+          const party = bill.sponsors[0].party;
+          const partyMatch = selectedSponsorParty.some(p => {
+            if (p === "D") return party === "Democratic";
+            if (p === "R") return party === "Republican";
+            return false;
+          });
+          if (!partyMatch) return false;
+        }
         
         return true;
       }
     });
-  }, [combinedData, lifecycleFilter, jurisdictionLevel, selectedStates, selectedDocTypes, selectedAuthorities, selectedCategories, selectedChamber, selectedRiskLevels]);
+  }, [combinedData, lifecycleFilter, jurisdictionLevel, selectedBranch, selectedInstrumentTypes, selectedStages, selectedStates, selectedCategories, selectedRiskLevels, selectedAuthorities, selectedChamber, deadlinePreset, selectedSponsorParty]);
 
-  // Count totals
+  // ========== COUNTS ==========
   const totalMock = usaLegislationData.filter(i => !isDeleted(i.id)).length;
   const totalCongress = congressBills.length;
   const allCount = totalMock + totalCongress;
@@ -254,89 +420,6 @@ export function USALegislationSection() {
   const inForceCount = usaLegislationData.filter(i => i.isInForce && !isDeleted(i.id)).length;
   const pipelineCount = usaLegislationData.filter(i => i.isPipeline && !isDeleted(i.id)).length + totalCongress;
 
-  // Toggle filters
-  const toggleDocType = (type: USDocumentType) => {
-    setSelectedDocTypes(prev => 
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    );
-  };
-
-  const toggleAuthority = (auth: Authority) => {
-    setSelectedAuthorities(prev => 
-      prev.includes(auth) ? prev.filter(a => a !== auth) : [...prev, auth]
-    );
-  };
-
-  const toggleCategory = (cat: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
-  };
-
-  const toggleState = (state: string) => {
-    setSelectedStates(prev =>
-      prev.includes(state) ? prev.filter(s => s !== state) : [...prev, state]
-    );
-  };
-
-  const toggleChamber = (chamber: string) => {
-    setSelectedChamber(prev =>
-      prev.includes(chamber) ? prev.filter(c => c !== chamber) : [...prev, chamber]
-    );
-  };
-
-  const toggleRiskLevel = (level: RiskLevel) => {
-    setSelectedRiskLevels(prev =>
-      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
-    );
-  };
-
-  const clearAllFilters = () => {
-    setSelectedDocTypes([]);
-    setSelectedAuthorities([]);
-    setSelectedCategories([]);
-    setSelectedStates([]);
-    setSelectedChamber([]);
-    setSelectedRiskLevels([]);
-    setJurisdictionLevel("all");
-    setLifecycleFilter("all");
-  };
-
-  // Filter state helpers
-  const hasRow2Filters = selectedStates.length > 0 || selectedCategories.length > 0 || selectedDocTypes.length > 0;
-  const hasAdvancedFilters = selectedAuthorities.length > 0 || selectedChamber.length > 0 || selectedRiskLevels.length > 0;
-  const advancedFilterCount = selectedAuthorities.length + selectedChamber.length + selectedRiskLevels.length;
-  const hasAnyFilters = hasRow2Filters || hasAdvancedFilters || jurisdictionLevel !== "all" || lifecycleFilter !== "all";
-
-  const handleReport = (id: string) => {
-    toast({ title: "Reported", description: "This item has been flagged for review." });
-  };
-
-  const handleRefresh = (id: string) => {
-    toast({ title: "Refreshed", description: "Item data has been updated." });
-  };
-
-  const handleDelete = (id: string) => {
-    deleteAlert(id);
-    toast({ title: "Deleted", description: "Item has been removed from your view." });
-  };
-
-  const handleViewMockDetails = (item: USLegislationItem) => {
-    markAsRead(item.id);
-    setSelectedMockItem(item);
-    setMockDrawerOpen(true);
-  };
-
-  const handleViewCongressDetails = (bill: CongressBill) => {
-    const billId = `${bill.congress}-${bill.type}-${bill.number}`;
-    markAsRead(billId);
-    setSelectedCongressBill(bill);
-    setCongressDrawerOpen(true);
-  };
-
-  const regulatoryCategories = ["Radio", "Product Safety", "Cybersecurity", "Battery", "Food Contact Material"];
-
-  // Calculate risk counts from filtered data
   const riskCounts = useMemo(() => {
     let high = 0, medium = 0, low = 0;
     
@@ -367,43 +450,204 @@ export function USALegislationSection() {
     return { high, medium, low };
   }, [filteredData]);
 
-  // Smart filter: get available authorities based on jurisdiction level
+  // ========== TOGGLE FUNCTIONS ==========
+  const toggleInstrumentType = (type: USInstrumentType) => {
+    setSelectedInstrumentTypes(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const toggleStage = (stage: CongressStage | RulemakingStage) => {
+    setSelectedStages(prev =>
+      prev.includes(stage) ? prev.filter(s => s !== stage) : [...prev, stage]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const toggleAuthority = (auth: Authority) => {
+    setSelectedAuthorities(prev => 
+      prev.includes(auth) ? prev.filter(a => a !== auth) : [...prev, auth]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const toggleState = (state: string) => {
+    setSelectedStates(prev =>
+      prev.includes(state) ? prev.filter(s => s !== state) : [...prev, state]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const toggleChamber = (chamber: string) => {
+    setSelectedChamber(prev =>
+      prev.includes(chamber) ? prev.filter(c => c !== chamber) : [...prev, chamber]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const toggleRiskLevel = (level: RiskLevel) => {
+    setSelectedRiskLevels(prev =>
+      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const toggleSponsorParty = (party: string) => {
+    setSelectedSponsorParty(prev =>
+      prev.includes(party) ? prev.filter(p => p !== party) : [...prev, party]
+    );
+    setActivePresetId(undefined);
+  };
+
+  const clearAllFilters = () => {
+    setSelectedInstrumentTypes([]);
+    setSelectedStages([]);
+    setSelectedAuthorities([]);
+    setSelectedCategories([]);
+    setSelectedStates([]);
+    setSelectedChamber([]);
+    setSelectedRiskLevels([]);
+    setSelectedSponsorParty([]);
+    setSelectedBranch("all");
+    setJurisdictionLevel("all");
+    setLifecycleFilter("all");
+    setDeadlinePreset("none");
+    setActivePresetId(undefined);
+  };
+
+  // ========== APPLY PRESET ==========
+  const applyPreset = useCallback((filters: USFilterPreset['filters']) => {
+    // Clear existing filters first
+    clearAllFilters();
+    
+    // Apply preset filters
+    if (filters.lifecycle) setLifecycleFilter(filters.lifecycle);
+    if (filters.level) setJurisdictionLevel(filters.level);
+    if (filters.branch) setSelectedBranch(filters.branch);
+    if (filters.instrumentTypes) setSelectedInstrumentTypes(filters.instrumentTypes);
+    if (filters.stages) setSelectedStages(filters.stages);
+    if (filters.riskLevels) setSelectedRiskLevels(filters.riskLevels);
+    if (filters.deadlinePreset) setDeadlinePreset(filters.deadlinePreset);
+    if (filters.states) setSelectedStates(filters.states);
+    if (filters.categories) setSelectedCategories(filters.categories);
+    
+    // Find matching preset ID
+    const matchingPreset = DEFAULT_US_PRESETS.find(p => 
+      JSON.stringify(p.filters) === JSON.stringify(filters)
+    );
+    setActivePresetId(matchingPreset?.id);
+  }, []);
+
+  // ========== SMART FILTER DEPENDENCIES ==========
   const availableAuthorities = useMemo((): Authority[] => {
+    if (selectedBranch === "legislative") return ["congress", "state", "city"];
+    if (selectedBranch === "executive") return ["federal-agency"];
     if (jurisdictionLevel === "federal") return ["congress", "federal-agency"];
     if (jurisdictionLevel === "state") return ["state"];
     if (jurisdictionLevel === "local") return ["city"];
     return ["congress", "federal-agency", "state", "city"];
-  }, [jurisdictionLevel]);
+  }, [jurisdictionLevel, selectedBranch]);
 
-  // Smart filter: chamber only shows for bills at federal/state level
-  const showChamberFilter = useMemo(() => {
-    if (selectedDocTypes.length > 0 && !selectedDocTypes.includes("bill")) return false;
-    if (jurisdictionLevel === "local") return false;
-    return true;
-  }, [selectedDocTypes, jurisdictionLevel]);
+  const availableStages = useMemo((): (CongressStage | RulemakingStage)[] => {
+    const hasCongressTypes = selectedInstrumentTypes.length === 0 || 
+      selectedInstrumentTypes.includes("congress-bill") || 
+      selectedInstrumentTypes.includes("public-law");
+    const hasRulemakingTypes = selectedInstrumentTypes.length === 0 || 
+      selectedInstrumentTypes.includes("agency-rulemaking");
+    
+    const stages: (CongressStage | RulemakingStage)[] = [];
+    if (hasCongressTypes) {
+      stages.push("introduced", "in-committee", "on-calendar", "passed-chamber", "to-president", "enacted", "failed");
+    }
+    if (hasRulemakingTypes) {
+      stages.push("draft", "proposed", "comment-open", "comment-closed", "final", "effective");
+    }
+    return stages;
+  }, [selectedInstrumentTypes]);
 
-  // Smart filter: geography only shows for state/local or all
   const showGeographyFilter = jurisdictionLevel !== "federal";
+  const showChamberFilter = selectedInstrumentTypes.length === 0 || selectedInstrumentTypes.includes("congress-bill");
+  const showSponsorPartyFilter = selectedInstrumentTypes.length === 0 || selectedInstrumentTypes.includes("congress-bill");
 
-  // Get jurisdiction chip label
+  // ========== FILTER COUNTS ==========
+  const coreFilterCount = selectedInstrumentTypes.length + selectedStages.length + selectedRiskLevels.length + 
+    (selectedBranch !== "all" ? 1 : 0) + selectedStates.length + selectedCategories.length;
+  const advancedFilterCount = selectedAuthorities.length + selectedChamber.length + selectedSponsorParty.length + 
+    (deadlinePreset !== "none" ? 1 : 0);
+  const hasAnyFilters = coreFilterCount > 0 || advancedFilterCount > 0 || jurisdictionLevel !== "all" || lifecycleFilter !== "all";
+
+  // ========== LABEL HELPERS ==========
   const getJurisdictionLabel = () => {
     if (selectedStates.length === 0) return "Jurisdiction · All US";
     if (selectedStates.length <= 3) return `Jurisdiction · ${selectedStates.join(", ")}`;
     return `Jurisdiction · ${selectedStates.length} states`;
   };
 
-  // Get category chip label
+  const getBranchLabel = () => {
+    if (selectedBranch === "all") return "Branch · All";
+    return `Branch · ${branchLabels[selectedBranch]}`;
+  };
+
+  const getInstrumentLabel = () => {
+    if (selectedInstrumentTypes.length === 0) return "Instrument · All";
+    if (selectedInstrumentTypes.length === 1) return `Instrument · ${instrumentTypeLabels[selectedInstrumentTypes[0]].split(" ")[0]}`;
+    return `Instrument · ${selectedInstrumentTypes.length} types`;
+  };
+
+  const getStageLabel = () => {
+    if (selectedStages.length === 0) return "Stage · All";
+    if (selectedStages.length === 1) {
+      const stage = selectedStages[0];
+      const label = congressStageLabels[stage as CongressStage] || rulemakingStageLabels[stage as RulemakingStage];
+      return `Stage · ${label}`;
+    }
+    return `Stage · ${selectedStages.length} stages`;
+  };
+
+  const getRiskLabel = () => {
+    if (selectedRiskLevels.length === 0) return "Risk · All";
+    return `Risk · ${selectedRiskLevels.map(r => r.charAt(0).toUpperCase() + r.slice(1)).join(", ")}`;
+  };
+
   const getCategoryLabel = () => {
     if (selectedCategories.length === 0) return "Category · All";
     if (selectedCategories.length === 1) return `Category · ${selectedCategories[0]}`;
     return `Category · ${selectedCategories.length} selected`;
   };
 
-  // Get document type chip label
-  const getDocTypeLabel = () => {
-    if (selectedDocTypes.length === 0) return "Document type · All";
-    if (selectedDocTypes.length <= 2) return `Document type · ${selectedDocTypes.map(t => documentTypeLabels[t]).join(", ")}`;
-    return `Document type · ${selectedDocTypes.length} selected`;
+  // ========== EVENT HANDLERS ==========
+  const handleReport = (id: string) => {
+    toast({ title: "Reported", description: "This item has been flagged for review." });
+  };
+
+  const handleRefresh = (id: string) => {
+    toast({ title: "Refreshed", description: "Item data has been updated." });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteAlert(id);
+    toast({ title: "Deleted", description: "Item has been removed from your view." });
+  };
+
+  const handleViewMockDetails = (item: USLegislationItem) => {
+    markAsRead(item.id);
+    setSelectedMockItem(item);
+    setMockDrawerOpen(true);
+  };
+
+  const handleViewCongressDetails = (bill: CongressBill) => {
+    const billId = `${bill.congress}-${bill.type}-${bill.number}`;
+    markAsRead(billId);
+    setSelectedCongressBill(bill);
+    setCongressDrawerOpen(true);
   };
 
   return (
@@ -418,13 +662,16 @@ export function USALegislationSection() {
         </p>
       </div>
 
-      {/* ========== ROW 1: SCOPE (Lifecycle + Level) - Strongest visual weight ========== */}
+      {/* ========== PRESET QUICK VIEWS ========== */}
+      <USAFilterPresets onApplyPreset={applyPreset} activePresetId={activePresetId} />
+
+      {/* ========== ROW 1: SCOPE (Lifecycle + Level) ========== */}
       <div className="bg-muted/50 border border-border rounded-lg p-3">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Lifecycle Tabs */}
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Lifecycle</span>
-            <Tabs value={lifecycleFilter} onValueChange={(v) => setLifecycleFilter(v as LifecycleStatus)}>
+            <Tabs value={lifecycleFilter} onValueChange={(v) => { setLifecycleFilter(v as LifecycleStatus); setActivePresetId(undefined); }}>
               <TabsList className="bg-background p-1 shadow-sm">
                 <TabsTrigger 
                   value="all" 
@@ -465,10 +712,8 @@ export function USALegislationSection() {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Level</span>
             <Tabs value={jurisdictionLevel} onValueChange={(v) => {
               setJurisdictionLevel(v as JurisdictionLevel);
-              // Clear geography when switching to federal
-              if (v === "federal") {
-                setSelectedStates([]);
-              }
+              setActivePresetId(undefined);
+              if (v === "federal") setSelectedStates([]);
             }}>
               <TabsList className="bg-background p-1 shadow-sm">
                 <TabsTrigger value="all" className="gap-1.5 text-xs">
@@ -492,20 +737,10 @@ export function USALegislationSection() {
 
             {/* View Toggle */}
             <div className="flex items-center gap-1 ml-4">
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setViewMode("list")}
-              >
+              <Button variant={viewMode === "list" ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => setViewMode("list")}>
                 <List className="h-4 w-4" />
               </Button>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setViewMode("grid")}
-              >
+              <Button variant={viewMode === "grid" ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => setViewMode("grid")}>
                 <Grid className="h-4 w-4" />
               </Button>
             </div>
@@ -513,9 +748,176 @@ export function USALegislationSection() {
         </div>
       </div>
 
-      {/* ========== ROW 2: MAIN FILTERS (Jurisdiction, Category, Document Type) ========== */}
+      {/* ========== ROW 2: CORE FILTERS ========== */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Jurisdiction Filter (States) - shows when level is state/local/all */}
+        {/* Branch Filter */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant={selectedBranch !== "all" ? "secondary" : "outline"} 
+              size="sm" 
+              className={cn("gap-2 h-9", selectedBranch !== "all" && "pr-2")}
+            >
+              <GitBranch className="h-3.5 w-3.5" />
+              {getBranchLabel()}
+              {selectedBranch !== "all" && (
+                <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedBranch("all"); setActivePresetId(undefined); }}>
+                  <X className="h-3 w-3" />
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 bg-background border border-border z-50">
+            <div className="space-y-2">
+              {(["all", "legislative", "executive", "judicial"] as USBranch[]).map(branch => (
+                <div key={branch} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`branch-${branch}`}
+                    checked={selectedBranch === branch}
+                    onCheckedChange={() => { setSelectedBranch(branch); setActivePresetId(undefined); }}
+                  />
+                  <label htmlFor={`branch-${branch}`} className="text-sm cursor-pointer">
+                    {branchLabels[branch]}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Instrument Type Filter */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant={selectedInstrumentTypes.length > 0 ? "secondary" : "outline"} 
+              size="sm" 
+              className={cn("gap-2 h-9", selectedInstrumentTypes.length > 0 && "pr-2")}
+            >
+              <ScrollText className="h-3.5 w-3.5" />
+              {getInstrumentLabel()}
+              {selectedInstrumentTypes.length > 0 && (
+                <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedInstrumentTypes([]); setActivePresetId(undefined); }}>
+                  <X className="h-3 w-3" />
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 bg-background border border-border z-50">
+            <div className="space-y-2">
+              {(Object.keys(instrumentTypeLabels) as USInstrumentType[]).map(type => (
+                <div key={type} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`inst-${type}`}
+                    checked={selectedInstrumentTypes.includes(type)}
+                    onCheckedChange={() => toggleInstrumentType(type)}
+                  />
+                  <label htmlFor={`inst-${type}`} className="text-sm cursor-pointer">
+                    {instrumentTypeLabels[type]}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Stage Filter */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant={selectedStages.length > 0 ? "secondary" : "outline"} 
+              size="sm" 
+              className={cn("gap-2 h-9", selectedStages.length > 0 && "pr-2")}
+            >
+              <Clock className="h-3.5 w-3.5" />
+              {getStageLabel()}
+              {selectedStages.length > 0 && (
+                <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedStages([]); setActivePresetId(undefined); }}>
+                  <X className="h-3 w-3" />
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 bg-background border border-border z-50 max-h-72 overflow-y-auto">
+            <div className="space-y-3">
+              {availableStages.includes("introduced") && (
+                <>
+                  <div className="text-xs font-medium text-muted-foreground uppercase">Congress Stages</div>
+                  {(["introduced", "in-committee", "on-calendar", "passed-chamber", "to-president", "enacted", "failed"] as CongressStage[]).map(stage => (
+                    <div key={stage} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`stage-${stage}`}
+                        checked={selectedStages.includes(stage)}
+                        onCheckedChange={() => toggleStage(stage)}
+                      />
+                      <label htmlFor={`stage-${stage}`} className="text-sm cursor-pointer">
+                        {congressStageLabels[stage]}
+                      </label>
+                    </div>
+                  ))}
+                </>
+              )}
+              {availableStages.includes("draft") && (
+                <>
+                  <div className="text-xs font-medium text-muted-foreground uppercase mt-2">Rulemaking Stages</div>
+                  {(["draft", "proposed", "comment-open", "comment-closed", "final", "effective"] as RulemakingStage[]).map(stage => (
+                    <div key={stage} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`stage-${stage}`}
+                        checked={selectedStages.includes(stage)}
+                        onCheckedChange={() => toggleStage(stage)}
+                      />
+                      <label htmlFor={`stage-${stage}`} className="text-sm cursor-pointer">
+                        {rulemakingStageLabels[stage]}
+                      </label>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Risk Level Filter - Moved from Advanced */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant={selectedRiskLevels.length > 0 ? "secondary" : "outline"} 
+              size="sm" 
+              className={cn("gap-2 h-9", selectedRiskLevels.length > 0 && "pr-2")}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {getRiskLabel()}
+              {selectedRiskLevels.length > 0 && (
+                <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedRiskLevels([]); setActivePresetId(undefined); }}>
+                  <X className="h-3 w-3" />
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 bg-background border border-border z-50">
+            <div className="space-y-2">
+              {(["high", "medium", "low"] as RiskLevel[]).map(level => (
+                <div key={level} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`risk-${level}`}
+                    checked={selectedRiskLevels.includes(level)}
+                    onCheckedChange={() => toggleRiskLevel(level)}
+                  />
+                  <label htmlFor={`risk-${level}`} className="text-sm cursor-pointer flex items-center gap-2">
+                    <span className={cn("w-2 h-2 rounded-full", 
+                      level === "high" && "bg-risk-high",
+                      level === "medium" && "bg-risk-medium",
+                      level === "low" && "bg-risk-low"
+                    )} />
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Jurisdiction Filter (States) */}
         {showGeographyFilter && (
           <Popover>
             <PopoverTrigger asChild>
@@ -527,13 +929,7 @@ export function USALegislationSection() {
                 <MapPin className="h-3.5 w-3.5" />
                 {getJurisdictionLabel()}
                 {selectedStates.length > 0 && (
-                  <span 
-                    className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedStates([]);
-                    }}
-                  >
+                  <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedStates([]); setActivePresetId(undefined); }}>
                     <X className="h-3 w-3" />
                   </span>
                 )}
@@ -569,15 +965,10 @@ export function USALegislationSection() {
               size="sm" 
               className={cn("gap-2 h-9", selectedCategories.length > 0 && "pr-2")}
             >
+              <Briefcase className="h-3.5 w-3.5" />
               {getCategoryLabel()}
               {selectedCategories.length > 0 && (
-                <span 
-                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedCategories([]);
-                  }}
-                >
+                <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedCategories([]); setActivePresetId(undefined); }}>
                   <X className="h-3 w-3" />
                 </span>
               )}
@@ -601,61 +992,19 @@ export function USALegislationSection() {
           </PopoverContent>
         </Popover>
 
-        {/* Document Type Filter */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button 
-              variant={selectedDocTypes.length > 0 ? "secondary" : "outline"} 
-              size="sm" 
-              className={cn("gap-2 h-9", selectedDocTypes.length > 0 && "pr-2")}
-            >
-              <ScrollText className="h-3.5 w-3.5" />
-              {getDocTypeLabel()}
-              {selectedDocTypes.length > 0 && (
-                <span 
-                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedDocTypes([]);
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 bg-background border border-border z-50">
-            <div className="space-y-2">
-              {(Object.keys(documentTypeLabels) as USDocumentType[]).map(type => (
-                <div key={type} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`doc-${type}`}
-                    checked={selectedDocTypes.includes(type)}
-                    onCheckedChange={() => toggleDocType(type)}
-                  />
-                  <label htmlFor={`doc-${type}`} className="text-sm flex items-center gap-2 cursor-pointer">
-                    {documentTypeIcons[type]}
-                    {documentTypeLabels[type]}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-
         {/* Advanced Filters Toggle */}
         <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
           <CollapsibleTrigger asChild>
             <Button 
-              variant={hasAdvancedFilters ? "secondary" : "ghost"} 
+              variant={advancedFilterCount > 0 ? "secondary" : "ghost"} 
               size="sm" 
               className="gap-2 h-9 text-muted-foreground"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              Advanced filters
-              {hasAdvancedFilters && (
+              Advanced
+              {advancedFilterCount > 0 && (
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                  {advancedFilterCount} active
+                  {advancedFilterCount}
                 </Badge>
               )}
               <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", advancedOpen && "rotate-180")} />
@@ -689,13 +1038,7 @@ export function USALegislationSection() {
                     {selectedAuthorities.length > 0 && (
                       <>
                         <Badge variant="secondary" className="text-[10px] px-1">{selectedAuthorities.length}</Badge>
-                        <span 
-                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedAuthorities([]);
-                          }}
-                        >
+                        <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedAuthorities([]); setActivePresetId(undefined); }}>
                           <X className="h-3 w-3" />
                         </span>
                       </>
@@ -720,7 +1063,7 @@ export function USALegislationSection() {
                 </PopoverContent>
               </Popover>
 
-              {/* Chamber Filter (only for bills) */}
+              {/* Chamber Filter */}
               {showChamberFilter && (
                 <Popover>
                   <PopoverTrigger asChild>
@@ -734,13 +1077,7 @@ export function USALegislationSection() {
                       {selectedChamber.length > 0 && (
                         <>
                           <Badge variant="secondary" className="text-[10px] px-1">{selectedChamber.length}</Badge>
-                          <span 
-                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedChamber([]);
-                            }}
-                          >
+                          <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedChamber([]); setActivePresetId(undefined); }}>
                             <X className="h-3 w-3" />
                           </span>
                         </>
@@ -750,19 +1087,11 @@ export function USALegislationSection() {
                   <PopoverContent className="w-48 bg-background border border-border z-50">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="chamber-house"
-                          checked={selectedChamber.includes("house")}
-                          onCheckedChange={() => toggleChamber("house")}
-                        />
+                        <Checkbox id="chamber-house" checked={selectedChamber.includes("house")} onCheckedChange={() => toggleChamber("house")} />
                         <label htmlFor="chamber-house" className="text-sm cursor-pointer">House</label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="chamber-senate"
-                          checked={selectedChamber.includes("senate")}
-                          onCheckedChange={() => toggleChamber("senate")}
-                        />
+                        <Checkbox id="chamber-senate" checked={selectedChamber.includes("senate")} onCheckedChange={() => toggleChamber("senate")} />
                         <label htmlFor="chamber-senate" className="text-sm cursor-pointer">Senate</label>
                       </div>
                     </div>
@@ -770,67 +1099,76 @@ export function USALegislationSection() {
                 </Popover>
               )}
 
-              {/* Risk Level Filter */}
+              {/* Sponsor Party Filter */}
+              {showSponsorPartyFilter && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant={selectedSponsorParty.length > 0 ? "secondary" : "outline"} 
+                      size="sm" 
+                      className={cn("gap-2 h-8", selectedSponsorParty.length > 0 && "pr-2")}
+                    >
+                      Sponsor Party
+                      {selectedSponsorParty.length > 0 && (
+                        <>
+                          <Badge variant="secondary" className="text-[10px] px-1">{selectedSponsorParty.length}</Badge>
+                          <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setSelectedSponsorParty([]); setActivePresetId(undefined); }}>
+                            <X className="h-3 w-3" />
+                          </span>
+                        </>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 bg-background border border-border z-50">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="party-d" checked={selectedSponsorParty.includes("D")} onCheckedChange={() => toggleSponsorParty("D")} />
+                        <label htmlFor="party-d" className="text-sm cursor-pointer">Democrat</label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="party-r" checked={selectedSponsorParty.includes("R")} onCheckedChange={() => toggleSponsorParty("R")} />
+                        <label htmlFor="party-r" className="text-sm cursor-pointer">Republican</label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="party-bi" checked={selectedSponsorParty.includes("bipartisan")} onCheckedChange={() => toggleSponsorParty("bipartisan")} />
+                        <label htmlFor="party-bi" className="text-sm cursor-pointer">Bipartisan</label>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+
+              {/* Deadline Preset Filter */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button 
-                    variant={selectedRiskLevels.length > 0 ? "secondary" : "outline"} 
+                    variant={deadlinePreset !== "none" ? "secondary" : "outline"} 
                     size="sm" 
-                    className={cn("gap-2 h-8", selectedRiskLevels.length > 0 && "pr-2")}
+                    className={cn("gap-2 h-8", deadlinePreset !== "none" && "pr-2")}
                   >
-                    <Scale className="h-3.5 w-3.5" />
-                    Risk Level
-                    {selectedRiskLevels.length > 0 && (
-                      <>
-                        <Badge variant="secondary" className="text-[10px] px-1">{selectedRiskLevels.length}</Badge>
-                        <span 
-                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRiskLevels([]);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </span>
-                      </>
+                    <Calendar className="h-3.5 w-3.5" />
+                    {deadlinePreset === "none" ? "Deadline" : deadlinePresetLabels[deadlinePreset]}
+                    {deadlinePreset !== "none" && (
+                      <span className="ml-1 hover:bg-destructive/20 rounded-full p-0.5" onClick={(e) => { e.stopPropagation(); setDeadlinePreset("none"); setActivePresetId(undefined); }}>
+                        <X className="h-3 w-3" />
+                      </span>
                     )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-48 bg-background border border-border z-50">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="risk-high"
-                        checked={selectedRiskLevels.includes("high")}
-                        onCheckedChange={() => toggleRiskLevel("high")}
-                      />
-                      <label htmlFor="risk-high" className="text-sm cursor-pointer flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-risk-high" />
-                        High
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="risk-medium"
-                        checked={selectedRiskLevels.includes("medium")}
-                        onCheckedChange={() => toggleRiskLevel("medium")}
-                      />
-                      <label htmlFor="risk-medium" className="text-sm cursor-pointer flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-risk-medium" />
-                        Medium
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="risk-low"
-                        checked={selectedRiskLevels.includes("low")}
-                        onCheckedChange={() => toggleRiskLevel("low")}
-                      />
-                      <label htmlFor="risk-low" className="text-sm cursor-pointer flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-risk-low" />
-                        Low
-                      </label>
-                    </div>
+                    {(["none", "next-30", "next-60", "next-90", "this-quarter"] as DeadlinePreset[]).map(preset => (
+                      <div key={preset} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`deadline-${preset}`}
+                          checked={deadlinePreset === preset}
+                          onCheckedChange={() => { setDeadlinePreset(preset); setActivePresetId(undefined); }}
+                        />
+                        <label htmlFor={`deadline-${preset}`} className="text-sm cursor-pointer">
+                          {deadlinePresetLabels[preset]}
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </PopoverContent>
               </Popover>
@@ -854,9 +1192,7 @@ export function USALegislationSection() {
             <CardTitle className="text-sm">High Risk</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-risk-high">
-              {riskCounts.high}
-            </div>
+            <div className="text-2xl font-bold text-risk-high">{riskCounts.high}</div>
           </CardContent>
         </Card>
         <Card className="border-risk-medium/30">
@@ -864,9 +1200,7 @@ export function USALegislationSection() {
             <CardTitle className="text-sm">Medium Risk</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-risk-medium">
-              {riskCounts.medium}
-            </div>
+            <div className="text-2xl font-bold text-risk-medium">{riskCounts.medium}</div>
           </CardContent>
         </Card>
         <Card className="border-risk-low/30">
@@ -874,9 +1208,7 @@ export function USALegislationSection() {
             <CardTitle className="text-sm">Low Risk</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-risk-low">
-              {riskCounts.low}
-            </div>
+            <div className="text-2xl font-bold text-risk-low">{riskCounts.low}</div>
           </CardContent>
         </Card>
       </div>
