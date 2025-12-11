@@ -23,11 +23,11 @@ interface AppSidebarProps {
 const menuItems = [
   { id: "starred", title: "Starred", icon: Star },
   { id: "legislation", title: "Legislation", icon: FileText },
-  { id: "certificates", title: "Certificates", icon: Shield },
-  { id: "tenders", title: "Tenders", icon: Receipt },
-  { id: "calendar", title: "Calendar", icon: Calendar },
   { id: "media", title: "Media", icon: FileText },
   { id: "social", title: "Social Listening", icon: Users },
+  { id: "tenders", title: "Tenders", icon: Receipt },
+  { id: "certificates", title: "Certificates", icon: Shield },
+  { id: "calendar", title: "Calendar", icon: Calendar },
   { id: "analytics", title: "Analytics", icon: BarChart3 },
   { id: "contact", title: "Contact", icon: MessageSquare },
 ];

@@ -1255,6 +1255,7 @@ export function USALegislationSection() {
                   onRefresh={() => handleRefresh(itemId)}
                   onReport={() => handleReport(itemId)}
                   onViewDetails={() => handleViewMockDetails(item.data)}
+                  viewMode={viewMode}
                 />
               );
             } else {
@@ -1272,6 +1273,7 @@ export function USALegislationSection() {
                   onRefresh={() => handleRefresh(billId)}
                   onReport={() => handleReport(billId)}
                   onViewDetails={() => handleViewCongressDetails(bill)}
+                  viewMode={viewMode}
                 />
               );
             }
