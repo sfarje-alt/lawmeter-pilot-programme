@@ -1855,13 +1855,180 @@ export const gccLegislation: InternationalLegislation[] = [
   }
 ];
 
-// Split GCC by country for dashboard
+// Additional GCC legislation for Oman, Kuwait, Bahrain, Qatar
+export const omanLegislationData: InternationalLegislation[] = [
+  {
+    id: "om-tra-rf-2024",
+    title: "TRA Oman Radio Equipment Requirements",
+    summary: "Telecommunications Regulatory Authority of Oman updates type approval requirements.",
+    bullets: ["Type approval requirements for wireless devices", "EMC testing requirements", "TRA Oman mark requirements"],
+    status: "In Force",
+    jurisdiction: "Oman",
+    riskLevel: "high",
+    riskScore: 76,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(45),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "TRA Oman",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Royal Decree"
+  },
+  {
+    id: "om-safety-2024",
+    title: "Oman Product Safety Standards Update",
+    summary: "Ministry of Commerce updates product safety requirements.",
+    bullets: ["Safety certification requirements", "Testing requirements alignment with GCC", "Market surveillance"],
+    status: "In Force",
+    jurisdiction: "Oman",
+    riskLevel: "medium",
+    riskScore: 68,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(20),
+    regulatoryBody: "Ministry of Commerce",
+    impactAreas: ["Safety", "Certification", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Ministerial Decision"
+  }
+];
+
+export const kuwaitLegislationData: InternationalLegislation[] = [
+  {
+    id: "kw-citra-rf-2024",
+    title: "CITRA Kuwait Wireless Equipment Standards",
+    summary: "Communication and Information Technology Regulatory Authority updates requirements.",
+    bullets: ["Type approval for wireless devices", "Frequency allocation requirements", "Certification marking"],
+    status: "In Force",
+    jurisdiction: "Kuwait",
+    riskLevel: "high",
+    riskScore: 74,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(35),
+    effectiveDate: daysAgo(5),
+    regulatoryBody: "CITRA",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Amiri Decree"
+  },
+  {
+    id: "kw-paa-safety-2024",
+    title: "Kuwait PAA Product Safety Requirements",
+    summary: "Public Authority for Industry updates appliance safety standards.",
+    bullets: ["GSO alignment requirements", "Safety testing", "Conformity marking"],
+    status: "Draft",
+    jurisdiction: "Kuwait",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(180),
+    regulatoryBody: "PAA",
+    impactAreas: ["Safety", "Certification", "Compliance"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Draft Regulation",
+    timeline: getGCCBillTimeline(0)
+  }
+];
+
+export const bahrainLegislationData: InternationalLegislation[] = [
+  {
+    id: "bh-tra-rf-2024",
+    title: "TRA Bahrain Radio Equipment Regulations",
+    summary: "Telecommunications Regulatory Authority of Bahrain updates wireless requirements.",
+    bullets: ["Type approval requirements", "EMC compliance", "TRA certification"],
+    status: "In Force",
+    jurisdiction: "Bahrain",
+    riskLevel: "high",
+    riskScore: 72,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(40),
+    effectiveDate: daysAgo(8),
+    regulatoryBody: "TRA Bahrain",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Royal Decree"
+  },
+  {
+    id: "bh-moic-safety-2024",
+    title: "Bahrain Product Safety Standards",
+    summary: "Ministry of Industry and Commerce updates consumer product safety.",
+    bullets: ["Safety certification requirements", "GSO standards alignment", "Market access requirements"],
+    status: "In Force",
+    jurisdiction: "Bahrain",
+    riskLevel: "medium",
+    riskScore: 66,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(55),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "MOIC",
+    impactAreas: ["Safety", "Certification", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Ministerial Order"
+  }
+];
+
+export const qatarLegislationData: InternationalLegislation[] = [
+  {
+    id: "qa-cra-rf-2024",
+    title: "CRA Qatar Radio Equipment Requirements",
+    summary: "Communications Regulatory Authority of Qatar updates type approval requirements.",
+    bullets: ["Type approval for wireless devices", "Frequency management", "CRA certification mark"],
+    status: "In Force",
+    jurisdiction: "Qatar",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(30),
+    effectiveDate: daysAgo(5),
+    regulatoryBody: "CRA Qatar",
+    impactAreas: ["Wireless", "Certification", "Testing"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Emiri Decision"
+  },
+  {
+    id: "qa-moci-safety-2024",
+    title: "Qatar Product Safety Technical Regulation",
+    summary: "Ministry of Commerce and Industry updates appliance safety requirements.",
+    bullets: ["GSO conformity requirements", "Safety testing", "Qatar Quality Mark"],
+    status: "Draft",
+    jurisdiction: "Qatar",
+    riskLevel: "medium",
+    riskScore: 70,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(240),
+    regulatoryBody: "MOCI",
+    impactAreas: ["Safety", "Certification", "Compliance"],
+    legislationType: "proposal",
+    legislativeCategory: "pending",
+    localTerminology: "Draft Regulation",
+    timeline: getGCCBillTimeline(1)
+  }
+];
+
+// Split GCC by country for dashboard - with unique IDs
 export const uaeLegislation = gccLegislation.filter(l => l.jurisdiction === "UAE");
 export const saudiLegislation = gccLegislation.filter(l => l.jurisdiction === "Saudi Arabia");
-export const omanLegislation = gccLegislation.filter(l => l.jurisdiction === "Oman");
-export const kuwaitLegislation = gccLegislation.filter(l => l.jurisdiction === "Kuwait");
-export const bahrainLegislation = gccLegislation.filter(l => l.jurisdiction === "Bahrain");
-export const qatarLegislation = gccLegislation.filter(l => l.jurisdiction === "Qatar");
+export const omanLegislation = omanLegislationData;
+export const kuwaitLegislation = kuwaitLegislationData;
+export const bahrainLegislation = bahrainLegislationData;
+export const qatarLegislation = qatarLegislationData;
 
 // Split EU for dashboard tabs
 export const euDirectives = euRegulations.filter(l => l.legislationType === "directive" || l.title.toLowerCase().includes("directive"));
