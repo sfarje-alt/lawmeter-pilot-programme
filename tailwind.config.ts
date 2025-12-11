@@ -75,6 +75,21 @@ export default {
           republican: "hsl(var(--party-republican))",
           democrat: "hsl(var(--party-democrat))",
         },
+        // Regional Color System
+        region: {
+          nam: "hsl(var(--region-nam))",
+          "nam-accent": "hsl(var(--region-nam-accent))",
+          latam: "hsl(var(--region-latam))",
+          "latam-accent": "hsl(var(--region-latam-accent))",
+          eu: "hsl(var(--region-eu))",
+          "eu-accent": "hsl(var(--region-eu-accent))",
+          gcc: "hsl(var(--region-gcc))",
+          "gcc-accent": "hsl(var(--region-gcc-accent))",
+          apac: "hsl(var(--region-apac))",
+          "apac-accent": "hsl(var(--region-apac-accent))",
+          jp: "hsl(var(--region-jp))",
+          "jp-accent": "hsl(var(--region-jp-accent))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

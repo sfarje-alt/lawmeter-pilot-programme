@@ -2,8 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, BarChart3, Star, Calendar, Bell, Filter, Search, AlertTriangle, Receipt, Users, Home } from "lucide-react";
+import { BookOpen, FileText, BarChart3, Star, Calendar, Bell, Filter, Search, AlertTriangle, Receipt, Users, Home, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { RegionShowcase } from "@/components/regions";
 
 export default function Documentation() {
   const navigate = useNavigate();
@@ -34,12 +35,13 @@ export default function Documentation() {
 
       <div className="container mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="features">Features</TabsTrigger>
             <TabsTrigger value="filtering">Filtering</TabsTrigger>
             <TabsTrigger value="alerts">Alerts</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="regions">Regions</TabsTrigger>
             <TabsTrigger value="tips">Tips</TabsTrigger>
           </TabsList>
 
@@ -505,6 +507,10 @@ export default function Documentation() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="regions" className="space-y-6">
+            <RegionShowcase />
           </TabsContent>
         </Tabs>
       </div>
