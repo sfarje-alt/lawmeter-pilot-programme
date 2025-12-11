@@ -66,6 +66,27 @@ export const uaeConfig: JurisdictionConfig = {
     authority: "Issuing Body"
   },
   
+  filterPresets: [
+    {
+      id: "high-risk-pipeline",
+      name: "High Risk Pipeline",
+      description: "High-risk legislation in progress",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"] }
+    },
+    {
+      id: "product-safety",
+      name: "Product Safety",
+      description: "Product safety and ESMA standards",
+      filters: { categories: ["Product Safety", "Radio Regulations"] }
+    },
+    {
+      id: "federal-laws",
+      name: "Federal Laws",
+      description: "Federal-level laws and decrees",
+      filters: { jurisdictionLevel: "federal", instrumentTypes: ["federal-law", "federal-decree"] }
+    }
+  ],
+  
   jurisdictionLevels: [
     { id: "federal", label: "Federal", enabled: true },
     { id: "state", label: "Emirate", enabled: true },
@@ -447,6 +468,33 @@ export const costaRicaConfig: JurisdictionConfig = {
     authority: "Ente Emisor"
   },
   
+  filterPresets: [
+    {
+      id: "high-risk-proyectos",
+      name: "Proyectos Alto Riesgo",
+      description: "Proyectos de ley con alto riesgo regulatorio",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"] }
+    },
+    {
+      id: "producto-seguridad",
+      name: "Seguridad de Productos",
+      description: "Legislación de protección al consumidor",
+      filters: { categories: ["Product Safety"] }
+    },
+    {
+      id: "ciberseguridad",
+      name: "Ciberseguridad",
+      description: "Legislación de ciberseguridad y datos",
+      filters: { categories: ["Cybersecurity"] }
+    },
+    {
+      id: "en-comision",
+      name: "En Comisión",
+      description: "Proyectos actualmente en comisión",
+      filters: { lifecycle: "pipeline" }
+    }
+  ],
+  
   // Costa Rica is unitary - mostly national legislation
   jurisdictionLevels: [
     { id: "federal", label: "Nacional", enabled: true },
@@ -525,6 +573,27 @@ export const koreaConfig: JurisdictionConfig = {
     authority: "발행 기관 (Authority)"
   },
   
+  filterPresets: [
+    {
+      id: "high-risk-pipeline",
+      name: "고위험 법안 (High Risk Bills)",
+      description: "High-risk bills in the legislative process",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"] }
+    },
+    {
+      id: "product-regulations",
+      name: "제품 규정 (Product Regulations)",
+      description: "KC marking and product safety",
+      filters: { categories: ["Product Safety", "Radio Regulations"] }
+    },
+    {
+      id: "cybersecurity",
+      name: "사이버 보안 (Cybersecurity)",
+      description: "Cybersecurity and data protection",
+      filters: { categories: ["Cybersecurity"] }
+    }
+  ],
+  
   // Korea is unitary - national legislation is primary
   jurisdictionLevels: [
     { id: "federal", label: "국가 (National)", enabled: true },
@@ -601,6 +670,27 @@ export const taiwanConfig: JurisdictionConfig = {
     subnational: "縣市 (County/City)",
     authority: "發布機關 (Authority)"
   },
+  
+  filterPresets: [
+    {
+      id: "high-risk-pipeline",
+      name: "高風險法案 (High Risk Bills)",
+      description: "High-risk bills requiring attention",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"] }
+    },
+    {
+      id: "product-regulations",
+      name: "產品法規 (Product Regulations)",
+      description: "BSMI certification and product safety",
+      filters: { categories: ["Product Safety", "Radio Regulations"] }
+    },
+    {
+      id: "food-contact",
+      name: "食品接觸 (Food Contact)",
+      description: "Food contact material regulations",
+      filters: { categories: ["Food Contact Material"] }
+    }
+  ],
   
   // Taiwan is unitary
   jurisdictionLevels: [

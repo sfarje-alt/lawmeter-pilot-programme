@@ -51,6 +51,20 @@ export interface PipelineStageConfig {
   instrumentType?: string; // Optional: different stages for different instruments
 }
 
+// ========== FILTER PRESET ==========
+export interface FilterPreset {
+  id: string;
+  name: string;
+  description: string;
+  filters: {
+    lifecycle?: "all" | "in-force" | "pipeline";
+    jurisdictionLevel?: "all" | "federal" | "state" | "local";
+    instrumentTypes?: string[];
+    riskLevels?: ("high" | "medium" | "low")[];
+    categories?: string[];
+  };
+}
+
 // ========== JURISDICTION CONFIGURATION ==========
 export interface JurisdictionLevelOption {
   id: "federal" | "state" | "local" | "supranational";
@@ -78,6 +92,9 @@ export interface JurisdictionConfig {
   
   // Jurisdiction level options (customized per country)
   jurisdictionLevels?: JurisdictionLevelOption[];
+  
+  // Filter presets (country-specific)
+  filterPresets?: FilterPreset[];
   
   // Authority/issuing body labels
   authorityLabels: Record<string, string>;
@@ -192,6 +209,39 @@ export const usaConfig: JurisdictionConfig = {
     authority: "Authority"
   },
   
+  filterPresets: [
+    {
+      id: "high-risk-pipeline",
+      name: "High Risk Pipeline",
+      description: "High-risk bills currently in the legislative process",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"] }
+    },
+    {
+      id: "tech-regulations",
+      name: "Tech & Communications",
+      description: "Technology and communications legislation",
+      filters: { categories: ["Radio Regulations", "Cybersecurity"] }
+    },
+    {
+      id: "product-safety",
+      name: "Product Safety",
+      description: "Consumer product safety and compliance",
+      filters: { categories: ["Product Safety", "Battery Regulations"] }
+    },
+    {
+      id: "federal-bills",
+      name: "Federal Bills Only",
+      description: "Only federal-level legislation",
+      filters: { jurisdictionLevel: "federal", instrumentTypes: ["bill"] }
+    },
+    {
+      id: "state-regulations",
+      name: "State Regulations",
+      description: "State-level rules and regulations",
+      filters: { jurisdictionLevel: "state" }
+    }
+  ],
+  
   caseLawFields: {
     courtLabel: "Court",
     chamberLabel: "Circuit/Division",
@@ -272,6 +322,33 @@ export const euConfig: JurisdictionConfig = {
     subnational: "Member State",
     authority: "Institution"
   },
+  
+  filterPresets: [
+    {
+      id: "high-risk-directives",
+      name: "High Risk Directives",
+      description: "High-risk EU directives requiring member state transposition",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"], instrumentTypes: ["directive"] }
+    },
+    {
+      id: "product-regulations",
+      name: "Product Regulations",
+      description: "Product safety and CE marking regulations",
+      filters: { categories: ["Product Safety", "Radio Regulations"] }
+    },
+    {
+      id: "cybersecurity",
+      name: "Cybersecurity & Data",
+      description: "Cybersecurity and data protection legislation",
+      filters: { categories: ["Cybersecurity"] }
+    },
+    {
+      id: "energy-battery",
+      name: "Energy & Battery",
+      description: "Battery and eco-design regulations",
+      filters: { categories: ["Battery Regulations"] }
+    }
+  ],
   
   caseLawFields: {
     courtLabel: "Court",

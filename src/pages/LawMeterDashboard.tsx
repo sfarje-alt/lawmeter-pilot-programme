@@ -36,7 +36,7 @@ import { CertificateTable } from '@/components/certificates/CertificateTable';
 import { useCertificates } from '@/hooks/useCertificates';
 import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
 import { Download, Plus } from "lucide-react";
-import { UnifiedLegislationSection, UnifiedLegislationDrawer } from "@/components/legislation";
+import { UnifiedLegislationSection, UnifiedLegislationDrawer, UnifiedCongressSection } from "@/components/legislation";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { 
   usStateBills, 
@@ -403,49 +403,14 @@ export default function LawMeterDashboard() {
             )}
 
 
-            {/* USA Section - Toggle between real Congress data and mock */}
+            {/* USA Section - Live Congress API with unified cards */}
             {selectedCountry === "usa" && (
-              <div className="space-y-4">
-                {/* Data Source Toggle */}
-                <div className="flex items-center gap-4 px-4 py-3 rounded-lg border border-primary/20 bg-primary/5">
-                  <span className="text-sm font-medium text-muted-foreground">Data Source:</span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={usaDataSource === "congress" ? "default" : "outline"}
-                      onClick={() => setUsaDataSource("congress")}
-                      size="sm"
-                      className="gap-2"
-                    >
-                      🏛️ Live Congress API
-                    </Button>
-                    <Button
-                      variant={usaDataSource === "mock" ? "default" : "outline"}
-                      onClick={() => setUsaDataSource("mock")}
-                      size="sm"
-                      className="gap-2"
-                    >
-                      📋 Mock State Bills
-                    </Button>
-                  </div>
-                </div>
-                
-                {usaDataSource === "congress" ? (
-                  <CongressBillsSection />
-                ) : (
-                  <UnifiedLegislationSection
-                    config={usaConfig}
-                    items={enrichedUSAData}
-                    presets={defaultPresets}
-                    categories={regulatoryCategories}
-                    title="USA State Legislation"
-                    subtitle="State-level legislation monitoring"
-                    onItemClick={(item) => {
-                      setSelectedUnifiedItem(item);
-                      setUnifiedDrawerConfig(usaConfig);
-                    }}
-                  />
-                )}
-              </div>
+              <UnifiedCongressSection
+                onItemClick={(item) => {
+                  setSelectedUnifiedItem(item);
+                  setUnifiedDrawerConfig(usaConfig);
+                }}
+              />
             )}
 
             {/* Peru Section - Empty placeholder */}
