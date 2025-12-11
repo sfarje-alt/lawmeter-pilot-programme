@@ -64,6 +64,20 @@
     --party-republican: 0 75% 50%;
     --party-democrat: 220 85% 55%;
 
+    /* Regional Color System */
+    --region-nam: 210 50% 20%;
+    --region-nam-accent: 195 40% 25%;
+    --region-latam: 160 45% 30%;
+    --region-latam-accent: 175 40% 35%;
+    --region-eu: 220 55% 35%;
+    --region-eu-accent: 45 80% 55%;
+    --region-gcc: 35 30% 45%;
+    --region-gcc-accent: 145 35% 25%;
+    --region-apac: 185 50% 35%;
+    --region-apac-accent: 190 45% 40%;
+    --region-jp: 0 0% 25%;
+    --region-jp-accent: 0 65% 45%;
+
     /* Brand Colors */
     --brand-navy: 220 40% 8%;
     --brand-navy-foreground: 210 40% 98%;
