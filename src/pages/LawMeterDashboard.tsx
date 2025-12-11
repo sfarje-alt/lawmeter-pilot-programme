@@ -59,12 +59,19 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { GlobalLegislationSearch } from "@/components/search/GlobalLegislationSearch";
 import { USALegislationSection } from "@/components/usa/USALegislationSection";
+import { 
+  RegionSelector, 
+  RegionHeader, 
+  RegionEmptyState,
+  regionThemes 
+} from "@/components/regions";
+import type { RegionCode } from "@/components/regions/RegionConfig";
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("legislation");
-  const [selectedRegion, setSelectedRegion] = useState<"nam" | "latam" | "eu" | "gcc" | "japan" | "apac">("nam");
+  const [selectedRegion, setSelectedRegion] = useState<RegionCode>("NAM");
   const [selectedCountry, setSelectedCountry] = useState<"usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu">("usa");
   const [usaSubTab, setUsaSubTab] = useState<"federal" | "state">("federal");
   const [costaRicaSubTab, setCostaRicaSubTab] = useState<"normas" | "proyectos">("normas");
@@ -245,165 +252,143 @@ export default function LawMeterDashboard() {
               ]} 
               onSelectRegion={(region) => {
                 // Map region to our region groups
-                if (region === "usa" || region === "canada") setSelectedRegion("nam");
-                else if (region === "costa-rica" || region === "peru") setSelectedRegion("latam");
-                else if (region === "eu") setSelectedRegion("eu");
-                else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar"].includes(region)) setSelectedRegion("gcc");
-                else if (region === "japan") setSelectedRegion("japan");
-                else if (region === "korea" || region === "taiwan") setSelectedRegion("apac");
+                if (region === "usa" || region === "canada") setSelectedRegion("NAM");
+                else if (region === "costa-rica" || region === "peru") setSelectedRegion("LATAM");
+                else if (region === "eu") setSelectedRegion("EU");
+                else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar"].includes(region)) setSelectedRegion("GCC");
+                else if (region === "japan") setSelectedRegion("JP");
+                else if (region === "korea" || region === "taiwan") setSelectedRegion("APAC");
                 setSelectedCountry(region as typeof selectedCountry);
               }}
             />
 
-            {/* Regional and Country Selector */}
-            <div className="flex flex-wrap items-start gap-6">
-              {/* Region Selector */}
-              <div className="flex items-center gap-4 flex-wrap">
-                <span className="text-sm font-medium text-muted-foreground">Select Region:</span>
+            {/* Regional Selector with themed icons */}
+            <RegionSelector
+              selectedRegion={selectedRegion}
+              onSelectRegion={(region) => {
+                setSelectedRegion(region);
+                // Auto-select first country in region
+                if (region === "NAM") setSelectedCountry("usa");
+                else if (region === "LATAM") setSelectedCountry("costa-rica");
+                else if (region === "EU") setSelectedCountry("eu");
+                else if (region === "GCC") setSelectedCountry("gcc");
+                else if (region === "JP") setSelectedCountry("japan");
+                else if (region === "APAC") setSelectedCountry("korea");
+              }}
+              alertCounts={{
+                NAM: 268,
+                LATAM: 45,
+                EU: 89,
+                GCC: 34,
+                APAC: 56,
+                JP: 23
+              }}
+            />
+
+            {/* Country Selector - Themed by region */}
+            {(selectedRegion === "NAM" || selectedRegion === "LATAM" || selectedRegion === "APAC") && (
+              <div className="flex items-center gap-4 px-4 py-3 rounded-lg border" style={{
+                borderColor: `color-mix(in srgb, ${regionThemes[selectedRegion].primaryColor} 30%, transparent)`,
+                backgroundColor: `color-mix(in srgb, ${regionThemes[selectedRegion].primaryColor} 5%, transparent)`,
+              }}>
+                <span className="text-sm font-medium text-muted-foreground">Select a Country:</span>
                 <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant={selectedRegion === "nam" ? "default" : "outline"}
-                    onClick={() => { setSelectedRegion("nam"); setSelectedCountry("usa"); }}
-                    className="gap-2"
-                  >
-                    🌎 NAM
-                  </Button>
-                  <Button
-                    variant={selectedRegion === "latam" ? "default" : "outline"}
-                    onClick={() => { setSelectedRegion("latam"); setSelectedCountry("costa-rica"); }}
-                    className="gap-2"
-                  >
-                    🌎 LATAM
-                  </Button>
-                  <Button
-                    variant={selectedRegion === "eu" ? "default" : "outline"}
-                    onClick={() => { setSelectedRegion("eu"); setSelectedCountry("eu"); }}
-                    className="gap-2"
-                  >
-                    🇪🇺 EU
-                  </Button>
-                  <Button
-                    variant={selectedRegion === "gcc" ? "default" : "outline"}
-                    onClick={() => { setSelectedRegion("gcc"); setSelectedCountry("gcc"); }}
-                    className="gap-2"
-                  >
-                    🏛️ GCC
-                  </Button>
-                  <Button
-                    variant={selectedRegion === "japan" ? "default" : "outline"}
-                    onClick={() => { setSelectedRegion("japan"); setSelectedCountry("japan"); }}
-                    className="gap-2"
-                  >
-                    🇯🇵 JAPAN
-                  </Button>
-                  <Button
-                    variant={selectedRegion === "apac" ? "default" : "outline"}
-                    onClick={() => { setSelectedRegion("apac"); setSelectedCountry("korea"); }}
-                    className="gap-2"
-                  >
-                    🌏 APAC
-                  </Button>
+                  {selectedRegion === "NAM" && (
+                    <>
+                      <Button
+                        variant={selectedCountry === "usa" ? "default" : "outline"}
+                        onClick={() => setSelectedCountry("usa")}
+                        size="sm"
+                        className="gap-2"
+                        style={selectedCountry === "usa" ? { backgroundColor: regionThemes.NAM.primaryColor } : undefined}
+                      >
+                        🇺🇸 USA
+                      </Button>
+                      <Button
+                        variant={selectedCountry === "canada" ? "default" : "outline"}
+                        onClick={() => setSelectedCountry("canada")}
+                        size="sm"
+                        className="gap-2"
+                        style={selectedCountry === "canada" ? { backgroundColor: regionThemes.NAM.primaryColor } : undefined}
+                      >
+                        🇨🇦 Canada
+                      </Button>
+                    </>
+                  )}
+                  {selectedRegion === "LATAM" && (
+                    <>
+                      <Button
+                        variant={selectedCountry === "costa-rica" ? "default" : "outline"}
+                        onClick={() => setSelectedCountry("costa-rica")}
+                        size="sm"
+                        className="gap-2"
+                        style={selectedCountry === "costa-rica" ? { backgroundColor: regionThemes.LATAM.primaryColor } : undefined}
+                      >
+                        🇨🇷 Costa Rica
+                      </Button>
+                      <Button
+                        variant={selectedCountry === "peru" ? "default" : "outline"}
+                        onClick={() => setSelectedCountry("peru")}
+                        size="sm"
+                        className="gap-2"
+                        style={selectedCountry === "peru" ? { backgroundColor: regionThemes.LATAM.primaryColor } : undefined}
+                      >
+                        🇵🇪 Perú
+                      </Button>
+                    </>
+                  )}
+                  {selectedRegion === "APAC" && (
+                    <>
+                      <Button
+                        variant={selectedCountry === "korea" ? "default" : "outline"}
+                        onClick={() => setSelectedCountry("korea")}
+                        size="sm"
+                        className="gap-2"
+                        style={selectedCountry === "korea" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
+                      >
+                        🇰🇷 Korea
+                      </Button>
+                      <Button
+                        variant={selectedCountry === "taiwan" ? "default" : "outline"}
+                        onClick={() => setSelectedCountry("taiwan")}
+                        size="sm"
+                        className="gap-2"
+                        style={selectedCountry === "taiwan" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
+                      >
+                        🇹🇼 Taiwan
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
+            )}
 
-              {/* Country Selector - Always visible when region has multiple countries */}
-              {(selectedRegion === "nam" || selectedRegion === "latam" || selectedRegion === "apac") && (
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-muted-foreground">Select a Country:</span>
-                  <div className="flex gap-2 flex-wrap">
-                    {selectedRegion === "nam" && (
-                      <>
-                        <Button
-                          variant={selectedCountry === "usa" ? "secondary" : "ghost"}
-                          onClick={() => setSelectedCountry("usa")}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          🇺🇸 USA
-                        </Button>
-                        <Button
-                          variant={selectedCountry === "canada" ? "secondary" : "ghost"}
-                          onClick={() => setSelectedCountry("canada")}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          🇨🇦 Canada
-                        </Button>
-                      </>
-                    )}
-                    {selectedRegion === "latam" && (
-                      <>
-                        <Button
-                          variant={selectedCountry === "costa-rica" ? "secondary" : "ghost"}
-                          onClick={() => setSelectedCountry("costa-rica")}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          🇨🇷 Costa Rica
-                        </Button>
-                        <Button
-                          variant={selectedCountry === "peru" ? "secondary" : "ghost"}
-                          onClick={() => setSelectedCountry("peru")}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          🇵🇪 Perú
-                        </Button>
-                      </>
-                    )}
-                    {selectedRegion === "apac" && (
-                      <>
-                        <Button
-                          variant={selectedCountry === "korea" ? "secondary" : "ghost"}
-                          onClick={() => setSelectedCountry("korea")}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          🇰🇷 Korea
-                        </Button>
-                        <Button
-                          variant={selectedCountry === "taiwan" ? "secondary" : "ghost"}
-                          onClick={() => setSelectedCountry("taiwan")}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          🇹🇼 Taiwan
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* USA Section - New unified view */}
             {selectedCountry === "usa" && (
-              <USALegislationSection />
+              <div className="space-y-4">
+                <RegionHeader region="NAM" title="USA Legislation" alertCount={268} />
+                <USALegislationSection />
+              </div>
             )}
 
             {/* Peru Section - Empty placeholder */}
             {selectedCountry === "peru" && (
-              <Card className="p-12 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <span className="text-6xl">🇵🇪</span>
-                  <h3 className="text-xl font-semibold">Perú</h3>
-                  <p className="text-muted-foreground">
-                    Legislation monitoring for Perú is coming soon.
-                  </p>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </div>
-              </Card>
+              <div className="space-y-4">
+                <RegionHeader region="LATAM" title="Perú Legislation" />
+                <RegionEmptyState 
+                  region="LATAM" 
+                  onAction={(action) => console.log("Peru action:", action)}
+                />
+              </div>
             )}
 
             {/* Canada Section */}
             {selectedCountry === "canada" && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🇨🇦</span>
-                  <h2 className="text-2xl font-bold">Canada Legislation</h2>
-                </div>
+              <div className="space-y-4">
+                <RegionHeader region="NAM" title="Canada Legislation" alertCount={canadaLegislation.length} />
                 {/* Province Filter */}
-                <div className="flex items-center gap-4 mb-4 flex-wrap">
+                <div className="flex items-center gap-4 flex-wrap">
                   <span className="text-sm font-medium">Filter by Province:</span>
                   <Select
                     value={selectedProvinces.length === 1 ? selectedProvinces[0] : ""}
@@ -445,11 +430,8 @@ export default function LawMeterDashboard() {
 
             {/* Costa Rica Section */}
             {selectedCountry === "costa-rica" && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🇨🇷</span>
-                  <h2 className="text-2xl font-bold">Costa Rica Legislation</h2>
-                </div>
+              <div className="space-y-4">
+                <RegionHeader region="LATAM" title="Costa Rica Legislation" alertCount={filteredAlerts.length + filteredBills.length} />
                 <Tabs value={costaRicaSubTab} onValueChange={(v) => setCostaRicaSubTab(v as "normas" | "proyectos")} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
                     <TabsTrigger value="normas" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
@@ -711,11 +693,8 @@ export default function LawMeterDashboard() {
 
             {/* GCC Section */}
             {selectedCountry === "gcc" && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🏛️</span>
-                  <h2 className="text-2xl font-bold">GCC Legislation</h2>
-                </div>
+              <div className="space-y-4">
+                <RegionHeader region="GCC" title="GCC Legislation" alertCount={uaeLegislation.length + saudiLegislation.length + omanLegislation.length + kuwaitLegislation.length + bahrainLegislation.length + qatarLegislation.length} />
                 <GCCRegionMap legislation={[...uaeLegislation, ...saudiLegislation, ...omanLegislation, ...kuwaitLegislation, ...bahrainLegislation, ...qatarLegislation]} />
                 
                 <Tabs value={gccSubTab} onValueChange={(v) => setGccSubTab(v as "uae" | "saudi" | "oman" | "kuwait" | "bahrain" | "qatar")} className="w-full">
@@ -769,44 +748,32 @@ export default function LawMeterDashboard() {
 
             {/* Japan Section */}
             {selectedCountry === "japan" && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🇯🇵</span>
-                  <h2 className="text-2xl font-bold">Japan Legislation</h2>
-                </div>
+              <div className="space-y-4">
+                <RegionHeader region="JP" title="Japan Legislation" alertCount={japanLegislation.length} />
                 <InternationalLegislationSection legislation={japanLegislation} />
               </div>
             )}
 
             {/* Korea Section */}
             {selectedCountry === "korea" && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🇰🇷</span>
-                  <h2 className="text-2xl font-bold">Korea Legislation</h2>
-                </div>
+              <div className="space-y-4">
+                <RegionHeader region="APAC" title="Korea Legislation" alertCount={koreaLegislation.length} />
                 <InternationalLegislationSection legislation={koreaLegislation} />
               </div>
             )}
 
             {/* Taiwan Section */}
             {selectedCountry === "taiwan" && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🇹🇼</span>
-                  <h2 className="text-2xl font-bold">Taiwan Legislation</h2>
-                </div>
+              <div className="space-y-4">
+                <RegionHeader region="APAC" title="Taiwan Legislation" alertCount={taiwanLegislation.length} />
                 <InternationalLegislationSection legislation={taiwanLegislation} />
               </div>
             )}
 
             {/* EU Section */}
             {selectedCountry === "eu" && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🇪🇺</span>
-                  <h2 className="text-2xl font-bold">European Union Legislation</h2>
-                </div>
+              <div className="space-y-4">
+                <RegionHeader region="EU" title="European Union Legislation" alertCount={euRegulations.length + euDirectives.length + euParliament.length + euCouncil.length} />
                 <Tabs value={euSubTab} onValueChange={(v) => setEuSubTab(v as "regulations" | "directives" | "parliament" | "council")} className="w-full">
                 <TabsList className="grid w-full grid-cols-4 mb-6 glass-card p-1 gap-1">
                   <TabsTrigger value="regulations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
