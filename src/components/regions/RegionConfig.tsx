@@ -41,11 +41,11 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
     code: "NAM",
     name: "North America",
     fullName: "North America (USA & Canada)",
-    primaryColor: "hsl(210, 50%, 20%)", // Deep navy
-    secondaryColor: "hsl(195, 40%, 25%)", // Petrol
-    accentColor: "hsl(210, 60%, 40%)",
-    bgPattern: "repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(210 50% 20% / 0.03) 2px, hsl(210 50% 20% / 0.03) 4px)",
-    tone: "Case-law heavy, layered regulation",
+    primaryColor: "hsl(215, 60%, 50%)",
+    secondaryColor: "hsl(210, 50%, 55%)",
+    accentColor: "hsl(215, 65%, 60%)",
+    bgPattern: "linear-gradient(135deg, hsl(215 60% 50% / 0.06) 0%, transparent 100%)",
+    tone: "",
     emptyStateMessages: {
       title: "No pending legislation",
       subtitle: "Check back for new bills, regulatory guidance, and landmark cases",
@@ -60,11 +60,11 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
     code: "LATAM",
     name: "Latin America",
     fullName: "Latin America & Caribbean",
-    primaryColor: "hsl(160, 45%, 30%)", // Emerald
-    secondaryColor: "hsl(175, 40%, 35%)", // Teal
-    accentColor: "hsl(160, 50%, 45%)",
-    bgPattern: "radial-gradient(ellipse 120% 80% at 50% 100%, hsl(160 45% 30% / 0.05), transparent)",
-    tone: "Socio-environmental focus",
+    primaryColor: "hsl(160, 50%, 42%)",
+    secondaryColor: "hsl(165, 45%, 48%)",
+    accentColor: "hsl(160, 55%, 52%)",
+    bgPattern: "linear-gradient(135deg, hsl(160 50% 42% / 0.06) 0%, transparent 100%)",
+    tone: "",
     emptyStateMessages: {
       title: "No active reforms",
       subtitle: "Monitor constitutional rights, ESG regulations, and community impact laws",
@@ -79,11 +79,11 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
     code: "EU",
     name: "European Union",
     fullName: "European Union",
-    primaryColor: "hsl(220, 55%, 35%)", // Royal blue
-    secondaryColor: "hsl(220, 45%, 45%)",
-    accentColor: "hsl(45, 80%, 55%)", // Gold accent
-    bgPattern: "radial-gradient(circle at 50% 50%, hsl(220 55% 35% / 0.04) 0%, transparent 70%)",
-    tone: "Harmonisation and compliance",
+    primaryColor: "hsl(220, 65%, 52%)",
+    secondaryColor: "hsl(220, 55%, 58%)",
+    accentColor: "hsl(45, 80%, 55%)",
+    bgPattern: "linear-gradient(135deg, hsl(220 65% 52% / 0.06) 0%, transparent 100%)",
+    tone: "",
     emptyStateMessages: {
       title: "No directives pending",
       subtitle: "Review frameworks, delegated acts, and Court of Justice case law",
@@ -98,11 +98,11 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
     code: "GCC",
     name: "Gulf States",
     fullName: "Gulf Cooperation Council",
-    primaryColor: "hsl(35, 30%, 45%)", // Sand
-    secondaryColor: "hsl(145, 35%, 25%)", // Deep green
-    accentColor: "hsl(35, 40%, 55%)",
-    bgPattern: "radial-gradient(ellipse 150% 50% at 50% 100%, hsl(35 30% 45% / 0.06), transparent)",
-    tone: "Authorisations and concessions",
+    primaryColor: "hsl(35, 55%, 48%)",
+    secondaryColor: "hsl(145, 40%, 40%)",
+    accentColor: "hsl(35, 60%, 55%)",
+    bgPattern: "linear-gradient(135deg, hsl(35 55% 48% / 0.06) 0%, transparent 100%)",
+    tone: "",
     emptyStateMessages: {
       title: "No pending approvals",
       subtitle: "Track licences, concessions, and government decrees",
@@ -117,11 +117,11 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
     code: "APAC",
     name: "Asia-Pacific",
     fullName: "Asia-Pacific (excl. Japan)",
-    primaryColor: "hsl(185, 50%, 35%)", // Cyan
-    secondaryColor: "hsl(190, 45%, 40%)", // Turquoise
-    accentColor: "hsl(185, 55%, 50%)",
-    bgPattern: "linear-gradient(135deg, hsl(185 50% 35% / 0.03) 0%, transparent 50%, hsl(185 50% 35% / 0.03) 100%)",
-    tone: "Diverse and fast-changing",
+    primaryColor: "hsl(185, 55%, 42%)",
+    secondaryColor: "hsl(190, 50%, 48%)",
+    accentColor: "hsl(185, 60%, 52%)",
+    bgPattern: "linear-gradient(135deg, hsl(185 55% 42% / 0.06) 0%, transparent 100%)",
+    tone: "",
     emptyStateMessages: {
       title: "No cross-border updates",
       subtitle: "Monitor trade agreements, tech regulations, and data privacy rules",
@@ -136,11 +136,11 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
     code: "JP",
     name: "Japan",
     fullName: "Japan",
-    primaryColor: "hsl(0, 0%, 25%)", // Neutral dark
-    secondaryColor: "hsl(0, 65%, 45%)", // Soft red
-    accentColor: "hsl(0, 60%, 55%)",
-    bgPattern: "linear-gradient(180deg, hsl(0 0% 95%) 0%, hsl(0 0% 98%) 100%)",
-    tone: "Detail and guidance",
+    primaryColor: "hsl(0, 60%, 52%)",
+    secondaryColor: "hsl(0, 50%, 58%)",
+    accentColor: "hsl(0, 65%, 60%)",
+    bgPattern: "linear-gradient(135deg, hsl(0 60% 52% / 0.06) 0%, transparent 100%)",
+    tone: "",
     emptyStateMessages: {
       title: "No guidelines pending",
       subtitle: "Review circulars, implementation rules, and technical standards",
@@ -266,11 +266,8 @@ export const RegionIcon: React.FC<RegionIconProps> = ({ region, size = 24, showC
   return (
     <div className={`inline-flex items-center gap-1.5 ${className || ''}`}>
       <div 
-        className="flex items-center justify-center rounded-md p-1"
-        style={{ 
-          backgroundColor: `color-mix(in srgb, ${theme.primaryColor} 15%, transparent)`,
-          color: theme.primaryColor
-        }}
+        className="flex items-center justify-center rounded-md p-1 bg-muted/50"
+        style={{ color: theme.primaryColor }}
       >
         <IconComponent size={size} />
       </div>
