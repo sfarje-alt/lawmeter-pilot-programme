@@ -268,13 +268,8 @@ export default function LawMeterDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
-            {/* Global Search Bar */}
-            <GlobalLegislationSearch 
-              onSearch={(query, jurisdiction) => console.log("Search:", query, jurisdiction)}
-            />
-
             {/* World Map - National/Federal Overview */}
-            <WorldMap 
+            <WorldMap
               legislation={[
                 ...usStateBills,
                 ...canadaLegislation,
@@ -302,6 +297,11 @@ export default function LawMeterDashboard() {
                 else if (region === "korea" || region === "taiwan") setSelectedRegion("APAC");
                 setSelectedCountry(region as typeof selectedCountry);
               }}
+            />
+
+            {/* Global Search Bar - Below map, above regions */}
+            <GlobalLegislationSearch 
+              onSearch={(query, jurisdiction) => console.log("Search:", query, jurisdiction)}
             />
 
             {/* Regional Selector with themed icons */}
