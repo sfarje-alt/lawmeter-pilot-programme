@@ -101,6 +101,9 @@ export interface UnifiedLegislationItem {
     text: string;
   }>;
   fullText?: string;
+  
+  // Original data reference (for fetching more details)
+  originalData?: any;
 }
 
 // ========== UNIFIED FILTER STATE ==========
