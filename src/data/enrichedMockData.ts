@@ -280,21 +280,25 @@ export const defaultPresets = [
   {
     id: "high-risk",
     name: "High Risk",
+    description: "Show high-risk legislation",
     filters: { riskLevels: ["high"] as ("high" | "medium" | "low")[] }
   },
   {
     id: "upcoming-deadlines",
     name: "Upcoming Deadlines",
+    description: "Items with deadlines in next 30 days",
     filters: { deadlinePreset: "next-30" as const }
   },
   {
     id: "pipeline-only",
     name: "Pipeline Only",
+    description: "Show only pending legislation",
     filters: { lifecycle: "pipeline" as const }
   },
   {
     id: "in-force",
     name: "In Force",
+    description: "Show enacted legislation",
     filters: { lifecycle: "in-force" as const }
   }
 ];

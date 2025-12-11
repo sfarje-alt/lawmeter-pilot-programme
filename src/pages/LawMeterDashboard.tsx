@@ -36,7 +36,7 @@ import { CertificateTable } from '@/components/certificates/CertificateTable';
 import { useCertificates } from '@/hooks/useCertificates';
 import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
 import { Download, Plus } from "lucide-react";
-import { UnifiedLegislationSection } from "@/components/legislation/UnifiedLegislationSection";
+import { UnifiedLegislationSection, UnifiedLegislationDrawer } from "@/components/legislation";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { 
   usStateBills, 
@@ -75,18 +75,37 @@ import {
   canadaConfig 
 } from "@/config/jurisdictionConfig";
 import {
-  unifiedUSACombinedData,
-  unifiedCanadaData,
-  unifiedJapanData,
-  unifiedKoreaData,
-  unifiedTaiwanData,
-  unifiedEUData,
-  unifiedGCCData,
+  uaeConfig,
+  saudiConfig,
+  omanConfig,
+  kuwaitConfig,
+  bahrainConfig,
+  qatarConfig,
+  costaRicaConfig,
+  GCCCountryCode
+} from "@/config/countryConfigs";
+import {
+  enrichedUSAData,
+  enrichedCanadaData,
+  enrichedJapanData,
+  enrichedKoreaData,
+  enrichedTaiwanData,
+  enrichedEUData,
+  enrichedUAEData,
+  enrichedSaudiData,
+  enrichedOmanData,
+  enrichedKuwaitData,
+  enrichedBahrainData,
+  enrichedQatarData,
   regulatoryCategories,
   defaultPresets,
-  convertInternationalToUnified
-} from "@/data/unifiedMockData";
+  convertToEnrichedUnified
+} from "@/data/enrichedMockData";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
+
+// Costa Rica mock data (using alerts for normas)
+const costaRicaEnrichedData: UnifiedLegislationItem[] = [];
+
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -94,9 +113,13 @@ export default function LawMeterDashboard() {
   const [activeTab, setActiveTab] = useState("legislation");
   const [selectedRegion, setSelectedRegion] = useState<RegionCode>("NAM");
   const [selectedCountry, setSelectedCountry] = useState<"usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu">("usa");
+  const [selectedGCCCountry, setSelectedGCCCountry] = useState<GCCCountryCode>("uae");
+  const [usaDataSource, setUsaDataSource] = useState<"congress" | "mock">("congress");
   const [costaRicaSubTab, setCostaRicaSubTab] = useState<"normas" | "proyectos">("normas");
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
+  const [selectedUnifiedItem, setSelectedUnifiedItem] = useState<UnifiedLegislationItem | null>(null);
+  const [unifiedDrawerConfig, setUnifiedDrawerConfig] = useState<any>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [starredFilter, setStarredFilter] = useState<"all" | "acts" | "bills">("all");
   
@@ -380,16 +403,49 @@ export default function LawMeterDashboard() {
             )}
 
 
-            {/* USA Section - New unified view */}
+            {/* USA Section - Toggle between real Congress data and mock */}
             {selectedCountry === "usa" && (
-              <UnifiedLegislationSection
-                config={usaConfig}
-                items={unifiedUSACombinedData}
-                presets={defaultPresets}
-                categories={regulatoryCategories}
-                title="USA Legislation"
-                subtitle="Federal and State legislation monitoring"
-              />
+              <div className="space-y-4">
+                {/* Data Source Toggle */}
+                <div className="flex items-center gap-4 px-4 py-3 rounded-lg border border-primary/20 bg-primary/5">
+                  <span className="text-sm font-medium text-muted-foreground">Data Source:</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={usaDataSource === "congress" ? "default" : "outline"}
+                      onClick={() => setUsaDataSource("congress")}
+                      size="sm"
+                      className="gap-2"
+                    >
+                      🏛️ Live Congress API
+                    </Button>
+                    <Button
+                      variant={usaDataSource === "mock" ? "default" : "outline"}
+                      onClick={() => setUsaDataSource("mock")}
+                      size="sm"
+                      className="gap-2"
+                    >
+                      📋 Mock State Bills
+                    </Button>
+                  </div>
+                </div>
+                
+                {usaDataSource === "congress" ? (
+                  <CongressBillsSection />
+                ) : (
+                  <UnifiedLegislationSection
+                    config={usaConfig}
+                    items={enrichedUSAData}
+                    presets={defaultPresets}
+                    categories={regulatoryCategories}
+                    title="USA State Legislation"
+                    subtitle="State-level legislation monitoring"
+                    onItemClick={(item) => {
+                      setSelectedUnifiedItem(item);
+                      setUnifiedDrawerConfig(usaConfig);
+                    }}
+                  />
+                )}
+              </div>
             )}
 
             {/* Peru Section - Empty placeholder */}
@@ -407,11 +463,15 @@ export default function LawMeterDashboard() {
             {selectedCountry === "canada" && (
               <UnifiedLegislationSection
                 config={canadaConfig}
-                items={unifiedCanadaData}
+                items={enrichedCanadaData}
                 presets={defaultPresets}
                 categories={regulatoryCategories}
                 title="Canada Legislation"
                 subtitle="Federal and Provincial legislation monitoring"
+                onItemClick={(item) => {
+                  setSelectedUnifiedItem(item);
+                  setUnifiedDrawerConfig(canadaConfig);
+                }}
               />
             )}
 
@@ -678,27 +738,57 @@ export default function LawMeterDashboard() {
               </div>
             )}
 
-            {/* GCC Section */}
+            {/* GCC Section - With country selector */}
             {selectedCountry === "gcc" && (
-              <UnifiedLegislationSection
-                config={gccConfig}
-                items={unifiedGCCData}
-                presets={defaultPresets}
-                categories={regulatoryCategories}
-                title="GCC Legislation"
-                subtitle="Gulf Cooperation Council regulatory monitoring"
-              />
+              <div className="space-y-4">
+                {/* GCC Country Selector */}
+                <div className="flex items-center gap-4 px-4 py-3 rounded-lg border" style={{
+                  borderColor: `hsl(var(--warning) / 0.3)`,
+                  backgroundColor: `hsl(var(--warning) / 0.05)`,
+                }}>
+                  <span className="text-sm font-medium text-muted-foreground">Select Country:</span>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant={selectedGCCCountry === "uae" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("uae")} size="sm" className="gap-2">🇦🇪 UAE</Button>
+                    <Button variant={selectedGCCCountry === "saudi" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("saudi")} size="sm" className="gap-2">🇸🇦 Saudi</Button>
+                    <Button variant={selectedGCCCountry === "oman" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("oman")} size="sm" className="gap-2">🇴🇲 Oman</Button>
+                    <Button variant={selectedGCCCountry === "kuwait" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("kuwait")} size="sm" className="gap-2">🇰🇼 Kuwait</Button>
+                    <Button variant={selectedGCCCountry === "bahrain" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("bahrain")} size="sm" className="gap-2">🇧🇭 Bahrain</Button>
+                    <Button variant={selectedGCCCountry === "qatar" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("qatar")} size="sm" className="gap-2">🇶🇦 Qatar</Button>
+                  </div>
+                </div>
+                
+                {/* Render country-specific section */}
+                {selectedGCCCountry === "uae" && (
+                  <UnifiedLegislationSection config={uaeConfig} items={enrichedUAEData} presets={defaultPresets} categories={regulatoryCategories} title="UAE Legislation" subtitle="United Arab Emirates regulatory monitoring" onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(uaeConfig); }} />
+                )}
+                {selectedGCCCountry === "saudi" && (
+                  <UnifiedLegislationSection config={saudiConfig} items={enrichedSaudiData} presets={defaultPresets} categories={regulatoryCategories} title="Saudi Arabia Legislation" subtitle="Kingdom of Saudi Arabia regulatory monitoring" onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(saudiConfig); }} />
+                )}
+                {selectedGCCCountry === "oman" && (
+                  <UnifiedLegislationSection config={omanConfig} items={enrichedOmanData} presets={defaultPresets} categories={regulatoryCategories} title="Oman Legislation" subtitle="Sultanate of Oman regulatory monitoring" onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(omanConfig); }} />
+                )}
+                {selectedGCCCountry === "kuwait" && (
+                  <UnifiedLegislationSection config={kuwaitConfig} items={enrichedKuwaitData} presets={defaultPresets} categories={regulatoryCategories} title="Kuwait Legislation" subtitle="State of Kuwait regulatory monitoring" onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(kuwaitConfig); }} />
+                )}
+                {selectedGCCCountry === "bahrain" && (
+                  <UnifiedLegislationSection config={bahrainConfig} items={enrichedBahrainData} presets={defaultPresets} categories={regulatoryCategories} title="Bahrain Legislation" subtitle="Kingdom of Bahrain regulatory monitoring" onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(bahrainConfig); }} />
+                )}
+                {selectedGCCCountry === "qatar" && (
+                  <UnifiedLegislationSection config={qatarConfig} items={enrichedQatarData} presets={defaultPresets} categories={regulatoryCategories} title="Qatar Legislation" subtitle="State of Qatar regulatory monitoring" onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(qatarConfig); }} />
+                )}
+              </div>
             )}
 
             {/* Japan Section */}
             {selectedCountry === "japan" && (
               <UnifiedLegislationSection
                 config={japanConfig}
-                items={unifiedJapanData}
+                items={enrichedJapanData}
                 presets={defaultPresets}
                 categories={regulatoryCategories}
                 title="Japan Legislation"
                 subtitle="Japanese regulatory monitoring"
+                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(japanConfig); }}
               />
             )}
 
@@ -706,11 +796,12 @@ export default function LawMeterDashboard() {
             {selectedCountry === "korea" && (
               <UnifiedLegislationSection
                 config={apacConfig}
-                items={unifiedKoreaData}
+                items={enrichedKoreaData}
                 presets={defaultPresets}
                 categories={regulatoryCategories}
                 title="Korea Legislation"
                 subtitle="South Korean regulatory monitoring"
+                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(apacConfig); }}
               />
             )}
 
@@ -718,11 +809,12 @@ export default function LawMeterDashboard() {
             {selectedCountry === "taiwan" && (
               <UnifiedLegislationSection
                 config={apacConfig}
-                items={unifiedTaiwanData}
+                items={enrichedTaiwanData}
                 presets={defaultPresets}
                 categories={regulatoryCategories}
                 title="Taiwan Legislation"
                 subtitle="Taiwanese regulatory monitoring"
+                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(apacConfig); }}
               />
             )}
 
@@ -730,11 +822,12 @@ export default function LawMeterDashboard() {
             {selectedCountry === "eu" && (
               <UnifiedLegislationSection
                 config={euConfig}
-                items={unifiedEUData}
+                items={enrichedEUData}
                 presets={defaultPresets}
                 categories={regulatoryCategories}
                 title="European Union Legislation"
                 subtitle="EU regulations, directives, and decisions"
+                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(euConfig); }}
               />
             )}
           </TabsContent>
@@ -912,6 +1005,14 @@ export default function LawMeterDashboard() {
             comments={selectedBill ? starredHooks.getComments("BILLS", selectedBill.id) : []}
             onAddComment={(vis, body) => selectedBill && starredHooks.addComment("BILLS", selectedBill.id, vis, body)}
             onDeleteComment={(id) => selectedBill && starredHooks.deleteComment("BILLS", selectedBill.id, id)}
+          />
+
+          {/* Unified Legislation Drawer for all jurisdictions */}
+          <UnifiedLegislationDrawer
+            item={selectedUnifiedItem}
+            config={unifiedDrawerConfig || usaConfig}
+            open={!!selectedUnifiedItem}
+            onOpenChange={(open) => !open && setSelectedUnifiedItem(null)}
           />
 
           <AlertSettingsDialog 
