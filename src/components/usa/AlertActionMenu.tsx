@@ -10,12 +10,10 @@ import {
   MoreVertical,
   Mail, 
   MailOpen,
-  Star, 
   RefreshCw, 
   Trash2, 
   Flag
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface AlertActionMenuProps {
   isRead: boolean;
@@ -29,9 +27,7 @@ interface AlertActionMenuProps {
 
 export function AlertActionMenu({
   isRead,
-  isStarred,
   onMarkRead,
-  onToggleStar,
   onDelete,
   onRefresh,
   onReport
@@ -67,7 +63,7 @@ export function AlertActionMenu({
           </Button>
         )}
         
-        {/* Expanded state - show all actions */}
+        {/* Expanded state - show all actions (without star, which is now outside) */}
         {isExpanded && (
           <div className="flex items-center gap-0.5 bg-muted/80 backdrop-blur-sm rounded-md p-0.5 animate-in fade-in-0 zoom-in-95 duration-150">
             <Tooltip>
@@ -87,25 +83,6 @@ export function AlertActionMenu({
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
                 {isRead ? "Mark as unread" : "Mark as read"}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
-                >
-                  <Star className={cn(
-                    "h-3.5 w-3.5",
-                    isStarred ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"
-                  )} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                {isStarred ? "Remove from starred" : "Add to starred"}
               </TooltipContent>
             </Tooltip>
 

@@ -255,9 +255,10 @@ export default function LawMeterDashboard() {
               }}
             />
 
-            {/* Regional Selector */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 mb-4 flex-wrap">
+            {/* Regional and Country Selector */}
+            <div className="flex flex-wrap items-start gap-6">
+              {/* Region Selector */}
+              <div className="flex items-center gap-4 flex-wrap">
                 <span className="text-sm font-medium text-muted-foreground">Select Region:</span>
                 <div className="flex gap-2 flex-wrap">
                   <Button
@@ -305,67 +306,72 @@ export default function LawMeterDashboard() {
                 </div>
               </div>
 
-              {/* Country Selector within Region */}
-              {selectedRegion === "nam" && (
-                <div className="flex gap-2 ml-8">
-                  <Button
-                    variant={selectedCountry === "usa" ? "secondary" : "ghost"}
-                    onClick={() => setSelectedCountry("usa")}
-                    size="sm"
-                    className="gap-2 flex-1 max-w-[150px]"
-                  >
-                    🇺🇸 USA
-                  </Button>
-                  <Button
-                    variant={selectedCountry === "canada" ? "secondary" : "ghost"}
-                    onClick={() => setSelectedCountry("canada")}
-                    size="sm"
-                    className="gap-2 flex-1 max-w-[150px]"
-                  >
-                    🇨🇦 Canada
-                  </Button>
-                </div>
-              )}
-
-              {selectedRegion === "latam" && (
-                <div className="flex gap-2 ml-8">
-                  <Button
-                    variant={selectedCountry === "costa-rica" ? "secondary" : "ghost"}
-                    onClick={() => setSelectedCountry("costa-rica")}
-                    size="sm"
-                    className="gap-2"
-                  >
-                    🇨🇷 Costa Rica
-                  </Button>
-                  <Button
-                    variant={selectedCountry === "peru" ? "secondary" : "ghost"}
-                    onClick={() => setSelectedCountry("peru")}
-                    size="sm"
-                    className="gap-2"
-                  >
-                    🇵🇪 Perú
-                  </Button>
-                </div>
-              )}
-
-              {selectedRegion === "apac" && (
-                <div className="flex gap-2 ml-8">
-                  <Button
-                    variant={selectedCountry === "korea" ? "secondary" : "ghost"}
-                    onClick={() => setSelectedCountry("korea")}
-                    size="sm"
-                    className="gap-2"
-                  >
-                    🇰🇷 Korea
-                  </Button>
-                  <Button
-                    variant={selectedCountry === "taiwan" ? "secondary" : "ghost"}
-                    onClick={() => setSelectedCountry("taiwan")}
-                    size="sm"
-                    className="gap-2"
-                  >
-                    🇹🇼 Taiwan
-                  </Button>
+              {/* Country Selector - Always visible when region has multiple countries */}
+              {(selectedRegion === "nam" || selectedRegion === "latam" || selectedRegion === "apac") && (
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-muted-foreground">Select a Country:</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {selectedRegion === "nam" && (
+                      <>
+                        <Button
+                          variant={selectedCountry === "usa" ? "secondary" : "ghost"}
+                          onClick={() => setSelectedCountry("usa")}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          🇺🇸 USA
+                        </Button>
+                        <Button
+                          variant={selectedCountry === "canada" ? "secondary" : "ghost"}
+                          onClick={() => setSelectedCountry("canada")}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          🇨🇦 Canada
+                        </Button>
+                      </>
+                    )}
+                    {selectedRegion === "latam" && (
+                      <>
+                        <Button
+                          variant={selectedCountry === "costa-rica" ? "secondary" : "ghost"}
+                          onClick={() => setSelectedCountry("costa-rica")}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          🇨🇷 Costa Rica
+                        </Button>
+                        <Button
+                          variant={selectedCountry === "peru" ? "secondary" : "ghost"}
+                          onClick={() => setSelectedCountry("peru")}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          🇵🇪 Perú
+                        </Button>
+                      </>
+                    )}
+                    {selectedRegion === "apac" && (
+                      <>
+                        <Button
+                          variant={selectedCountry === "korea" ? "secondary" : "ghost"}
+                          onClick={() => setSelectedCountry("korea")}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          🇰🇷 Korea
+                        </Button>
+                        <Button
+                          variant={selectedCountry === "taiwan" ? "secondary" : "ghost"}
+                          onClick={() => setSelectedCountry("taiwan")}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          🇹🇼 Taiwan
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

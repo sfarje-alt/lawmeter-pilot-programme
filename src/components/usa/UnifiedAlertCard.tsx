@@ -12,13 +12,21 @@ import {
   Loader2,
   ChevronRight,
   Tag,
-  FileText
+  FileText,
+  Star,
+  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertActionMenu } from "./AlertActionMenu";
 import { useAISummary } from "@/hooks/useAISummary";
-import { USLegislationItem } from "@/types/usaLegislation";
+import { USLegislationItem, documentTypeLabels } from "@/types/usaLegislation";
 import { CongressBill } from "@/types/congress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface UnifiedAlertCardProps {
   isRead: boolean;
@@ -31,15 +39,16 @@ interface UnifiedAlertCardProps {
   onViewDetails: () => void;
   mockItem?: USLegislationItem;
   congressBill?: CongressBill;
+  viewMode?: "list" | "grid";
 }
 
-// Document type icons
-const docTypeIcons: Record<string, string> = {
-  bill: "📜",
-  statute: "⚖️",
-  regulation: "📋",
-  treaty: "🤝",
-  ordinance: "🏛️"
+// Document type labels for badge
+const docTypeLabels: Record<string, string> = {
+  bill: "Bill",
+  statute: "Statute",
+  regulation: "Regulation",
+  treaty: "Treaty",
+  ordinance: "Ordinance"
 };
 
 // Pipeline stages for different document types
@@ -90,7 +99,7 @@ function getStageIndex(status: string, docType: string): number {
 // Normalize data from both sources to a common structure
 interface NormalizedAlertData {
   id: string;
-  identifier: string; // Bill/law number (e.g., "H.R. 1234", "S. 567", "P.L. 118-45")
+  identifier: string;
   title: string;
   documentType: string;
   billTextUrl?: string;
@@ -213,7 +222,8 @@ export function UnifiedAlertCard({
   onReport,
   onViewDetails,
   mockItem,
-  congressBill
+  congressBill,
+  viewMode = "list"
 }: UnifiedAlertCardProps) {
   const data = useMemo(() => normalizeData(mockItem, congressBill), [mockItem, congressBill]);
   
@@ -285,16 +295,12 @@ export function UnifiedAlertCard({
   return (
     <Card 
       className={cn(
-        "transition-all hover:shadow-lg cursor-pointer",
+        "transition-all hover:shadow-lg",
         !isRead && "bg-primary/5 border-primary/20 border-l-4 border-l-primary"
       )}
-      onClick={() => {
-        onMarkRead();
-        onViewDetails();
-      }}
     >
       <CardHeader className="pb-2 pt-3">
-        {/* Row 1: Lifecycle badge + Bill Identifier + Action Menu */}
+        {/* Row 1: Lifecycle badge + Bill Identifier + Type Badge + Star + Action Menu */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Lifecycle badge */}
@@ -310,15 +316,40 @@ export function UnifiedAlertCard({
               {data.lifecycle}
             </Badge>
             
-            {/* Bill/Law Identifier (replaces status icon) */}
-            <Badge variant="secondary" className="text-xs font-mono gap-1">
-              <FileText className="h-3 w-3" />
+            {/* Bill/Law Identifier - neutral color */}
+            <Badge variant="outline" className="text-xs font-mono text-muted-foreground">
               {data.identifier}
+            </Badge>
+
+            {/* Document Type Badge */}
+            <Badge variant="secondary" className="text-xs gap-1">
+              <FileText className="h-3 w-3" />
+              {docTypeLabels[data.documentType] || data.documentType}
             </Badge>
           </div>
 
-          {/* Consolidated Action Menu (click to open) */}
-          <div onClick={(e) => e.stopPropagation()}>
+          {/* Star Button (outside menu) + Action Menu */}
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
+                  >
+                    <Star className={cn(
+                      "h-4 w-4",
+                      isStarred ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"
+                    )} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {isStarred ? "Remove from starred" : "Add to starred"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <AlertActionMenu
               isRead={isRead}
               isStarred={isStarred}
@@ -331,13 +362,10 @@ export function UnifiedAlertCard({
           </div>
         </div>
 
-        {/* Row 2: Document type icon + Full Title (no truncation) */}
-        <div className="flex items-start gap-2">
-          <span className="text-xl flex-shrink-0">{docTypeIcons[data.documentType] || "📄"}</span>
-          <h3 className="text-base font-semibold leading-tight hover:text-primary transition-colors">
-            {data.title}
-          </h3>
-        </div>
+        {/* Row 2: Full Title (no truncation) */}
+        <h3 className="text-base font-semibold leading-tight hover:text-primary transition-colors">
+          {data.title}
+        </h3>
 
         {/* Row 3: Jurisdiction line */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
@@ -389,8 +417,8 @@ export function UnifiedAlertCard({
           )}
         </div>
 
-        {/* Legislative Status Tracker - Only for Pipeline items */}
-        {!data.isInForce && data.stages && (
+        {/* Legislative Status Tracker - Only for Pipeline items in list mode */}
+        {!data.isInForce && data.stages && viewMode === "list" && (
           <div className="bg-muted/20 p-3 rounded-md border border-border/30">
             <div className="text-xs font-medium text-muted-foreground mb-2">Legislative Progress</div>
             <div className="flex items-center gap-0.5">
@@ -425,7 +453,7 @@ export function UnifiedAlertCard({
           </div>
         )}
 
-        {/* Footer Row: Date + Deadline + Policy Area + Risk */}
+        {/* Footer Row: Date + Deadline + Policy Area + Risk + Details Button */}
         <div className="flex items-center justify-between gap-2 flex-wrap text-xs pt-1">
           <div className="flex items-center gap-3 text-muted-foreground flex-wrap">
             <div className="flex items-center gap-1">
@@ -440,7 +468,7 @@ export function UnifiedAlertCard({
               </div>
             )}
             
-            {/* Policy Area badge - always show */}
+            {/* Policy Area badge */}
             <Badge variant="outline" className="text-xs py-0 gap-1">
               <Tag className="h-2.5 w-2.5" />
               {data.policyArea}
@@ -466,6 +494,21 @@ export function UnifiedAlertCard({
                 Congress.gov
               </Button>
             )}
+
+            {/* Details Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 px-2 text-xs gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkRead();
+                onViewDetails();
+              }}
+            >
+              <Eye className="h-3 w-3" />
+              Details
+            </Button>
           </div>
         </div>
       </CardContent>

@@ -119,7 +119,7 @@ export function WorldMap({ legislation, onSelectRegion }: WorldMapProps) {
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <Globe className="w-4 h-4" />
-          National / Federal Alert Distribution
+          Tracked Jurisdictions
           <span className="text-xs text-muted-foreground ml-2">(Click a country to navigate, scroll to zoom)</span>
         </CardTitle>
         <div className="flex gap-1 ml-auto">
