@@ -35,26 +35,20 @@ export function RegionSelector({
               key={regionCode}
               variant="ghost"
               className={cn(
-                "w-full justify-between h-auto py-2 px-3 transition-all",
+                "w-full justify-between h-auto py-2 px-3 transition-colors",
                 isSelected && "bg-muted"
               )}
               onClick={() => onSelectRegion(regionCode)}
             >
               <div className="flex items-center gap-2">
                 <RegionIcon region={regionCode} size={18} showCode={false} />
-                <div className="text-left">
-                  <div className="text-sm font-medium">{theme.name}</div>
-                  <div className="text-[10px] text-muted-foreground">{theme.tone}</div>
-                </div>
+                <span className="text-sm font-medium">{theme.name}</span>
               </div>
               <div className="flex items-center gap-2">
                 {count > 0 && (
                   <span 
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={{ 
-                      backgroundColor: `color-mix(in srgb, ${theme.primaryColor} 20%, transparent)`,
-                      color: theme.primaryColor
-                    }}
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted"
+                    style={{ color: theme.primaryColor }}
                   >
                     {count}
                   </span>
@@ -82,34 +76,29 @@ export function RegionSelector({
           return (
             <Button
               key={regionCode}
-              variant={isSelected ? "default" : "outline"}
+              variant={isSelected ? "default" : "ghost"}
               size="sm"
               className={cn(
-                "flex-shrink-0 gap-2 h-10 px-3 transition-all",
-                isSelected && "ring-2 ring-offset-2 ring-offset-background"
+                "flex-shrink-0 gap-2 h-9 px-3 transition-colors border",
+                isSelected 
+                  ? "text-white border-transparent" 
+                  : "border-border/50 hover:bg-muted"
               )}
               style={isSelected ? {
                 backgroundColor: theme.primaryColor,
-                borderColor: theme.primaryColor,
-                color: 'white',
-                // @ts-ignore - CSS custom property for ring color
-                '--tw-ring-color': theme.primaryColor
-              } as React.CSSProperties : {
-                borderColor: `color-mix(in srgb, ${theme.primaryColor} 40%, transparent)`,
+              } : {
                 color: theme.primaryColor
               }}
               onClick={() => onSelectRegion(regionCode)}
             >
               <RegionIcon region={regionCode} size={16} showCode={false} />
-              <span className="font-semibold">{regionCode}</span>
+              <span className="font-medium">{regionCode}</span>
               {count > 0 && (
                 <span 
-                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                  style={{ 
-                    backgroundColor: isSelected 
-                      ? 'rgba(255,255,255,0.2)' 
-                      : `color-mix(in srgb, ${theme.primaryColor} 15%, transparent)`,
-                  }}
+                  className={cn(
+                    "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                    isSelected ? "bg-white/20" : "bg-muted"
+                  )}
                 >
                   {count}
                 </span>
