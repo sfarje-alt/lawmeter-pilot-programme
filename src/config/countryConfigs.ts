@@ -64,7 +64,13 @@ export const uaeConfig: JurisdictionConfig = {
     status: "Status",
     subnational: "Emirate",
     authority: "Issuing Body"
-  }
+  },
+  
+  jurisdictionLevels: [
+    { id: "federal", label: "Federal", enabled: true },
+    { id: "state", label: "Emirate", enabled: true },
+    { id: "local", label: "Free Zone", enabled: false }
+  ]
 };
 
 // ========== SAUDI ARABIA CONFIGURATION ==========
@@ -121,7 +127,14 @@ export const saudiConfig: JurisdictionConfig = {
     status: "Status",
     subnational: "Region",
     authority: "Issuing Body"
-  }
+  },
+  
+  // Saudi Arabia is largely centralized
+  jurisdictionLevels: [
+    { id: "federal", label: "National", enabled: true },
+    { id: "state", label: "Region", enabled: false },
+    { id: "local", label: "Municipal", enabled: false }
+  ]
 };
 
 // ========== OMAN CONFIGURATION ==========
@@ -175,7 +188,13 @@ export const omanConfig: JurisdictionConfig = {
     status: "Status",
     subnational: "Governorate",
     authority: "Issuing Body"
-  }
+  },
+  
+  jurisdictionLevels: [
+    { id: "federal", label: "National", enabled: true },
+    { id: "state", label: "Governorate", enabled: false },
+    { id: "local", label: "Local", enabled: false }
+  ]
 };
 
 // ========== KUWAIT CONFIGURATION ==========
@@ -228,7 +247,13 @@ export const kuwaitConfig: JurisdictionConfig = {
     status: "Status",
     subnational: "Governorate",
     authority: "Issuing Body"
-  }
+  },
+  
+  jurisdictionLevels: [
+    { id: "federal", label: "National", enabled: true },
+    { id: "state", label: "Governorate", enabled: false },
+    { id: "local", label: "Local", enabled: false }
+  ]
 };
 
 // ========== BAHRAIN CONFIGURATION ==========
@@ -283,7 +308,13 @@ export const bahrainConfig: JurisdictionConfig = {
     status: "Status",
     subnational: "Governorate",
     authority: "Issuing Body"
-  }
+  },
+  
+  jurisdictionLevels: [
+    { id: "federal", label: "National", enabled: true },
+    { id: "state", label: "Governorate", enabled: false },
+    { id: "local", label: "Local", enabled: false }
+  ]
 };
 
 // ========== QATAR CONFIGURATION ==========
@@ -338,7 +369,13 @@ export const qatarConfig: JurisdictionConfig = {
     status: "Status",
     subnational: "Municipality",
     authority: "Issuing Body"
-  }
+  },
+  
+  jurisdictionLevels: [
+    { id: "federal", label: "National", enabled: true },
+    { id: "state", label: "Municipality", enabled: false },
+    { id: "local", label: "Local", enabled: false }
+  ]
 };
 
 // ========== COSTA RICA CONFIGURATION ==========
@@ -408,7 +445,169 @@ export const costaRicaConfig: JurisdictionConfig = {
     status: "Estado",
     subnational: "Provincia",
     authority: "Ente Emisor"
-  }
+  },
+  
+  // Costa Rica is unitary - mostly national legislation
+  jurisdictionLevels: [
+    { id: "federal", label: "Nacional", enabled: true },
+    { id: "state", label: "Provincial", enabled: false },
+    { id: "local", label: "Cantonal", enabled: true }
+  ]
+};
+
+// ========== KOREA CONFIGURATION ==========
+export const koreaConfig: JurisdictionConfig = {
+  code: "KR",
+  name: "South Korea",
+  region: "APAC",
+  legalSystem: "civil-law",
+  
+  instrumentTypes: [
+    { id: "law", label: "법률 (Law)", emoji: "⚖️", hierarchyLevel: "primary" },
+    { id: "bill", label: "법안 (Bill)", emoji: "📜", hierarchyLevel: "primary" },
+    { id: "presidential-decree", label: "대통령령 (Presidential Decree)", emoji: "📋", hierarchyLevel: "secondary" },
+    { id: "ministerial-ordinance", label: "부령 (Ministerial Ordinance)", emoji: "📄", hierarchyLevel: "secondary" },
+    { id: "kats-standard", label: "KS 표준 (KS Standard)", emoji: "✅", hierarchyLevel: "tertiary" },
+    { id: "notice", label: "고시 (Notice)", emoji: "📢", hierarchyLevel: "tertiary" },
+    { id: "guideline", label: "지침 (Guideline)", emoji: "💡", hierarchyLevel: "soft-law" }
+  ],
+  
+  statusMappings: [
+    { localStatus: "Proposed", genericStatus: "proposal", label: "발의 (Proposed)" },
+    { localStatus: "Committee Review", genericStatus: "in-committee", label: "위원회 심사 (Committee Review)" },
+    { localStatus: "Plenary Session", genericStatus: "approved", label: "본회의 (Plenary Session)" },
+    { localStatus: "Promulgated", genericStatus: "in-force", label: "공포 (Promulgated)" },
+    { localStatus: "In Force", genericStatus: "in-force", label: "시행 (In Force)" },
+    { localStatus: "Draft", genericStatus: "draft", label: "초안 (Draft)" },
+    { localStatus: "Abolished", genericStatus: "repealed", label: "폐지 (Abolished)" }
+  ],
+  
+  pipelineStages: [
+    { stages: ["발의 (Proposed)", "위원회 (Committee)", "법사위 (Judiciary)", "본회의 (Plenary)", "공포 (Promulgated)", "시행 (In Force)"], instrumentType: "bill" }
+  ],
+  
+  // Korea is a unitary state - no true subnational legislation
+  // But has metropolitan cities and provinces for local ordinances
+  subnationalUnits: {
+    label: "Metropolitan City/Province",
+    units: [
+      { code: "SEL", name: "Seoul (서울)" }, { code: "BSN", name: "Busan (부산)" },
+      { code: "DGU", name: "Daegu (대구)" }, { code: "ICN", name: "Incheon (인천)" },
+      { code: "GJU", name: "Gwangju (광주)" }, { code: "DJN", name: "Daejeon (대전)" },
+      { code: "ULS", name: "Ulsan (울산)" }, { code: "SJN", name: "Sejong (세종)" },
+      { code: "GGI", name: "Gyeonggi (경기)" }, { code: "GWD", name: "Gangwon (강원)" }
+    ]
+  },
+  
+  authorityLabels: {
+    assembly: "국회 (National Assembly)",
+    president: "대통령실 (Presidential Office)",
+    ministry: "부처 (Ministry)",
+    kats: "국가기술표준원 (KATS)",
+    msit: "과학기술정보통신부 (MSIT)",
+    mfds: "식품의약품안전처 (MFDS)"
+  },
+  
+  hierarchyLabels: {
+    constitutional: "헌법 (Constitution)",
+    primary: "법률 (Law)",
+    secondary: "대통령령/부령 (Decree/Ordinance)",
+    tertiary: "고시/표준 (Notice/Standard)",
+    "soft-law": "지침 (Guideline)",
+    "case-law": "판례 (Case Law)"
+  },
+  
+  filterLabels: {
+    instrumentType: "문서 유형 (Document Type)",
+    hierarchy: "규범 수준 (Norm Level)",
+    status: "상태 (Status)",
+    subnational: "시/도 (Region)",
+    authority: "발행 기관 (Authority)"
+  },
+  
+  // Korea is unitary - national legislation is primary
+  jurisdictionLevels: [
+    { id: "federal", label: "국가 (National)", enabled: true },
+    { id: "state", label: "시/도 (Metro/Province)", enabled: true },
+    { id: "local", label: "시/군/구 (Municipal)", enabled: true }
+  ]
+};
+
+// ========== TAIWAN CONFIGURATION ==========
+export const taiwanConfig: JurisdictionConfig = {
+  code: "TW",
+  name: "Taiwan",
+  region: "APAC",
+  legalSystem: "civil-law",
+  
+  instrumentTypes: [
+    { id: "law", label: "法律 (Law)", emoji: "⚖️", hierarchyLevel: "primary" },
+    { id: "bill", label: "法案 (Bill)", emoji: "📜", hierarchyLevel: "primary" },
+    { id: "decree", label: "命令 (Decree/Order)", emoji: "📋", hierarchyLevel: "secondary" },
+    { id: "regulation", label: "規則 (Regulation)", emoji: "📄", hierarchyLevel: "secondary" },
+    { id: "cns-standard", label: "CNS 標準 (CNS Standard)", emoji: "✅", hierarchyLevel: "tertiary" },
+    { id: "notice", label: "公告 (Notice)", emoji: "📢", hierarchyLevel: "tertiary" },
+    { id: "guideline", label: "指引 (Guideline)", emoji: "💡", hierarchyLevel: "soft-law" }
+  ],
+  
+  statusMappings: [
+    { localStatus: "Proposed", genericStatus: "proposal", label: "提案 (Proposed)" },
+    { localStatus: "Committee Review", genericStatus: "in-committee", label: "委員會審查 (Committee Review)" },
+    { localStatus: "Second Reading", genericStatus: "in-committee", label: "二讀 (Second Reading)" },
+    { localStatus: "Third Reading", genericStatus: "approved", label: "三讀 (Third Reading)" },
+    { localStatus: "Promulgated", genericStatus: "in-force", label: "公布 (Promulgated)" },
+    { localStatus: "In Force", genericStatus: "in-force", label: "施行 (In Force)" },
+    { localStatus: "Draft", genericStatus: "draft", label: "草案 (Draft)" },
+    { localStatus: "Abolished", genericStatus: "repealed", label: "廢止 (Abolished)" }
+  ],
+  
+  pipelineStages: [
+    { stages: ["提案 (Proposed)", "一讀 (1st Reading)", "委員會 (Committee)", "二讀 (2nd Reading)", "三讀 (3rd Reading)", "公布 (Promulgated)"], instrumentType: "bill" }
+  ],
+  
+  // Taiwan is unitary - counties/cities for local matters only
+  subnationalUnits: {
+    label: "County/City",
+    units: [
+      { code: "TPE", name: "Taipei (臺北)" }, { code: "NWT", name: "New Taipei (新北)" },
+      { code: "TYN", name: "Taoyuan (桃園)" }, { code: "TXG", name: "Taichung (臺中)" },
+      { code: "TNN", name: "Tainan (臺南)" }, { code: "KHH", name: "Kaohsiung (高雄)" },
+      { code: "HSZ", name: "Hsinchu (新竹)" }, { code: "KEL", name: "Keelung (基隆)" }
+    ]
+  },
+  
+  authorityLabels: {
+    yuan: "立法院 (Legislative Yuan)",
+    executive: "行政院 (Executive Yuan)",
+    ministry: "部會 (Ministry)",
+    bsmi: "標準檢驗局 (BSMI)",
+    ncc: "通傳會 (NCC)",
+    tfda: "食藥署 (TFDA)"
+  },
+  
+  hierarchyLabels: {
+    constitutional: "憲法 (Constitution)",
+    primary: "法律 (Law)",
+    secondary: "命令/規則 (Decree/Regulation)",
+    tertiary: "公告/標準 (Notice/Standard)",
+    "soft-law": "指引 (Guideline)",
+    "case-law": "判例 (Case Law)"
+  },
+  
+  filterLabels: {
+    instrumentType: "文件類型 (Document Type)",
+    hierarchy: "規範層級 (Norm Level)",
+    status: "狀態 (Status)",
+    subnational: "縣市 (County/City)",
+    authority: "發布機關 (Authority)"
+  },
+  
+  // Taiwan is unitary
+  jurisdictionLevels: [
+    { id: "federal", label: "中央 (Central)", enabled: true },
+    { id: "state", label: "直轄市/縣市 (Municipality/County)", enabled: true },
+    { id: "local", label: "鄉鎮市區 (Township)", enabled: false }
+  ]
 };
 
 // Export all configs as a map
@@ -421,4 +620,10 @@ export const gccCountryConfigs = {
   qatar: qatarConfig
 };
 
+export const apacCountryConfigs = {
+  korea: koreaConfig,
+  taiwan: taiwanConfig
+};
+
 export type GCCCountryCode = keyof typeof gccCountryConfigs;
+export type APACCountryCode = keyof typeof apacCountryConfigs;

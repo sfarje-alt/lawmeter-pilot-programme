@@ -163,25 +163,45 @@ export function UnifiedLegislationFilters({
           </Tabs>
         </div>
 
-        {/* Jurisdiction Level Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Level:</span>
-          <Tabs 
-            value={filters.jurisdictionLevel} 
-            onValueChange={(v) => updateFilter("jurisdictionLevel", v as any)}
-          >
-            <TabsList className="h-8">
-              <TabsTrigger value="all" className="text-xs px-3">All</TabsTrigger>
-              <TabsTrigger value="federal" className="text-xs px-3">Federal</TabsTrigger>
-              {config.subnationalUnits && (
-                <TabsTrigger value="state" className="text-xs px-3">
-                  {config.filterLabels.subnational}
-                </TabsTrigger>
-              )}
-              <TabsTrigger value="local" className="text-xs px-3">Local</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        {/* Jurisdiction Level Filter - Adapted per jurisdiction */}
+        {config.jurisdictionLevels && config.jurisdictionLevels.some(l => l.enabled) && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Level:</span>
+            <Tabs 
+              value={filters.jurisdictionLevel} 
+              onValueChange={(v) => updateFilter("jurisdictionLevel", v as any)}
+            >
+              <TabsList className="h-8">
+                <TabsTrigger value="all" className="text-xs px-3">All</TabsTrigger>
+                {config.jurisdictionLevels.filter(l => l.enabled).map(level => (
+                  <TabsTrigger key={level.id} value={level.id} className="text-xs px-3">
+                    {level.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
+        {/* Fallback for configs without jurisdictionLevels */}
+        {!config.jurisdictionLevels && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Level:</span>
+            <Tabs 
+              value={filters.jurisdictionLevel} 
+              onValueChange={(v) => updateFilter("jurisdictionLevel", v as any)}
+            >
+              <TabsList className="h-8">
+                <TabsTrigger value="all" className="text-xs px-3">All</TabsTrigger>
+                <TabsTrigger value="federal" className="text-xs px-3">National</TabsTrigger>
+                {config.subnationalUnits && (
+                  <TabsTrigger value="state" className="text-xs px-3">
+                    {config.filterLabels.subnational}
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
       </div>
 
       {/* Row 2: Core Filter Chips */}

@@ -82,6 +82,8 @@ import {
   bahrainConfig,
   qatarConfig,
   costaRicaConfig,
+  koreaConfig,
+  taiwanConfig,
   GCCCountryCode
 } from "@/config/countryConfigs";
 import {
@@ -546,26 +548,26 @@ export default function LawMeterDashboard() {
             {/* Korea Section */}
             {selectedCountry === "korea" && (
               <UnifiedLegislationSection
-                config={apacConfig}
+                config={koreaConfig}
                 items={enrichedKoreaData}
                 presets={defaultPresets}
                 categories={regulatoryCategories}
                 title="Korea Legislation"
-                subtitle="South Korean regulatory monitoring"
-                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(apacConfig); }}
+                subtitle="대한민국 법률 모니터링 (South Korean regulatory monitoring)"
+                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(koreaConfig); }}
               />
             )}
 
             {/* Taiwan Section */}
             {selectedCountry === "taiwan" && (
               <UnifiedLegislationSection
-                config={apacConfig}
+                config={taiwanConfig}
                 items={enrichedTaiwanData}
                 presets={defaultPresets}
                 categories={regulatoryCategories}
                 title="Taiwan Legislation"
-                subtitle="Taiwanese regulatory monitoring"
-                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(apacConfig); }}
+                subtitle="臺灣法規監測 (Taiwanese regulatory monitoring)"
+                onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(taiwanConfig); }}
               />
             )}
 
