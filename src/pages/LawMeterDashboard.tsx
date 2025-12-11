@@ -101,10 +101,8 @@ import {
   defaultPresets,
   convertToEnrichedUnified
 } from "@/data/enrichedMockData";
+import { enrichedCostaRicaData } from "@/data/costaRicaEnrichedData";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
-
-// Costa Rica mock data (using alerts for normas)
-const costaRicaEnrichedData: UnifiedLegislationItem[] = [];
 
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
@@ -115,7 +113,7 @@ export default function LawMeterDashboard() {
   const [selectedCountry, setSelectedCountry] = useState<"usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu">("usa");
   const [selectedGCCCountry, setSelectedGCCCountry] = useState<GCCCountryCode>("uae");
   const [usaDataSource, setUsaDataSource] = useState<"congress" | "mock">("congress");
-  const [costaRicaSubTab, setCostaRicaSubTab] = useState<"normas" | "proyectos">("normas");
+  
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
   const [selectedUnifiedItem, setSelectedUnifiedItem] = useState<UnifiedLegislationItem | null>(null);
@@ -475,267 +473,20 @@ export default function LawMeterDashboard() {
               />
             )}
 
-            {/* Costa Rica Section */}
+            {/* Costa Rica Section - Unified System */}
             {selectedCountry === "costa-rica" && (
-              <div className="space-y-4">
-                <RegionHeader region="LATAM" title="Costa Rica Legislation" alertCount={filteredAlerts.length + filteredBills.length} />
-                <Tabs value={costaRicaSubTab} onValueChange={(v) => setCostaRicaSubTab(v as "normas" | "proyectos")} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6 glass-card p-1 gap-1">
-                    <TabsTrigger value="normas" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Normas (Legislations)
-                    </TabsTrigger>
-                    <TabsTrigger value="proyectos" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Proyectos (Bills)
-                    </TabsTrigger>
-                  </TabsList>
-
-                <TabsContent value="normas" className="space-y-6 mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Active Alerts</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.total}</div></CardContent></Card>
-                    <Card 
-                      className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("high") ? "ring-2 ring-risk-high" : ""}`}
-                      onClick={() => {
-                        setActsFilters(prev => ({
-                          ...prev,
-                          riskLevels: prev.riskLevels.includes("high") 
-                            ? prev.riskLevels.filter(r => r !== "high")
-                            : [...prev.riskLevels, "high"]
-                        }));
-                        setActsPage(1);
-                      }}
-                    >
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
-                      <CardContent><div className="text-2xl font-bold text-risk-high">{actsKPIs.highRisk}</div></CardContent>
-                    </Card>
-                    <Card 
-                      className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("medium") ? "ring-2 ring-risk-medium" : ""}`}
-                      onClick={() => {
-                        setActsFilters(prev => ({
-                          ...prev,
-                          riskLevels: prev.riskLevels.includes("medium") 
-                            ? prev.riskLevels.filter(r => r !== "medium")
-                            : [...prev.riskLevels, "medium"]
-                        }));
-                        setActsPage(1);
-                      }}
-                    >
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
-                      <CardContent><div className="text-2xl font-bold text-risk-medium">{actsKPIs.mediumRisk}</div></CardContent>
-                    </Card>
-                    <Card 
-                      className={`cursor-pointer transition-all hover:shadow-md ${actsFilters.riskLevels.includes("low") ? "ring-2 ring-risk-low" : ""}`}
-                      onClick={() => {
-                        setActsFilters(prev => ({
-                          ...prev,
-                          riskLevels: prev.riskLevels.includes("low") 
-                            ? prev.riskLevels.filter(r => r !== "low")
-                            : [...prev.riskLevels, "low"]
-                        }));
-                        setActsPage(1);
-                      }}
-                    >
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
-                      <CardContent><div className="text-2xl font-bold text-risk-low">{actsKPIs.lowRisk}</div></CardContent>
-                    </Card>
-                    <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Portfolios</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{actsKPIs.portfolios}</div></CardContent></Card>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Showing {((actsPage - 1) * actsPerPage) + 1}-{Math.min(actsPage * actsPerPage, filteredAlerts.length)} of {filteredAlerts.length}
-                      </span>
-                      <Select value={String(actsPerPage)} onValueChange={(v) => { setActsPerPage(Number(v)); setActsPage(1); }}>
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border">
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="25">25</SelectItem>
-                          <SelectItem value="50">50</SelectItem>
-                          <SelectItem value="100">100</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={actsViewMode === "list" ? "default" : "outline"}
-                        size="icon"
-                        onClick={() => setActsViewMode("list")}
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={actsViewMode === "grid" ? "default" : "outline"}
-                        size="icon"
-                        onClick={() => setActsViewMode("grid")}
-                      >
-                        <Grid className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className={actsViewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-                    {paginatedAlerts.map(alert => (
-                      <AlertActCard
-                        key={alert.title_id}
-                        alert={alert}
-                        isStarred={starredHooks.isStarred("ACTS", alert.title_id)}
-                        onToggleStar={() => starredHooks.toggleStar("ACTS", alert.title_id)}
-                        onOpenDrawer={() => setSelectedAlert(alert)}
-                        isPronouncementRead={(id) => starredHooks.isPronouncementRead("ACTS", alert.title_id, id)}
-                      />
-                    ))}
-                  </div>
-
-                  {totalActsPages > 1 && (
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setActsPage(p => Math.max(1, p - 1))}
-                        disabled={actsPage === 1}
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-sm text-muted-foreground">
-                        Page {actsPage} of {totalActsPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        onClick={() => setActsPage(p => Math.min(totalActsPages, p + 1))}
-                        disabled={actsPage === totalActsPages}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="proyectos" className="space-y-6 mt-6">
-                  <div className="bg-warning/10 border border-warning rounded-lg p-4 mb-4">
-                    <div className="flex gap-2"><AlertTriangle className="h-5 w-5 text-warning" /><div><p className="font-semibold">Demo Data</p><p className="text-sm">Bills are fictional for demonstration purposes.</p></div></div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <Card 
-                      className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.riskLevels.includes("high") ? "ring-2 ring-risk-high" : ""}`}
-                      onClick={() => {
-                        setBillsFilters(prev => ({
-                          ...prev,
-                          riskLevels: prev.riskLevels.includes("high") 
-                            ? prev.riskLevels.filter(r => r !== "high")
-                            : [...prev.riskLevels, "high"]
-                        }));
-                        setBillsPage(1);
-                      }}
-                    >
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">High Risk</CardTitle></CardHeader>
-                      <CardContent><div className="text-2xl font-bold text-risk-high">{billsKPIs.highRisk}</div></CardContent>
-                    </Card>
-                    <Card 
-                      className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.riskLevels.includes("medium") ? "ring-2 ring-risk-medium" : ""}`}
-                      onClick={() => {
-                        setBillsFilters(prev => ({
-                          ...prev,
-                          riskLevels: prev.riskLevels.includes("medium") 
-                            ? prev.riskLevels.filter(r => r !== "medium")
-                            : [...prev.riskLevels, "medium"]
-                        }));
-                        setBillsPage(1);
-                      }}
-                    >
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Medium Risk</CardTitle></CardHeader>
-                      <CardContent><div className="text-2xl font-bold text-risk-medium">{billsKPIs.mediumRisk}</div></CardContent>
-                    </Card>
-                    <Card 
-                      className={`cursor-pointer transition-all hover:shadow-md ${billsFilters.riskLevels.includes("low") ? "ring-2 ring-risk-low" : ""}`}
-                      onClick={() => {
-                        setBillsFilters(prev => ({
-                          ...prev,
-                          riskLevels: prev.riskLevels.includes("low") 
-                            ? prev.riskLevels.filter(r => r !== "low")
-                            : [...prev.riskLevels, "low"]
-                        }));
-                        setBillsPage(1);
-                      }}
-                    >
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Low Risk</CardTitle></CardHeader>
-                      <CardContent><div className="text-2xl font-bold text-risk-low">{billsKPIs.lowRisk}</div></CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Showing {((billsPage - 1) * billsPerPage) + 1}-{Math.min(billsPage * billsPerPage, filteredBills.length)} of {filteredBills.length}
-                      </span>
-                      <Select value={String(billsPerPage)} onValueChange={(v) => { setBillsPerPage(Number(v)); setBillsPage(1); }}>
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border">
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="25">25</SelectItem>
-                          <SelectItem value="50">50</SelectItem>
-                          <SelectItem value="100">100</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={billsViewMode === "list" ? "default" : "outline"}
-                        size="icon"
-                        onClick={() => setBillsViewMode("list")}
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={billsViewMode === "grid" ? "default" : "outline"}
-                        size="icon"
-                        onClick={() => setBillsViewMode("grid")}
-                      >
-                        <Grid className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className={billsViewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-                    {paginatedBills.map(bill => (
-                      <BillCard
-                        key={bill.id}
-                        bill={bill}
-                        isStarred={starredHooks.isStarred("BILLS", bill.id)}
-                        onToggleStar={() => starredHooks.toggleStar("BILLS", bill.id)}
-                        onOpenDrawer={() => setSelectedBill(bill)}
-                      />
-                    ))}
-                  </div>
-
-                  {totalBillsPages > 1 && (
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setBillsPage(p => Math.max(1, p - 1))}
-                        disabled={billsPage === 1}
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-sm text-muted-foreground">
-                        Page {billsPage} of {totalBillsPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        onClick={() => setBillsPage(p => Math.min(totalBillsPages, p + 1))}
-                        disabled={billsPage === totalBillsPages}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-              </div>
+              <UnifiedLegislationSection
+                config={costaRicaConfig}
+                items={enrichedCostaRicaData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="Costa Rica Legislation"
+                subtitle="Proyectos de Ley - Asamblea Legislativa"
+                onItemClick={(item) => {
+                  setSelectedUnifiedItem(item);
+                  setUnifiedDrawerConfig(costaRicaConfig);
+                }}
+              />
             )}
 
             {/* GCC Section - With country selector */}

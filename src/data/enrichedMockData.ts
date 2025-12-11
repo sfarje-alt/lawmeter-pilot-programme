@@ -248,7 +248,7 @@ export const enrichedKoreaData = convertToEnrichedUnified(koreaLegislation, "Kor
 export const enrichedTaiwanData = convertToEnrichedUnified(taiwanLegislation, "Taiwan", "APAC");
 export const enrichedEUData = convertToEnrichedUnified([...euRegulations, ...euDirectives], "EU", "EU");
 
-// GCC Countries - Individual datasets
+// GCC Countries - Individual datasets with unique IDs
 export const enrichedUAEData = convertToEnrichedUnified(uaeLegislation, "UAE", "GCC");
 export const enrichedSaudiData = convertToEnrichedUnified(saudiLegislation, "Saudi Arabia", "GCC");
 export const enrichedOmanData = convertToEnrichedUnified(omanLegislation, "Oman", "GCC");
@@ -256,14 +256,14 @@ export const enrichedKuwaitData = convertToEnrichedUnified(kuwaitLegislation, "K
 export const enrichedBahrainData = convertToEnrichedUnified(bahrainLegislation, "Bahrain", "GCC");
 export const enrichedQatarData = convertToEnrichedUnified(qatarLegislation, "Qatar", "GCC");
 
-// Combined GCC data
+// Combined GCC data - ensure unique IDs by prefixing
 export const enrichedGCCData = [
-  ...enrichedUAEData,
-  ...enrichedSaudiData,
-  ...enrichedOmanData,
-  ...enrichedKuwaitData,
-  ...enrichedBahrainData,
-  ...enrichedQatarData
+  ...enrichedUAEData.map(item => ({ ...item, id: `uae-${item.id}` })),
+  ...enrichedSaudiData.map(item => ({ ...item, id: `sa-${item.id}` })),
+  ...enrichedOmanData.map(item => ({ ...item, id: `om-${item.id}` })),
+  ...enrichedKuwaitData.map(item => ({ ...item, id: `kw-${item.id}` })),
+  ...enrichedBahrainData.map(item => ({ ...item, id: `bh-${item.id}` })),
+  ...enrichedQatarData.map(item => ({ ...item, id: `qa-${item.id}` }))
 ];
 
 // Regulatory categories
