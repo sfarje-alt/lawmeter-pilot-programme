@@ -713,19 +713,31 @@ export function USALegislationSection() {
               if (v === "federal") setSelectedStates([]);
             }}>
               <TabsList className="bg-background p-1 shadow-sm">
-                <TabsTrigger value="all" className="gap-1.5 text-xs">
+                <TabsTrigger 
+                  value="all" 
+                  className="gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <Scale className="h-3.5 w-3.5" />
                   All
                 </TabsTrigger>
-                <TabsTrigger value="federal" className="gap-1.5 text-xs">
+                <TabsTrigger 
+                  value="federal" 
+                  className="gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <Building2 className="h-3.5 w-3.5" />
                   Federal
                 </TabsTrigger>
-                <TabsTrigger value="state" className="gap-1.5 text-xs">
+                <TabsTrigger 
+                  value="state" 
+                  className="gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <MapPin className="h-3.5 w-3.5" />
                   State
                 </TabsTrigger>
-                <TabsTrigger value="local" className="gap-1.5 text-xs">
+                <TabsTrigger 
+                  value="local" 
+                  className="gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <Home className="h-3.5 w-3.5" />
                   Local
                 </TabsTrigger>
