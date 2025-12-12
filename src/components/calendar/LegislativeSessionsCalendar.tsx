@@ -1128,7 +1128,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">
+          <CardTitle className="text-lg text-foreground">
             {calendarView === "daily" && format(selectedDate, "MMMM d, yyyy")}
             {calendarView === "weekly" && `Week of ${format(startOfWeek(selectedDate), "MMM d")} - ${format(endOfWeek(selectedDate), "MMM d, yyyy")}`}
             {calendarView === "monthly" && format(selectedDate, "MMMM yyyy")}
@@ -1339,7 +1339,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {selectedSessions
+                {filteredSessions
                   .sort((a, b) => a.date.getTime() - b.date.getTime())
                   .map((session, index) => (
                   <TableRow key={index}>
