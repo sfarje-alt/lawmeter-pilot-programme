@@ -199,7 +199,57 @@ export interface CostaRicaLegislationItem {
     impactosPotenciales: string;      // Quién se vería afectado y cómo
     fechaClave: string;               // Fecha relevante con contexto
     calificadorEstado: string;        // "En trámite - no aplicable hasta..." 
-    analisisRiesgo?: string;
+    
+    // Extended Peru-format fields
+    resumenEjecutivo?: string;
+    estadisticas?: {
+      empresasAfectadasEstimadas?: number;
+      costoEstimadoCumplimiento?: { min: number; max: number; moneda: string };
+      impactoMercado?: string;
+      tiempoImplementacionMeses?: number;
+      rangoSanciones?: { min: number; max: number; moneda: string };
+      puntajeComplejidad?: number;
+    };
+    analisisRiesgo?: {
+      puntajeRiesgoGeneral: number;
+      desglosePorCategoria: Array<{ categoria: string; puntaje: number; descripcion: string; estrategiaMitigacion: string }>;
+      probabilidadFiscalizacion: string;
+      responsabilidadesPotenciales: string[];
+      evaluacionRiesgoCompetitivo: string;
+    };
+    analisisActores?: Array<{
+      actor: string;
+      tipo: string;
+      nivelImpacto: string;
+      descripcionImpacto: string;
+      accionesRequeridas: string[];
+      cronograma: string;
+    }>;
+    requisitosCumplimiento?: Array<{
+      requisito: string;
+      prioridad: string;
+      fechaLimite: string;
+      esfuerzoEstimado: string;
+      areaResponsable: string;
+    }>;
+    recomendacionesEstrategicas?: Array<{
+      titulo: string;
+      descripcion: string;
+      prioridad: string;
+      recursosNecesarios: string;
+    }>;
+    legislacionRelacionada?: Array<{
+      identificador: string;
+      titulo: string;
+      relacion: string;
+      relevancia: string;
+    }>;
+    benchmarksIndustria?: {
+      tiempoPromedioCumplimiento: string;
+      nivelPreparacionIndustria: string;
+      tasaAdopcionCompetidores: string;
+      mejoresPracticas: string[];
+    };
   };
   
   // Análisis profundo
