@@ -115,6 +115,7 @@ export default function LawMeterDashboard() {
   const [selectedCountry, setSelectedCountry] = useState<"usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu">("usa");
   const [selectedGCCCountry, setSelectedGCCCountry] = useState<GCCCountryCode>("uae");
   const [usaDataSource, setUsaDataSource] = useState<"congress" | "mock">("congress");
+  const [selectedSubJurisdiction, setSelectedSubJurisdiction] = useState<string | null>(null);
   
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
@@ -285,25 +286,25 @@ export default function LawMeterDashboard() {
                 ...costaRicaLegislation
               ]}
               onSelectRegion={(region) => {
-                // Map region to our region groups
+                // Map region to our region groups and navigate
                 if (region === "usa" || region === "canada") setSelectedRegion("NAM");
                 else if (region === "costa-rica" || region === "peru") setSelectedRegion("LATAM");
                 else if (region === "eu") setSelectedRegion("EU");
                 else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar", "gcc"].includes(region)) setSelectedRegion("GCC");
                 else if (region === "japan" || region === "korea" || region === "taiwan") setSelectedRegion("APAC");
                 setSelectedCountry(region as typeof selectedCountry);
+                setSelectedSubJurisdiction(null); // Clear sub-jurisdiction when changing country
               }}
               onSelectSubJurisdiction={(jurisdiction, subJurisdiction) => {
-                // Handle state/province selection from map
+                // Handle state/province selection from map - auto-select and filter
                 if (jurisdiction === "usa") {
                   setSelectedRegion("NAM");
                   setSelectedCountry("usa");
-                  // The subJurisdiction will be the state abbreviation (e.g., "CA", "TX")
-                  console.log("Selected US state:", subJurisdiction);
+                  setSelectedSubJurisdiction(subJurisdiction);
                 } else if (jurisdiction === "canada") {
                   setSelectedRegion("NAM");
                   setSelectedCountry("canada");
-                  console.log("Selected Canada province:", subJurisdiction);
+                  setSelectedSubJurisdiction(subJurisdiction);
                 }
               }}
             />
@@ -425,6 +426,8 @@ export default function LawMeterDashboard() {
             {/* USA Section - Live Congress API with unified cards */}
             {selectedCountry === "usa" && (
               <UnifiedCongressSection
+                initialSubnationalFilter={selectedSubJurisdiction}
+                onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
                 onItemClick={(item) => {
                   setSelectedUnifiedItem(item);
                   setUnifiedDrawerConfig(usaConfig);
@@ -460,6 +463,8 @@ export default function LawMeterDashboard() {
                 categories={regulatoryCategories}
                 title="Canada Legislation"
                 subtitle="Federal and Provincial legislation monitoring"
+                initialSubnationalFilter={selectedSubJurisdiction}
+                onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
                 onItemClick={(item) => {
                   setSelectedUnifiedItem(item);
                   setUnifiedDrawerConfig(canadaConfig);

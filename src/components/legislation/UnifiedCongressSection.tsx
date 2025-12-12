@@ -20,9 +20,16 @@ const usaCategories = [
 interface UnifiedCongressSectionProps {
   onItemClick?: (item: UnifiedLegislationItem) => void;
   onCongressBillClick?: (bill: any) => void; // For opening CongressBillDrawer with original data
+  initialSubnationalFilter?: string | null; // Pre-selected state from map
+  onClearSubnationalFilter?: () => void;
 }
 
-export function UnifiedCongressSection({ onItemClick, onCongressBillClick }: UnifiedCongressSectionProps) {
+export function UnifiedCongressSection({ 
+  onItemClick, 
+  onCongressBillClick,
+  initialSubnationalFilter,
+  onClearSubnationalFilter
+}: UnifiedCongressSectionProps) {
   const [sortBy] = useState<SortOption>("latestAction-desc");
   const { bills, loading, error } = useCongressBills(sortBy);
   
@@ -68,6 +75,8 @@ export function UnifiedCongressSection({ onItemClick, onCongressBillClick }: Uni
       subtitle="Live data from Congress.gov API (119th Congress)"
       onItemClick={handleItemClick}
       prioritizeRealData={true}
+      initialSubnationalFilter={initialSubnationalFilter}
+      onClearSubnationalFilter={onClearSubnationalFilter}
     />
   );
 }
