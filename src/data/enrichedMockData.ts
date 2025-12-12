@@ -13,7 +13,8 @@ import {
   omanLegislation,
   kuwaitLegislation,
   bahrainLegislation,
-  qatarLegislation
+  qatarLegislation,
+  peruLegislation
 } from "./mockInternationalLegislation";
 import { InternationalLegislation } from "./mockInternationalLegislation";
 
@@ -372,6 +373,9 @@ export const enrichedGCCData = [
   ...enrichedBahrainData.map(item => ({ ...item, id: `bh-${item.id}` })),
   ...enrichedQatarData.map(item => ({ ...item, id: `qa-${item.id}` }))
 ];
+
+// Peru data
+export const enrichedPeruData = convertToEnrichedUnified(peruLegislation, "Peru", "LATAM");
 
 // Regulatory categories
 export const regulatoryCategories = [
