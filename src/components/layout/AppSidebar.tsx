@@ -23,7 +23,7 @@ interface AppSidebarProps {
 const menuItems = [
   { id: "starred", title: "Starred", icon: Star },
   { id: "legislation", title: "Legislation", icon: FileText },
-  { id: "media", title: "Legislative Session Detection", icon: FileText },
+  { id: "media", title: "Legislative Session Monitor", icon: FileText },
   { id: "social", title: "Social Listening", icon: Users },
   { id: "calendar", title: "Calendar", icon: Calendar },
   { id: "analytics", title: "Analytics", icon: BarChart3 },
