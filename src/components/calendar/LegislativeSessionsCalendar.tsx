@@ -4,7 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale, Download, Globe, Filter, X } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale, Download, Globe, Filter, X, Link2, Copy, Check } from "lucide-react";
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -26,6 +26,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   unifiedUSACombinedData,
   unifiedCanadaData,
@@ -78,6 +87,120 @@ interface LegislativeSessionsCalendarProps {
   alerts?: any[];
   clientInterests?: string[];
   onNavigateToAlert?: (alertId: string) => void;
+}
+
+// Subscribe Dialog Component
+function SubscribeDialog() {
+  const [copied, setCopied] = useState(false);
+  
+  // This would be your actual calendar feed URL in production
+  const subscribeUrl = "webcal://lawmeter.app/api/calendar/legislative-feed.ics";
+  const httpsUrl = "https://lawmeter.app/api/calendar/legislative-feed.ics";
+  
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(httpsUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+  
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Link2 className="w-4 h-4" />
+          Subscribe
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5" />
+            Subscribe to Legislative Calendar
+          </DialogTitle>
+          <DialogDescription>
+            Add this calendar to your preferred app to receive automatic updates
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 pt-4">
+          {/* Subscribe URL */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Calendar Feed URL</Label>
+            <div className="flex gap-2">
+              <Input 
+                value={httpsUrl} 
+                readOnly 
+                className="text-xs font-mono"
+              />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={copyToClipboard}
+                className="shrink-0"
+              >
+                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Instructions */}
+          <div className="space-y-4 pt-2">
+            {/* Google Calendar */}
+            <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📅</span>
+                <span className="font-medium text-sm">Google Calendar</span>
+              </div>
+              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Open Google Calendar on web</li>
+                <li>Click the + next to "Other calendars"</li>
+                <li>Select "From URL"</li>
+                <li>Paste the calendar feed URL above</li>
+                <li>Click "Add calendar"</li>
+              </ol>
+            </div>
+            
+            {/* Apple Calendar */}
+            <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🍎</span>
+                <span className="font-medium text-sm">Apple Calendar (Mac/iPhone)</span>
+              </div>
+              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Open Calendar app</li>
+                <li>Go to File → New Calendar Subscription</li>
+                <li>Paste the calendar feed URL</li>
+                <li>Configure refresh frequency and click Subscribe</li>
+              </ol>
+            </div>
+            
+            {/* Outlook */}
+            <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📧</span>
+                <span className="font-medium text-sm">Outlook</span>
+              </div>
+              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Open Outlook Calendar</li>
+                <li>Click "Add calendar" → "Subscribe from web"</li>
+                <li>Paste the calendar feed URL</li>
+                <li>Name it "LawMeter Legislative Calendar"</li>
+                <li>Click "Import"</li>
+              </ol>
+            </div>
+          </div>
+          
+          <p className="text-xs text-muted-foreground text-center pt-2">
+            Subscribed calendars automatically sync when new sessions or deadlines are added
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [], onNavigateToAlert }: LegislativeSessionsCalendarProps) {
@@ -862,43 +985,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                     Download .ics
                   </Button>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      exportToICS();
-                      const blob = new Blob([generateICSContent()], { type: 'text/calendar;charset=utf-8' });
-                      const url = URL.createObjectURL(blob);
-                      window.open(`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(url)}`, '_blank');
-                      URL.revokeObjectURL(url);
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                    Google Calendar
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const icsContent = generateICSContent();
-                      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = 'calendario-legislativo.ics';
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      URL.revokeObjectURL(url);
-                      window.open('https://outlook.office.com/calendar/', '_blank');
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                    Outlook
-                  </Button>
+                  <SubscribeDialog />
                 </div>
               </div>
 
