@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale, Download } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale, Download, Globe, Filter, X } from "lucide-react";
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
-import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,16 +26,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  unifiedUSACombinedData,
+  unifiedCanadaData,
+  unifiedJapanData,
+  unifiedKoreaData,
+  unifiedTaiwanData,
+  unifiedEUData,
+  unifiedGCCData
+} from "@/data/unifiedMockData";
+import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
+
+// Jurisdiction definitions for filtering
+const JURISDICTIONS = [
+  { code: "USA", name: "United States", flag: "🇺🇸", region: "NAM" },
+  { code: "CAN", name: "Canada", flag: "🇨🇦", region: "NAM" },
+  { code: "CRI", name: "Costa Rica", flag: "🇨🇷", region: "LATAM" },
+  { code: "EU", name: "European Union", flag: "🇪🇺", region: "EU" },
+  { code: "UAE", name: "UAE", flag: "🇦🇪", region: "GCC" },
+  { code: "SAU", name: "Saudi Arabia", flag: "🇸🇦", region: "GCC" },
+  { code: "JPN", name: "Japan", flag: "🇯🇵", region: "JAPAN" },
+  { code: "KOR", name: "South Korea", flag: "🇰🇷", region: "APAC" },
+  { code: "TWN", name: "Taiwan", flag: "🇹🇼", region: "APAC" },
+] as const;
 
 interface LegislativeSession {
   date: Date;
   sessionNumber: string;
   time: string;
-  organType: string; // "PLENARIO", "ESPECIAL", "PERMANENTE ESPECIAL", "PERMANENTE ORDINARIA"
+  organType: string;
   organName: string;
-  sessionType: string; // "ORDINARIA", "EXTRAORDINARIA"
-  status: string; // "PENDIENTE", "REALIZADA", "CANCELADA"
+  sessionType: string;
+  status: string;
   agenda?: string[];
+  jurisdiction?: string;
 }
 
 interface EffectiveDate {
@@ -47,10 +70,12 @@ interface EffectiveDate {
   description?: string;
   riskLevel: "high" | "medium" | "low";
   alertId: string;
+  jurisdiction: string;
+  jurisdictionFlag?: string;
 }
 
 interface LegislativeSessionsCalendarProps {
-  alerts?: any[]; // Alertas de legislaciones
+  alerts?: any[];
   clientInterests?: string[];
   onNavigateToAlert?: (alertId: string) => void;
 }
@@ -63,77 +88,159 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
   const [showSessions, setShowSessions] = useState<boolean>(true);
   const [showEffectiveDates, setShowEffectiveDates] = useState<boolean>(true);
   const [showDeadlines, setShowDeadlines] = useState<boolean>(true);
+  const [selectedJurisdictions, setSelectedJurisdictions] = useState<string[]>(JURISDICTIONS.map(j => j.code));
 
-  // Generar fechas de vigencia y plazos desde las alertas reales
-  const generateEffectiveDates = (): EffectiveDate[] => {
-    if (!alerts || alerts.length === 0) return [];
-    
-    const vigencias = alerts
-      .filter(alert => alert.effective_date)
-      .map(alert => {
-        // Parsear la fecha de vigencia (formato puede ser DD/MM/YYYY o YYYY-MM-DD)
-        let effectiveDate: Date;
-        const dateStr = alert.effective_date;
-        
-        try {
-          // Intentar parsear como DD/MM/YYYY
-          if (dateStr.includes('/')) {
-            const [day, month, year] = dateStr.split('/');
-            effectiveDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-          } else {
-            // Intentar parsear como ISO
-            effectiveDate = parseISO(dateStr);
-          }
-        } catch {
-          effectiveDate = new Date();
-        }
-        
-        return {
-          date: effectiveDate,
-          lawName: alert.title || alert.law_number || "Sin título",
-          lawNumber: alert.law_number || alert.title_id || "",
-          type: "efectiva" as const,
-          riskLevel: alert.AI_triage?.risk_level || "low",
-          alertId: alert.title_id,
-          description: alert.AI_triage?.summary?.substring(0, 150)
-        };
-      })
-      .filter(ed => !isNaN(ed.date.getTime())); // Filtrar fechas inválidas
-
-    // Generar plazos de cumplimiento desde AI_triage.deadline_detected
-    const plazos = alerts
-      .filter(alert => alert.AI_triage?.deadline_detected)
-      .map(alert => {
-        let deadlineDate: Date;
-        const dateStr = alert.AI_triage.deadline_detected;
-        
-        try {
-          // Intentar parsear como DD/MM/YYYY
-          if (dateStr.includes('/')) {
-            const [day, month, year] = dateStr.split('/');
-            deadlineDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-          } else {
-            // Intentar parsear como ISO
-            deadlineDate = parseISO(dateStr);
-          }
-        } catch {
-          deadlineDate = new Date();
-        }
-        
-        return {
-          date: deadlineDate,
-          lawName: alert.title || alert.law_number || "Sin título",
-          lawNumber: alert.law_number || alert.title_id || "",
-          type: "plazo" as const,
-          riskLevel: alert.AI_triage?.risk_level || "low",
-          alertId: alert.title_id,
-          description: alert.AI_triage?.summary?.substring(0, 150)
-        };
-      })
-      .filter(ed => !isNaN(ed.date.getTime())); // Filtrar fechas inválidas
-
-    return [...vigencias, ...plazos];
+  // Helper to toggle jurisdiction selection
+  const toggleJurisdiction = (code: string) => {
+    setSelectedJurisdictions(prev => 
+      prev.includes(code) 
+        ? prev.filter(j => j !== code)
+        : [...prev, code]
+    );
   };
+
+  const selectAllJurisdictions = () => setSelectedJurisdictions(JURISDICTIONS.map(j => j.code));
+  const clearAllJurisdictions = () => setSelectedJurisdictions([]);
+
+  // Get jurisdiction flag by code
+  const getJurisdictionFlag = (code: string): string => {
+    const jurisdiction = JURISDICTIONS.find(j => j.code === code);
+    return jurisdiction?.flag || "🌐";
+  };
+
+  // Convert unified legislation data to EffectiveDate format
+  const convertUnifiedToEffectiveDates = (items: UnifiedLegislationItem[], jurisdictionCode: string): EffectiveDate[] => {
+    const results: EffectiveDate[] = [];
+    const flag = getJurisdictionFlag(jurisdictionCode);
+
+    items.forEach(item => {
+      // Add effective dates
+      if (item.effectiveDate) {
+        try {
+          const date = parseISO(item.effectiveDate);
+          if (!isNaN(date.getTime())) {
+            results.push({
+              date,
+              lawName: item.title,
+              lawNumber: item.identifier,
+              type: "efectiva",
+              riskLevel: item.riskLevel || "low",
+              alertId: item.id,
+              description: item.summary?.substring(0, 150),
+              jurisdiction: jurisdictionCode,
+              jurisdictionFlag: flag
+            });
+          }
+        } catch {}
+      }
+
+      // Add compliance deadlines
+      if (item.complianceDeadline) {
+        try {
+          const date = parseISO(item.complianceDeadline);
+          if (!isNaN(date.getTime())) {
+            results.push({
+              date,
+              lawName: item.title,
+              lawNumber: item.identifier,
+              type: "plazo",
+              riskLevel: item.riskLevel || "low",
+              alertId: item.id,
+              description: item.summary?.substring(0, 150),
+              jurisdiction: jurisdictionCode,
+              jurisdictionFlag: flag
+            });
+          }
+        } catch {}
+      }
+    });
+
+    return results;
+  };
+
+  // Generate effective dates from all sources
+  const allEffectiveDates = useMemo((): EffectiveDate[] => {
+    const results: EffectiveDate[] = [];
+
+    // Add Costa Rica alerts (original data)
+    if (alerts && alerts.length > 0) {
+      alerts.forEach(alert => {
+        // Effective dates
+        if (alert.effective_date) {
+          let effectiveDate: Date;
+          const dateStr = alert.effective_date;
+          
+          try {
+            if (dateStr.includes('/')) {
+              const [day, month, year] = dateStr.split('/');
+              effectiveDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            } else {
+              effectiveDate = parseISO(dateStr);
+            }
+            
+            if (!isNaN(effectiveDate.getTime())) {
+              results.push({
+                date: effectiveDate,
+                lawName: alert.title || alert.law_number || "Sin título",
+                lawNumber: alert.law_number || alert.title_id || "",
+                type: "efectiva",
+                riskLevel: alert.AI_triage?.risk_level || "low",
+                alertId: alert.title_id,
+                description: alert.AI_triage?.summary?.substring(0, 150),
+                jurisdiction: "CRI",
+                jurisdictionFlag: "🇨🇷"
+              });
+            }
+          } catch {}
+        }
+
+        // Deadlines
+        if (alert.AI_triage?.deadline_detected) {
+          let deadlineDate: Date;
+          const dateStr = alert.AI_triage.deadline_detected;
+          
+          try {
+            if (dateStr.includes('/')) {
+              const [day, month, year] = dateStr.split('/');
+              deadlineDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            } else {
+              deadlineDate = parseISO(dateStr);
+            }
+            
+            if (!isNaN(deadlineDate.getTime())) {
+              results.push({
+                date: deadlineDate,
+                lawName: alert.title || alert.law_number || "Sin título",
+                lawNumber: alert.law_number || alert.title_id || "",
+                type: "plazo",
+                riskLevel: alert.AI_triage?.risk_level || "low",
+                alertId: alert.title_id,
+                description: alert.AI_triage?.summary?.substring(0, 150),
+                jurisdiction: "CRI",
+                jurisdictionFlag: "🇨🇷"
+              });
+            }
+          } catch {}
+        }
+      });
+    }
+
+    // Add unified data from all jurisdictions
+    results.push(...convertUnifiedToEffectiveDates(unifiedUSACombinedData, "USA"));
+    results.push(...convertUnifiedToEffectiveDates(unifiedCanadaData, "CAN"));
+    results.push(...convertUnifiedToEffectiveDates(unifiedEUData, "EU"));
+    results.push(...convertUnifiedToEffectiveDates(unifiedGCCData, "UAE")); // GCC mapped to UAE for simplicity
+    results.push(...convertUnifiedToEffectiveDates(unifiedJapanData, "JPN"));
+    results.push(...convertUnifiedToEffectiveDates(unifiedKoreaData, "KOR"));
+    results.push(...convertUnifiedToEffectiveDates(unifiedTaiwanData, "TWN"));
+
+    return results;
+  }, [alerts]);
+
+  // Filter effective dates by selected jurisdictions
+  const filteredEffectiveDates = useMemo(() => {
+    return allEffectiveDates.filter(ed => selectedJurisdictions.includes(ed.jurisdiction));
+  }, [allEffectiveDates, selectedJurisdictions]);
 
   // Datos de ejemplo basados en la imagen
   const generateMockSessions = (): LegislativeSession[] => {
@@ -347,7 +454,6 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
   };
 
   const sessions = generateMockSessions();
-  const effectiveDates = generateEffectiveDates();
 
   // Filtrar sesiones según los filtros seleccionados
   const getFilteredSessions = () => {
@@ -386,7 +492,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   // Obtener fechas de vigencia para el rango seleccionado
   const getEffectiveDatesForDate = (date: Date): EffectiveDate[] => {
-    const filtered = effectiveDates.filter((ed) => {
+    const filtered = filteredEffectiveDates.filter((ed) => {
       if (ed.type === "efectiva" && !showEffectiveDates) return false;
       if (ed.type === "plazo" && !showDeadlines) return false;
       return true;
@@ -410,10 +516,10 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   // Obtener fechas con sesiones y fechas de vigencia para resaltar en el calendario
   const datesWithSessions = showSessions ? filteredSessions.map((s) => s.date) : [];
-  const datesWithVigencias = effectiveDates
+  const datesWithVigencias = filteredEffectiveDates
     .filter(ed => ed.type === "efectiva" && showEffectiveDates)
     .map((ed) => ed.date);
-  const datesWithDeadlines = effectiveDates
+  const datesWithDeadlines = filteredEffectiveDates
     .filter(ed => ed.type === "plazo" && showDeadlines)
     .map((ed) => ed.date);
 
@@ -458,7 +564,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
     // Agregar fechas de vigencia
     if (showEffectiveDates) {
-      effectiveDates
+      filteredEffectiveDates
         .filter(ed => ed.type === "efectiva")
         .forEach(item => {
           const dateStr = format(item.date, "yyyyMMdd");
@@ -466,9 +572,9 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
           icsEvents.push(
             `BEGIN:VEVENT`,
             `DTSTART;VALUE=DATE:${dateStr}`,
-            `SUMMARY:Vigencia: ${item.lawName}`,
-            `DESCRIPTION:Entra en vigor - ${item.lawNumber}${item.description ? '\\n\\n' + item.description : ''}`,
-            `CATEGORIES:Fecha de Vigencia`,
+            `SUMMARY:${item.jurisdictionFlag} Effective: ${item.lawName}`,
+            `DESCRIPTION:Enters into force - ${item.lawNumber} (${item.jurisdiction})${item.description ? '\\n\\n' + item.description : ''}`,
+            `CATEGORIES:Effective Date`,
             `END:VEVENT`
           );
         });
@@ -476,7 +582,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
     // Agregar plazos de cumplimiento
     if (showDeadlines) {
-      effectiveDates
+      filteredEffectiveDates
         .filter(ed => ed.type === "plazo")
         .forEach(item => {
           const dateStr = format(item.date, "yyyyMMdd");
@@ -484,9 +590,9 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
           icsEvents.push(
             `BEGIN:VEVENT`,
             `DTSTART;VALUE=DATE:${dateStr}`,
-            `SUMMARY:Plazo: ${item.lawName}`,
-            `DESCRIPTION:Fecha límite de cumplimiento - ${item.lawNumber}${item.description ? '\\n\\n' + item.description : ''}`,
-            `CATEGORIES:Plazo de Cumplimiento`,
+            `SUMMARY:${item.jurisdictionFlag} Deadline: ${item.lawName}`,
+            `DESCRIPTION:Compliance deadline - ${item.lawNumber} (${item.jurisdiction})${item.description ? '\\n\\n' + item.description : ''}`,
+            `CATEGORIES:Compliance Deadline`,
             `END:VEVENT`
           );
         });
@@ -561,17 +667,17 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <CalendarIcon className="w-5 h-5" />
-                  Calendario de Sesiones de la Asamblea Legislativa
+                  Legislative Calendar
                 </CardTitle>
                 <CardDescription>
-                  Programación de sesiones y agenda legislativa
+                  Legislative sessions, effective dates & compliance deadlines across jurisdictions
                 </CardDescription>
               </div>
               <Tabs value={calendarView} onValueChange={(v) => setCalendarView(v as typeof calendarView)}>
                 <TabsList>
-                  <TabsTrigger value="daily">Diario</TabsTrigger>
-                  <TabsTrigger value="weekly">Semanal</TabsTrigger>
-                  <TabsTrigger value="monthly">Mensual</TabsTrigger>
+                  <TabsTrigger value="daily">Daily</TabsTrigger>
+                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -579,29 +685,29 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             {/* Filtros */}
             <div className="flex flex-col gap-3 pt-2 border-t">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground">Filtrar por:</span>
+                <span className="text-sm font-medium text-muted-foreground">Filter by:</span>
                 
                 <Select value={filterOrganType} onValueChange={setFilterOrganType}>
                   <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Tipo de órgano" />
+                    <SelectValue placeholder="Organ Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos los órganos</SelectItem>
-                    <SelectItem value="PLENARIO">Plenario</SelectItem>
-                    <SelectItem value="ESPECIAL">Comisión Especial</SelectItem>
-                    <SelectItem value="PERMANENTE ESPECIAL">Permanente Especial</SelectItem>
-                    <SelectItem value="PERMANENTE ORDINARIA">Permanente Ordinaria</SelectItem>
+                    <SelectItem value="all">All Organs</SelectItem>
+                    <SelectItem value="PLENARIO">Plenary</SelectItem>
+                    <SelectItem value="ESPECIAL">Special Committee</SelectItem>
+                    <SelectItem value="PERMANENTE ESPECIAL">Permanent Special</SelectItem>
+                    <SelectItem value="PERMANENTE ORDINARIA">Permanent Ordinary</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Select value={filterSessionType} onValueChange={setFilterSessionType}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Tipo de sesión" />
+                    <SelectValue placeholder="Session Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas las sesiones</SelectItem>
-                    <SelectItem value="ORDINARIA">Ordinaria</SelectItem>
-                    <SelectItem value="EXTRAORDINARIA">Extraordinaria</SelectItem>
+                    <SelectItem value="all">All Sessions</SelectItem>
+                    <SelectItem value="ORDINARIA">Ordinary</SelectItem>
+                    <SelectItem value="EXTRAORDINARIA">Extraordinary</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -613,7 +719,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                     setFilterSessionType("all");
                   }}
                 >
-                  Limpiar filtros
+                  Clear Filters
                 </Button>
 
                 <div className="flex items-center gap-2 ml-auto">
@@ -624,7 +730,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                     className="flex items-center gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    Descargar .ics
+                    Download .ics
                   </Button>
                   
                   <Button
@@ -668,7 +774,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
               </div>
 
               <div className="flex flex-wrap items-center gap-4 p-3 bg-muted/30 rounded-lg">
-                <span className="text-sm font-medium text-muted-foreground">Mostrar:</span>
+                <span className="text-sm font-medium text-muted-foreground">Show:</span>
                 
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -678,7 +784,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   />
                   <Label htmlFor="show-sessions" className="cursor-pointer text-sm flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-blue-500 border border-blue-600" />
-                    Sesiones
+                    Sessions
                   </Label>
                 </div>
                 
@@ -690,7 +796,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   />
                   <Label htmlFor="show-effective" className="cursor-pointer text-sm flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-purple-500 border border-purple-600" />
-                    Vigencias
+                    Effective Dates
                   </Label>
                 </div>
                 
@@ -702,8 +808,52 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   />
                   <Label htmlFor="show-deadlines" className="cursor-pointer text-sm flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-orange-500 border border-orange-600" />
-                    Plazos de Cumplimiento
+                    Compliance Deadlines
                   </Label>
+                </div>
+              </div>
+
+              {/* Jurisdiction filter */}
+              <div className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Globe className="w-4 h-4" />
+                    Jurisdictions ({selectedJurisdictions.length}/{JURISDICTIONS.length})
+                  </span>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={selectAllJurisdictions} className="text-xs h-7">
+                      Select All
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={clearAllJurisdictions} className="text-xs h-7">
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {JURISDICTIONS.map((jurisdiction) => {
+                    const isSelected = selectedJurisdictions.includes(jurisdiction.code);
+                    const count = allEffectiveDates.filter(ed => ed.jurisdiction === jurisdiction.code).length;
+                    return (
+                      <Button
+                        key={jurisdiction.code}
+                        variant={isSelected ? "default" : "outline"}
+                        size="sm"
+                        className={cn(
+                          "h-8 text-xs gap-1.5",
+                          isSelected && "bg-primary text-primary-foreground"
+                        )}
+                        onClick={() => toggleJurisdiction(jurisdiction.code)}
+                      >
+                        <span>{jurisdiction.flag}</span>
+                        <span>{jurisdiction.name}</span>
+                        {count > 0 && (
+                          <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                            {count}
+                          </Badge>
+                        )}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -763,14 +913,14 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            {calendarView === "daily" && format(selectedDate, "d 'de' MMMM, yyyy", { locale: es })}
-            {calendarView === "weekly" && `Semana del ${format(startOfWeek(selectedDate), "d MMM", { locale: es })} - ${format(endOfWeek(selectedDate), "d MMM, yyyy", { locale: es })}`}
-            {calendarView === "monthly" && format(selectedDate, "MMMM yyyy", { locale: es })}
+            {calendarView === "daily" && format(selectedDate, "MMMM d, yyyy")}
+            {calendarView === "weekly" && `Week of ${format(startOfWeek(selectedDate), "MMM d")} - ${format(endOfWeek(selectedDate), "MMM d, yyyy")}`}
+            {calendarView === "monthly" && format(selectedDate, "MMMM yyyy")}
           </CardTitle>
           <CardDescription>
-            {selectedSessions.length} sesión{selectedSessions.length !== 1 ? "es" : ""} programada{selectedSessions.length !== 1 ? "s" : ""}
+            {selectedSessions.length} session{selectedSessions.length !== 1 ? "s" : ""} scheduled
             {showEffectiveDates && selectedEffectiveDates.length > 0 && (
-              <> • {selectedEffectiveDates.length} norma{selectedEffectiveDates.length !== 1 ? "s" : ""} vigente{selectedEffectiveDates.length !== 1 ? "s" : ""}</>
+              <> • {selectedEffectiveDates.length} legislative date{selectedEffectiveDates.length !== 1 ? "s" : ""}</>
             )}
           </CardDescription>
         </CardHeader>
@@ -839,6 +989,11 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                               {effectiveDate.lawName}
                             </h4>
                             <div className="flex items-center gap-2 flex-wrap">
+                              {effectiveDate.jurisdictionFlag && (
+                                <Badge variant="outline" className="text-xs">
+                                  {effectiveDate.jurisdictionFlag} {effectiveDate.jurisdiction}
+                                </Badge>
+                              )}
                               <Badge variant="outline" className={cn(
                                 "text-xs",
                                 effectiveDate.type === "plazo" 
@@ -858,7 +1013,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                                       : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
                                 )}
                               >
-                                {effectiveDate.type === "plazo" ? "Plazo de cumplimiento" : effectiveDate.type === "efectiva" ? "Entra en vigor" : "Vigente"}
+                                {effectiveDate.type === "plazo" ? "Compliance Deadline" : effectiveDate.type === "efectiva" ? "Effective Date" : "In Force"}
                               </Badge>
                             </div>
                             {effectiveDate.description && (
@@ -871,7 +1026,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                               effectiveDate.type === "plazo" ? "text-orange-600" : "text-purple-600"
                             )}>
                               <CalendarIcon className="w-3 h-3" />
-                              {format(effectiveDate.date, "d 'de' MMMM, yyyy", { locale: es })}
+                              {format(effectiveDate.date, "MMM d, yyyy")}
                             </div>
                           </div>
                         </div>
@@ -932,7 +1087,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                         )}
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
-                          {format(session.date, "d 'de' MMM, yyyy 'a las' HH:mm", { locale: es })}
+                          {format(session.date, "MMM d, yyyy 'at' HH:mm")}
                         </div>
                       </div>
                     </div>
