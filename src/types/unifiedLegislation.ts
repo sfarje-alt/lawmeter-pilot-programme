@@ -190,6 +190,29 @@ export interface UnifiedLegislationItem {
     obligacionesAfectadas?: string[];
     calificadorVoluntariedad?: string;
   };
+  
+  // Costa Rica-specific data for correct legal rendering
+  costaRicaData?: {
+    tipoNorma: string;                // proyecto_ley, ley, decreto_ejecutivo, etc.
+    tipoEmisor: string;               // legislativo, ejecutivo, municipal, regulador, autonomo
+    nivel: string;                    // nacional, municipal, institucional
+    provincia?: string;               // Solo relevante para municipal
+    canton?: string;                  // Municipalidad específica
+    organoEmisor: string;             // Quién dicta la norma
+    organoCompetente?: string;        // Quién aplica/fiscaliza/implementa
+    comisionLegislativa?: string;     // Solo para proyectos de ley
+    numeroGaceta?: string;            // Número de publicación en La Gaceta
+    plazosTransitorios?: string;      // Régimen transitorio
+    calificadorEstado: string;        // Calificador automático para proyectos
+    // Fechas del proceso legislativo
+    fechaPresentacion?: string;
+    fechaDictamenComision?: string;
+    fechaPrimerDebate?: string;
+    fechaSegundoDebate?: string;
+    fechaEnvioEjecutivo?: string;
+    fechaSancionOVeto?: string;
+    fechaPublicacionGaceta?: string;
+  };
 }
 
 // ========== UNIFIED FILTER STATE ==========

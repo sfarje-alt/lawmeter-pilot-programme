@@ -357,7 +357,136 @@ export const euConfig: JurisdictionConfig = {
   }
 };
 
-// ========== LATAM CONFIGURATION (Costa Rica as example) ==========
+// ========== COSTA RICA CONFIGURATION (Estado unitario - NO Federal) ==========
+export const costaRicaConfig: JurisdictionConfig = {
+  code: "CR",
+  name: "Costa Rica",
+  region: "LATAM",
+  legalSystem: "civil-law",
+  
+  instrumentTypes: [
+    { id: "proyecto", label: "Proyecto de Ley", emoji: "📝", hierarchyLevel: "primary" },
+    { id: "ley", label: "Ley", emoji: "⚖️", hierarchyLevel: "primary" },
+    { id: "decreto", label: "Decreto Ejecutivo", emoji: "📜", hierarchyLevel: "secondary" },
+    { id: "reglamento", label: "Reglamento", emoji: "📋", hierarchyLevel: "secondary" },
+    { id: "resolucion", label: "Resolución/Directriz", emoji: "📄", hierarchyLevel: "tertiary" },
+    { id: "acuerdo", label: "Acuerdo", emoji: "🤝", hierarchyLevel: "tertiary" },
+    { id: "ordenanza-municipal", label: "Ordenanza Municipal", emoji: "🏘️", hierarchyLevel: "tertiary" },
+    { id: "reglamento-municipal", label: "Reglamento Municipal", emoji: "🏘️", hierarchyLevel: "tertiary" },
+    { id: "normativa-regulatoria", label: "Normativa Regulatoria", emoji: "🏛️", hierarchyLevel: "secondary" },
+    { id: "circular", label: "Circular", emoji: "📢", hierarchyLevel: "soft-law" }
+  ],
+  
+  statusMappings: [
+    // Proyectos de ley
+    { localStatus: "presentado", genericStatus: "proposal", label: "Presentado" },
+    { localStatus: "en_tramite", genericStatus: "proposal", label: "En Trámite" },
+    { localStatus: "dictamen_comision", genericStatus: "in-committee", label: "Dictaminado" },
+    { localStatus: "primer_debate", genericStatus: "in-committee", label: "Primer Debate" },
+    { localStatus: "segundo_debate", genericStatus: "approved", label: "Segundo Debate" },
+    { localStatus: "enviado_ejecutivo", genericStatus: "approved", label: "Enviado al Ejecutivo" },
+    { localStatus: "sancionado", genericStatus: "approved", label: "Sancionado" },
+    { localStatus: "vetado", genericStatus: "in-committee", label: "Vetado" },
+    { localStatus: "publicado_gaceta", genericStatus: "in-force", label: "Publicado (La Gaceta)" },
+    { localStatus: "archivado", genericStatus: "repealed", label: "Archivado" },
+    // Normas vigentes
+    { localStatus: "vigente", genericStatus: "in-force", label: "Vigente" },
+    { localStatus: "modificada", genericStatus: "in-force", label: "Modificada" },
+    { localStatus: "derogada", genericStatus: "repealed", label: "Derogada" },
+    { localStatus: "suspendida", genericStatus: "partially-in-force", label: "Suspendida" },
+    { localStatus: "en_consulta", genericStatus: "proposal", label: "En Consulta Pública" }
+  ],
+  
+  pipelineStages: [
+    { 
+      stages: ["Presentado", "En Comisión", "Dictaminado", "Primer Debate", "Segundo Debate", "Enviado al Ejecutivo", "Sancionado/Vetado", "Publicado (La Gaceta)"], 
+      instrumentType: "proyecto" 
+    }
+  ],
+  
+  // Niveles jurisdiccionales para Costa Rica (SIN "Federal")
+  jurisdictionLevels: [
+    { id: "federal", label: "Nacional", enabled: true }, // Mapea a "federal" pero muestra "Nacional"
+    { id: "local", label: "Municipal (Cantonal)", enabled: true },
+    { id: "state", label: "Institucional/Regulatorio", enabled: true } // Para entes reguladores
+  ],
+  
+  // Provincias (solo relevantes para filtrar por ubicación geográfica de impacto, NO nivel normativo)
+  subnationalUnits: {
+    label: "Cantón",
+    units: [
+      { code: "SJ", name: "San José" }, { code: "AL", name: "Alajuela" }, { code: "CA", name: "Cartago" },
+      { code: "HE", name: "Heredia" }, { code: "GU", name: "Guanacaste" }, { code: "PU", name: "Puntarenas" },
+      { code: "LI", name: "Limón" }
+    ]
+  },
+  
+  authorityLabels: {
+    asamblea: "Asamblea Legislativa",
+    ejecutivo: "Poder Ejecutivo",
+    micit: "MICIT",
+    meic: "MEIC",
+    hacienda: "Ministerio de Hacienda",
+    salud: "Ministerio de Salud",
+    ambiente: "MINAE",
+    conassif: "CONASSIF",
+    sugef: "SUGEF",
+    sugeval: "SUGEVAL",
+    supen: "SUPEN",
+    sugese: "SUGESE",
+    aresep: "ARESEP",
+    sutel: "SUTEL",
+    inteco: "INTECO",
+    bccr: "Banco Central",
+    municipalidad: "Municipalidad"
+  },
+  
+  hierarchyLabels: {
+    constitutional: "Constitución Política",
+    primary: "Ley",
+    secondary: "Decreto/Reglamento",
+    tertiary: "Resolución/Ordenanza",
+    "soft-law": "Circular/Directriz",
+    "case-law": "Jurisprudencia"
+  },
+  
+  filterLabels: {
+    instrumentType: "Tipo de Norma",
+    hierarchy: "Jerarquía",
+    status: "Estado",
+    subnational: "Cantón",
+    authority: "Órgano Emisor"
+  },
+  
+  filterPresets: [
+    {
+      id: "proyectos-alto-riesgo",
+      name: "Proyectos Alto Riesgo",
+      description: "Proyectos de ley con alto riesgo regulatorio",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"], instrumentTypes: ["proyecto"] }
+    },
+    {
+      id: "vigentes-electrodomesticos",
+      name: "Vigentes Electrodomésticos",
+      description: "Normativa vigente aplicable a electrodomésticos",
+      filters: { lifecycle: "in-force", categories: ["Product Safety", "Battery Regulations"] }
+    },
+    {
+      id: "reguladores",
+      name: "Normativa Reguladores",
+      description: "Normativa de entes reguladores (SUGEF, ARESEP, etc.)",
+      filters: { instrumentTypes: ["normativa-regulatoria"] }
+    },
+    {
+      id: "municipal",
+      name: "Ordenanzas Municipales",
+      description: "Normativa municipal/cantonal",
+      filters: { jurisdictionLevel: "local" }
+    }
+  ]
+};
+
+// ========== LATAM CONFIGURATION (Generic for other LATAM countries) ==========
 export const latamConfig: JurisdictionConfig = {
   code: "LATAM",
   name: "Latin America",
@@ -706,6 +835,7 @@ export const jurisdictionConfigs: Record<string, JurisdictionConfig> = {
   USA: usaConfig,
   EU: euConfig,
   LATAM: latamConfig,
+  CR: costaRicaConfig,  // Costa Rica specific config
   GCC: gccConfig,
   JP: japanConfig,
   APAC: apacConfig,

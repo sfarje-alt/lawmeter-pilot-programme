@@ -17,6 +17,7 @@ import {
 } from "./mockInternationalLegislation";
 import { InternationalLegislation } from "./mockInternationalLegislation";
 import { peruLegislationData, convertPeruToUnified } from "./peruLegislationData";
+import { costaRicaLegislationData, convertCostaRicaToUnified } from "./costaRicaLegislationData";
 
 // Helper to generate realistic mock data for drawer tabs
 function generateFullContent(item: InternationalLegislation, jurisdiction: string): Partial<UnifiedLegislationItem> {
@@ -376,6 +377,9 @@ export const enrichedGCCData = [
 
 // Peru data - usando el nuevo sistema jurídico correcto
 export const enrichedPeruData = convertPeruToUnified(peruLegislationData);
+
+// Costa Rica data - usando el sistema jurídico correcto (Estado unitario)
+export const enrichedCostaRicaData = convertCostaRicaToUnified(costaRicaLegislationData);
 
 // Regulatory categories
 export const regulatoryCategories = [

@@ -59,7 +59,22 @@ const LATAM_LABELS = {
   obligatorio: "Obligatorio",
   nacional: "Nacional",
   regional: "Regional",
-  municipal: "Municipal/Local"
+  municipal: "Municipal/Local",
+  // Costa Rica-specific
+  institucional: "Institucional/Regulatorio",
+  organoCompetente: "Órgano Competente",
+  comision: "Comisión",
+  vetado: "Vetado",
+  proyectoLey: "Proyecto de Ley",
+  ley: "Ley",
+  decretoEjecutivo: "Decreto Ejecutivo",
+  reglamento: "Reglamento",
+  resolucion: "Resolución",
+  ordenanzaMunicipal: "Ordenanza Municipal",
+  reglamentoMunicipal: "Reglamento Municipal",
+  normativaRegulatoria: "Normativa Regulatoria",
+  circular: "Circular",
+  gaceta: "La Gaceta"
 };
 
 interface UnifiedLegislationCardProps {
@@ -98,18 +113,45 @@ export function UnifiedLegislationCard({
   // Check if this is Peru data with specific legal structure
   const isPeru = item.jurisdictionCode === "PE" && item.peruData;
   const peruData = item.peruData;
+  
+  // Check if this is Costa Rica data with specific legal structure
+  const isCostaRica = item.jurisdictionCode === "CR" && item.costaRicaData;
+  const crData = item.costaRicaData;
 
-  // Build jurisdiction line - special handling for Peru
+  // Build jurisdiction line - special handling for Peru and Costa Rica
   const jurisdictionLine = useMemo(() => {
+    // Costa Rica handling - NO "Federal" label
+    if (isCostaRica && crData) {
+      const parts = [];
+      // Use CR levels: Nacional, Municipal (Cantonal), Institucional (NEVER "Federal")
+      const nivelLabel = crData.nivel === "nacional" ? LATAM_LABELS.nacional :
+                        crData.nivel === "municipal" ? LATAM_LABELS.municipal :
+                        LATAM_LABELS.institucional;
+      parts.push(nivelLabel);
+      
+      // Add canton/province only if municipal
+      if (crData.nivel === "municipal") {
+        if (crData.canton) {
+          parts.push(crData.canton);
+        } else if (crData.provincia) {
+          parts.push(crData.provincia);
+        }
+      }
+      
+      // Add issuing authority (órgano emisor)
+      parts.push(crData.organoEmisor);
+      
+      return parts.filter(Boolean).join(" · ");
+    }
+    
+    // Peru handling
     if (isPeru && peruData) {
       const parts = [];
-      // Use Peru levels: Nacional, Regional, Municipal (NEVER "Federal")
       const nivelLabel = peruData.nivel === "nacional" ? LATAM_LABELS.nacional :
                         peruData.nivel === "regional" ? LATAM_LABELS.regional :
                         LATAM_LABELS.municipal;
       parts.push(nivelLabel);
       
-      // Add department if regional or municipal
       if (peruData.departamento) {
         parts.push(peruData.departamento);
       }
@@ -117,20 +159,19 @@ export function UnifiedLegislationCard({
         parts.push(peruData.municipio);
       }
       
-      // Add issuing authority
       parts.push(item.authorityLabel || item.authority);
       
       return parts.filter(Boolean).join(" · ");
     }
     
-    // Default for non-Peru
+    // Default for non-LATAM (translate "Federal" for CR would be wrong, but this is fallback)
     const parts = [
       item.jurisdictionLevel.charAt(0).toUpperCase() + item.jurisdictionLevel.slice(1),
       item.subnationalUnit || config.code,
       item.authorityLabel || item.authority
     ].filter(Boolean);
     return parts.join(" · ");
-  }, [item, config, isPeru, peruData]);
+  }, [item, config, isPeru, peruData, isCostaRica, crData]);
 
   // Calculate current stage index for pipeline items
   const currentStageIndex = useMemo(() => {
@@ -244,8 +285,21 @@ export function UnifiedLegislationCard({
               {item.identifier}
             </Badge>
             
-            {/* Document type - Peru shows tipo de norma label */}
-            {isPeru && peruData ? (
+            {/* Document type badge - Costa Rica shows tipo de norma */}
+            {isCostaRica && crData ? (
+              <Badge variant="secondary" className="text-[10px]">
+                {crData.tipoNorma === "proyecto_ley" ? "📝 " + LATAM_LABELS.proyectoLey :
+                 crData.tipoNorma === "ley" ? "⚖️ " + LATAM_LABELS.ley :
+                 crData.tipoNorma === "decreto_ejecutivo" ? "📜 " + LATAM_LABELS.decretoEjecutivo :
+                 crData.tipoNorma === "reglamento" ? "📋 " + LATAM_LABELS.reglamento :
+                 crData.tipoNorma === "resolucion" ? "📄 " + LATAM_LABELS.resolucion :
+                 crData.tipoNorma === "ordenanza_municipal" ? "🏘️ " + LATAM_LABELS.ordenanzaMunicipal :
+                 crData.tipoNorma === "reglamento_municipal" ? "🏘️ " + LATAM_LABELS.reglamentoMunicipal :
+                 crData.tipoNorma === "normativa_regulatoria" ? "🏛️ " + LATAM_LABELS.normativaRegulatoria :
+                 crData.tipoNorma === "circular" ? "📢 " + LATAM_LABELS.circular :
+                 crData.tipoNorma}
+              </Badge>
+            ) : isPeru && peruData ? (
               <Badge variant="secondary" className="text-[10px]">
                 {peruData.esVinculante ? "📋" : "📝"} {
                   peruData.tipoNorma === "ley" ? "Ley" :
@@ -261,6 +315,13 @@ export function UnifiedLegislationCard({
             ) : instrumentType && (
               <Badge variant="secondary" className="text-[10px]">
                 {instrumentType.emoji} {instrumentType.label}
+              </Badge>
+            )}
+            
+            {/* Costa Rica: Vetado indicator */}
+            {isCostaRica && crData && item.status === "vetado" && (
+              <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 border-red-200">
+                ⚠️ {LATAM_LABELS.vetado}
               </Badge>
             )}
             
@@ -318,15 +379,27 @@ export function UnifiedLegislationCard({
 
         {/* Row 3: Jurisdiction line */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
-          {isPeru && peruData?.nivel !== "nacional" ? (
-            <MapPin className="h-3 w-3" />
-          ) : item.jurisdictionLevel !== "federal" ? (
+          {(isCostaRica && crData?.nivel === "municipal") || (isPeru && peruData?.nivel !== "nacional") || item.jurisdictionLevel !== "federal" ? (
             <MapPin className="h-3 w-3" />
           ) : (
             <Building2 className="h-3 w-3" />
           )}
           <span>{jurisdictionLine}</span>
         </div>
+        
+        {/* Row 4: Costa Rica competent authority / legislative committee (when applicable) */}
+        {isCostaRica && crData?.organoCompetente && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <span className="font-medium">{LATAM_LABELS.organoCompetente}:</span>
+            <span>{crData.organoCompetente}</span>
+          </div>
+        )}
+        {isCostaRica && crData?.comisionLegislativa && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <span className="font-medium">{LATAM_LABELS.comision}:</span>
+            <span>{crData.comisionLegislativa}</span>
+          </div>
+        )}
         
         {/* Row 4: Peru supervisory authority (when applicable) */}
         {isPeru && peruData?.autoridadFiscalizadora && (

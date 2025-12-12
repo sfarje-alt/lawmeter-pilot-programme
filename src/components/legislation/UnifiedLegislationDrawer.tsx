@@ -66,6 +66,10 @@ export function UnifiedLegislationDrawer({
   const isPeru = item?.jurisdictionCode === "PE" && item?.peruData;
   const peruData = item?.peruData;
   const isLatam = item?.region === "LATAM";
+  
+  // Check if Costa Rica data
+  const isCostaRica = item?.jurisdictionCode === "CR" && item?.costaRicaData;
+  const crData = item?.costaRicaData;
 
   // Calculate current stage index for pipeline items
   const currentStageIndex = useMemo(() => {
@@ -80,10 +84,25 @@ export function UnifiedLegislationDrawer({
     return idx >= 0 ? idx : 0;
   }, [item, pipelineStages]);
 
-  // Build jurisdiction line - special handling for Peru
+  // Build jurisdiction line - special handling for Peru and Costa Rica
   const jurisdictionLine = useMemo(() => {
     if (!item) return "";
     
+    // Costa Rica: NO "Federal" label
+    if (isCostaRica && crData) {
+      const parts = [];
+      const nivelLabel = crData.nivel === "nacional" ? "Nacional" :
+                        crData.nivel === "municipal" ? "Municipal (Cantonal)" :
+                        "Institucional/Regulatorio";
+      parts.push(nivelLabel);
+      if (crData.nivel === "municipal" && crData.canton) {
+        parts.push(crData.canton);
+      }
+      parts.push(crData.organoEmisor);
+      return parts.filter(Boolean).join(" · ");
+    }
+    
+    // Peru handling
     if (isPeru && peruData) {
       const parts = [];
       const nivelLabel = peruData.nivel === "nacional" ? "Nacional" :
@@ -449,6 +468,109 @@ export function UnifiedLegislationDrawer({
                         <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm">
                           <p className="text-blue-800 font-medium mb-1">⚠️ Nota sobre Aplicación</p>
                           <p className="text-blue-700">{peruData.calificadorVoluntariedad}</p>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Costa Rica-specific Legal Details */}
+              {isCostaRica && crData && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Información Jurídica
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">País:</span>
+                        <span className="font-medium ml-2">Costa Rica</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Nivel:</span>
+                        <span className="font-medium ml-2">
+                          {crData.nivel === "nacional" ? "Nacional" :
+                           crData.nivel === "municipal" ? "Municipal (Cantonal)" : "Institucional/Regulatorio"}
+                        </span>
+                      </div>
+                      {crData.provincia && (
+                        <div>
+                          <span className="text-muted-foreground">Provincia:</span>
+                          <span className="font-medium ml-2">{crData.provincia}</span>
+                        </div>
+                      )}
+                      {crData.canton && (
+                        <div>
+                          <span className="text-muted-foreground">Cantón:</span>
+                          <span className="font-medium ml-2">{crData.canton}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">Tipo de Norma:</span>
+                        <span className="font-medium ml-2">
+                          {crData.tipoNorma === "proyecto_ley" ? "Proyecto de Ley" :
+                           crData.tipoNorma === "ley" ? "Ley" :
+                           crData.tipoNorma === "decreto_ejecutivo" ? "Decreto Ejecutivo" :
+                           crData.tipoNorma === "reglamento" ? "Reglamento" :
+                           crData.tipoNorma === "ordenanza_municipal" ? "Ordenanza Municipal" :
+                           crData.tipoNorma === "normativa_regulatoria" ? "Normativa Regulatoria" :
+                           crData.tipoNorma}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Tipo Emisor:</span>
+                        <span className="font-medium ml-2">
+                          {crData.tipoEmisor === "legislativo" ? "Legislativo" :
+                           crData.tipoEmisor === "ejecutivo" ? "Ejecutivo" :
+                           crData.tipoEmisor === "municipal" ? "Municipal" :
+                           crData.tipoEmisor === "regulador" ? "Regulador" : "Institución Autónoma"}
+                        </span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">Órgano Emisor:</span>
+                        <span className="font-medium ml-2">{crData.organoEmisor}</span>
+                      </div>
+                      {crData.organoCompetente && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Órgano Competente/Fiscalizador:</span>
+                          <span className="font-medium ml-2">{crData.organoCompetente}</span>
+                        </div>
+                      )}
+                      {crData.comisionLegislativa && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Comisión Legislativa:</span>
+                          <span className="font-medium ml-2">{crData.comisionLegislativa}</span>
+                        </div>
+                      )}
+                      {crData.numeroGaceta && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Publicación en La Gaceta:</span>
+                          <span className="font-medium ml-2">{crData.numeroGaceta}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {crData.plazosTransitorios && (
+                      <>
+                        <Separator className="my-3" />
+                        <div className="text-sm">
+                          <span className="text-muted-foreground font-medium">Régimen Transitorio:</span>
+                          <p className="mt-1">{crData.plazosTransitorios}</p>
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* State Qualifier for Projects */}
+                    {crData.calificadorEstado && item.isPipeline && (
+                      <>
+                        <Separator className="my-3" />
+                        <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm">
+                          <p className="text-amber-800 font-medium mb-1">⚠️ Estado del Instrumento</p>
+                          <p className="text-amber-700">{crData.calificadorEstado}</p>
                         </div>
                       </>
                     )}
