@@ -160,6 +160,76 @@ export interface PeruLegislationItem {
     calificadorVoluntariedad?: string; // Solo para NTP
     explicacionRiesgo?: string;
     actoresClave?: string[];
+    
+    // === Análisis Profundo ===
+    resumenEjecutivo?: string;
+    
+    // Estadísticas de impacto
+    estadisticas?: {
+      empresasAfectadasEstimadas?: number;
+      costoEstimadoCumplimiento?: { min: number; max: number; moneda: string };
+      impactoMercado?: string;
+      tiempoImplementacionMeses?: number;
+      rangoSanciones?: { min: number; max: number; moneda: string; unidad?: string }; // UIT para Perú
+      puntajeComplejidad?: number; // 1-10
+    };
+    
+    // Evaluación de riesgo detallada
+    analisisRiesgo?: {
+      puntajeRiesgoGeneral: number;
+      desglosePorCategoria: Array<{
+        categoria: string;
+        puntaje: number;
+        descripcion: string;
+        estrategiaMitigacion?: string;
+      }>;
+      probabilidadFiscalizacion?: "alta" | "media" | "baja";
+      responsabilidadesPotenciales?: string[];
+      evaluacionRiesgoCompetitivo?: string;
+    };
+    
+    // Análisis de actores clave
+    analisisActores?: Array<{
+      actor: string;
+      tipo: "interno" | "externo" | "regulador" | "industria";
+      nivelImpacto: "alto" | "medio" | "bajo";
+      descripcionImpacto: string;
+      accionesRequeridas?: string[];
+      cronograma?: string;
+    }>;
+    
+    // Requisitos de cumplimiento
+    requisitosCumplimiento?: Array<{
+      requisito: string;
+      prioridad: "critica" | "alta" | "media" | "baja";
+      fechaLimite?: string;
+      esfuerzoEstimado?: string;
+      areaResponsable?: string;
+    }>;
+    
+    // Recomendaciones estratégicas
+    recomendacionesEstrategicas?: Array<{
+      titulo: string;
+      descripcion: string;
+      prioridad: "inmediata" | "corto-plazo" | "mediano-plazo" | "largo-plazo";
+      recursosNecesarios?: string;
+    }>;
+    
+    // Legislación relacionada
+    legislacionRelacionada?: Array<{
+      identificador: string;
+      titulo: string;
+      relacion: "modifica" | "deroga" | "implementa" | "relacionada" | "conflicto";
+      relevancia: string;
+    }>;
+    
+    // Benchmarks de la industria
+    benchmarksIndustria?: {
+      tiempoPromedioCumplimiento?: string;
+      nivelPreparacionIndustria?: string;
+      tasaAdopcionCompetidores?: string;
+      mejoresPracticas?: string[];
+    };
   };
   
   // === Fuentes ===

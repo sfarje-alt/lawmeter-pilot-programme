@@ -119,7 +119,7 @@ export function UnifiedLegislationDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90vh]">
+      <DrawerContent className="max-h-[90vh] flex flex-col">
         <DrawerHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2 flex-1">
@@ -185,7 +185,7 @@ export function UnifiedLegislationDrawer({
           </div>
         </DrawerHeader>
 
-        <ScrollArea className="flex-1 px-6 pb-6">
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="overview">
@@ -457,19 +457,27 @@ export function UnifiedLegislationDrawer({
               )}
             </TabsContent>
 
-            {/* AI Analysis Tab */}
-            <TabsContent value="analysis" className="space-y-4 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2" style={{ color: theme.primaryColor }}>
-                    <Sparkles className="h-5 w-5" />
-                    AI-Powered Analysis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {item.aiSummary ? (
-                    <>
-                      <div className="space-y-3">
+            {/* AI Analysis Tab - Enhanced Deep Analysis */}
+            <TabsContent value="analysis" className="space-y-6 mt-6">
+              {item.aiSummary ? (
+                <>
+                  {/* Executive Summary */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2" style={{ color: theme.primaryColor }}>
+                        <Sparkles className="h-5 w-5" />
+                        AI-Powered Deep Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {item.aiSummary.executiveSummary && (
+                        <div className="p-4 rounded-lg border" style={{ borderColor: `${theme.primaryColor}30`, backgroundColor: `${theme.primaryColor}05` }}>
+                          <h4 className="text-sm font-semibold mb-2">Executive Summary</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{item.aiSummary.executiveSummary}</p>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-4 rounded-lg bg-muted/50">
                           <h4 className="text-sm font-semibold mb-2">What Changes</h4>
                           <p className="text-sm text-muted-foreground">{item.aiSummary.whatChanges}</p>
@@ -483,33 +491,367 @@ export function UnifiedLegislationDrawer({
                           <p className="text-sm text-muted-foreground">{item.aiSummary.keyDeadline}</p>
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
 
-                      {item.aiSummary.riskExplanation && (
-                        <div className="p-4 rounded-lg border border-warning/30 bg-warning/5">
-                          <h4 className="text-sm font-semibold mb-2 text-warning">Risk Assessment</h4>
-                          <p className="text-sm text-muted-foreground">{item.aiSummary.riskExplanation}</p>
+                  {/* Statistical Analysis */}
+                  {item.aiSummary.statistics && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Statistical Impact Analysis
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {item.aiSummary.statistics.estimatedAffectedCompanies && (
+                            <div className="text-center p-4 rounded-lg bg-muted/50">
+                              <p className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
+                                {item.aiSummary.statistics.estimatedAffectedCompanies.toLocaleString()}+
+                              </p>
+                              <p className="text-xs text-muted-foreground">Companies Affected</p>
+                            </div>
+                          )}
+                          {item.aiSummary.statistics.estimatedComplianceCost && (
+                            <div className="text-center p-4 rounded-lg bg-muted/50">
+                              <p className="text-2xl font-bold text-warning">
+                                {item.aiSummary.statistics.estimatedComplianceCost.currency}{item.aiSummary.statistics.estimatedComplianceCost.min.toLocaleString()}-{item.aiSummary.statistics.estimatedComplianceCost.max.toLocaleString()}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Compliance Cost Range</p>
+                            </div>
+                          )}
+                          {item.aiSummary.statistics.implementationTimeMonths && (
+                            <div className="text-center p-4 rounded-lg bg-muted/50">
+                              <p className="text-2xl font-bold text-info">
+                                {item.aiSummary.statistics.implementationTimeMonths} months
+                              </p>
+                              <p className="text-xs text-muted-foreground">Avg. Implementation Time</p>
+                            </div>
+                          )}
+                          {item.aiSummary.statistics.complianceComplexityScore && (
+                            <div className="text-center p-4 rounded-lg bg-muted/50">
+                              <p className="text-2xl font-bold text-destructive">
+                                {item.aiSummary.statistics.complianceComplexityScore}/10
+                              </p>
+                              <p className="text-xs text-muted-foreground">Complexity Score</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-
-                      {item.aiSummary.stakeholders && item.aiSummary.stakeholders.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-semibold">Key Stakeholders</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {item.aiSummary.stakeholders.map((stakeholder, idx) => (
-                              <Badge key={idx} variant="outline">{stakeholder}</Badge>
-                            ))}
+                        {item.aiSummary.statistics.penaltyRange && (
+                          <div className="mt-4 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                            <p className="text-sm font-medium text-destructive flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4" />
+                              Penalty Range: {item.aiSummary.statistics.penaltyRange.currency}{item.aiSummary.statistics.penaltyRange.min.toLocaleString()} - {item.aiSummary.statistics.penaltyRange.currency}{item.aiSummary.statistics.penaltyRange.max.toLocaleString()}
+                            </p>
                           </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>AI analysis not yet generated for this item.</p>
-                    </div>
+                        )}
+                        {item.aiSummary.statistics.marketSizeImpact && (
+                          <p className="mt-3 text-sm text-muted-foreground">
+                            <span className="font-medium">Market Impact:</span> {item.aiSummary.statistics.marketSizeImpact}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
                   )}
-                </CardContent>
-              </Card>
+
+                  {/* Detailed Risk Assessment */}
+                  {(item.aiSummary.riskAnalysis || item.aiSummary.riskExplanation) && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2 text-warning">
+                          <AlertTriangle className="h-4 w-4" />
+                          Comprehensive Risk Assessment
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {item.aiSummary.riskAnalysis ? (
+                          <>
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="text-center p-4 rounded-lg bg-warning/10 border border-warning/30">
+                                <p className="text-3xl font-bold text-warning">{item.aiSummary.riskAnalysis.overallRiskScore}</p>
+                                <p className="text-xs text-muted-foreground">Overall Risk Score</p>
+                              </div>
+                              {item.aiSummary.riskAnalysis.probabilityOfEnforcement && (
+                                <div className="flex-1">
+                                  <p className="text-sm text-muted-foreground">Enforcement Probability</p>
+                                  <Badge className={cn(
+                                    item.aiSummary.riskAnalysis.probabilityOfEnforcement === "high" ? "bg-destructive" :
+                                    item.aiSummary.riskAnalysis.probabilityOfEnforcement === "medium" ? "bg-warning" : "bg-success"
+                                  )}>
+                                    {item.aiSummary.riskAnalysis.probabilityOfEnforcement.toUpperCase()}
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {item.aiSummary.riskAnalysis.riskBreakdown.length > 0 && (
+                              <div className="space-y-3">
+                                <h5 className="text-sm font-semibold">Risk Breakdown by Category</h5>
+                                {item.aiSummary.riskAnalysis.riskBreakdown.map((risk, idx) => (
+                                  <div key={idx} className="p-3 rounded-lg bg-muted/50">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="font-medium text-sm">{risk.category}</span>
+                                      <Badge variant="outline" className={cn(
+                                        risk.score >= 70 ? "border-destructive text-destructive" :
+                                        risk.score >= 40 ? "border-warning text-warning" : "border-success text-success"
+                                      )}>
+                                        {risk.score}/100
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mb-2">{risk.description}</p>
+                                    {risk.mitigationStrategy && (
+                                      <p className="text-xs text-info">
+                                        <span className="font-medium">Mitigation:</span> {risk.mitigationStrategy}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {item.aiSummary.riskAnalysis.potentialLiabilities && item.aiSummary.riskAnalysis.potentialLiabilities.length > 0 && (
+                              <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                                <h5 className="text-sm font-semibold text-destructive mb-2">Potential Liabilities</h5>
+                                <ul className="list-disc list-inside space-y-1">
+                                  {item.aiSummary.riskAnalysis.potentialLiabilities.map((liability, idx) => (
+                                    <li key={idx} className="text-sm text-muted-foreground">{liability}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            
+                            {item.aiSummary.riskAnalysis.competitiveRiskAssessment && (
+                              <div className="p-3 rounded-lg bg-muted/50">
+                                <h5 className="text-sm font-semibold mb-1">Competitive Risk</h5>
+                                <p className="text-sm text-muted-foreground">{item.aiSummary.riskAnalysis.competitiveRiskAssessment}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">{item.aiSummary.riskExplanation}</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Stakeholder Impact Analysis */}
+                  {item.aiSummary.stakeholderAnalysis && item.aiSummary.stakeholderAnalysis.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Stakeholder Impact Analysis
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {item.aiSummary.stakeholderAnalysis.map((stakeholder, idx) => (
+                            <div key={idx} className="p-4 rounded-lg bg-muted/50 border-l-4" style={{
+                              borderLeftColor: stakeholder.impactLevel === "high" ? "hsl(var(--destructive))" :
+                                              stakeholder.impactLevel === "medium" ? "hsl(var(--warning))" : "hsl(var(--success))"
+                            }}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold">{stakeholder.stakeholder}</span>
+                                  <Badge variant="outline" className="text-xs">{stakeholder.type}</Badge>
+                                </div>
+                                <Badge className={cn(
+                                  stakeholder.impactLevel === "high" ? "bg-destructive" :
+                                  stakeholder.impactLevel === "medium" ? "bg-warning" : "bg-success"
+                                )}>
+                                  {stakeholder.impactLevel.toUpperCase()} IMPACT
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2">{stakeholder.impactDescription}</p>
+                              {stakeholder.requiredActions && stakeholder.requiredActions.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-xs font-medium mb-1">Required Actions:</p>
+                                  <ul className="list-disc list-inside text-xs text-muted-foreground">
+                                    {stakeholder.requiredActions.map((action, aidx) => (
+                                      <li key={aidx}>{action}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {stakeholder.timeline && (
+                                <p className="text-xs text-info mt-2">Timeline: {stakeholder.timeline}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Compliance Requirements */}
+                  {item.aiSummary.complianceRequirements && item.aiSummary.complianceRequirements.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Check className="h-4 w-4" />
+                          Compliance Requirements Checklist
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {item.aiSummary.complianceRequirements.map((req, idx) => (
+                            <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                              <Badge className={cn(
+                                "mt-0.5 flex-shrink-0",
+                                req.priority === "critical" ? "bg-destructive" :
+                                req.priority === "high" ? "bg-warning" :
+                                req.priority === "medium" ? "bg-info" : "bg-muted"
+                              )}>
+                                {req.priority.toUpperCase()}
+                              </Badge>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{req.requirement}</p>
+                                <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
+                                  {req.deadline && <span>⏰ {req.deadline}</span>}
+                                  {req.estimatedEffort && <span>⚡ {req.estimatedEffort}</span>}
+                                  {req.responsibleDepartment && <span>👥 {req.responsibleDepartment}</span>}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Strategic Recommendations */}
+                  {item.aiSummary.strategicRecommendations && item.aiSummary.strategicRecommendations.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" style={{ color: theme.primaryColor }} />
+                          Strategic Recommendations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {item.aiSummary.strategicRecommendations.map((rec, idx) => (
+                            <div key={idx} className="p-4 rounded-lg border" style={{ borderColor: `${theme.primaryColor}30` }}>
+                              <div className="flex items-center justify-between mb-2">
+                                <h5 className="font-semibold text-sm">{rec.title}</h5>
+                                <Badge variant="outline" className={cn(
+                                  rec.priority === "immediate" ? "border-destructive text-destructive" :
+                                  rec.priority === "short-term" ? "border-warning text-warning" :
+                                  rec.priority === "medium-term" ? "border-info text-info" : "border-muted text-muted-foreground"
+                                )}>
+                                  {rec.priority.replace("-", " ").toUpperCase()}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{rec.description}</p>
+                              {rec.resourcesRequired && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  <span className="font-medium">Resources:</span> {rec.resourcesRequired}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Related Legislation */}
+                  {item.aiSummary.relatedLegislation && item.aiSummary.relatedLegislation.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Scale className="h-4 w-4" />
+                          Related Legislation & Precedents
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {item.aiSummary.relatedLegislation.map((rel, idx) => (
+                            <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                              <Badge variant="outline" className="flex-shrink-0">
+                                {rel.relationship}
+                              </Badge>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{rel.identifier}</p>
+                                <p className="text-xs text-muted-foreground">{rel.title}</p>
+                                <p className="text-xs text-info mt-1">{rel.relevance}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Industry Benchmarks */}
+                  {item.aiSummary.industryBenchmarks && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Industry Benchmarks
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {item.aiSummary.industryBenchmarks.averageComplianceTime && (
+                            <div className="p-3 rounded-lg bg-muted/50 text-center">
+                              <p className="text-lg font-bold">{item.aiSummary.industryBenchmarks.averageComplianceTime}</p>
+                              <p className="text-xs text-muted-foreground">Avg. Compliance Time</p>
+                            </div>
+                          )}
+                          {item.aiSummary.industryBenchmarks.industryReadinessLevel && (
+                            <div className="p-3 rounded-lg bg-muted/50 text-center">
+                              <p className="text-lg font-bold">{item.aiSummary.industryBenchmarks.industryReadinessLevel}</p>
+                              <p className="text-xs text-muted-foreground">Industry Readiness</p>
+                            </div>
+                          )}
+                          {item.aiSummary.industryBenchmarks.competitorAdoptionRate && (
+                            <div className="p-3 rounded-lg bg-muted/50 text-center">
+                              <p className="text-lg font-bold">{item.aiSummary.industryBenchmarks.competitorAdoptionRate}</p>
+                              <p className="text-xs text-muted-foreground">Competitor Adoption</p>
+                            </div>
+                          )}
+                        </div>
+                        {item.aiSummary.industryBenchmarks.bestPractices && item.aiSummary.industryBenchmarks.bestPractices.length > 0 && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium mb-2">Industry Best Practices:</p>
+                            <ul className="list-disc list-inside space-y-1">
+                              {item.aiSummary.industryBenchmarks.bestPractices.map((practice, idx) => (
+                                <li key={idx} className="text-sm text-muted-foreground">{practice}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Key Stakeholders Badges */}
+                  {item.aiSummary.stakeholders && item.aiSummary.stakeholders.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Key Stakeholders</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {item.aiSummary.stakeholders.map((stakeholder, idx) => (
+                            <Badge key={idx} variant="outline">{stakeholder}</Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
+                    <p className="text-muted-foreground">AI analysis not yet generated for this item.</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Votes Tab */}
@@ -738,7 +1080,7 @@ export function UnifiedLegislationDrawer({
               </Card>
             </TabsContent>
           </Tabs>
-        </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   );
