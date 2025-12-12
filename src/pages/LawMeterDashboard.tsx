@@ -296,7 +296,7 @@ export default function LawMeterDashboard() {
                 setSelectedSubJurisdiction(null); // Clear sub-jurisdiction when changing country
               }}
               onSelectSubJurisdiction={(jurisdiction, subJurisdiction) => {
-                // Handle state/province selection from map - auto-select and filter
+                // Handle state/province/department selection from map - auto-select and filter
                 if (jurisdiction === "usa") {
                   setSelectedRegion("NAM");
                   setSelectedCountry("usa");
@@ -304,6 +304,26 @@ export default function LawMeterDashboard() {
                 } else if (jurisdiction === "canada") {
                   setSelectedRegion("NAM");
                   setSelectedCountry("canada");
+                  setSelectedSubJurisdiction(subJurisdiction);
+                } else if (jurisdiction === "japan") {
+                  setSelectedRegion("APAC");
+                  setSelectedCountry("japan");
+                  setSelectedSubJurisdiction(subJurisdiction);
+                } else if (jurisdiction === "korea") {
+                  setSelectedRegion("APAC");
+                  setSelectedCountry("korea");
+                  setSelectedSubJurisdiction(subJurisdiction);
+                } else if (jurisdiction === "taiwan") {
+                  setSelectedRegion("APAC");
+                  setSelectedCountry("taiwan");
+                  setSelectedSubJurisdiction(subJurisdiction);
+                } else if (jurisdiction === "peru") {
+                  setSelectedRegion("LATAM");
+                  setSelectedCountry("peru");
+                  setSelectedSubJurisdiction(subJurisdiction);
+                } else if (jurisdiction === "costa-rica") {
+                  setSelectedRegion("LATAM");
+                  setSelectedCountry("costa-rica");
                   setSelectedSubJurisdiction(subJurisdiction);
                 }
               }}
@@ -447,6 +467,8 @@ export default function LawMeterDashboard() {
                 categories={regulatoryCategories}
                 title="Perú Legislation"
                 subtitle="Congreso de la República - Regulatory Monitoring"
+                initialSubnationalFilter={selectedSubJurisdiction}
+                onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
                 onItemClick={(item) => {
                   setSelectedUnifiedItem(item);
                   setUnifiedDrawerConfig(peruConfig);
@@ -481,6 +503,8 @@ export default function LawMeterDashboard() {
                 categories={regulatoryCategories}
                 title="Costa Rica Legislation"
                 subtitle="Proyectos de Ley - Asamblea Legislativa"
+                initialSubnationalFilter={selectedSubJurisdiction}
+                onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
                 onItemClick={(item) => {
                   setSelectedUnifiedItem(item);
                   setUnifiedDrawerConfig(costaRicaConfig);
@@ -538,6 +562,8 @@ export default function LawMeterDashboard() {
                 categories={regulatoryCategories}
                 title="Japan Legislation"
                 subtitle="Japanese regulatory monitoring"
+                initialSubnationalFilter={selectedSubJurisdiction}
+                onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
                 onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(japanConfig); }}
               />
             )}
@@ -551,6 +577,8 @@ export default function LawMeterDashboard() {
                 categories={regulatoryCategories}
                 title="Korea Legislation"
                 subtitle="대한민국 법률 모니터링 (South Korean regulatory monitoring)"
+                initialSubnationalFilter={selectedSubJurisdiction}
+                onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
                 onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(koreaConfig); }}
               />
             )}
@@ -564,6 +592,8 @@ export default function LawMeterDashboard() {
                 categories={regulatoryCategories}
                 title="Taiwan Legislation"
                 subtitle="臺灣法規監測 (Taiwanese regulatory monitoring)"
+                initialSubnationalFilter={selectedSubJurisdiction}
+                onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
                 onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(taiwanConfig); }}
               />
             )}
