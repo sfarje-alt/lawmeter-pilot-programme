@@ -1382,8 +1382,6 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
         "Revisar contratos con proveedores de pago"
       ]
     },
-      ]
-    },
     acciones: [
       { fecha: "2024-08-01", descripcion: "Consulta pública del proyecto de acuerdo", actor: "SUGEF" },
       { fecha: "2024-09-15", descripcion: "Aprobación por Junta Directiva SUGEF", actor: "Junta Directiva SUGEF" },
