@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
+import lawmeterIcon from "@/assets/lawmeter-icon.png";
 
 interface AppSidebarProps {
   activeTab: string;
@@ -37,7 +38,15 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
   return (
     <Sidebar collapsible="icon" className="border-r border-white/10 bg-gradient-to-b from-[hsl(220,40%,10%)] to-[hsl(220,45%,8%)]">
       <SidebarHeader className="p-3 pb-2">
-        {!isCollapsed && (
+        {isCollapsed ? (
+          <div className="flex justify-center">
+            <img 
+              src={lawmeterIcon} 
+              alt="LawMeter" 
+              className="w-8 h-8 object-contain" 
+            />
+          </div>
+        ) : (
           <div className="space-y-2">
             <img 
               src={lawmeterLogo} 
