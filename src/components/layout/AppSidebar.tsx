@@ -1,4 +1,4 @@
-import { FileText, BarChart3, Star, Users, Calendar, Settings, BookOpen, Clock, MessageSquare } from "lucide-react";
+import { FileText, BarChart3, Star, Users, Calendar, Settings, BookOpen, Clock, MessageSquare, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +12,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
 import lawmeterIcon from "@/assets/lawmeter-icon.png";
 
@@ -34,6 +37,18 @@ const menuItems = [
 export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+    navigate("/auth");
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-white/10 bg-gradient-to-b from-[hsl(220,40%,10%)] to-[hsl(220,45%,8%)]">
@@ -101,6 +116,15 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
         >
           <Settings className="h-4 w-4" />
           {!isCollapsed && <span>Alert Settings</span>}
+        </SidebarMenuButton>
+
+        <SidebarMenuButton
+          onClick={handleLogout}
+          tooltip="Sign Out"
+          className="text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive"
+        >
+          <LogOut className="h-4 w-4" />
+          {!isCollapsed && <span>Sign Out</span>}
         </SidebarMenuButton>
 
         {!isCollapsed && (
