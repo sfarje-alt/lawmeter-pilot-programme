@@ -1162,26 +1162,62 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                       }
                     };
 
+                    // Get jurisdiction-specific gradient colors
+                    const getJurisdictionGradient = (jurisdiction: string) => {
+                      switch (jurisdiction) {
+                        case "USA":
+                        case "CAN":
+                          return "bg-gradient-to-r from-blue-950/90 to-blue-900/80 dark:from-blue-950 dark:to-blue-900"; // NAM
+                        case "CRI":
+                          return "bg-gradient-to-r from-emerald-950/90 to-teal-900/80 dark:from-emerald-950 dark:to-teal-900"; // LATAM
+                        case "EU":
+                          return "bg-gradient-to-r from-indigo-950/90 to-violet-900/80 dark:from-indigo-950 dark:to-violet-900"; // EU
+                        case "UAE":
+                        case "SAU":
+                          return "bg-gradient-to-r from-amber-950/90 to-orange-900/80 dark:from-amber-950 dark:to-orange-900"; // GCC
+                        case "JPN":
+                        case "KOR":
+                        case "TWN":
+                          return "bg-gradient-to-r from-rose-950/90 to-pink-900/80 dark:from-rose-950 dark:to-pink-900"; // APAC
+                        default:
+                          return "bg-gradient-to-r from-slate-950/90 to-slate-900/80 dark:from-slate-950 dark:to-slate-900";
+                      }
+                    };
+
+                    const getBorderColor = (jurisdiction: string) => {
+                      switch (jurisdiction) {
+                        case "USA":
+                        case "CAN":
+                          return "border-blue-500"; // NAM
+                        case "CRI":
+                          return "border-emerald-500"; // LATAM
+                        case "EU":
+                          return "border-indigo-500"; // EU
+                        case "UAE":
+                        case "SAU":
+                          return "border-amber-500"; // GCC
+                        case "JPN":
+                        case "KOR":
+                        case "TWN":
+                          return "border-rose-500"; // APAC
+                        default:
+                          return "border-purple-500";
+                      }
+                    };
+
                     return (
                       <div
                         key={`effective-${index}`}
                         onClick={() => effectiveDate.alertId && onNavigateToAlert?.(effectiveDate.alertId)}
                         className={cn(
                           "p-4 rounded-lg border-l-4 hover:shadow-md transition-shadow",
-                          effectiveDate.type === "plazo" 
-                            ? "border-orange-600 bg-orange-50 dark:bg-orange-950/20" 
-                            : "border-purple-600 bg-purple-50 dark:bg-purple-950/20",
-                          effectiveDate.alertId && onNavigateToAlert && "cursor-pointer",
-                          effectiveDate.type === "plazo" 
-                            ? "hover:bg-orange-100 dark:hover:bg-orange-900/30" 
-                            : "hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                          getJurisdictionGradient(effectiveDate.jurisdiction),
+                          getBorderColor(effectiveDate.jurisdiction),
+                          effectiveDate.alertId && onNavigateToAlert && "cursor-pointer"
                         )}
                       >
                         <div className="flex items-start gap-3">
-                          <div className={cn(
-                            "mt-1 flex items-center gap-2",
-                            effectiveDate.type === "plazo" ? "text-orange-600" : "text-purple-600"
-                          )}>
+                          <div className="mt-1 flex items-center gap-2 text-white/80">
                             {effectiveDate.type === "plazo" ? (
                               <Clock className="w-4 h-4" />
                             ) : (
@@ -1192,55 +1228,39 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                                 "w-3 h-3 rounded-full",
                                 getRiskColor(effectiveDate.riskLevel)
                               )}
-                              title={`Riesgo ${effectiveDate.riskLevel === "high" ? "alto" : effectiveDate.riskLevel === "medium" ? "medio" : "bajo"}`}
+                              title={`Risk: ${effectiveDate.riskLevel}`}
                             />
                           </div>
                           <div className="flex-1 space-y-2">
-                            <h4 className={cn(
-                              "font-semibold text-sm",
-                              effectiveDate.type === "plazo" 
-                                ? "text-orange-900 dark:text-orange-100" 
-                                : "text-purple-900 dark:text-purple-100"
-                            )}>
+                            <h4 className="font-semibold text-sm text-white">
                               {effectiveDate.lawName}
                             </h4>
                             <div className="flex items-center gap-2 flex-wrap">
                               {effectiveDate.jurisdictionFlag && (
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-xs border-white/30 text-white/90">
                                   {effectiveDate.jurisdictionFlag} {effectiveDate.jurisdiction}
                                 </Badge>
                               )}
-                              <Badge variant="outline" className={cn(
-                                "text-xs",
-                                effectiveDate.type === "plazo" 
-                                  ? "border-orange-600 text-orange-600" 
-                                  : "border-purple-600 text-purple-600"
-                              )}>
+                              <Badge variant="outline" className="text-xs border-white/30 text-white/90">
                                 {effectiveDate.lawNumber}
                               </Badge>
                               <Badge 
-                                variant={effectiveDate.type === "efectiva" ? "default" : "secondary"} 
                                 className={cn(
                                   "text-xs",
                                   effectiveDate.type === "plazo"
-                                    ? "bg-orange-600 text-white hover:bg-orange-700"
-                                    : effectiveDate.type === "efectiva" 
-                                      ? "bg-purple-600 text-white hover:bg-purple-700" 
-                                      : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
+                                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                                    : "bg-purple-500 text-white hover:bg-purple-600"
                                 )}
                               >
                                 {effectiveDate.type === "plazo" ? "Compliance Deadline" : effectiveDate.type === "efectiva" ? "Effective Date" : "In Force"}
                               </Badge>
                             </div>
                             {effectiveDate.description && (
-                              <p className="text-xs text-muted-foreground mt-2">
+                              <p className="text-xs text-white/70 mt-2">
                                 {effectiveDate.description}
                               </p>
                             )}
-                            <div className={cn(
-                              "flex items-center gap-1 text-xs",
-                              effectiveDate.type === "plazo" ? "text-orange-600" : "text-purple-600"
-                            )}>
+                            <div className="flex items-center gap-1 text-xs text-white/80">
                               <CalendarIcon className="w-3 h-3" />
                               {format(effectiveDate.date, "MMM d, yyyy")}
                             </div>
@@ -1331,7 +1351,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   <TableHead>Jurisdiction</TableHead>
                   <TableHead>Body Type</TableHead>
                   <TableHead>Legislative Body</TableHead>
-                  <TableHead>Session Date</TableHead>
+                  <TableHead className="min-w-[110px]">Session Date</TableHead>
                   <TableHead>Session #</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead>Session Type</TableHead>
@@ -1359,7 +1379,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                     <TableCell className="max-w-[300px] truncate" title={session.organName}>
                       {session.organName}
                     </TableCell>
-                    <TableCell>{format(session.date, "dd/MM/yyyy")}</TableCell>
+                    <TableCell className="whitespace-nowrap">{format(session.date, "MMM d, yyyy")}</TableCell>
                     <TableCell>{session.sessionNumber || "-"}</TableCell>
                     <TableCell>{session.time}</TableCell>
                     <TableCell>
