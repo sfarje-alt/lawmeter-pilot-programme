@@ -18,6 +18,7 @@ import { mockBills } from "@/data/mockBills";
 import { FilterState, Alert, BillItem } from "@/types/legislation";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { ComplianceTimeline } from "@/components/analytics/ComplianceTimeline";
 import { AlertActCard } from "@/components/acts/AlertActCard";
 import { AlertActDrawer } from "@/components/acts/AlertActDrawer";
 import { BillCard } from "@/components/bills/BillCard";
@@ -626,7 +627,24 @@ export default function LawMeterDashboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="calendar" className="mt-6">
+          <TabsContent value="calendar" className="mt-6 space-y-6">
+            <ComplianceTimeline 
+              data={[
+                ...enrichedUSAData,
+                ...enrichedCanadaData,
+                ...enrichedJapanData,
+                ...enrichedKoreaData,
+                ...enrichedTaiwanData,
+                ...enrichedEUData,
+                ...enrichedUAEData,
+                ...enrichedSaudiData,
+                ...enrichedOmanData,
+                ...enrichedKuwaitData,
+                ...enrichedBahrainData,
+                ...enrichedQatarData,
+                ...enrichedCostaRicaData,
+              ]} 
+            />
             <LegislativeSessionsCalendar
               alerts={alerts}
               onNavigateToAlert={(alertId) => {

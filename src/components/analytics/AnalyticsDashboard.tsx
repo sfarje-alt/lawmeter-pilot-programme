@@ -6,8 +6,7 @@ import { UnifiedImpactUrgencyMatrix } from "./UnifiedImpactUrgencyMatrix";
 import { JurisdictionHeatMap } from "./JurisdictionHeatMap";
 import { RiskTrendChart } from "./RiskTrendChart";
 import { CategoryBreakdownChart } from "./CategoryBreakdownChart";
-import { CompactDeadlineCalendar } from "./CompactDeadlineCalendar";
-import { ComplianceTimeline } from "./ComplianceTimeline";
+
 import {
   enrichedUSAData,
   enrichedCanadaData,
@@ -120,20 +119,11 @@ export function AnalyticsDashboard() {
 
       {/* Second Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Compliance Timeline */}
-        <ComplianceTimeline data={filteredData} />
-
         {/* Risk Trend Over Time */}
         <RiskTrendChart data={filteredData} />
-      </div>
 
-      {/* Third Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Category Breakdown */}
         <CategoryBreakdownChart data={filteredData} />
-
-        {/* Compact Deadline Calendar */}
-        <CompactDeadlineCalendar data={filteredData} />
       </div>
     </div>
   );
