@@ -54,6 +54,9 @@ export function UnifiedLegislationFilters({
 }: UnifiedLegislationFiltersProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const theme = regionThemes[config.region];
+  
+  // Check if LATAM region for Spanish labels
+  const isLatam = config.region === "LATAM";
 
   // Update a single filter field
   const updateFilter = <K extends keyof UnifiedFilterState>(
@@ -141,7 +144,9 @@ export function UnifiedLegislationFilters({
       >
         {/* Lifecycle Filter */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Lifecycle:</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {isLatam ? "Ciclo de Vida:" : "Lifecycle:"}
+          </span>
           <Tabs 
             value={filters.lifecycle} 
             onValueChange={(v) => updateFilter("lifecycle", v as any)}
@@ -149,15 +154,15 @@ export function UnifiedLegislationFilters({
             <TabsList className="h-8">
               <TabsTrigger value="all" className="text-xs px-3 gap-1.5">
                 {lifecycleIcons.all}
-                All ({counts.all})
+                {isLatam ? "Todos" : "All"} ({counts.all})
               </TabsTrigger>
               <TabsTrigger value="in-force" className="text-xs px-3 gap-1.5">
                 {lifecycleIcons["in-force"]}
-                In Force ({counts.inForce})
+                {isLatam ? "Vigente" : "In Force"} ({counts.inForce})
               </TabsTrigger>
               <TabsTrigger value="pipeline" className="text-xs px-3 gap-1.5">
                 {lifecycleIcons.pipeline}
-                Pipeline ({counts.pipeline})
+                {isLatam ? "En Trámite" : "Pipeline"} ({counts.pipeline})
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -166,13 +171,17 @@ export function UnifiedLegislationFilters({
         {/* Jurisdiction Level Filter - Adapted per jurisdiction */}
         {config.jurisdictionLevels && config.jurisdictionLevels.some(l => l.enabled) && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Level:</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {isLatam ? "Nivel:" : "Level:"}
+            </span>
             <Tabs 
               value={filters.jurisdictionLevel} 
               onValueChange={(v) => updateFilter("jurisdictionLevel", v as any)}
             >
               <TabsList className="h-8">
-                <TabsTrigger value="all" className="text-xs px-3">All</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs px-3">
+                  {isLatam ? "Todos" : "All"}
+                </TabsTrigger>
                 {config.jurisdictionLevels.filter(l => l.enabled).map(level => (
                   <TabsTrigger key={level.id} value={level.id} className="text-xs px-3">
                     {level.label}

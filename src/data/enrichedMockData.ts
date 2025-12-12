@@ -13,10 +13,10 @@ import {
   omanLegislation,
   kuwaitLegislation,
   bahrainLegislation,
-  qatarLegislation,
-  peruLegislation
+  qatarLegislation
 } from "./mockInternationalLegislation";
 import { InternationalLegislation } from "./mockInternationalLegislation";
+import { peruLegislationData, convertPeruToUnified } from "./peruLegislationData";
 
 // Helper to generate realistic mock data for drawer tabs
 function generateFullContent(item: InternationalLegislation, jurisdiction: string): Partial<UnifiedLegislationItem> {
@@ -374,8 +374,8 @@ export const enrichedGCCData = [
   ...enrichedQatarData.map(item => ({ ...item, id: `qa-${item.id}` }))
 ];
 
-// Peru data
-export const enrichedPeruData = convertToEnrichedUnified(peruLegislation, "Peru", "LATAM");
+// Peru data - usando el nuevo sistema jurídico correcto
+export const enrichedPeruData = convertPeruToUnified(peruLegislationData);
 
 // Regulatory categories
 export const regulatoryCategories = [
