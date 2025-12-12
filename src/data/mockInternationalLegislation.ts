@@ -22,7 +22,14 @@ export type RegulatoryCategory =
   | "Product Safety"
   | "Cybersecurity"
   | "Battery"
-  | "Food Contact Material";
+  | "Food Contact Material"
+  // Spanish equivalents for LATAM jurisdictions
+  | "Regulaciones de Radio"
+  | "Seguridad del Producto"
+  | "Ciberseguridad"
+  | "Baterías"
+  | "Materiales en Contacto con Alimentos"
+  | "Regulaciones de Baterías";
 
 export interface TimelineStage {
   name: string;
@@ -2047,12 +2054,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "high",
     riskScore: 78,
-    category: "Radio Regulations",
-    regulatoryCategory: "Radio",
+    category: "Regulaciones de Radio",
+    regulatoryCategory: "Regulaciones de Radio",
     publishedDate: daysAgo(20),
     complianceDeadline: daysFromNow(180),
     regulatoryBody: "MTC - Ministerio de Transportes y Comunicaciones",
-    impactAreas: ["Wireless", "Certification", "Labeling"],
+    impactAreas: ["Inalámbrico", "Certificación", "Etiquetado"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "Proyecto de Ley",
@@ -2071,12 +2078,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "medium",
     riskScore: 65,
-    category: "Radio Regulations",
-    regulatoryCategory: "Radio",
+    category: "Regulaciones de Radio",
+    regulatoryCategory: "Regulaciones de Radio",
     publishedDate: daysAgo(60),
     effectiveDate: daysAgo(15),
     regulatoryBody: "OSIPTEL",
-    impactAreas: ["IoT", "Registration", "Connectivity"],
+    impactAreas: ["IoT", "Registro", "Conectividad"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
     localTerminology: "Resolución de Consejo Directivo"
@@ -2095,12 +2102,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "high",
     riskScore: 85,
-    category: "Product Safety",
-    regulatoryCategory: "Product Safety",
+    category: "Seguridad del Producto",
+    regulatoryCategory: "Seguridad del Producto",
     publishedDate: daysAgo(15),
     complianceDeadline: daysFromNow(120),
     regulatoryBody: "INDECOPI",
-    impactAreas: ["Product Safety", "Certification", "Manufacturing"],
+    impactAreas: ["Seguridad del Producto", "Certificación", "Manufactura"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "Proyecto de Ley",
@@ -2119,12 +2126,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "medium",
     riskScore: 70,
-    category: "Product Safety",
-    regulatoryCategory: "Product Safety",
+    category: "Seguridad del Producto",
+    regulatoryCategory: "Seguridad del Producto",
     publishedDate: daysAgo(90),
     effectiveDate: daysAgo(30),
     regulatoryBody: "INACAL",
-    impactAreas: ["Standards", "Testing", "Compliance"],
+    impactAreas: ["Estándares", "Ensayos", "Cumplimiento"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
     localTerminology: "Norma Técnica Peruana"
@@ -2143,12 +2150,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "high",
     riskScore: 82,
-    category: "Cybersecurity",
-    regulatoryCategory: "Cybersecurity",
+    category: "Ciberseguridad",
+    regulatoryCategory: "Ciberseguridad",
     publishedDate: daysAgo(25),
     complianceDeadline: daysFromNow(270),
     regulatoryBody: "PCM - Presidencia del Consejo de Ministros",
-    impactAreas: ["Software", "Security", "Firmware"],
+    impactAreas: ["Software", "Seguridad", "Firmware"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "Proyecto de Ley",
@@ -2167,12 +2174,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "medium",
     riskScore: 58,
-    category: "Cybersecurity",
-    regulatoryCategory: "Cybersecurity",
+    category: "Ciberseguridad",
+    regulatoryCategory: "Ciberseguridad",
     publishedDate: daysAgo(45),
     effectiveDate: daysAgo(10),
     regulatoryBody: "SEGDI - Secretaría de Gobierno Digital",
-    impactAreas: ["Data Security", "Encryption", "Authentication"],
+    impactAreas: ["Seguridad de Datos", "Cifrado", "Autenticación"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
     localTerminology: "Directiva"
@@ -2191,12 +2198,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "high",
     riskScore: 76,
-    category: "Battery Regulations",
-    regulatoryCategory: "Battery",
+    category: "Regulaciones de Baterías",
+    regulatoryCategory: "Baterías",
     publishedDate: daysAgo(30),
     complianceDeadline: daysFromNow(200),
     regulatoryBody: "MINAM - Ministerio del Ambiente",
-    impactAreas: ["Battery Safety", "Certification", "Labeling"],
+    impactAreas: ["Seguridad de Baterías", "Certificación", "Etiquetado"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "Proyecto de Ley",
@@ -2215,12 +2222,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "medium",
     riskScore: 55,
-    category: "Battery Regulations",
-    regulatoryCategory: "Battery",
+    category: "Regulaciones de Baterías",
+    regulatoryCategory: "Baterías",
     publishedDate: daysAgo(120),
     effectiveDate: daysAgo(60),
     regulatoryBody: "OEFA - Organismo de Evaluación y Fiscalización Ambiental",
-    impactAreas: ["Recycling", "Producer Responsibility", "Reporting"],
+    impactAreas: ["Reciclaje", "Responsabilidad del Productor", "Reportes"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
     localTerminology: "Resolución de Consejo Directivo"
@@ -2239,12 +2246,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "high",
     riskScore: 88,
-    category: "Food Contact Material",
-    regulatoryCategory: "Food Contact Material",
+    category: "Materiales en Contacto con Alimentos",
+    regulatoryCategory: "Materiales en Contacto con Alimentos",
     publishedDate: daysAgo(10),
     complianceDeadline: daysFromNow(300),
     regulatoryBody: "DIGESA - Dirección General de Salud Ambiental",
-    impactAreas: ["Materials", "Testing", "Certification"],
+    impactAreas: ["Materiales", "Ensayos", "Certificación"],
     legislationType: "bill",
     legislativeCategory: "pending",
     localTerminology: "Proyecto de Ley",
@@ -2263,12 +2270,12 @@ export const peruLegislation: InternationalLegislation[] = [
     jurisdiction: "Peru",
     riskLevel: "medium",
     riskScore: 62,
-    category: "Food Contact Material",
-    regulatoryCategory: "Food Contact Material",
+    category: "Materiales en Contacto con Alimentos",
+    regulatoryCategory: "Materiales en Contacto con Alimentos",
     publishedDate: daysAgo(75),
     effectiveDate: daysAgo(20),
     regulatoryBody: "SANIPES - Organismo Nacional de Sanidad Pesquera",
-    impactAreas: ["Materials", "Documentation", "Compliance"],
+    impactAreas: ["Materiales", "Documentación", "Cumplimiento"],
     legislationType: "regulation",
     legislativeCategory: "enacted",
     localTerminology: "Norma Técnica"
@@ -2316,3 +2323,48 @@ export const REGULATORY_CATEGORIES: RegulatoryCategory[] = [
   "Battery",
   "Food Contact Material"
 ];
+
+// Spanish regulatory categories for LATAM jurisdictions
+export const REGULATORY_CATEGORIES_ES: Record<string, string> = {
+  "Radio": "Regulaciones de Radio",
+  "Radio Regulations": "Regulaciones de Radio",
+  "Product Safety": "Seguridad del Producto",
+  "Cybersecurity": "Ciberseguridad",
+  "Battery": "Baterías",
+  "Battery Regulations": "Regulaciones de Baterías",
+  "Food Contact Material": "Materiales en Contacto con Alimentos"
+};
+
+// Spanish risk levels for LATAM jurisdictions
+export const RISK_LEVELS_ES: Record<string, string> = {
+  "high": "Alto",
+  "medium": "Medio",
+  "low": "Bajo"
+};
+
+// Spanish impact areas for LATAM jurisdictions
+export const IMPACT_AREAS_ES: Record<string, string> = {
+  "Wireless": "Inalámbrico",
+  "Certification": "Certificación",
+  "Labeling": "Etiquetado",
+  "IoT": "IoT",
+  "Registration": "Registro",
+  "Connectivity": "Conectividad",
+  "Product Safety": "Seguridad del Producto",
+  "Manufacturing": "Manufactura",
+  "Standards": "Estándares",
+  "Testing": "Ensayos",
+  "Compliance": "Cumplimiento",
+  "Software": "Software",
+  "Security": "Seguridad",
+  "Firmware": "Firmware",
+  "Data Security": "Seguridad de Datos",
+  "Encryption": "Cifrado",
+  "Authentication": "Autenticación",
+  "Battery Safety": "Seguridad de Baterías",
+  "Recycling": "Reciclaje",
+  "Producer Responsibility": "Responsabilidad del Productor",
+  "Reporting": "Reportes",
+  "Materials": "Materiales",
+  "Documentation": "Documentación"
+};
