@@ -60,7 +60,7 @@ export interface UnifiedLegislationItem {
   isRead?: boolean;
   isStarred?: boolean;
   
-  // AI summary (cached)
+  // AI summary (cached) - Extended deep analysis
   aiSummary?: {
     whatChanges: string;
     whoImpacted: string;
@@ -70,6 +70,76 @@ export interface UnifiedLegislationItem {
     riskCategory?: string;
     riskExplanation?: string;
     stakeholders?: string[];
+    
+    // Deep analysis fields
+    executiveSummary?: string;
+    
+    // Statistical analysis
+    statistics?: {
+      estimatedAffectedCompanies?: number;
+      estimatedComplianceCost?: { min: number; max: number; currency: string };
+      marketSizeImpact?: string;
+      implementationTimeMonths?: number;
+      penaltyRange?: { min: number; max: number; currency: string };
+      complianceComplexityScore?: number; // 1-10
+    };
+    
+    // Detailed risk assessment
+    riskAnalysis?: {
+      overallRiskScore: number;
+      riskBreakdown: Array<{
+        category: string;
+        score: number;
+        description: string;
+        mitigationStrategy?: string;
+      }>;
+      probabilityOfEnforcement?: "high" | "medium" | "low";
+      potentialLiabilities?: string[];
+      competitiveRiskAssessment?: string;
+    };
+    
+    // Stakeholder impact analysis
+    stakeholderAnalysis?: Array<{
+      stakeholder: string;
+      type: "internal" | "external" | "regulatory" | "industry";
+      impactLevel: "high" | "medium" | "low";
+      impactDescription: string;
+      requiredActions?: string[];
+      timeline?: string;
+    }>;
+    
+    // Compliance requirements
+    complianceRequirements?: Array<{
+      requirement: string;
+      priority: "critical" | "high" | "medium" | "low";
+      deadline?: string;
+      estimatedEffort?: string;
+      responsibleDepartment?: string;
+    }>;
+    
+    // Strategic recommendations
+    strategicRecommendations?: Array<{
+      title: string;
+      description: string;
+      priority: "immediate" | "short-term" | "medium-term" | "long-term";
+      resourcesRequired?: string;
+    }>;
+    
+    // Related legislation and precedents
+    relatedLegislation?: Array<{
+      identifier: string;
+      title: string;
+      relationship: "amends" | "repeals" | "implements" | "related" | "conflicts";
+      relevance: string;
+    }>;
+    
+    // Industry benchmarks
+    industryBenchmarks?: {
+      averageComplianceTime?: string;
+      industryReadinessLevel?: string;
+      competitorAdoptionRate?: string;
+      bestPractices?: string[];
+    };
   };
   
   // Source URLs

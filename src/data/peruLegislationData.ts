@@ -188,7 +188,78 @@ export const peruLegislationData: PeruLegislationItem[] = [
       afectados: "Fabricantes, importadores y comercializadores de hervidores y cafeteras. INDECOPI fiscaliza con multas hasta 450 UIT.",
       fechaClave: `Vigente desde ${diasAtras(60)}. Aplicable a productos comercializados desde esa fecha.`,
       explicacionRiesgo: "Alto impacto en cadena de suministro de repuestos y costos de servicio técnico.",
-      actoresClave: ["INDECOPI", "Asociación de Consumidores", "Comercializadores"]
+      actoresClave: ["INDECOPI", "Asociación de Consumidores", "Comercializadores", "ASPEC", "Cámara de Comercio"],
+      
+      resumenEjecutivo: "Esta ley representa un cambio significativo en el marco regulatorio de protección al consumidor para electrodomésticos en Perú. Extiende la garantía legal mínima de 1 a 2 años y establece obligaciones de disponibilidad de repuestos por 5 años, afectando directamente la cadena de suministro y costos operativos de fabricantes e importadores de hervidores eléctricos y cafeteras.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 450,
+        costoEstimadoCumplimiento: { min: 15000, max: 85000, moneda: "USD" },
+        impactoMercado: "Incremento estimado del 8-12% en costos de post-venta y servicio técnico para el sector de electrodomésticos de cocina",
+        tiempoImplementacionMeses: 6,
+        rangoSanciones: { min: 1, max: 450, moneda: "UIT", unidad: "UIT (S/ 5,150 cada UIT)" },
+        puntajeComplejidad: 7
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 78,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Operativo", puntaje: 82, descripcion: "Necesidad de restructurar cadena de repuestos y servicio técnico", estrategiaMitigacion: "Establecer acuerdos con proveedores locales de repuestos y ampliar red de servicio técnico autorizado" },
+          { categoria: "Riesgo Financiero", puntaje: 75, descripcion: "Incremento en costos de garantía y almacenamiento de repuestos", estrategiaMitigacion: "Revisar política de precios y evaluar opciones de seguro de garantía extendida" },
+          { categoria: "Riesgo de Cumplimiento", puntaje: 85, descripcion: "Fiscalización activa por INDECOPI con sanciones significativas", estrategiaMitigacion: "Implementar sistema de trazabilidad de productos y protocolo de respuesta a reclamos" },
+          { categoria: "Riesgo Reputacional", puntaje: 65, descripcion: "Exposición mediática en caso de incumplimiento", estrategiaMitigacion: "Comunicación proactiva de cumplimiento y programa de satisfacción al cliente" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Multas administrativas hasta 450 UIT (aprox. S/ 2,317,500)",
+          "Obligación de reparación o reposición del producto",
+          "Indemnización por daños y perjuicios al consumidor",
+          "Publicación de sanciones en medios de comunicación",
+          "Restricción temporal de importación en casos graves"
+        ],
+        evaluacionRiesgoCompetitivo: "Competidores con infraestructura de servicio técnico establecida tendrán ventaja. Marcas sin presencia local de repuestos enfrentarán mayores costos de cumplimiento."
+      },
+      
+      analisisActores: [
+        { actor: "INDECOPI", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad fiscalizadora principal. Realizará inspecciones y procesará denuncias de consumidores.", accionesRequeridas: ["Mantener documentación de garantías actualizada", "Registrar sistema de gestión de repuestos"], cronograma: "Fiscalización activa desde entrada en vigencia" },
+        { actor: "Departamento Legal Interno", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe actualizar contratos de garantía y términos de venta", accionesRequeridas: ["Revisar términos de garantía", "Actualizar manuales de producto", "Capacitar a equipo de ventas"], cronograma: "30 días desde entrada en vigencia" },
+        { actor: "Cadena de Suministro", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Requiere planificación de inventario de repuestos a 5 años", accionesRequeridas: ["Proyectar demanda de repuestos", "Negociar contratos de suministro largo plazo", "Establecer almacén dedicado"], cronograma: "90 días para implementación completa" },
+        { actor: "Distribuidores Autorizados", tipo: "externo", nivelImpacto: "medio", descripcionImpacto: "Deben cumplir obligaciones de información y canalizar reclamos", accionesRequeridas: ["Actualizar materiales de punto de venta", "Capacitar personal de atención"], cronograma: "60 días" },
+        { actor: "ASPEC", tipo: "externo", nivelImpacto: "medio", descripcionImpacto: "Asociación de consumidores que monitorea cumplimiento y canaliza denuncias", accionesRequeridas: [], cronograma: "Monitoreo continuo" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Actualizar certificados de garantía para reflejar 2 años mínimo", prioridad: "critica", fechaLimite: "Inmediato", esfuerzoEstimado: "2-4 semanas", areaResponsable: "Legal + Marketing" },
+        { requisito: "Implementar sistema de gestión de inventario de repuestos a 5 años", prioridad: "critica", fechaLimite: "90 días", esfuerzoEstimado: "8-12 semanas", areaResponsable: "Supply Chain" },
+        { requisito: "Actualizar etiquetado de productos con información de eficiencia energética", prioridad: "alta", fechaLimite: "60 días", esfuerzoEstimado: "4-6 semanas", areaResponsable: "Producto + Regulatorio" },
+        { requisito: "Capacitar a red de servicio técnico autorizado", prioridad: "alta", fechaLimite: "45 días", esfuerzoEstimado: "3-4 semanas", areaResponsable: "Servicio Post-Venta" },
+        { requisito: "Establecer protocolo de respuesta a reclamos INDECOPI", prioridad: "alta", fechaLimite: "30 días", esfuerzoEstimado: "2 semanas", areaResponsable: "Legal" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Cumplimiento Inmediata", descripcion: "Realizar auditoría interna de toda la documentación de garantía, etiquetado e inventario de repuestos para identificar brechas", prioridad: "inmediata", recursosNecesarios: "Equipo legal + operaciones (2-3 personas, 2 semanas)" },
+        { titulo: "Alianza con Proveedores de Repuestos", descripcion: "Negociar contratos de suministro a largo plazo con proveedores de componentes críticos para asegurar disponibilidad de repuestos por 5 años", prioridad: "corto-plazo", recursosNecesarios: "Procurement + Legal (negociación 4-6 semanas)" },
+        { titulo: "Programa de Fidelización Post-Venta", descripcion: "Convertir la obligación de garantía extendida en ventaja competitiva mediante programa de servicio premium", prioridad: "mediano-plazo", recursosNecesarios: "Marketing + Servicio (presupuesto campaña)" },
+        { titulo: "Digitalización de Trazabilidad", descripcion: "Implementar sistema digital de registro de productos vendidos y solicitudes de garantía para facilitar cumplimiento y fiscalización", prioridad: "mediano-plazo", recursosNecesarios: "IT + Operaciones (inversión en software)" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N° 29571", titulo: "Código de Protección y Defensa del Consumidor", relacion: "modifica", relevancia: "Ley base que esta norma modifica. Establece el marco general de derechos del consumidor." },
+        { identificador: "D.S. N° 006-2009-PCM", titulo: "Reglamento del Libro de Reclamaciones", relacion: "relacionada", relevancia: "Mecanismo de reclamo que los consumidores pueden usar para exigir cumplimiento de garantía." },
+        { identificador: "NTP 399.482:2024", titulo: "Eficiencia Energética - Electrodomésticos de Cocina", relacion: "relacionada", relevancia: "Norma técnica de referencia para el etiquetado de eficiencia energética exigido por esta ley." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "4-6 meses para empresas con infraestructura local establecida",
+        nivelPreparacionIndustria: "Medio - 60% de empresas tienen sistemas de garantía actualizables, 40% requieren reestructuración significativa",
+        tasaAdopcionCompetidores: "Principales marcas internacionales (Samsung, LG, Philips) ya cumplen por políticas globales de garantía",
+        mejoresPracticas: [
+          "Establecer centro de servicio técnico propio o alianza exclusiva con red autorizada",
+          "Mantener inventario de repuestos críticos equivalente a 18 meses de demanda proyectada",
+          "Implementar sistema CRM para seguimiento de casos de garantía",
+          "Ofrecer extensión de garantía como servicio adicional de valor agregado"
+        ]
+      }
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-ley-31890",
     votaciones: [
@@ -501,7 +572,58 @@ export function convertirPeruAUnificado(item: PeruLegislationItem): UnifiedLegis
       whoImpacted: item.resumenIA.afectados,
       keyDeadline: item.resumenIA.fechaClave,
       riskExplanation: item.resumenIA.explicacionRiesgo,
-      stakeholders: item.resumenIA.actoresClave
+      stakeholders: item.resumenIA.actoresClave,
+      executiveSummary: item.resumenIA.resumenEjecutivo,
+      statistics: item.resumenIA.estadisticas ? {
+        estimatedAffectedCompanies: item.resumenIA.estadisticas.empresasAfectadasEstimadas,
+        estimatedComplianceCost: item.resumenIA.estadisticas.costoEstimadoCumplimiento ? {
+          min: item.resumenIA.estadisticas.costoEstimadoCumplimiento.min,
+          max: item.resumenIA.estadisticas.costoEstimadoCumplimiento.max,
+          currency: item.resumenIA.estadisticas.costoEstimadoCumplimiento.moneda
+        } : undefined,
+        marketSizeImpact: item.resumenIA.estadisticas.impactoMercado,
+        implementationTimeMonths: item.resumenIA.estadisticas.tiempoImplementacionMeses,
+        penaltyRange: item.resumenIA.estadisticas.rangoSanciones ? {
+          min: item.resumenIA.estadisticas.rangoSanciones.min,
+          max: item.resumenIA.estadisticas.rangoSanciones.max,
+          currency: item.resumenIA.estadisticas.rangoSanciones.moneda
+        } : undefined,
+        complianceComplexityScore: item.resumenIA.estadisticas.puntajeComplejidad
+      } : undefined,
+      riskAnalysis: item.resumenIA.analisisRiesgo ? {
+        overallRiskScore: item.resumenIA.analisisRiesgo.puntajeRiesgoGeneral,
+        riskBreakdown: item.resumenIA.analisisRiesgo.desglosePorCategoria.map(r => ({
+          category: r.categoria, score: r.puntaje, description: r.descripcion, mitigationStrategy: r.estrategiaMitigacion
+        })),
+        probabilityOfEnforcement: item.resumenIA.analisisRiesgo.probabilidadFiscalizacion === "alta" ? "high" : item.resumenIA.analisisRiesgo.probabilidadFiscalizacion === "media" ? "medium" : "low",
+        potentialLiabilities: item.resumenIA.analisisRiesgo.responsabilidadesPotenciales,
+        competitiveRiskAssessment: item.resumenIA.analisisRiesgo.evaluacionRiesgoCompetitivo
+      } : undefined,
+      stakeholderAnalysis: item.resumenIA.analisisActores?.map(a => ({
+        stakeholder: a.actor, type: a.tipo === "regulador" ? "regulatory" : a.tipo === "industria" ? "industry" : a.tipo,
+        impactLevel: a.nivelImpacto === "alto" ? "high" : a.nivelImpacto === "medio" ? "medium" : "low",
+        impactDescription: a.descripcionImpacto, requiredActions: a.accionesRequeridas, timeline: a.cronograma
+      })),
+      complianceRequirements: item.resumenIA.requisitosCumplimiento?.map(r => ({
+        requirement: r.requisito, priority: r.prioridad === "critica" ? "critical" : r.prioridad,
+        deadline: r.fechaLimite, estimatedEffort: r.esfuerzoEstimado, responsibleDepartment: r.areaResponsable
+      })),
+      strategicRecommendations: item.resumenIA.recomendacionesEstrategicas?.map(r => ({
+        title: r.titulo, description: r.descripcion,
+        priority: r.prioridad === "inmediata" ? "immediate" : r.prioridad === "corto-plazo" ? "short-term" : r.prioridad === "mediano-plazo" ? "medium-term" : "long-term",
+        resourcesRequired: r.recursosNecesarios
+      })),
+      relatedLegislation: item.resumenIA.legislacionRelacionada?.map(l => ({
+        identifier: l.identificador, title: l.titulo,
+        relationship: l.relacion === "modifica" ? "amends" : l.relacion === "deroga" ? "repeals" : l.relacion === "implementa" ? "implements" : l.relacion === "conflicto" ? "conflicts" : "related",
+        relevance: l.relevancia
+      })),
+      industryBenchmarks: item.resumenIA.benchmarksIndustria ? {
+        averageComplianceTime: item.resumenIA.benchmarksIndustria.tiempoPromedioCumplimiento,
+        industryReadinessLevel: item.resumenIA.benchmarksIndustria.nivelPreparacionIndustria,
+        competitorAdoptionRate: item.resumenIA.benchmarksIndustria.tasaAdopcionCompetidores,
+        bestPractices: item.resumenIA.benchmarksIndustria.mejoresPracticas
+      } : undefined
     } : undefined,
     // Campos específicos de Perú para renderizado especial
     peruData: {
