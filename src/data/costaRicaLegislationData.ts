@@ -642,7 +642,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Exige certificación de seguridad IEC 60335 y EMC para hervidores y cafeteras antes de comercialización.",
       impactosPotenciales: "IMPACTO DIRECTO: Fabricantes de hervidores y cafeteras deben obtener certificación de conformidad con IEC 60335-2-15 (hervidores) e IEC 60335-2-14 (cafeteras).",
       fechaClave: "Vigente desde 15 de diciembre de 2024.",
-      calificadorEstado: "Norma vigente desde 15/12/2024. Cumplimiento inmediato requerido."
+      calificadorEstado: "Norma vigente desde 15/12/2024. Cumplimiento inmediato requerido.",
+      
+      resumenEjecutivo: "Decreto ejecutivo ya en vigor que establece requisitos técnicos obligatorios de seguridad eléctrica para electrodomésticos. Impacto directo e inmediato para fabricantes de hervidores y cafeteras que comercializan en Costa Rica.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 150,
+        costoEstimadoCumplimiento: { min: 5000, max: 35000, moneda: "USD" },
+        impactoMercado: "Barrera de entrada para productos sin certificación internacional previa. Productos no certificados no pueden comercializarse.",
+        tiempoImplementacionMeses: 6,
+        rangoSanciones: { min: 1000000, max: 25000000, moneda: "CRC" },
+        puntajeComplejidad: 7
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 90,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 95, descripcion: "Norma ya vigente con fiscalización activa del MEIC", estrategiaMitigacion: "Verificar inmediatamente certificación de todos los productos en catálogo" },
+          { categoria: "Riesgo Operativo", puntaje: 85, descripcion: "Productos sin certificación deben retirarse del mercado", estrategiaMitigacion: "Priorizar certificación de productos de mayor rotación" },
+          { categoria: "Riesgo Financiero", puntaje: 78, descripcion: "Costos de certificación y posible pérdida de inventario", estrategiaMitigacion: "Negociar con laboratorios acreditados tarifas preferenciales por volumen" },
+          { categoria: "Riesgo Comercial", puntaje: 82, descripcion: "Imposibilidad de comercializar productos no conformes", estrategiaMitigacion: "Comunicar a clientes situación de cumplimiento de cada SKU" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Multas de ₡1 a ₡25 millones por producto no conforme",
+          "Decomiso de inventario sin certificación",
+          "Prohibición de comercialización",
+          "Responsabilidad por daños en caso de accidentes"
+        ],
+        evaluacionRiesgoCompetitivo: "Productos con certificación CE o UL tienen ventaja pues cumplen estándares IEC. Marcas premium ya certificadas pueden capturar mercado de competidores no conformes."
+      },
+      
+      analisisActores: [
+        { actor: "MEIC", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad fiscalizadora que realiza inspecciones de mercado y procesa denuncias", accionesRequeridas: ["Registro de productos", "Mantener certificados disponibles"], cronograma: "Inmediato" },
+        { actor: "INTECO", tipo: "certificador", nivelImpacto: "alto", descripcionImpacto: "Organismo nacional de normalización que emite certificados de conformidad", accionesRequeridas: ["Solicitar ensayos", "Obtener certificados"], cronograma: "Urgente - 60 días" },
+        { actor: "Laboratorios Acreditados", tipo: "externo", nivelImpacto: "alto", descripcionImpacto: "Realizan ensayos de conformidad IEC 60335", accionesRequeridas: ["Contratar ensayos", "Enviar muestras"], cronograma: "Inmediato" },
+        { actor: "Departamento de Calidad", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe coordinar proceso de certificación de toda la línea", accionesRequeridas: ["Inventariar productos sin certificar", "Priorizar certificación"], cronograma: "Esta semana" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Certificación IEC 60335-2-15 para hervidores", prioridad: "critica", fechaLimite: "Vigente ahora", esfuerzoEstimado: "4-8 semanas por modelo", areaResponsable: "Calidad + Ingeniería" },
+        { requisito: "Certificación IEC 60335-2-14 para cafeteras", prioridad: "critica", fechaLimite: "Vigente ahora", esfuerzoEstimado: "4-8 semanas por modelo", areaResponsable: "Calidad + Ingeniería" },
+        { requisito: "Certificación EMC (compatibilidad electromagnética)", prioridad: "alta", fechaLimite: "Vigente ahora", esfuerzoEstimado: "2-4 semanas por modelo", areaResponsable: "Calidad" },
+        { requisito: "Etiquetado de seguridad en productos y empaques", prioridad: "alta", fechaLimite: "Vigente ahora", esfuerzoEstimado: "2 semanas", areaResponsable: "Marketing + Operaciones" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Cumplimiento Urgente", descripcion: "Inventariar inmediatamente todos los productos en catálogo y verificar estado de certificación de cada uno", prioridad: "inmediata", recursosNecesarios: "Calidad + base de datos de productos (1 semana)" },
+        { titulo: "Priorización de Certificación", descripcion: "Ordenar productos por volumen de ventas y margen, certificar primero los de mayor impacto comercial", prioridad: "inmediata", recursosNecesarios: "Gerencia + Calidad + presupuesto de ensayos" },
+        { titulo: "Gestión de Inventario No Conforme", descripcion: "Definir estrategia para inventario sin certificar: exportar a mercados sin requisito, liquidar con descuento, o destruir", prioridad: "corto-plazo", recursosNecesarios: "Comercial + Legal + Logística" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 8279", titulo: "Ley del Sistema Nacional para la Calidad", relacion: "base", relevancia: "Marco legal que fundamenta los reglamentos técnicos costarricenses." },
+        { identificador: "RTCR 478:2015", titulo: "Reglamento Técnico de Seguridad para Electrodomésticos", relacion: "modifica", relevancia: "Reglamento técnico previo que este decreto actualiza y fortalece." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "4-8 semanas por modelo para empresas con productos previamente certificados (CE, UL)",
+        nivelPreparacionIndustria: "Medio - 60% de marcas premium ya tienen certificaciones internacionales equivalentes, 40% requiere certificación desde cero",
+        tasaAdopcionCompetidores: "Marcas globales (Philips, Bosch, Cuisinart) cumplen automáticamente por certificación CE. Marcas económicas enfrentan mayor reto.",
+        mejoresPracticas: [
+          "Mantener certificaciones internacionales actualizadas (CE, UL) que facilitan cumplimiento local",
+          "Establecer relación con laboratorio acreditado para ensayos recurrentes",
+          "Diseñar nuevos productos con cumplimiento IEC desde fase de desarrollo"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Decreto ya vigente que afecta directamente hervidores y cafeteras. Requiere acción inmediata de cumplimiento.",
@@ -716,7 +781,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Establece eficiencia mínima de 85% para hervidores. Productos sin certificación no podrán importarse.",
       impactosPotenciales: "IMPACTO DIRECTO: Hervidores con eficiencia menor a 85% serán rechazados en aduana. Cafeteras también sujetas a verificación.",
       fechaClave: "Vigente desde 1 de marzo de 2025.",
-      calificadorEstado: "Norma vigente desde 01/03/2025. Cumplimiento obligatorio."
+      calificadorEstado: "Norma vigente desde 01/03/2025. Cumplimiento obligatorio.",
+      
+      resumenEjecutivo: "Reglamento vigente que establece estándares de eficiencia energética obligatorios para equipos de calentamiento de agua. Control aduanero activo rechaza productos que no cumplan con eficiencia mínima del 85%.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 80,
+        costoEstimadoCumplimiento: { min: 3000, max: 20000, moneda: "USD" },
+        impactoMercado: "Eliminación de productos de baja eficiencia del mercado. Incremento de precios promedio en 10-15% por productos de mayor calidad.",
+        tiempoImplementacionMeses: 4,
+        rangoSanciones: { min: 500000, max: 10000000, moneda: "CRC" },
+        puntajeComplejidad: 6
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 85,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 90, descripcion: "Control aduanero automático rechaza productos sin certificado", estrategiaMitigacion: "Obtener certificación de eficiencia antes de cualquier importación" },
+          { categoria: "Riesgo Operativo", puntaje: 82, descripcion: "Posible rechazo de embarques en aduana", estrategiaMitigacion: "Verificar eficiencia de cada modelo antes de ordenar producción" },
+          { categoria: "Riesgo Financiero", puntaje: 75, descripcion: "Costos de re-exportación o destrucción de productos rechazados", estrategiaMitigacion: "Solicitar certificado de eficiencia a fábrica antes de embarque" },
+          { categoria: "Riesgo de Cadena de Suministro", puntaje: 78, descripcion: "Retrasos por verificación aduanera", estrategiaMitigacion: "Incluir certificado de eficiencia en documentación de importación" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Rechazo de embarque en aduana",
+          "Multas de ₡500,000 a ₡10 millones",
+          "Costos de re-exportación o destrucción",
+          "Pérdida de mercancía perecedera en puerto"
+        ],
+        evaluacionRiesgoCompetitivo: "Fabricantes con líneas de alta eficiencia tendrán ventaja. Productos europeos clase A+ ya cumplen. Marcas económicas de baja eficiencia excluidas del mercado."
+      },
+      
+      analisisActores: [
+        { actor: "MINAE", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Define estándares de eficiencia y fiscaliza cumplimiento post-importación", accionesRequeridas: ["Registro de productos", "Reportes de eficiencia"], cronograma: "Pre-importación" },
+        { actor: "Dirección General de Aduanas", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Verifica certificación en punto de ingreso al país", accionesRequeridas: ["Presentar certificado con documentos de importación"], cronograma: "En cada importación" },
+        { actor: "Laboratorios de Ensayo", tipo: "externo", nivelImpacto: "alto", descripcionImpacto: "Emiten certificados de eficiencia energética", accionesRequeridas: ["Contratar ensayos de eficiencia"], cronograma: "Antes de importar" },
+        { actor: "Departamento de Importaciones", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe verificar certificación antes de cada orden", accionesRequeridas: ["Actualizar checklist de documentos", "Verificar cumplimiento por SKU"], cronograma: "Inmediato" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Certificado de eficiencia ≥85% para hervidores", prioridad: "critica", fechaLimite: "Vigente ahora", esfuerzoEstimado: "2-4 semanas por modelo", areaResponsable: "Calidad + Importaciones" },
+        { requisito: "Etiqueta de eficiencia energética visible en producto", prioridad: "alta", fechaLimite: "Vigente ahora", esfuerzoEstimado: "1-2 semanas", areaResponsable: "Marketing + Operaciones" },
+        { requisito: "Declaración de eficiencia en documentos aduaneros", prioridad: "alta", fechaLimite: "En cada importación", esfuerzoEstimado: "Permanente", areaResponsable: "Importaciones" },
+        { requisito: "Registro en sistema de eficiencia MINAE", prioridad: "media", fechaLimite: "30 días post-primera importación", esfuerzoEstimado: "1 semana", areaResponsable: "Regulatorio" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Verificación de Catálogo de Productos", descripcion: "Auditar eficiencia energética de cada modelo de hervidor y cafetera en catálogo actual", prioridad: "inmediata", recursosNecesarios: "Ingeniería + fichas técnicas de productos (1 semana)" },
+        { titulo: "Actualización de Proveedores", descripcion: "Solicitar a fábricas certificados de eficiencia actualizados para todos los modelos", prioridad: "inmediata", recursosNecesarios: "Compras + comunicación con proveedores (2 semanas)" },
+        { titulo: "Rediseño de Línea Económica", descripcion: "Evaluar si modelos de baja eficiencia pueden actualizarse o deben descontinuarse", prioridad: "corto-plazo", recursosNecesarios: "Ingeniería + análisis de viabilidad por modelo" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 7447", titulo: "Ley de Regulación del Uso Racional de la Energía", relacion: "base", relevancia: "Marco legal que fundamenta los estándares de eficiencia energética." },
+        { identificador: "Decreto N.º 36979-MINAE", titulo: "Reglamento de Etiquetado Energético", relacion: "complementa", relevancia: "Define sistema de etiquetado de eficiencia que este decreto referencia." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "2-4 semanas para productos con documentación de eficiencia del fabricante",
+        nivelPreparacionIndustria: "Medio-Alto - 70% de hervidores de marcas reconocidas ya cumplen 85%, productos económicos típicamente no cumplen",
+        tasaAdopcionCompetidores: "Marcas premium (Breville, KitchenAid) superan ampliamente 85%. Marcas genéricas asiáticas enfrentan mayor reto.",
+        mejoresPracticas: [
+          "Especificar eficiencia mínima de 85% en órdenes de compra a fábricas",
+          "Solicitar certificado de eficiencia antes de confirmar pedidos",
+          "Incluir verificación de eficiencia en proceso de desarrollo de nuevos productos"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Reglamento vigente que requiere certificación de eficiencia para hervidores y cafeteras. Verificación en aduanas activa.",
@@ -783,7 +913,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Requiere certificación de materiales en contacto con alimentos (BPA-free, límites de migración) para hervidores y cafeteras.",
       impactosPotenciales: "IMPACTO DIRECTO: Hervidores y cafeteras requieren certificación de materiales. Registro sanitario obligatorio.",
       fechaClave: "Vigente desde 1 de mayo de 2025.",
-      calificadorEstado: "Norma vigente desde 01/05/2025. Plazo transitorio de 18 meses para productos existentes."
+      calificadorEstado: "Norma vigente desde 01/05/2025. Plazo transitorio de 18 meses para productos existentes.",
+      
+      resumenEjecutivo: "Reglamento sanitario crítico que establece requisitos de inocuidad para materiales en contacto con agua y alimentos en electrodomésticos. Requiere certificación BPA-free, pruebas de migración de sustancias, y registro sanitario obligatorio.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 100,
+        costoEstimadoCumplimiento: { min: 8000, max: 50000, moneda: "USD" },
+        impactoMercado: "Mayor escrutinio de materiales plásticos y recubrimientos internos. Productos con materiales de baja calidad quedarán excluidos.",
+        tiempoImplementacionMeses: 18,
+        rangoSanciones: { min: 2000000, max: 50000000, moneda: "CRC" },
+        puntajeComplejidad: 8
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 88,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 88, descripcion: "Requisitos técnicos específicos de composición de materiales", estrategiaMitigacion: "Solicitar certificados de materiales a proveedores de componentes" },
+          { categoria: "Riesgo de Salud Pública", puntaje: 92, descripcion: "Materiales en contacto con agua caliente pueden liberar sustancias nocivas", estrategiaMitigacion: "Verificar composición de todos los materiales en contacto con líquidos" },
+          { categoria: "Riesgo Operativo", puntaje: 80, descripcion: "Necesidad de pruebas de laboratorio especializadas", estrategiaMitigacion: "Identificar laboratorios acreditados para pruebas de migración" },
+          { categoria: "Riesgo Reputacional", puntaje: 85, descripcion: "Exposición mediática por presencia de BPA u otras sustancias", estrategiaMitigacion: "Comunicar proactivamente certificación BPA-free en marketing" }
+        ],
+        probabilidadFiscalizacion: "media",
+        responsabilidadesPotenciales: [
+          "Multas de ₡2 a ₡50 millones por incumplimiento",
+          "Retiro de productos del mercado por riesgo sanitario",
+          "Responsabilidad civil por daños a la salud",
+          "Daño reputacional severo por incidentes de salud pública"
+        ],
+        evaluacionRiesgoCompetitivo: "Marcas premium con materiales certificados (Tritan, acero inoxidable) tienen ventaja. Productos con plásticos genéricos enfrentan mayor escrutinio."
+      },
+      
+      analisisActores: [
+        { actor: "Ministerio de Salud", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad sanitaria que define estándares y fiscaliza cumplimiento", accionesRequeridas: ["Registro sanitario de productos", "Reportes de conformidad"], cronograma: "18 meses para productos existentes" },
+        { actor: "ARS (Área Rectora de Salud)", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Realiza inspecciones y procesa denuncias sanitarias", accionesRequeridas: ["Mantener documentación de materiales disponible"], cronograma: "Continuo" },
+        { actor: "Laboratorios de Ensayo Sanitario", tipo: "externo", nivelImpacto: "alto", descripcionImpacto: "Realizan pruebas de migración y certifican materiales", accionesRequeridas: ["Contratar ensayos de migración", "Obtener certificados BPA-free"], cronograma: "12 meses" },
+        { actor: "Departamento de I+D/Calidad", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe verificar composición de materiales y coordinar pruebas", accionesRequeridas: ["Auditar materiales de productos", "Solicitar certificados a proveedores"], cronograma: "6 meses" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Certificación BPA-free de materiales plásticos", prioridad: "critica", fechaLimite: "18 meses para productos existentes", esfuerzoEstimado: "8-12 semanas por línea de producto", areaResponsable: "Calidad + I&D" },
+        { requisito: "Pruebas de migración con simulantes de alimentos", prioridad: "critica", fechaLimite: "18 meses para productos existentes", esfuerzoEstimado: "4-6 semanas por modelo", areaResponsable: "Calidad" },
+        { requisito: "Registro sanitario ante Ministerio de Salud", prioridad: "alta", fechaLimite: "Antes de comercialización de nuevos productos", esfuerzoEstimado: "4-8 semanas", areaResponsable: "Regulatorio + Legal" },
+        { requisito: "Documentación de composición de materiales", prioridad: "alta", fechaLimite: "Permanente", esfuerzoEstimado: "2 semanas inicial, luego continuo", areaResponsable: "Calidad + Compras" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Materiales de Productos", descripcion: "Mapear todos los materiales en contacto con líquidos en hervidores y cafeteras, identificando composición química", prioridad: "inmediata", recursosNecesarios: "I&D + fichas técnicas de proveedores (3 semanas)" },
+        { titulo: "Certificación de Proveedores", descripcion: "Solicitar a proveedores de componentes plásticos certificados de composición y conformidad BPA-free", prioridad: "corto-plazo", recursosNecesarios: "Compras + comunicación con proveedores (4 semanas)" },
+        { titulo: "Actualización de Especificaciones de Materiales", descripcion: "Incluir requisitos de inocuidad alimentaria en especificaciones de compra de materiales", prioridad: "mediano-plazo", recursosNecesarios: "I&D + Compras + actualización de contratos" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 5395", titulo: "Ley General de Salud", relacion: "base", relevancia: "Marco legal general de salud pública que fundamenta requisitos sanitarios." },
+        { identificador: "RTCA 67.04.54:10", titulo: "Reglamento Técnico Centroamericano sobre Aditivos Alimentarios", relacion: "relacionada", relevancia: "Norma regional sobre sustancias en contacto con alimentos." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "12-18 meses para certificación completa de línea de productos",
+        nivelPreparacionIndustria: "Medio - 50% de marcas premium ya usan materiales certificados, 50% requiere evaluación y posible cambio de materiales",
+        tasaAdopcionCompetidores: "Marcas europeas ya cumplen regulaciones EU más estrictas. Marcas con componentes Tritan (Eastman) tienen ventaja.",
+        mejoresPracticas: [
+          "Especificar materiales BPA-free en desarrollo de nuevos productos",
+          "Mantener trazabilidad completa de materiales en contacto con alimentos",
+          "Comunicar certificación de materiales como diferenciador de marketing"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Reglamento crítico para hervidores y cafeteras. Requiere certificación de materiales en contacto con agua/café.",
@@ -853,7 +1048,65 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Requiere que comercios en Escazú etiqueten nivel de ruido de electrodomésticos vendidos.",
       impactosPotenciales: "Impacto limitado a operaciones comerciales en cantón de Escazú. Hervidores y cafeteras generalmente cumplen límite de 55 dB.",
       fechaClave: "Vigente desde 1 de octubre de 2024.",
-      calificadorEstado: "Norma vigente en jurisdicción municipal de Escazú desde 01/10/2024."
+      calificadorEstado: "Norma vigente en jurisdicción municipal de Escazú desde 01/10/2024.",
+      
+      resumenEjecutivo: "Reglamento de alcance local limitado al cantón de Escazú. Bajo impacto para fabricantes dado que la mayoría de hervidores y cafeteras cumplen con el límite de 55 dB(A). Afecta principalmente a comercios minoristas del cantón.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 25,
+        costoEstimadoCumplimiento: { min: 500, max: 2000, moneda: "USD" },
+        impactoMercado: "Mínimo - la mayoría de electrodomésticos modernos cumplen naturalmente con los límites establecidos",
+        tiempoImplementacionMeses: 1,
+        rangoSanciones: { min: 100000, max: 500000, moneda: "CRC" },
+        puntajeComplejidad: 2
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 35,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 30, descripcion: "Requisito de etiquetado local con alcance limitado", estrategiaMitigacion: "Incluir especificación de ruido en fichas técnicas estándar" },
+          { categoria: "Riesgo Operativo", puntaje: 35, descripcion: "Necesidad de verificar niveles de ruido en documentación", estrategiaMitigacion: "Solicitar dato de dB a fabricante si no está en ficha técnica" },
+          { categoria: "Riesgo Comercial", puntaje: 25, descripcion: "Alcance muy limitado - solo comercios en Escazú", estrategiaMitigacion: "Comunicar a distribuidores en Escazú sobre requisito" }
+        ],
+        probabilidadFiscalizacion: "baja",
+        responsabilidadesPotenciales: [
+          "Multas municipales de ₡100,000 a ₡500,000",
+          "Apercibimiento a comerciantes",
+          "Clausura temporal de local en caso de reincidencia"
+        ],
+        evaluacionRiesgoCompetitivo: "Sin impacto competitivo significativo. La mayoría de productos cumplen. Solo afecta a equipos industriales de alto ruido, no electrodomésticos domésticos."
+      },
+      
+      analisisActores: [
+        { actor: "Municipalidad de Escazú", tipo: "regulador", nivelImpacto: "medio", descripcionImpacto: "Autoridad local que fiscaliza cumplimiento en comercios del cantón", accionesRequeridas: ["Verificar que distribuidores en Escazú tengan información"], cronograma: "Bajo demanda" },
+        { actor: "Comercios en Escazú", tipo: "distribuidor", nivelImpacto: "alto", descripcionImpacto: "Responsables directos de exhibir información de ruido", accionesRequeridas: ["Proveer información de dB a distribuidores"], cronograma: "Continuo" },
+        { actor: "Departamento de Marketing", tipo: "interno", nivelImpacto: "bajo", descripcionImpacto: "Puede incluir dato de ruido en materiales de producto", accionesRequeridas: ["Agregar dB a fichas técnicas si no existe"], cronograma: "Siguiente actualización de materiales" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Información de nivel de ruido (dB) disponible para productos", prioridad: "baja", fechaLimite: "Vigente ahora (solo Escazú)", esfuerzoEstimado: "1-2 días", areaResponsable: "Marketing" },
+        { requisito: "Comunicación a distribuidores en Escazú", prioridad: "baja", fechaLimite: "Cuando aplique", esfuerzoEstimado: "1 día", areaResponsable: "Comercial" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Actualización de Fichas Técnicas", descripcion: "Incluir nivel de ruido en dB(A) en fichas técnicas estándar de todos los productos para cumplir con este y futuros requisitos similares", prioridad: "baja", recursosNecesarios: "Marketing + datos de fabricante (2-3 días)" },
+        { titulo: "Monitoreo de Expansión Normativa", descripcion: "Vigilar si otros cantones adoptan normativas similares para anticipar cumplimiento a mayor escala", prioridad: "baja", recursosNecesarios: "Regulatorio + monitoreo periódico" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 7554", titulo: "Ley Orgánica del Ambiente", relacion: "base", relevancia: "Marco legal ambiental que fundamenta regulaciones de ruido." },
+        { identificador: "Decreto N.º 28718-S", titulo: "Reglamento para el Control de la Contaminación por Ruido", relacion: "relacionada", relevancia: "Normativa nacional de ruido que este reglamento municipal complementa." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "Inmediato para productos con especificación de ruido disponible",
+        nivelPreparacionIndustria: "Alto - 90% de fabricantes ya reportan niveles de ruido en especificaciones técnicas",
+        tasaAdopcionCompetidores: "Todas las marcas reconocidas incluyen especificaciones de ruido en documentación estándar",
+        mejoresPracticas: [
+          "Incluir nivel de ruido en especificaciones técnicas de todos los productos",
+          "Diseñar productos con reducción de ruido como característica diferenciadora"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Reglamento de alcance local (Escazú). Bajo impacto para fabricantes ya que mayoría de hervidores/cafeteras cumplen límites.",
@@ -915,7 +1168,66 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Requisitos específicos para comerciantes del Mercado Central de Alajuela. Afecta canal de distribución local.",
       impactosPotenciales: "Impacto indirecto: distribuidores en Mercado Central deben exhibir certificados de productos vendidos.",
       fechaClave: "Vigente desde 1 de septiembre de 2024.",
-      calificadorEstado: "Norma vigente en jurisdicción municipal de Alajuela desde 01/09/2024."
+      calificadorEstado: "Norma vigente en jurisdicción municipal de Alajuela desde 01/09/2024.",
+      
+      resumenEjecutivo: "Ordenanza de alcance muy local que regula específicamente la venta de electrodomésticos en el Mercado Central de Alajuela. Afecta principalmente a comerciantes del mercado, con impacto indirecto para fabricantes que deben proveer documentación de cumplimiento a sus distribuidores.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 15,
+        costoEstimadoCumplimiento: { min: 200, max: 1000, moneda: "USD" },
+        impactoMercado: "Mínimo - afecta canal de distribución muy específico con volumen limitado",
+        tiempoImplementacionMeses: 1,
+        rangoSanciones: { min: 50000, max: 200000, moneda: "CRC" },
+        puntajeComplejidad: 2
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 25,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 20, descripcion: "Requisitos básicos de exhibición de documentos existentes", estrategiaMitigacion: "Proveer copias de certificados a distribuidores autorizados" },
+          { categoria: "Riesgo Operativo", puntaje: 25, descripcion: "Necesidad de material de apoyo para comerciantes", estrategiaMitigacion: "Crear kit de documentos para punto de venta" },
+          { categoria: "Riesgo Comercial", puntaje: 20, descripcion: "Alcance limitado a un mercado municipal específico", estrategiaMitigacion: "Identificar distribuidores en Mercado Central y proveer documentación" }
+        ],
+        probabilidadFiscalizacion: "baja",
+        responsabilidadesPotenciales: [
+          "Multas municipales de ₡50,000 a ₡200,000 para comerciantes",
+          "Apercibimiento a comerciantes sin documentación",
+          "Posible retiro de productos sin certificados exhibidos"
+        ],
+        evaluacionRiesgoCompetitivo: "Sin impacto competitivo. Beneficia a marcas con documentación completa y certificaciones vigentes."
+      },
+      
+      analisisActores: [
+        { actor: "Municipalidad de Alajuela", tipo: "regulador", nivelImpacto: "bajo", descripcionImpacto: "Fiscaliza comerciantes del Mercado Central", accionesRequeridas: ["Verificar que distribuidores tengan documentación"], cronograma: "Bajo demanda" },
+        { actor: "Comerciantes del Mercado Central", tipo: "distribuidor", nivelImpacto: "alto", descripcionImpacto: "Responsables directos de exhibir certificados y garantías", accionesRequeridas: ["Proveer copias de certificados", "Asegurar garantía mínima de 6 meses"], cronograma: "Continuo" },
+        { actor: "Departamento Comercial", tipo: "interno", nivelImpacto: "bajo", descripcionImpacto: "Debe identificar y apoyar a distribuidores en el mercado", accionesRequeridas: ["Identificar distribuidores", "Proveer material de apoyo"], cronograma: "Única vez" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Proveer copias de certificados de seguridad a distribuidores", prioridad: "baja", fechaLimite: "Vigente ahora (solo Mercado Central Alajuela)", esfuerzoEstimado: "1-2 días", areaResponsable: "Comercial" },
+        { requisito: "Asegurar garantía mínima de 6 meses en productos", prioridad: "baja", fechaLimite: "Ya cumplido (garantía estándar)", esfuerzoEstimado: "0 (ya cumplido)", areaResponsable: "N/A" },
+        { requisito: "Material informativo de eficiencia energética", prioridad: "baja", fechaLimite: "Vigente ahora", esfuerzoEstimado: "1 día", areaResponsable: "Marketing" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Kit de Documentos para Distribuidores", descripcion: "Crear paquete estándar con copias de certificados, garantías y fichas de eficiencia energética para entregar a distribuidores autorizados", prioridad: "baja", recursosNecesarios: "Marketing + Comercial (1-2 días)" },
+        { titulo: "Mapeo de Canal de Distribución", descripcion: "Identificar si hay distribuidores de la marca en Mercado Central de Alajuela y asegurar que tengan documentación", prioridad: "baja", recursosNecesarios: "Comercial (1 día de verificación)" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 7472", titulo: "Ley de Promoción de la Competencia y Defensa Efectiva del Consumidor", relacion: "base", relevancia: "Marco legal de protección al consumidor que fundamenta requisitos de garantía." },
+        { identificador: "Código Municipal", titulo: "Ley N.º 7794 - Código Municipal", relacion: "base", relevancia: "Otorga potestad a municipalidades para emitir ordenanzas locales." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "Inmediato - requiere solo distribución de documentación existente",
+        nivelPreparacionIndustria: "Alto - 95% de fabricantes formales ya cuentan con toda la documentación requerida",
+        tasaAdopcionCompetidores: "Cumplimiento automático para marcas con procesos comerciales estructurados",
+        mejoresPracticas: [
+          "Mantener kit de documentos actualizado para distribuidores",
+          "Incluir certificados y garantías en empaque de productos"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Ordenanza de alcance muy local. Afecta solo comerciantes del Mercado Central de Alajuela.",
@@ -977,7 +1289,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Requisitos de ciberseguridad para procesamiento de pagos electrónicos. Aplica si empresa procesa pagos directamente.",
       impactosPotenciales: "Impacto si empresa vende directamente y procesa pagos con tarjeta. Si usa pasarelas de pago terceras, impacto reducido.",
       fechaClave: "Vigente desde 1 de enero de 2025.",
-      calificadorEstado: "Norma vigente desde 01/01/2025. Régimen transitorio para pequeños comercios."
+      calificadorEstado: "Norma vigente desde 01/01/2025. Régimen transitorio para pequeños comercios.",
+      
+      resumenEjecutivo: "Normativa del regulador financiero SUGEF que establece requisitos de ciberseguridad para procesamiento de pagos electrónicos. Aplica a fabricantes de electrodomésticos solo si operan canales de venta directa al consumidor con procesamiento propio de pagos con tarjeta.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 500,
+        costoEstimadoCumplimiento: { min: 15000, max: 80000, moneda: "USD" },
+        impactoMercado: "Consolidación de proveedores de servicios de pago. Empresas pequeñas migrarán a pasarelas de pago terceras.",
+        tiempoImplementacionMeses: 6,
+        rangoSanciones: { min: 5000000, max: 100000000, moneda: "CRC" },
+        puntajeComplejidad: 8
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 65,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 70, descripcion: "Requisitos técnicos específicos de PCI-DSS y protección de datos", estrategiaMitigacion: "Evaluar si es más viable usar pasarela de pago tercera certificada" },
+          { categoria: "Riesgo Operativo", puntaje: 75, descripcion: "Necesidad de sistemas de seguridad especializados y auditorías", estrategiaMitigacion: "Contratar proveedor de pagos certificado si no se procesa directamente" },
+          { categoria: "Riesgo Financiero", puntaje: 60, descripcion: "Inversión significativa en seguridad si se procesa directamente", estrategiaMitigacion: "Comparar costo de cumplimiento vs. comisiones de pasarela tercera" },
+          { categoria: "Riesgo de Datos", puntaje: 80, descripcion: "Exposición por brechas de datos de pago", estrategiaMitigacion: "Minimizar almacenamiento de datos sensibles, usar tokenización" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Multas de ₡5 a ₡100 millones por incumplimiento",
+          "Suspensión de capacidad de procesamiento de pagos",
+          "Responsabilidad por fraudes y brechas de datos",
+          "Notificación obligatoria a clientes afectados por brechas"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas que usan pasarelas de pago certificadas (PayPal, Stripe, BAC) no se ven afectadas directamente. Solo aplica a procesadores directos."
+      },
+      
+      analisisActores: [
+        { actor: "SUGEF", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad supervisora que fiscaliza cumplimiento y procesa denuncias", accionesRequeridas: ["Reportes de cumplimiento", "Notificación de brechas"], cronograma: "Continuo" },
+        { actor: "Proveedores de Pasarelas de Pago", tipo: "externo", nivelImpacto: "alto", descripcionImpacto: "Alternativa de cumplimiento al delegar procesamiento", accionesRequeridas: ["Evaluar migración a pasarela tercera"], cronograma: "Si aplica" },
+        { actor: "Auditores de Seguridad", tipo: "externo", nivelImpacto: "medio", descripcionImpacto: "Realizan auditorías trimestrales obligatorias", accionesRequeridas: ["Contratar auditoría de seguridad"], cronograma: "Trimestral" },
+        { actor: "Departamento de TI/Finanzas", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe evaluar modelo de procesamiento de pagos actual", accionesRequeridas: ["Determinar si empresa procesa pagos directamente", "Evaluar opciones de cumplimiento"], cronograma: "Inmediato" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Certificación PCI-DSS si procesa pagos directamente", prioridad: "critica", fechaLimite: "Vigente ahora (si aplica)", esfuerzoEstimado: "16-24 semanas", areaResponsable: "TI + Finanzas" },
+        { requisito: "Sistema de notificación de brechas en 48 horas", prioridad: "alta", fechaLimite: "Vigente ahora (si aplica)", esfuerzoEstimado: "4-6 semanas", areaResponsable: "TI + Legal" },
+        { requisito: "Auditorías de seguridad trimestrales", prioridad: "alta", fechaLimite: "Cada 3 meses (si aplica)", esfuerzoEstimado: "2-3 semanas por auditoría", areaResponsable: "TI + Cumplimiento" },
+        { requisito: "Políticas de retención de datos de transacciones", prioridad: "media", fechaLimite: "Vigente ahora (si aplica)", esfuerzoEstimado: "2-3 semanas", areaResponsable: "Legal + TI" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Evaluación de Modelo de Pagos", descripcion: "Determinar si la empresa procesa pagos con tarjeta directamente o utiliza pasarelas de pago terceras (BAC, PayPal, Stripe, SINPE)", prioridad: "inmediata", recursosNecesarios: "Finanzas + TI (1 semana de análisis)" },
+        { titulo: "Migración a Pasarela Certificada", descripcion: "Si procesa pagos directamente, evaluar migración a proveedor de pagos certificado PCI-DSS para eliminar carga de cumplimiento", prioridad: "corto-plazo", recursosNecesarios: "TI + Finanzas + evaluación de proveedores (4-8 semanas)" },
+        { titulo: "Revisión de Contratos con Proveedores de Pago", descripcion: "Verificar que contratos con proveedores de pago incluyan cláusulas de cumplimiento PCI-DSS y responsabilidad por brechas", prioridad: "corto-plazo", recursosNecesarios: "Legal + Finanzas (2 semanas)" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 8968", titulo: "Ley de Protección de la Persona frente al Tratamiento de sus Datos Personales", relacion: "complementa", relevancia: "Marco de protección de datos personales aplicable a datos de pago." },
+        { identificador: "Ley N.º 9416", titulo: "Ley contra la Delincuencia Organizada", relacion: "relacionada", relevancia: "Marco legal de responsabilidad por fraudes financieros." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "No aplica si usa pasarela tercera. 6+ meses si procesa directamente.",
+        nivelPreparacionIndustria: "Alto para empresas que usan pasarelas terceras (85%). Bajo para procesadores directos (15%).",
+        tasaAdopcionCompetidores: "Mayoría de comercios electrónicos de electrodomésticos ya usan pasarelas certificadas (BAC, PayPal, Stripe)",
+        mejoresPracticas: [
+          "Usar pasarelas de pago certificadas PCI-DSS en lugar de procesar directamente",
+          "Nunca almacenar datos de tarjeta completos - usar tokenización",
+          "Revisar contratos de proveedores de pago para verificar transferencia de riesgo"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Normativa de SUGEF que aplica a procesadores de pagos. Fabricantes de electrodomésticos afectados solo si venden directo al consumidor y procesan pagos.",
@@ -1003,6 +1380,8 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
         "Evaluar si empresa procesa pagos directamente",
         "Si usa pasarela de terceros (SINPE, etc.), verificar su cumplimiento",
         "Revisar contratos con proveedores de pago"
+      ]
+    },
       ]
     },
     acciones: [
