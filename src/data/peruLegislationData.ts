@@ -46,13 +46,13 @@ export const peruLegislationData: PeruLegislationItem[] = [
     autoridadEmisora: "MINAM - Ministerio del Ambiente",
     autoridadFiscalizadora: "OEFA - Organismo de Evaluación y Fiscalización Ambiental",
     autoridadesCompetentes: ["MINAM", "OEFA", "Municipalidades"],
-    estado: "vigente",
-    estadoGenerico: "vigente",
+    estado: "en-tramite",
+    estadoGenerico: "pipeline",
+    indiceEtapaActual: 3,
     fechaPublicacion: diasAtras(45),
     fuentePublicacion: "El Peruano",
-    fechaEntradaVigencia: diasAtras(30),
     fechaLimiteCumplimiento: diasAdelante(180),
-    regimenTransitorio: "Los obligados tienen 180 días para adecuar sus sistemas de gestión y registrarse en el SIGERSOL.",
+    regimenTransitorio: "Los obligados tendrán 180 días desde la entrada en vigencia para adecuar sus sistemas de gestión.",
     nivelRiesgo: "alto",
     puntajeRiesgo: 85,
     categoria: "Medio Ambiente",
@@ -62,15 +62,15 @@ export const peruLegislationData: PeruLegislationItem[] = [
     resumenIA: {
       queCambia: "Implementa sistema obligatorio de responsabilidad extendida del productor para electrodomésticos. Exige sistemas de recolección, metas de valorización progresivas y registro en plataforma MINAM.",
       afectados: "Fabricantes e importadores de hervidores eléctricos y máquinas de café. OEFA fiscalizará cumplimiento con multas hasta 10,000 UIT.",
-      fechaClave: `Vigente desde ${diasAtras(30)}. Plazo de adecuación: ${diasAdelante(180)}.`,
+      fechaClave: `Proyecto publicado ${diasAtras(45)}. Pendiente de aprobación final.`,
       explicacionRiesgo: "Alto impacto operativo y financiero. Requiere infraestructura de recolección y acuerdos con operadores de RAEE autorizados.",
       actoresClave: ["MINAM", "OEFA", "DIGESA", "Operadores RAEE autorizados"]
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-ds-012-2024-minam",
     acciones: [
-      { fecha: diasAtras(60), descripcion: "Proyecto de decreto publicado para comentarios", organo: "MINAM" },
-      { fecha: diasAtras(45), descripcion: "Publicación en El Peruano", organo: "El Peruano" },
-      { fecha: diasAtras(30), descripcion: "Entrada en vigencia", organo: "MINAM" }
+      { fecha: diasAtras(90), descripcion: "Prepublicación de proyecto para comentarios", organo: "MINAM" },
+      { fecha: diasAtras(60), descripcion: "Fin de plazo de comentarios públicos", organo: "MINAM" },
+      { fecha: diasAtras(45), descripcion: "Informe técnico de evaluación de comentarios", organo: "MINAM" }
     ]
   },
 
@@ -226,11 +226,11 @@ export const peruLegislationData: PeruLegislationItem[] = [
     autoridadEmisora: "Gobierno Regional de Arequipa",
     autoridadFiscalizadora: "OEFA (en coordinación con Gerencia Regional de Ambiente)",
     autoridadesCompetentes: ["GRA", "OEFA", "Municipalidades distritales"],
-    estado: "vigente",
-    estadoGenerico: "vigente",
+    estado: "en-tramite",
+    estadoGenerico: "pipeline",
+    indiceEtapaActual: 2,
     fechaPublicacion: diasAtras(40),
     fuentePublicacion: "Diario Oficial El Peruano (Normas Regionales)",
-    fechaEntradaVigencia: diasAtras(25),
     nivelRiesgo: "medio",
     puntajeRiesgo: 55,
     categoria: "Medio Ambiente",
@@ -240,7 +240,7 @@ export const peruLegislationData: PeruLegislationItem[] = [
     resumenIA: {
       queCambia: "Complementa normativa nacional RAEE con requisitos específicos para Arequipa. Obliga puntos de acopio en centros comerciales grandes.",
       afectados: "Comercializadores con presencia en Región Arequipa. Centros comerciales deben habilitar puntos de acopio.",
-      fechaClave: `Vigente desde ${diasAtras(25)}. Aplica solo en Región Arequipa.`,
+      fechaClave: `Proyecto publicado ${diasAtras(40)}. Pendiente de aprobación por Consejo Regional.`,
       actoresClave: ["GRA", "OEFA", "Municipalidades distritales de Arequipa"]
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-or-435-gra"
@@ -305,11 +305,11 @@ export const peruLegislationData: PeruLegislationItem[] = [
     autoridadEmisora: "Gobierno Regional del Cusco",
     autoridadFiscalizadora: "SUNAFIL (en coordinación con Dirección Regional de Trabajo)",
     autoridadesCompetentes: ["GRC", "SUNAFIL", "DRTPE Cusco"],
-    estado: "vigente",
-    estadoGenerico: "vigente",
+    estado: "en-tramite",
+    estadoGenerico: "pipeline",
+    indiceEtapaActual: 1,
     fechaPublicacion: diasAtras(35),
     fuentePublicacion: "Diario Oficial El Peruano (Normas Regionales)",
-    fechaEntradaVigencia: diasAtras(20),
     nivelRiesgo: "medio",
     puntajeRiesgo: 58,
     categoria: "Salud y Seguridad Laboral",
@@ -319,7 +319,7 @@ export const peruLegislationData: PeruLegislationItem[] = [
     resumenIA: {
       queCambia: "Refuerza requisitos de SST en Cusco. Reduce umbral para comités de SST de 20 a 10 trabajadores. Capacitación semestral obligatoria.",
       afectados: "Empresas con operaciones en Región Cusco. SUNAFIL fiscaliza en coordinación con gobierno regional.",
-      fechaClave: `Vigente desde ${diasAtras(20)}. Aplica solo en Región Cusco.`,
+      fechaClave: `Proyecto en primera lectura ${diasAtras(35)}. Pendiente de dictamen de comisión.`,
       actoresClave: ["GRC", "SUNAFIL", "DRTPE Cusco"]
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-or-198-grc"
@@ -383,11 +383,11 @@ export const peruLegislationData: PeruLegislationItem[] = [
     tipoNorma: "ntp",
     esVinculante: false,
     autoridadEmisora: "INACAL - Instituto Nacional de Calidad",
-    estado: "publicada",
-    estadoGenerico: "vigente",
+    estado: "en-tramite",
+    estadoGenerico: "pipeline",
+    indiceEtapaActual: 1,
     fechaPublicacion: diasAtras(30),
-    fuentePublicacion: "INACAL - Catálogo de Normas Técnicas",
-    fechaEntradaVigencia: diasAtras(30),
+    fuentePublicacion: "INACAL - Consulta Pública",
     nivelRiesgo: "bajo",
     puntajeRiesgo: 45,
     categoria: "Energía",
@@ -395,9 +395,9 @@ export const peruLegislationData: PeruLegislationItem[] = [
     obligacionesAfectadas: ["Ensayos de eficiencia", "Etiquetado voluntario"],
     areasImpacto: ["Laboratorios", "Marketing", "Etiquetado"],
     resumenIA: {
-      queCambia: "Define metodología de ensayo y etiquetado de eficiencia energética para electrodomésticos de cocina. Adopta clasificación A+++ a G.",
+      queCambia: "Propone metodología de ensayo y etiquetado de eficiencia energética para electrodomésticos de cocina. Adopta clasificación A+++ a G.",
       afectados: "Fabricantes que deseen certificar eficiencia energética voluntariamente o por requerimiento de grandes compradores.",
-      fechaClave: `NTP publicada ${diasAtras(30)}. Aplicación voluntaria.`,
+      fechaClave: `NTP en consulta pública desde ${diasAtras(30)}. Pendiente de aprobación final.`,
       calificadorVoluntariedad: PERU_UI_LABELS.calificadorNTP,
       actoresClave: ["INACAL", "MINEM", "Laboratorios de eficiencia energética"]
     },
