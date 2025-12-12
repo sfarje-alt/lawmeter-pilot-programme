@@ -118,6 +118,7 @@ export default function LawMeterDashboard() {
   const [unifiedDrawerConfig, setUnifiedDrawerConfig] = useState<any>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [starredFilter, setStarredFilter] = useState<"all" | "acts" | "bills">("all");
+  const [starredCountryFilter, setStarredCountryFilter] = useState<string>("all");
   
   // Independent state for Acts
   const [actsFilters, setActsFilters] = useState<FilterState>({
@@ -552,21 +553,43 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           <TabsContent value="starred" className="space-y-6 mt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <h3 className="text-lg font-semibold">Starred Items</h3>
-              <Select 
-                value={starredFilter} 
-                onValueChange={(value: "all" | "acts" | "bills") => setStarredFilter(value)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Items</SelectItem>
-                  <SelectItem value="acts">Acts Only</SelectItem>
-                  <SelectItem value="bills">Bills Only</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-3">
+                <Select 
+                  value={starredCountryFilter} 
+                  onValueChange={setStarredCountryFilter}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">🌍 All Countries</SelectItem>
+                    <SelectItem value="usa">🇺🇸 USA</SelectItem>
+                    <SelectItem value="canada">🇨🇦 Canada</SelectItem>
+                    <SelectItem value="costa-rica">🇨🇷 Costa Rica</SelectItem>
+                    <SelectItem value="eu">🇪🇺 European Union</SelectItem>
+                    <SelectItem value="uae">🇦🇪 UAE</SelectItem>
+                    <SelectItem value="saudi">🇸🇦 Saudi Arabia</SelectItem>
+                    <SelectItem value="japan">🇯🇵 Japan</SelectItem>
+                    <SelectItem value="korea">🇰🇷 Korea</SelectItem>
+                    <SelectItem value="taiwan">🇹🇼 Taiwan</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select 
+                  value={starredFilter} 
+                  onValueChange={(value: "all" | "acts" | "bills") => setStarredFilter(value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Items</SelectItem>
+                    <SelectItem value="acts">Acts Only</SelectItem>
+                    <SelectItem value="bills">Bills Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             {starredHooks.starred.length === 0 ? (
               <Card><CardContent className="py-12 text-center"><Star className="h-12 w-12 mx-auto text-muted-foreground mb-4" /><p>No starred items yet</p></CardContent></Card>
@@ -575,6 +598,8 @@ export default function LawMeterDashboard() {
                 {(starredFilter === "all" || starredFilter === "acts") && starredHooks.starred.filter(s => s.startsWith("ACTS:")).map(key => {
                   const id = key.replace("ACTS:", "");
                   const alert = alerts.find(a => a.title_id === id);
+                  // Filter by country - Costa Rica alerts are the default ACTS
+                  if (starredCountryFilter !== "all" && starredCountryFilter !== "costa-rica") return null;
                   return alert ? (
                     <AlertActCard 
                       key={id} 
@@ -589,6 +614,8 @@ export default function LawMeterDashboard() {
                 {(starredFilter === "all" || starredFilter === "bills") && starredHooks.starred.filter(s => s.startsWith("BILLS:")).map(key => {
                   const id = key.replace("BILLS:", "");
                   const bill = mockBills.find(b => b.id === id);
+                  // Filter by country - mockBills are Costa Rica bills
+                  if (starredCountryFilter !== "all" && starredCountryFilter !== "costa-rica") return null;
                   return bill ? <BillCard key={id} bill={bill} isStarred onToggleStar={() => starredHooks.toggleStar("BILLS", id)} onOpenDrawer={() => setSelectedBill(bill)} /> : null;
                 })}
                 {((starredFilter === "acts" && !starredHooks.starred.some(s => s.startsWith("ACTS:"))) ||
