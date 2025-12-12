@@ -242,213 +242,342 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
     return allEffectiveDates.filter(ed => selectedJurisdictions.includes(ed.jurisdiction));
   }, [allEffectiveDates, selectedJurisdictions]);
 
-  // Datos de ejemplo basados en la imagen
+  // Generate mock sessions across all jurisdictions and months
   const generateMockSessions = (): LegislativeSession[] => {
     return [
+      // ========== USA Sessions ==========
       {
-        date: parseISO("2025-11-04T14:45:00"),
-        sessionNumber: "",
-        time: "14:45",
-        organType: "PLENARIO",
-        organName: "PLENARIO",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
-        agenda: ["Proyecto de Ley Regulación Fintech 2025"]
+        date: parseISO("2025-01-15T10:00:00"),
+        sessionNumber: "1",
+        time: "10:00",
+        organType: "COMMITTEE",
+        organName: "House Energy & Commerce Committee",
+        sessionType: "HEARING",
+        status: "SCHEDULED",
+        agenda: ["Smart Appliance Safety Standards", "IoT Device Regulations"],
+        jurisdiction: "USA"
       },
       {
-        date: parseISO("2025-11-03T18:05:00"),
-        sessionNumber: "",
-        time: "18:05",
-        organType: "ESPECIAL",
-        organName: "COMISIÓN ESP. DE LA PROVINCIA DE GUANACASTE, ENCARGADA DE ANÁLISIS, INVESTIGACIÓN...",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
-        agenda: ["Analysis of regional bills"]
+        date: parseISO("2025-01-22T14:00:00"),
+        sessionNumber: "2",
+        time: "14:00",
+        organType: "SUBCOMMITTEE",
+        organName: "Senate Commerce Subcommittee on Consumer Protection",
+        sessionType: "MARKUP",
+        status: "SCHEDULED",
+        agenda: ["Consumer Product Safety Act Amendments"],
+        jurisdiction: "USA"
       },
       {
-        date: parseISO("2025-11-02T18:05:00"),
-        sessionNumber: "",
-        time: "18:05",
-        organType: "ESPECIAL",
-        organName: "COMISIÓN ESPECIAL DE LA PROVINCIA DE ALAJUELA, QUE SE ENCARGARÁ DEL ANÁLISIS, INVEST...",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
+        date: parseISO("2025-02-05T09:30:00"),
+        sessionNumber: "5",
+        time: "09:30",
+        organType: "PLENARY",
+        organName: "House of Representatives Floor Session",
+        sessionType: "VOTE",
+        status: "SCHEDULED",
+        agenda: ["H.R. 1234 - Cybersecurity Standards for Consumer Electronics"],
+        jurisdiction: "USA"
       },
       {
-        date: parseISO("2025-10-31T09:00:00"),
-        sessionNumber: "18",
-        time: "9:00",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE AMBIENTE",
-        sessionType: "EXTRAORDINARIA",
-        status: "PENDIENTE",
-        agenda: ["Ley de Cambio Climático", "Regulaciones Ambientales Bancarias"]
+        date: parseISO("2025-02-18T11:00:00"),
+        sessionNumber: "8",
+        time: "11:00",
+        organType: "COMMITTEE",
+        organName: "Senate Judiciary Committee",
+        sessionType: "HEARING",
+        status: "SCHEDULED",
+        agenda: ["Data Privacy in Smart Home Devices"],
+        jurisdiction: "USA"
       },
       {
-        date: parseISO("2025-10-30T08:00:00"),
-        sessionNumber: "91",
-        time: "8:00",
-        organType: "ESPECIAL",
-        organName: "COMISIÓN ESPECIAL DE LA PROVINCIA DE LIMÓN, QUE ESTARÁ ENCARGADA DEL ANÁLISIS, INVES...",
-        sessionType: "EXTRAORDINARIA",
-        status: "PENDIENTE",
+        date: parseISO("2025-03-10T10:00:00"),
+        sessionNumber: "12",
+        time: "10:00",
+        organType: "AGENCY",
+        organName: "FCC Open Commission Meeting",
+        sessionType: "REGULATORY",
+        status: "SCHEDULED",
+        agenda: ["RF Emissions Standards Update", "Wireless Device Certification"],
+        jurisdiction: "USA"
       },
       {
-        date: parseISO("2025-10-30T13:15:00"),
-        sessionNumber: "13",
-        time: "13:15",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE ASUNTOS MUNICIPALES Y DESARROLLO LOCAL PARTICIPATIVO",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
-      },
-      {
-        date: parseISO("2025-10-30T07:30:00"),
-        sessionNumber: "14",
-        time: "7:30",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE LA MUJER",
-        sessionType: "EXTRAORDINARIA",
-        status: "PENDIENTE",
-      },
-      {
-        date: parseISO("2025-10-30T08:00:00"),
-        sessionNumber: "36",
-        time: "8:00",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE SEGURIDAD Y NARCOTRÁFICO",
-        sessionType: "EXTRAORDINARIA",
-        status: "PENDIENTE",
-      },
-      {
-        date: parseISO("2025-10-30T09:00:00"),
-        sessionNumber: "37",
-        time: "9:00",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE SEGURIDAD Y NARCOTRÁFICO",
-        sessionType: "ORDINARIA",
-        status: "CANCELADA",
-      },
-      {
-        date: parseISO("2025-10-30T13:15:00"),
-        sessionNumber: "13",
-        time: "13:15",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE DERECHOS HUMANOS",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
-      },
-      {
-        date: parseISO("2025-10-30T13:00:00"),
-        sessionNumber: "24",
-        time: "13:00",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE CONTROL DE INGRESO Y GASTO PÚBLICO",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
-        agenda: ["Presupuesto Nacional 2026", "Regulaciones Fiscales Sector Financiero"]
-      },
-      {
-        date: parseISO("2025-10-30T13:15:00"),
+        date: parseISO("2025-03-25T14:30:00"),
         sessionNumber: "15",
-        time: "13:15",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE CIENCIA Y TECNOLOGÍA Y EDUCACIÓN",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
+        time: "14:30",
+        organType: "AGENCY",
+        organName: "CPSC Public Hearing",
+        sessionType: "PUBLIC HEARING",
+        status: "SCHEDULED",
+        agenda: ["Kitchen Appliance Safety Standards Review"],
+        jurisdiction: "USA"
+      },
+      
+      // ========== EU Sessions ==========
+      {
+        date: parseISO("2025-01-20T09:00:00"),
+        sessionNumber: "EP-001",
+        time: "09:00",
+        organType: "PARLIAMENT",
+        organName: "European Parliament IMCO Committee",
+        sessionType: "ORDINARY",
+        status: "SCHEDULED",
+        agenda: ["Product Safety Regulation Review", "CE Marking Updates"],
+        jurisdiction: "EU"
       },
       {
-        date: parseISO("2025-10-30T09:00:00"),
-        sessionNumber: "",
-        time: "9:00",
-        organType: "PLENARIO",
-        organName: "PLENARIO",
-        sessionType: "EXTRAORDINARIA",
-        status: "PENDIENTE",
-        agenda: ["Voting on pending bills", "Ley Fintech"]
+        date: parseISO("2025-02-12T10:00:00"),
+        sessionNumber: "EC-045",
+        time: "10:00",
+        organType: "COMMISSION",
+        organName: "European Commission DG GROW",
+        sessionType: "REGULATORY",
+        status: "SCHEDULED",
+        agenda: ["Ecodesign Regulation for Small Appliances"],
+        jurisdiction: "EU"
       },
       {
-        date: parseISO("2025-10-30T14:45:00"),
+        date: parseISO("2025-03-05T14:00:00"),
+        sessionNumber: "EP-012",
+        time: "14:00",
+        organType: "PARLIAMENT",
+        organName: "European Parliament Plenary",
+        sessionType: "VOTE",
+        status: "SCHEDULED",
+        agenda: ["Cyber Resilience Act Final Vote"],
+        jurisdiction: "EU"
+      },
+      {
+        date: parseISO("2025-04-15T09:30:00"),
+        sessionNumber: "COU-008",
+        time: "09:30",
+        organType: "COUNCIL",
+        organName: "Council of the EU - Competitiveness",
+        sessionType: "ORDINARY",
+        status: "SCHEDULED",
+        agenda: ["AI Act Implementation Guidelines"],
+        jurisdiction: "EU"
+      },
+      
+      // ========== Japan Sessions ==========
+      {
+        date: parseISO("2025-01-28T10:00:00"),
+        sessionNumber: "211-15",
+        time: "10:00",
+        organType: "DIET",
+        organName: "House of Representatives Economy Committee",
+        sessionType: "ORDINARY",
+        status: "SCHEDULED",
+        agenda: ["Product Safety Law Amendments"],
+        jurisdiction: "JPN"
+      },
+      {
+        date: parseISO("2025-02-20T13:00:00"),
+        sessionNumber: "211-28",
+        time: "13:00",
+        organType: "MINISTRY",
+        organName: "METI Technical Standards Council",
+        sessionType: "REGULATORY",
+        status: "SCHEDULED",
+        agenda: ["JIS Standards for Electric Appliances"],
+        jurisdiction: "JPN"
+      },
+      {
+        date: parseISO("2025-03-15T09:00:00"),
+        sessionNumber: "211-42",
+        time: "09:00",
+        organType: "DIET",
+        organName: "House of Councillors Plenary",
+        sessionType: "VOTE",
+        status: "SCHEDULED",
+        agenda: ["Electrical Appliance Safety Act Revision"],
+        jurisdiction: "JPN"
+      },
+      
+      // ========== Korea Sessions ==========
+      {
+        date: parseISO("2025-01-25T14:00:00"),
+        sessionNumber: "KNA-101",
+        time: "14:00",
+        organType: "ASSEMBLY",
+        organName: "National Assembly Trade Committee",
+        sessionType: "ORDINARY",
+        status: "SCHEDULED",
+        agenda: ["KC Mark Certification Updates"],
+        jurisdiction: "KOR"
+      },
+      {
+        date: parseISO("2025-02-28T10:00:00"),
+        sessionNumber: "KATS-015",
+        time: "10:00",
+        organType: "AGENCY",
+        organName: "Korean Agency for Technology and Standards",
+        sessionType: "REGULATORY",
+        status: "SCHEDULED",
+        agenda: ["KS Standards Review - Household Appliances"],
+        jurisdiction: "KOR"
+      },
+      {
+        date: parseISO("2025-04-10T09:00:00"),
+        sessionNumber: "KNA-145",
+        time: "09:00",
+        organType: "ASSEMBLY",
+        organName: "National Assembly Plenary",
+        sessionType: "VOTE",
+        status: "SCHEDULED",
+        agenda: ["Consumer Safety Framework Act"],
+        jurisdiction: "KOR"
+      },
+      
+      // ========== Taiwan Sessions ==========
+      {
+        date: parseISO("2025-02-10T09:00:00"),
+        sessionNumber: "LY-2025-01",
+        time: "09:00",
+        organType: "LEGISLATURE",
+        organName: "Legislative Yuan Economics Committee",
+        sessionType: "ORDINARY",
+        status: "SCHEDULED",
+        agenda: ["BSMI Certification Requirements"],
+        jurisdiction: "TWN"
+      },
+      {
+        date: parseISO("2025-03-20T14:00:00"),
+        sessionNumber: "BSMI-008",
+        time: "14:00",
+        organType: "AGENCY",
+        organName: "Bureau of Standards - Technical Review",
+        sessionType: "REGULATORY",
+        status: "SCHEDULED",
+        agenda: ["CNS Standards for Small Kitchen Appliances"],
+        jurisdiction: "TWN"
+      },
+      
+      // ========== UAE Sessions ==========
+      {
+        date: parseISO("2025-01-30T11:00:00"),
+        sessionNumber: "FNC-45",
+        time: "11:00",
+        organType: "COUNCIL",
+        organName: "Federal National Council",
+        sessionType: "ORDINARY",
+        status: "SCHEDULED",
+        agenda: ["Consumer Protection Law Amendments"],
+        jurisdiction: "UAE"
+      },
+      {
+        date: parseISO("2025-03-12T10:00:00"),
+        sessionNumber: "ESMA-012",
+        time: "10:00",
+        organType: "AUTHORITY",
+        organName: "Emirates Authority for Standardization",
+        sessionType: "REGULATORY",
+        status: "SCHEDULED",
+        agenda: ["UAE.S Standards for Electrical Appliances"],
+        jurisdiction: "UAE"
+      },
+      
+      // ========== Canada Sessions ==========
+      {
+        date: parseISO("2025-02-15T13:00:00"),
+        sessionNumber: "HC-2025-08",
+        time: "13:00",
+        organType: "COMMITTEE",
+        organName: "House of Commons Industry Committee",
+        sessionType: "HEARING",
+        status: "SCHEDULED",
+        agenda: ["Product Safety Canada Act Review"],
+        jurisdiction: "CAN"
+      },
+      {
+        date: parseISO("2025-03-28T10:00:00"),
+        sessionNumber: "SCC-015",
+        time: "10:00",
+        organType: "AGENCY",
+        organName: "Standards Council of Canada",
+        sessionType: "REGULATORY",
+        status: "SCHEDULED",
+        agenda: ["CSA Standards Harmonization with US/EU"],
+        jurisdiction: "CAN"
+      },
+      {
+        date: parseISO("2025-04-22T14:00:00"),
+        sessionNumber: "SEN-042",
+        time: "14:00",
+        organType: "SENATE",
+        organName: "Senate Standing Committee on Banking",
+        sessionType: "ORDINARY",
+        status: "SCHEDULED",
+        agenda: ["Consumer Product Regulations Update"],
+        jurisdiction: "CAN"
+      },
+      
+      // ========== Costa Rica Sessions (original data with jurisdiction) ==========
+      {
+        date: parseISO("2025-01-10T14:45:00"),
         sessionNumber: "",
         time: "14:45",
         organType: "PLENARIO",
-        organName: "PLENARIO",
+        organName: "Asamblea Legislativa - Plenario",
         sessionType: "ORDINARIA",
         status: "PENDIENTE",
+        agenda: ["Proyecto de Ley Regulación Fintech 2025"],
+        jurisdiction: "CRI"
       },
       {
-        date: parseISO("2025-10-29T18:05:00"),
-        sessionNumber: "13",
+        date: parseISO("2025-02-03T18:05:00"),
+        sessionNumber: "",
         time: "18:05",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE NOMBRAMIENTOS",
-        sessionType: "EXTRAORDINARIA",
-        status: "PENDIENTE",
-      },
-      {
-        date: parseISO("2025-10-29T18:05:00"),
-        sessionNumber: "14",
-        time: "18:05",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE CIENCIA Y TECNOLOGÍA Y EDUCACIÓN",
-        sessionType: "EXTRAORDINARIA",
-        status: "PENDIENTE",
-      },
-      {
-        date: parseISO("2025-10-29T12:06:00"),
-        sessionNumber: "22",
-        time: "12:06",
-        organType: "PERMANENTE ESPECIAL",
-        organName: "DE REDACCIÓN",
+        organType: "ESPECIAL",
+        organName: "Comisión de Ciencia y Tecnología",
         sessionType: "ORDINARIA",
-        status: "REALIZADA",
+        status: "PENDIENTE",
+        agenda: ["Ley de Ciberseguridad Nacional"],
+        jurisdiction: "CRI"
       },
       {
-        date: parseISO("2025-10-29T13:15:00"),
+        date: parseISO("2025-02-25T09:00:00"),
+        sessionNumber: "18",
+        time: "09:00",
+        organType: "PERMANENTE",
+        organName: "Comisión de Ambiente",
+        sessionType: "EXTRAORDINARIA",
+        status: "PENDIENTE",
+        agenda: ["Ley de Electrodomésticos Eficientes"],
+        jurisdiction: "CRI"
+      },
+      {
+        date: parseISO("2025-03-18T13:15:00"),
         sessionNumber: "51",
         time: "13:15",
-        organType: "PERMANENTE ORDINARIA",
-        organName: "ASUNTOS HACENDARIOS",
+        organType: "PERMANENTE",
+        organName: "Comisión de Asuntos Hacendarios",
         sessionType: "ORDINARIA",
         status: "PENDIENTE",
-        agenda: ["Regulación Financiera", "Impuestos al Sector Bancario", "Ley Fintech"]
+        agenda: ["Regulación de Criptoactivos"],
+        jurisdiction: "CRI"
       },
       {
-        date: parseISO("2025-10-29T13:15:00"),
-        sessionNumber: "14",
-        time: "13:15",
-        organType: "PERMANENTE ORDINARIA",
-        organName: "DE ASUNTOS AGROPECUARIOS",
-        sessionType: "ORDINARIA",
-        status: "CANCELADA",
-      },
-      {
-        date: parseISO("2025-10-29T13:15:00"),
-        sessionNumber: "27",
-        time: "13:15",
-        organType: "PERMANENTE ORDINARIA",
-        organName: "DE ASUNTOS SOCIALES",
+        date: parseISO("2025-04-08T14:45:00"),
+        sessionNumber: "",
+        time: "14:45",
+        organType: "PLENARIO",
+        organName: "Asamblea Legislativa - Segundo Debate",
         sessionType: "ORDINARIA",
         status: "PENDIENTE",
+        agenda: ["Votación Ley de Electrodomésticos Eficientes"],
+        jurisdiction: "CRI"
       },
       {
-        date: parseISO("2025-10-29T13:15:00"),
-        sessionNumber: "37",
-        time: "13:15",
-        organType: "PERMANENTE ORDINARIA",
-        organName: "DE GOBIERNO Y ADMINISTRACIÓN",
-        sessionType: "ORDINARIA",
-        status: "PENDIENTE",
-      },
-      {
-        date: parseISO("2025-10-29T12:05:00"),
-        sessionNumber: "37",
-        time: "12:05",
-        organType: "PERMANENTE ORDINARIA",
-        organName: "DE ASUNTOS ECONÓMICOS",
+        date: parseISO("2025-05-12T09:00:00"),
+        sessionNumber: "22",
+        time: "09:00",
+        organType: "PERMANENTE",
+        organName: "Comisión de Asuntos Económicos",
         sessionType: "EXTRAORDINARIA",
         status: "PENDIENTE",
-        agenda: ["Regulación Fintech", "Competencia en Sector Financiero", "Protección al Consumidor Financiero"]
+        agenda: ["Regulación Fintech - Dictamen Final"],
+        jurisdiction: "CRI"
       },
     ];
   };
@@ -929,7 +1058,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             {selectedSessions.length === 0 && selectedEffectiveDates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No hay sesiones ni normas vigentes</p>
+                <p>No sessions or effective dates scheduled</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -1099,12 +1228,12 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
         </CardContent>
       </Card>
 
-      {/* Tabla resumen de todas las sesiones */}
+      {/* Complete Sessions Table */}
       <Card className="lg:col-span-3">
         <CardHeader>
-          <CardTitle>Lista completa de sesiones</CardTitle>
+          <CardTitle>Complete Sessions List</CardTitle>
           <CardDescription>
-            Todas las sesiones programadas en la Asamblea Legislativa
+            All scheduled legislative sessions across jurisdictions
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1112,13 +1241,14 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tipo de órgano</TableHead>
-                  <TableHead>Órgano legislativo</TableHead>
-                  <TableHead>Fecha sesión</TableHead>
-                  <TableHead>Sesión n.º</TableHead>
-                  <TableHead>Hora</TableHead>
-                  <TableHead>Tipo sesión</TableHead>
-                  <TableHead>Estado sesión</TableHead>
+                  <TableHead>Jurisdiction</TableHead>
+                  <TableHead>Body Type</TableHead>
+                  <TableHead>Legislative Body</TableHead>
+                  <TableHead>Session Date</TableHead>
+                  <TableHead>Session #</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Session Type</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1126,6 +1256,18 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   .sort((a, b) => a.date.getTime() - b.date.getTime())
                   .map((session, index) => (
                   <TableRow key={index}>
+                    <TableCell>
+                      <span className="text-base">
+                        {session.jurisdiction === "USA" ? "🇺🇸" : 
+                         session.jurisdiction === "CAN" ? "🇨🇦" : 
+                         session.jurisdiction === "EU" ? "🇪🇺" : 
+                         session.jurisdiction === "JPN" ? "🇯🇵" : 
+                         session.jurisdiction === "KOR" ? "🇰🇷" : 
+                         session.jurisdiction === "TWN" ? "🇹🇼" : 
+                         session.jurisdiction === "UAE" ? "🇦🇪" : 
+                         session.jurisdiction === "CRI" ? "🇨🇷" : "🌐"}
+                      </span>
+                    </TableCell>
                     <TableCell className="font-medium">{session.organType}</TableCell>
                     <TableCell className="max-w-[300px] truncate" title={session.organName}>
                       {session.organName}
