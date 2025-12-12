@@ -178,18 +178,22 @@ export function SocialListeningDemo() {
     return extractedPosts.filter(post => selectedAccounts.includes(post.username));
   }, [selectedAccounts]);
 
-  const scheduledReports = [
-    { id: "1", name: "Weekly Sentiment Summary", frequency: "Weekly", nextRun: "Monday 8:00 AM", lastRun: "Jan 13, 2025", status: "active" },
-    { id: "2", name: "Monthly Stakeholder Analysis", frequency: "Monthly", nextRun: "Feb 1, 2025", lastRun: "Jan 1, 2025", status: "active" },
-    { id: "3", name: "Quarterly Trend Report", frequency: "Quarterly", nextRun: "Apr 1, 2025", lastRun: "Jan 1, 2025", status: "active" },
-  ];
+  // Single standard monthly report configuration
+  const scheduledReport = {
+    name: "Monthly Social Activity Report",
+    frequency: "Monthly",
+    nextRun: "Jan 1, 2025",
+    lastRun: "Dec 1, 2024",
+    status: "active",
+    description: "Comprehensive narrative report on social media activity across all tracked accounts"
+  };
 
   const reportRepository = [
-    { id: "1", name: "Weekly Sentiment Summary - Jan 13, 2025", date: "Jan 13, 2025", type: "Weekly", size: "2.4 MB" },
-    { id: "2", name: "Weekly Sentiment Summary - Jan 6, 2025", date: "Jan 6, 2025", type: "Weekly", size: "2.1 MB" },
-    { id: "3", name: "Monthly Stakeholder Analysis - Jan 2025", date: "Jan 1, 2025", type: "Monthly", size: "5.8 MB" },
-    { id: "4", name: "Weekly Sentiment Summary - Dec 30, 2024", date: "Dec 30, 2024", type: "Weekly", size: "2.3 MB" },
-    { id: "5", name: "Quarterly Trend Report - Q4 2024", date: "Jan 1, 2025", type: "Quarterly", size: "12.4 MB" },
+    { id: "1", name: "Monthly Social Activity Report - December 2024", date: "Dec 1, 2024", size: "4.2 MB" },
+    { id: "2", name: "Monthly Social Activity Report - November 2024", date: "Nov 1, 2024", size: "3.8 MB" },
+    { id: "3", name: "Monthly Social Activity Report - October 2024", date: "Oct 1, 2024", size: "4.5 MB" },
+    { id: "4", name: "Monthly Social Activity Report - September 2024", date: "Sep 1, 2024", size: "3.9 MB" },
+    { id: "5", name: "Monthly Social Activity Report - August 2024", date: "Aug 1, 2024", size: "4.1 MB" },
   ];
 
   // Filter and paginate tracked accounts
@@ -661,20 +665,20 @@ export function SocialListeningDemo() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {scheduledReports.map((report) => (
-                  <div 
-                    key={report.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                  >
+              <CardContent>
+                <div className="p-4 rounded-lg border bg-card">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-primary/10 rounded-lg">
                         <Clock className="w-4 h-4 text-primary" />
                       </div>
                       <div>
-                        <div className="font-medium text-sm">{report.name}</div>
+                        <div className="font-medium text-sm">{scheduledReport.name}</div>
+                        <div className="text-xs text-muted-foreground mb-1">
+                          {scheduledReport.frequency} - Next: {scheduledReport.nextRun}
+                        </div>
                         <div className="text-xs text-muted-foreground">
-                          {report.frequency} • Next: {report.nextRun}
+                          {scheduledReport.description}
                         </div>
                       </div>
                     </div>
@@ -682,7 +686,7 @@ export function SocialListeningDemo() {
                       Active
                     </Badge>
                   </div>
-                ))}
+                </div>
               </CardContent>
             </Card>
 
