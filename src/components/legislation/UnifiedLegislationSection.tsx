@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Grid, List, Loader2 } from "lucide-react";
 import { UnifiedLegislationCard } from "./UnifiedLegislationCard";
 import { UnifiedLegislationFilters } from "./UnifiedLegislationFilters";
@@ -28,6 +29,8 @@ interface UnifiedLegislationSectionProps {
   title?: string;
   subtitle?: string;
   prioritizeRealData?: boolean; // Sort items with originalData first
+  initialSubnationalFilter?: string | null; // Pre-selected state/province from map
+  onClearSubnationalFilter?: () => void; // Callback to clear the filter
 }
 
 export function UnifiedLegislationSection({
@@ -40,7 +43,9 @@ export function UnifiedLegislationSection({
   onItemClick,
   title,
   subtitle,
-  prioritizeRealData = false
+  prioritizeRealData = false,
+  initialSubnationalFilter = null,
+  onClearSubnationalFilter
 }: UnifiedLegislationSectionProps) {
   const [filters, setFilters] = useState<UnifiedFilterState>(defaultFilterState);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -65,6 +70,11 @@ export function UnifiedLegislationSection({
     return items.filter(item => {
       if (isDeleted(item.id)) return false;
       
+      // Initial subnational filter from map click (takes priority)
+      if (initialSubnationalFilter) {
+        if (!item.subnationalUnit || item.subnationalUnit !== initialSubnationalFilter) return false;
+      }
+      
       // Lifecycle filter
       if (filters.lifecycle === "in-force" && !item.isInForce) return false;
       if (filters.lifecycle === "pipeline" && item.isInForce) return false;
@@ -78,8 +88,8 @@ export function UnifiedLegislationSection({
       // Hierarchy level filter
       if (filters.hierarchyLevels.length > 0 && !filters.hierarchyLevels.includes(item.hierarchyLevel)) return false;
       
-      // Subnational unit filter
-      if (filters.subnationalUnits.length > 0) {
+      // Subnational unit filter (only apply if no initial filter from map)
+      if (!initialSubnationalFilter && filters.subnationalUnits.length > 0) {
         if (!item.subnationalUnit || !filters.subnationalUnits.includes(item.subnationalUnit)) return false;
       }
       
@@ -122,7 +132,7 @@ export function UnifiedLegislationSection({
       
       return true;
     });
-  }, [items, filters, isDeleted]);
+  }, [items, filters, isDeleted, initialSubnationalFilter]);
 
   // Sort items - prioritize real data if enabled
   const sortedItems = useMemo(() => {
@@ -192,6 +202,25 @@ export function UnifiedLegislationSection({
         subtitle={subtitle}
         alertCount={unreadCount}
       />
+
+      {/* Active State/Province Filter Badge */}
+      {initialSubnationalFilter && (
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg border" style={{
+          borderColor: `${theme.primaryColor}40`,
+          backgroundColor: `${theme.primaryColor}10`
+        }}>
+          <span className="text-sm text-muted-foreground">Filtered to:</span>
+          <Badge 
+            className="gap-1 cursor-pointer hover:opacity-80"
+            style={{ backgroundColor: theme.primaryColor }}
+            onClick={onClearSubnationalFilter}
+          >
+            {initialSubnationalFilter}
+            <span className="ml-1">×</span>
+          </Badge>
+          <span className="text-xs text-muted-foreground">(Click badge to clear)</span>
+        </div>
+      )}
 
       {/* Filters */}
       <UnifiedLegislationFilters
