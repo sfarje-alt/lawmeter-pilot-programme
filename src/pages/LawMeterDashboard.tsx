@@ -49,7 +49,8 @@ import {
   omanLegislation,
   kuwaitLegislation,
   bahrainLegislation,
-  qatarLegislation
+  qatarLegislation,
+  peruLegislation
 } from "@/data/mockInternationalLegislation";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -278,16 +279,30 @@ export default function LawMeterDashboard() {
                 ...omanLegislation,
                 ...kuwaitLegislation,
                 ...bahrainLegislation,
-                ...qatarLegislation
+                ...qatarLegislation,
+                ...peruLegislation
               ]} 
               onSelectRegion={(region) => {
                 // Map region to our region groups
                 if (region === "usa" || region === "canada") setSelectedRegion("NAM");
                 else if (region === "costa-rica" || region === "peru") setSelectedRegion("LATAM");
                 else if (region === "eu") setSelectedRegion("EU");
-                else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar"].includes(region)) setSelectedRegion("GCC");
+                else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar", "gcc"].includes(region)) setSelectedRegion("GCC");
                 else if (region === "japan" || region === "korea" || region === "taiwan") setSelectedRegion("APAC");
                 setSelectedCountry(region as typeof selectedCountry);
+              }}
+              onSelectSubJurisdiction={(jurisdiction, subJurisdiction) => {
+                // Handle state/province selection from map
+                if (jurisdiction === "usa") {
+                  setSelectedRegion("NAM");
+                  setSelectedCountry("usa");
+                  // The subJurisdiction will be the state abbreviation (e.g., "CA", "TX")
+                  console.log("Selected US state:", subJurisdiction);
+                } else if (jurisdiction === "canada") {
+                  setSelectedRegion("NAM");
+                  setSelectedCountry("canada");
+                  console.log("Selected Canada province:", subJurisdiction);
+                }
               }}
             />
 
