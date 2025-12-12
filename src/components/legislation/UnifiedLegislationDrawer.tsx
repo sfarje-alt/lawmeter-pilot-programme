@@ -61,6 +61,11 @@ export function UnifiedLegislationDrawer({
   const theme = item ? regionThemes[item.region] : regionThemes.NAM;
   const instrumentType = item ? getInstrumentType(config, item.instrumentType) : null;
   const pipelineStages = item ? getPipelineStages(config, item.instrumentType) : [];
+  
+  // Check if Peru data
+  const isPeru = item?.jurisdictionCode === "PE" && item?.peruData;
+  const peruData = item?.peruData;
+  const isLatam = item?.region === "LATAM";
 
   // Calculate current stage index for pipeline items
   const currentStageIndex = useMemo(() => {
@@ -75,16 +80,29 @@ export function UnifiedLegislationDrawer({
     return idx >= 0 ? idx : 0;
   }, [item, pipelineStages]);
 
-  // Build jurisdiction line
+  // Build jurisdiction line - special handling for Peru
   const jurisdictionLine = useMemo(() => {
     if (!item) return "";
+    
+    if (isPeru && peruData) {
+      const parts = [];
+      const nivelLabel = peruData.nivel === "nacional" ? "Nacional" :
+                        peruData.nivel === "regional" ? "Regional" :
+                        "Municipal/Local";
+      parts.push(nivelLabel);
+      if (peruData.departamento) parts.push(peruData.departamento);
+      if (peruData.municipio) parts.push(peruData.municipio);
+      parts.push(item.authorityLabel || item.authority);
+      return parts.filter(Boolean).join(" · ");
+    }
+    
     const parts = [
       item.jurisdictionLevel.charAt(0).toUpperCase() + item.jurisdictionLevel.slice(1),
       item.subnationalUnit || config.code,
       item.authorityLabel || item.authority
     ].filter(Boolean);
     return parts.join(" · ");
-  }, [item, config]);
+  }, [item, config, isPeru, peruData]);
 
   // Early return after all hooks
   if (!item) return null;
@@ -323,6 +341,120 @@ export function UnifiedLegislationDrawer({
                   )}
                 </CardContent>
               </Card>
+              
+              {/* Peru-specific Legal Details */}
+              {isPeru && peruData && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      {isLatam ? "Información Jurídica" : "Legal Information"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">País:</span>
+                        <span className="font-medium ml-2">Perú</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Nivel:</span>
+                        <span className="font-medium ml-2">
+                          {peruData.nivel === "nacional" ? "Nacional" :
+                           peruData.nivel === "regional" ? "Regional" : "Municipal/Local"}
+                        </span>
+                      </div>
+                      {peruData.departamento && (
+                        <div>
+                          <span className="text-muted-foreground">Departamento:</span>
+                          <span className="font-medium ml-2">{peruData.departamento}</span>
+                        </div>
+                      )}
+                      {peruData.municipio && (
+                        <div>
+                          <span className="text-muted-foreground">Municipio:</span>
+                          <span className="font-medium ml-2">{peruData.municipio}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">Tipo de Norma:</span>
+                        <span className="font-medium ml-2">
+                          {peruData.tipoNorma === "ley" ? "Ley" :
+                           peruData.tipoNorma === "decreto-legislativo" ? "Decreto Legislativo" :
+                           peruData.tipoNorma === "decreto-supremo" ? "Decreto Supremo" :
+                           peruData.tipoNorma === "resolucion-ministerial" ? "Resolución Ministerial" :
+                           peruData.tipoNorma === "resolucion-directoral" ? "Resolución Directoral" :
+                           peruData.tipoNorma === "ordenanza-regional" ? "Ordenanza Regional" :
+                           peruData.tipoNorma === "ordenanza-municipal" ? "Ordenanza Municipal" :
+                           peruData.tipoNorma === "ntp" ? "Norma Técnica Peruana (NTP)" : peruData.tipoNorma}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Carácter:</span>
+                        <span className="font-medium ml-2">
+                          {peruData.esVinculante ? "Obligatorio" : "Voluntario"}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Separator className="my-3" />
+                    
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Autoridad Emisora:</span>
+                        <span className="font-medium ml-2">{item.authority}</span>
+                      </div>
+                      {peruData.autoridadFiscalizadora && (
+                        <div>
+                          <span className="text-muted-foreground">Fiscalización/Supervisión:</span>
+                          <span className="font-medium ml-2">{peruData.autoridadFiscalizadora}</span>
+                        </div>
+                      )}
+                      {peruData.fuentePublicacion && (
+                        <div>
+                          <span className="text-muted-foreground">Fuente de Publicación:</span>
+                          <span className="font-medium ml-2">{peruData.fuentePublicacion}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {peruData.regimenTransitorio && (
+                      <>
+                        <Separator className="my-3" />
+                        <div className="text-sm">
+                          <span className="text-muted-foreground font-medium">Régimen Transitorio:</span>
+                          <p className="mt-1">{peruData.regimenTransitorio}</p>
+                        </div>
+                      </>
+                    )}
+                    
+                    {peruData.obligacionesAfectadas && peruData.obligacionesAfectadas.length > 0 && (
+                      <>
+                        <Separator className="my-3" />
+                        <div className="text-sm">
+                          <span className="text-muted-foreground font-medium">Obligaciones Afectadas:</span>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {peruData.obligacionesAfectadas.map((obligacion, idx) => (
+                              <Badge key={idx} variant="outline">{obligacion}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* NTP Voluntariness Qualifier */}
+                    {!peruData.esVinculante && peruData.calificadorVoluntariedad && (
+                      <>
+                        <Separator className="my-3" />
+                        <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm">
+                          <p className="text-blue-800 font-medium mb-1">⚠️ Nota sobre Aplicación</p>
+                          <p className="text-blue-700">{peruData.calificadorVoluntariedad}</p>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* AI Analysis Tab */}

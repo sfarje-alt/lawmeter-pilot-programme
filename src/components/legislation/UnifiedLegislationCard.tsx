@@ -52,7 +52,14 @@ const LATAM_LABELS = {
   riskMedium: "Medio",
   riskLow: "Bajo",
   starred: "Quitar de favoritos",
-  notStarred: "Agregar a favoritos"
+  notStarred: "Agregar a favoritos",
+  // Peru-specific
+  fiscalizacion: "Fiscalización",
+  voluntario: "Voluntario",
+  obligatorio: "Obligatorio",
+  nacional: "Nacional",
+  regional: "Regional",
+  municipal: "Municipal/Local"
 };
 
 interface UnifiedLegislationCardProps {
@@ -87,16 +94,43 @@ export function UnifiedLegislationCard({
   // Determine if this is a LATAM jurisdiction (use Spanish)
   const isLatam = item.region === "LATAM";
   const labels = isLatam ? LATAM_LABELS : null;
+  
+  // Check if this is Peru data with specific legal structure
+  const isPeru = item.jurisdictionCode === "PE" && item.peruData;
+  const peruData = item.peruData;
 
-  // Build jurisdiction line
+  // Build jurisdiction line - special handling for Peru
   const jurisdictionLine = useMemo(() => {
+    if (isPeru && peruData) {
+      const parts = [];
+      // Use Peru levels: Nacional, Regional, Municipal (NEVER "Federal")
+      const nivelLabel = peruData.nivel === "nacional" ? LATAM_LABELS.nacional :
+                        peruData.nivel === "regional" ? LATAM_LABELS.regional :
+                        LATAM_LABELS.municipal;
+      parts.push(nivelLabel);
+      
+      // Add department if regional or municipal
+      if (peruData.departamento) {
+        parts.push(peruData.departamento);
+      }
+      if (peruData.municipio) {
+        parts.push(peruData.municipio);
+      }
+      
+      // Add issuing authority
+      parts.push(item.authorityLabel || item.authority);
+      
+      return parts.filter(Boolean).join(" · ");
+    }
+    
+    // Default for non-Peru
     const parts = [
       item.jurisdictionLevel.charAt(0).toUpperCase() + item.jurisdictionLevel.slice(1),
       item.subnationalUnit || config.code,
       item.authorityLabel || item.authority
     ].filter(Boolean);
     return parts.join(" · ");
-  }, [item, config]);
+  }, [item, config, isPeru, peruData]);
 
   // Calculate current stage index for pipeline items
   const currentStageIndex = useMemo(() => {
@@ -210,10 +244,30 @@ export function UnifiedLegislationCard({
               {item.identifier}
             </Badge>
             
-            {/* Document type */}
-            {instrumentType && (
+            {/* Document type - Peru shows tipo de norma label */}
+            {isPeru && peruData ? (
+              <Badge variant="secondary" className="text-[10px]">
+                {peruData.esVinculante ? "📋" : "📝"} {
+                  peruData.tipoNorma === "ley" ? "Ley" :
+                  peruData.tipoNorma === "decreto-legislativo" ? "Decreto Legislativo" :
+                  peruData.tipoNorma === "decreto-supremo" ? "Decreto Supremo" :
+                  peruData.tipoNorma === "resolucion-ministerial" ? "Resolución Ministerial" :
+                  peruData.tipoNorma === "resolucion-directoral" ? "Resolución Directoral" :
+                  peruData.tipoNorma === "ordenanza-regional" ? "Ordenanza Regional" :
+                  peruData.tipoNorma === "ordenanza-municipal" ? "Ordenanza Municipal" :
+                  peruData.tipoNorma === "ntp" ? "NTP" : peruData.tipoNorma
+                }
+              </Badge>
+            ) : instrumentType && (
               <Badge variant="secondary" className="text-[10px]">
                 {instrumentType.emoji} {instrumentType.label}
+              </Badge>
+            )}
+            
+            {/* Peru: Voluntary/Binding indicator for NTP */}
+            {isPeru && peruData && !peruData.esVinculante && (
+              <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                {labels!.voluntario}
               </Badge>
             )}
           </div>
@@ -264,13 +318,23 @@ export function UnifiedLegislationCard({
 
         {/* Row 3: Jurisdiction line */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
-          {item.jurisdictionLevel !== "federal" ? (
+          {isPeru && peruData?.nivel !== "nacional" ? (
+            <MapPin className="h-3 w-3" />
+          ) : item.jurisdictionLevel !== "federal" ? (
             <MapPin className="h-3 w-3" />
           ) : (
             <Building2 className="h-3 w-3" />
           )}
           <span>{jurisdictionLine}</span>
         </div>
+        
+        {/* Row 4: Peru supervisory authority (when applicable) */}
+        {isPeru && peruData?.autoridadFiscalizadora && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <span className="font-medium">{labels!.fiscalizacion}:</span>
+            <span>{peruData.autoridadFiscalizadora}</span>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-3 pt-0">

@@ -104,6 +104,22 @@ export interface UnifiedLegislationItem {
   
   // Original data reference (for fetching more details)
   originalData?: any;
+  
+  // Peru-specific data for correct legal rendering
+  peruData?: {
+    tipoNorma: string;
+    esVinculante: boolean;
+    nivel: "nacional" | "regional" | "municipal";
+    departamento?: string;
+    municipio?: string;
+    autoridadFiscalizadora?: string;
+    autoridadesCompetentes?: string[];
+    fuentePublicacion?: string;
+    regimenTransitorio?: string;
+    sector?: string;
+    obligacionesAfectadas?: string[];
+    calificadorVoluntariedad?: string;
+  };
 }
 
 // ========== UNIFIED FILTER STATE ==========

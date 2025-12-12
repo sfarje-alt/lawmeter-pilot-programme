@@ -4,6 +4,7 @@
 
 import { 
   PeruLegislationItem, 
+  PeruNivelTerritorial,
   PERU_UI_LABELS 
 } from "@/types/peruLegislation";
 
@@ -444,7 +445,16 @@ export const peruLegislationData: PeruLegislationItem[] = [
 ];
 
 // Exportar función para convertir a formato unificado
-export function convertirPeruAUnificado(item: PeruLegislationItem) {
+import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
+
+export function convertirPeruAUnificado(item: PeruLegislationItem): UnifiedLegislationItem {
+  // Mapear nivel peruano a jurisdictionLevel del sistema unificado
+  const jurisdictionLevelMap: Record<PeruNivelTerritorial, "federal" | "state" | "local"> = {
+    "nacional": "federal",   // Nacional = nivel federal en el sistema unificado
+    "regional": "state",     // Regional = nivel state
+    "municipal": "local"     // Municipal = nivel local
+  };
+
   return {
     id: item.id,
     identifier: item.identificador,
@@ -453,12 +463,12 @@ export function convertirPeruAUnificado(item: PeruLegislationItem) {
     bullets: item.puntosClave,
     region: "LATAM" as const,
     jurisdictionCode: "PE",
-    jurisdictionLevel: item.nivel === "nacional" ? "federal" : item.nivel === "regional" ? "state" : "local",
+    jurisdictionLevel: jurisdictionLevelMap[item.nivel],
     subnationalUnit: item.departamento,
     instrumentType: item.tipoNorma,
-    hierarchyLevel: item.esVinculante ? "primary" : "soft-law",
+    hierarchyLevel: item.esVinculante ? "primary" : "soft-law" as any,
     status: item.estado,
-    genericStatus: item.estadoGenerico === "vigente" ? "in-force" : item.estadoGenerico === "pipeline" ? "proposal" : "repealed",
+    genericStatus: item.estadoGenerico === "vigente" ? "in-force" : item.estadoGenerico === "pipeline" ? "proposal" : "repealed" as any,
     isInForce: item.estadoGenerico === "vigente",
     isPipeline: item.estadoGenerico === "pipeline",
     currentStageIndex: item.indiceEtapaActual,
@@ -493,13 +503,28 @@ export function convertirPeruAUnificado(item: PeruLegislationItem) {
       riskExplanation: item.resumenIA.explicacionRiesgo,
       stakeholders: item.resumenIA.actoresClave
     } : undefined,
-    // Campos específicos de Perú para el drawer
-    originalData: {
-      ...item,
-      _peruSpecific: true
+    // Campos específicos de Perú para renderizado especial
+    peruData: {
+      tipoNorma: item.tipoNorma,
+      esVinculante: item.esVinculante,
+      nivel: item.nivel,
+      departamento: item.departamento,
+      municipio: item.municipio,
+      autoridadFiscalizadora: item.autoridadFiscalizadora,
+      autoridadesCompetentes: item.autoridadesCompetentes,
+      fuentePublicacion: item.fuentePublicacion,
+      regimenTransitorio: item.regimenTransitorio,
+      sector: item.sector,
+      obligacionesAfectadas: item.obligacionesAfectadas,
+      calificadorVoluntariedad: item.resumenIA?.calificadorVoluntariedad
     }
-  };
+  } as UnifiedLegislationItem;
+}
+
+// Función para convertir array de items peruanos a formato unificado
+export function convertPeruToUnified(items: PeruLegislationItem[]): UnifiedLegislationItem[] {
+  return items.map(convertirPeruAUnificado);
 }
 
 // Datos convertidos listos para usar
-export const enrichedPeruDataNew = peruLegislationData.map(convertirPeruAUnificado);
+export const enrichedPeruDataNew = convertPeruToUnified(peruLegislationData);
