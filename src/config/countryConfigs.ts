@@ -400,66 +400,93 @@ export const qatarConfig: JurisdictionConfig = {
 };
 
 // ========== PERU CONFIGURATION ==========
+// Estado unitario - NO usar "federal"
 export const peruConfig: JurisdictionConfig = {
   code: "PE",
   name: "Perú",
   region: "LATAM",
   legalSystem: "civil-law",
   
+  // Tipos de norma válidos para Perú (sistema civilista)
   instrumentTypes: [
     { id: "ley", label: "Ley", emoji: "⚖️", hierarchyLevel: "primary" },
-    { id: "decreto-supremo", label: "Decreto Supremo", emoji: "📜", hierarchyLevel: "secondary" },
-    { id: "decreto-legislativo", label: "Decreto Legislativo", emoji: "📋", hierarchyLevel: "primary" },
-    { id: "resolucion", label: "Resolución Ministerial", emoji: "📄", hierarchyLevel: "tertiary" },
-    { id: "proyecto", label: "Proyecto de Ley", emoji: "📝", hierarchyLevel: "primary" },
-    { id: "directiva", label: "Directiva", emoji: "💡", hierarchyLevel: "soft-law" },
-    { id: "norma-tecnica", label: "Norma Técnica Peruana", emoji: "🔧", hierarchyLevel: "tertiary" }
+    { id: "decreto-legislativo", label: "Decreto Legislativo", emoji: "📜", hierarchyLevel: "primary" },
+    { id: "decreto-supremo", label: "Decreto Supremo", emoji: "📋", hierarchyLevel: "secondary" },
+    { id: "resolucion-ministerial", label: "Resolución Ministerial", emoji: "📄", hierarchyLevel: "tertiary" },
+    { id: "resolucion-directoral", label: "Resolución Directoral", emoji: "📄", hierarchyLevel: "tertiary" },
+    { id: "ordenanza-regional", label: "Ordenanza Regional", emoji: "🏛️", hierarchyLevel: "secondary" },
+    { id: "ordenanza-municipal", label: "Ordenanza Municipal", emoji: "🏘️", hierarchyLevel: "tertiary" },
+    { id: "ntp", label: "Norma Técnica Peruana (NTP)", emoji: "🔧", hierarchyLevel: "soft-law" }
   ],
   
+  // Estados diferenciados para vinculantes vs NTP
   statusMappings: [
-    { localStatus: "Presentado", genericStatus: "proposal", label: "Presentado" },
+    // Para instrumentos vinculantes (leyes, decretos, resoluciones, ordenanzas)
+    { localStatus: "En Trámite", genericStatus: "proposal", label: "En Trámite" },
     { localStatus: "En Comisión", genericStatus: "in-committee", label: "En Comisión" },
     { localStatus: "Primera Votación", genericStatus: "in-committee", label: "Primera Votación" },
     { localStatus: "Segunda Votación", genericStatus: "approved", label: "Segunda Votación" },
     { localStatus: "Autógrafa", genericStatus: "approved", label: "Autógrafa" },
     { localStatus: "Promulgada", genericStatus: "in-force", label: "Promulgada" },
     { localStatus: "Vigente", genericStatus: "in-force", label: "Vigente" },
-    { localStatus: "Publicada", genericStatus: "in-force", label: "Publicada en El Peruano" },
-    { localStatus: "Derogada", genericStatus: "repealed", label: "Derogada" }
+    { localStatus: "Derogada", genericStatus: "repealed", label: "Derogada" },
+    // Para NTP (estándares voluntarios)
+    { localStatus: "Publicada", genericStatus: "in-force", label: "NTP: Publicada" },
+    { localStatus: "Revisada", genericStatus: "in-force", label: "NTP: Revisada/Actualizada" },
+    { localStatus: "Retirada", genericStatus: "repealed", label: "NTP: Retirada" }
   ],
   
   pipelineStages: [
-    { stages: ["Presentación", "Comisión", "Primera Votación", "Segunda Votación", "Autógrafa", "Promulgación"], instrumentType: "proyecto" }
+    { stages: ["Presentación", "Comisión", "Primera Votación", "Segunda Votación", "Autógrafa", "Promulgación"], instrumentType: "proyecto" },
+    { stages: ["Proyecto", "Comisión", "Pleno Regional", "Publicación"], instrumentType: "ordenanza-regional" }
   ],
   
+  // Departamentos de Perú (todos los 25)
   subnationalUnits: {
     label: "Departamento",
     units: [
-      { code: "LIM", name: "Lima" }, { code: "ARE", name: "Arequipa" },
-      { code: "CUS", name: "Cusco" }, { code: "PIU", name: "Piura" },
-      { code: "LAL", name: "La Libertad" }, { code: "CAL", name: "Callao" },
-      { code: "JUN", name: "Junín" }, { code: "LAM", name: "Lambayeque" }
+      { code: "AMA", name: "Amazonas" }, { code: "ANC", name: "Áncash" },
+      { code: "APU", name: "Apurímac" }, { code: "ARE", name: "Arequipa" },
+      { code: "AYA", name: "Ayacucho" }, { code: "CAJ", name: "Cajamarca" },
+      { code: "CAL", name: "Callao" }, { code: "CUS", name: "Cusco" },
+      { code: "HUV", name: "Huancavelica" }, { code: "HUA", name: "Huánuco" },
+      { code: "ICA", name: "Ica" }, { code: "JUN", name: "Junín" },
+      { code: "LAL", name: "La Libertad" }, { code: "LAM", name: "Lambayeque" },
+      { code: "LIM", name: "Lima" }, { code: "LOR", name: "Loreto" },
+      { code: "MDD", name: "Madre de Dios" }, { code: "MOQ", name: "Moquegua" },
+      { code: "PAS", name: "Pasco" }, { code: "PIU", name: "Piura" },
+      { code: "PUN", name: "Puno" }, { code: "SAM", name: "San Martín" },
+      { code: "TAC", name: "Tacna" }, { code: "TUM", name: "Tumbes" },
+      { code: "UCA", name: "Ucayali" }
     ]
   },
   
+  // Autoridades emisoras y fiscalizadoras
   authorityLabels: {
     congreso: "Congreso de la República",
     ejecutivo: "Poder Ejecutivo",
-    ministerio: "Ministerio",
+    pcm: "Presidencia del Consejo de Ministros",
+    minam: "MINAM - Ministerio del Ambiente",
+    minem: "MINEM - Ministerio de Energía y Minas",
+    minsa: "MINSA - Ministerio de Salud",
+    mtc: "MTC - Ministerio de Transportes y Comunicaciones",
+    produce: "PRODUCE - Ministerio de la Producción",
+    mtpe: "MTPE - Ministerio de Trabajo",
+    inacal: "INACAL - Instituto Nacional de Calidad",
     indecopi: "INDECOPI",
-    inacal: "INACAL",
-    mtc: "MTC",
+    oefa: "OEFA - Organismo de Evaluación y Fiscalización Ambiental",
+    osinergmin: "OSINERGMIN",
     osiptel: "OSIPTEL",
-    digesa: "DIGESA",
-    minam: "MINAM"
+    sunafil: "SUNAFIL",
+    digesa: "DIGESA"
   },
   
   hierarchyLabels: {
     constitutional: "Constitución",
-    primary: "Ley/Decreto Legislativo",
-    secondary: "Decreto Supremo/Reglamento",
-    tertiary: "Resolución/Norma Técnica",
-    "soft-law": "Directiva/Circular",
+    primary: "Ley / Decreto Legislativo",
+    secondary: "Decreto Supremo / Ordenanza",
+    tertiary: "Resolución Ministerial / Directoral",
+    "soft-law": "NTP / Directiva (voluntario)",
     "case-law": "Jurisprudencia"
   },
   
@@ -468,40 +495,48 @@ export const peruConfig: JurisdictionConfig = {
     hierarchy: "Jerarquía Normativa",
     status: "Estado",
     subnational: "Departamento",
-    authority: "Entidad Emisora"
+    authority: "Autoridad Emisora"
   },
   
   filterPresets: [
     {
-      id: "high-risk-proyectos",
-      name: "Proyectos Alto Riesgo",
-      description: "Proyectos de ley con alto riesgo regulatorio",
-      filters: { lifecycle: "pipeline", riskLevels: ["high"] }
+      id: "alto-riesgo-vigente",
+      name: "Alto Riesgo Vigente",
+      description: "Normativa vigente con alto riesgo regulatorio",
+      filters: { lifecycle: "in-force", riskLevels: ["high"] }
     },
     {
-      id: "seguridad-producto",
-      name: "Seguridad de Producto",
-      description: "Regulaciones de seguridad de productos",
-      filters: { categories: ["Product Safety", "Battery Regulations"] }
+      id: "proyectos-tramite",
+      name: "Proyectos en Trámite",
+      description: "Proyectos de ley y normas en proceso",
+      filters: { lifecycle: "pipeline" }
     },
     {
-      id: "telecomunicaciones",
-      name: "Telecomunicaciones",
-      description: "Regulaciones de radio y conectividad",
-      filters: { categories: ["Radio Regulations", "Cybersecurity"] }
+      id: "ordenanzas-regionales",
+      name: "Ordenanzas Regionales",
+      description: "Normativa de gobiernos regionales",
+      filters: { instrumentTypes: ["ordenanza-regional", "ordenanza-municipal"] }
     },
     {
-      id: "vigente",
-      name: "Normativa Vigente",
-      description: "Legislación actualmente en vigor",
-      filters: { lifecycle: "in-force" }
+      id: "ntp-voluntarias",
+      name: "NTP (Voluntarias)",
+      description: "Normas Técnicas Peruanas de aplicación voluntaria",
+      filters: { instrumentTypes: ["ntp"] }
+    },
+    {
+      id: "medio-ambiente",
+      name: "Medio Ambiente",
+      description: "Normativa ambiental (MINAM/OEFA)",
+      filters: { categories: ["Medio Ambiente"] }
     }
   ],
   
+  // IMPORTANTE: Perú es Estado UNITARIO - NO usar "federal"
+  // Mapeo: "federal" -> "Nacional" (solo para compatibilidad con sistema genérico)
   jurisdictionLevels: [
-    { id: "federal", label: "Nacional", enabled: true },
-    { id: "state", label: "Regional", enabled: false },
-    { id: "local", label: "Local", enabled: false }
+    { id: "federal", label: "Nacional", enabled: true },    // Renderiza como "Nacional"
+    { id: "state", label: "Regional", enabled: true },      // Gobiernos regionales
+    { id: "local", label: "Municipal/Local", enabled: true } // Municipalidades
   ]
 };
 
