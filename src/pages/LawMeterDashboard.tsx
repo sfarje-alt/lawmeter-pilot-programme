@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Receipt, Settings, Calendar, BookOpen, Grid, List, Building2, Shield } from "lucide-react";
+import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Settings, Calendar, BookOpen, Grid, List, Building2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,19 +25,12 @@ import { BillDrawer } from "@/components/bills/BillDrawer";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { LegislativeSessionsCalendar } from "@/components/calendar/LegislativeSessionsCalendar";
 import { ContactForm } from "@/components/ContactForm";
-import { TendersSection } from "@/components/tenders/TendersSection";
 import { MediaMonitoringDemo } from "@/components/media/MediaMonitoringDemo";
 import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
 import { CongressBillsSection } from "@/components/congress/CongressBillsSection";
 import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
 import { CongressBill } from "@/types/congress";
-import { CertificateFilters as CertFilters } from '@/components/certificates/CertificateFilters';
-import { SummaryCards } from '@/components/certificates/SummaryCards';
-import { CertificateTable } from '@/components/certificates/CertificateTable';
-import { useCertificates } from '@/hooks/useCertificates';
-import { CertificateFilters as CertificateFiltersType } from '@/types/certificates';
-import { Download, Plus } from "lucide-react";
 import { UnifiedLegislationSection, UnifiedLegislationDrawer, UnifiedCongressSection } from "@/components/legislation";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { 
@@ -167,10 +160,6 @@ export default function LawMeterDashboard() {
   const [billsViewMode, setBillsViewMode] = useState<"list" | "grid">("list");
   const [billsPage, setBillsPage] = useState(1);
   const [billsPerPage, setBillsPerPage] = useState(25);
-  
-  // Certificates state
-  const [certificateFilters, setCertificateFilters] = useState<CertificateFiltersType>({});
-  const { data: certificates = [], isLoading: certificatesLoading } = useCertificates(certificateFilters);
 
   const starredHooks = useStarredAlerts();
   const filteredAlerts = useFilteredAlerts(alerts, actsFilters);
@@ -604,78 +593,10 @@ export default function LawMeterDashboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="certificates" className="space-y-6 mt-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Certificate Repository</h2>
-                <p className="text-muted-foreground">
-                  Go Global Compliance - Manage and track all certifications
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    const headers = ['Client', 'Product', 'Model', 'Type', 'Country/Region', 'Standard', 'Cert Body', 'Cert Number', 'Issue Date', 'Expiration', 'Status'];
-                    const rows = certificates.map(cert => [
-                      cert.clients?.client_name || '',
-                      cert.product_name,
-                      cert.product_model || '',
-                      cert.certificate_type,
-                      cert.country_or_region,
-                      cert.regulatory_standard || '',
-                      cert.certification_body || '',
-                      cert.certificate_number || '',
-                      cert.issue_date,
-                      cert.expiration_date || '',
-                      cert.status,
-                    ]);
-                    const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `certificates-export-${new Date().toISOString().split('T')[0]}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                  }}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
-                <Button onClick={() => navigate('/certificates/new')}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Certificate
-                </Button>
-              </div>
-            </div>
-
-            <CertFilters filters={certificateFilters} onFiltersChange={setCertificateFilters} />
-
-            {certificatesLoading ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[...Array(4)].map((_, i) => (
-                    <Card key={i} className="glass-card"><CardContent className="h-32" /></Card>
-                  ))}
-                </div>
-                <Card className="glass-card"><CardContent className="h-96" /></Card>
-              </div>
-            ) : (
-              <>
-                <SummaryCards certificates={certificates} />
-                <CertificateTable certificates={certificates} />
-              </>
-            )}
-          </TabsContent>
-
           <TabsContent value="calendar" className="mt-6">
             <LegislativeSessionsCalendar
               alerts={alerts}
               onNavigateToAlert={(alertId) => {
-                // Buscar la alerta correspondiente
                 const alert = alerts.find(a => a.title_id === alertId);
                 if (alert) {
                   setSelectedAlert(alert);
@@ -690,10 +611,6 @@ export default function LawMeterDashboard() {
               data={activeTab === "bills" ? filteredBills : filteredAlerts} 
               type={activeTab === "bills" ? "bills" : "acts"} 
             />
-          </TabsContent>
-
-          <TabsContent value="tenders" className="mt-6">
-            <TendersSection />
           </TabsContent>
 
           <TabsContent value="media" className="mt-6">

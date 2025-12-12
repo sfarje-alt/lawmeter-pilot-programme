@@ -1,4 +1,4 @@
-import { FileText, BarChart3, Star, Users, Receipt, Calendar, Shield, Settings, BookOpen, Clock, MessageSquare } from "lucide-react";
+import { FileText, BarChart3, Star, Users, Calendar, Settings, BookOpen, Clock, MessageSquare } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,8 +25,6 @@ const menuItems = [
   { id: "legislation", title: "Legislation", icon: FileText },
   { id: "media", title: "Media", icon: FileText },
   { id: "social", title: "Social Listening", icon: Users },
-  { id: "tenders", title: "Tenders", icon: Receipt },
-  { id: "certificates", title: "Certificates", icon: Shield },
   { id: "calendar", title: "Calendar", icon: Calendar },
   { id: "analytics", title: "Analytics", icon: BarChart3 },
   { id: "contact", title: "Contact", icon: MessageSquare },
