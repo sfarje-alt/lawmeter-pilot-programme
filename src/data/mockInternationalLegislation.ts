@@ -2022,6 +2022,259 @@ export const qatarLegislationData: InternationalLegislation[] = [
   }
 ];
 
+// Peru Legislative Timeline
+const getPeruBillTimeline = (currentStage: number): TimelineStage[] => [
+  { name: "Presentación", completed: currentStage >= 0, date: currentStage >= 0 ? daysAgo(45) : undefined },
+  { name: "Comisión", completed: currentStage >= 1, date: currentStage >= 1 ? daysAgo(30) : undefined },
+  { name: "Primera Votación", completed: currentStage >= 2, date: currentStage >= 2 ? daysAgo(15) : undefined },
+  { name: "Segunda Votación", completed: currentStage >= 3 },
+  { name: "Promulgación", completed: currentStage >= 4 },
+];
+
+// Peru Legislation - Smart Kettle/Espresso Machine focused
+export const peruLegislation: InternationalLegislation[] = [
+  // RADIO REGULATIONS
+  {
+    id: "pe-mtc-rf-2024-001",
+    title: "Reglamento de Homologación de Equipos de Telecomunicaciones con Conectividad Inalámbrica",
+    summary: "Actualización de requisitos de homologación del MTC para dispositivos con WiFi y Bluetooth, incluyendo electrodomésticos inteligentes.",
+    bullets: [
+      "Certificación obligatoria ante el MTC para dispositivos con módulos WiFi/Bluetooth",
+      "Nuevos límites de emisión RF alineados con estándares internacionales",
+      "Requisito de etiquetado de frecuencia operativa en español"
+    ],
+    status: "En Comisión",
+    jurisdiction: "Peru",
+    riskLevel: "high",
+    riskScore: 78,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(180),
+    regulatoryBody: "MTC - Ministerio de Transportes y Comunicaciones",
+    impactAreas: ["Wireless", "Certification", "Labeling"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Ley",
+    timeline: getPeruBillTimeline(1)
+  },
+  {
+    id: "pe-osiptel-2024-001",
+    title: "Norma Técnica OSIPTEL para Dispositivos IoT Conectados",
+    summary: "OSIPTEL establece requisitos técnicos para dispositivos del Internet de las Cosas comercializados en Perú.",
+    bullets: [
+      "Registro obligatorio de dispositivos IoT en base de datos OSIPTEL",
+      "Requisitos de interoperabilidad con redes peruanas",
+      "Estándares de seguridad para comunicaciones inalámbricas"
+    ],
+    status: "Vigente",
+    jurisdiction: "Peru",
+    riskLevel: "medium",
+    riskScore: 65,
+    category: "Radio Regulations",
+    regulatoryCategory: "Radio",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "OSIPTEL",
+    impactAreas: ["IoT", "Registration", "Connectivity"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Resolución de Consejo Directivo"
+  },
+  // PRODUCT SAFETY
+  {
+    id: "pe-indecopi-safety-2024",
+    title: "Reglamento Técnico de Seguridad para Electrodomésticos de Calentamiento",
+    summary: "INDECOPI actualiza normas de seguridad para aparatos eléctricos de calentamiento incluyendo hervidores y cafeteras.",
+    bullets: [
+      "Requisitos de protección térmica dual para aparatos sobre 1000W",
+      "Apagado automático obligatorio por inactividad",
+      "Certificación NTP obligatoria antes de comercialización"
+    ],
+    status: "Primera Votación",
+    jurisdiction: "Peru",
+    riskLevel: "high",
+    riskScore: 85,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(15),
+    complianceDeadline: daysFromNow(120),
+    regulatoryBody: "INDECOPI",
+    impactAreas: ["Product Safety", "Certification", "Manufacturing"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Ley",
+    timeline: getPeruBillTimeline(2)
+  },
+  {
+    id: "pe-inacal-electric-2024",
+    title: "Norma Técnica Peruana NTP-IEC 60335-2-15 Hervidores Eléctricos",
+    summary: "INACAL adopta estándar internacional IEC para requisitos de seguridad específicos de hervidores eléctricos.",
+    bullets: [
+      "Adopción de IEC 60335-2-15 con modificaciones nacionales",
+      "Requisitos de estabilidad y protección contra derrames",
+      "Ensayos de durabilidad térmica obligatorios"
+    ],
+    status: "Vigente",
+    jurisdiction: "Peru",
+    riskLevel: "medium",
+    riskScore: 70,
+    category: "Product Safety",
+    regulatoryCategory: "Product Safety",
+    publishedDate: daysAgo(90),
+    effectiveDate: daysAgo(30),
+    regulatoryBody: "INACAL",
+    impactAreas: ["Standards", "Testing", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Norma Técnica Peruana"
+  },
+  // CYBERSECURITY
+  {
+    id: "pe-pcm-cyber-2024",
+    title: "Ley de Ciberseguridad para Dispositivos Conectados del Consumidor",
+    summary: "PCM propone requisitos mínimos de ciberseguridad para dispositivos IoT comercializados en Perú.",
+    bullets: [
+      "Prohibición de contraseñas por defecto - credenciales únicas obligatorias",
+      "Soporte de actualizaciones de seguridad mínimo 3 años",
+      "Programa de divulgación de vulnerabilidades requerido"
+    ],
+    status: "En Comisión",
+    jurisdiction: "Peru",
+    riskLevel: "high",
+    riskScore: 82,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(25),
+    complianceDeadline: daysFromNow(270),
+    regulatoryBody: "PCM - Presidencia del Consejo de Ministros",
+    impactAreas: ["Software", "Security", "Firmware"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Ley",
+    timeline: getPeruBillTimeline(1)
+  },
+  {
+    id: "pe-segdi-iot-2024",
+    title: "Directiva de Seguridad Digital para Electrodomésticos Inteligentes",
+    summary: "SEGDI establece lineamientos de seguridad digital para dispositivos inteligentes del hogar.",
+    bullets: [
+      "Cifrado obligatorio para transmisión de datos",
+      "Requisitos de autenticación segura",
+      "Auditorías de seguridad periódicas recomendadas"
+    ],
+    status: "Vigente",
+    jurisdiction: "Peru",
+    riskLevel: "medium",
+    riskScore: 58,
+    category: "Cybersecurity",
+    regulatoryCategory: "Cybersecurity",
+    publishedDate: daysAgo(45),
+    effectiveDate: daysAgo(10),
+    regulatoryBody: "SEGDI - Secretaría de Gobierno Digital",
+    impactAreas: ["Data Security", "Encryption", "Authentication"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Directiva"
+  },
+  // BATTERY REGULATIONS
+  {
+    id: "pe-minam-battery-2024",
+    title: "Reglamento de Gestión de Baterías de Litio en Productos Electrónicos",
+    summary: "MINAM establece requisitos para baterías de litio en electrodomésticos portátiles incluyendo hervidores inalámbricos.",
+    bullets: [
+      "Certificación de seguridad obligatoria para baterías de litio",
+      "Sistema de gestión de baterías (BMS) requerido",
+      "Etiquetado de capacidad y advertencias de seguridad"
+    ],
+    status: "Segunda Votación",
+    jurisdiction: "Peru",
+    riskLevel: "high",
+    riskScore: 76,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(30),
+    complianceDeadline: daysFromNow(200),
+    regulatoryBody: "MINAM - Ministerio del Ambiente",
+    impactAreas: ["Battery Safety", "Certification", "Labeling"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Ley",
+    timeline: getPeruBillTimeline(3)
+  },
+  {
+    id: "pe-oefa-recycle-2024",
+    title: "Norma de Responsabilidad Extendida del Productor para Baterías",
+    summary: "OEFA implementa programa de reciclaje obligatorio para productos con baterías recargables.",
+    bullets: [
+      "Programa de retorno obligatorio para fabricantes",
+      "Puntos de recolección en puntos de venta",
+      "Reportes anuales de reciclaje al OEFA"
+    ],
+    status: "Vigente",
+    jurisdiction: "Peru",
+    riskLevel: "medium",
+    riskScore: 55,
+    category: "Battery Regulations",
+    regulatoryCategory: "Battery",
+    publishedDate: daysAgo(120),
+    effectiveDate: daysAgo(60),
+    regulatoryBody: "OEFA - Organismo de Evaluación y Fiscalización Ambiental",
+    impactAreas: ["Recycling", "Producer Responsibility", "Reporting"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Resolución de Consejo Directivo"
+  },
+  // FOOD CONTACT MATERIAL
+  {
+    id: "pe-digesa-fcm-2024",
+    title: "Reglamento Sanitario de Materiales en Contacto con Alimentos",
+    summary: "DIGESA actualiza requisitos para materiales que entran en contacto con alimentos y bebidas en electrodomésticos.",
+    bullets: [
+      "Prohibición de PFAS en superficies de contacto con alimentos",
+      "Límites de migración para metales pesados en elementos calefactores",
+      "Certificación sanitaria obligatoria para nuevos productos"
+    ],
+    status: "En Comisión",
+    jurisdiction: "Peru",
+    riskLevel: "high",
+    riskScore: 88,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(10),
+    complianceDeadline: daysFromNow(300),
+    regulatoryBody: "DIGESA - Dirección General de Salud Ambiental",
+    impactAreas: ["Materials", "Testing", "Certification"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Ley",
+    timeline: getPeruBillTimeline(1)
+  },
+  {
+    id: "pe-sanipes-beverage-2024",
+    title: "Norma Técnica para Equipos de Preparación de Bebidas Calientes",
+    summary: "SANIPES establece requisitos específicos para materiales en cafeteras y hervidores.",
+    bullets: [
+      "Ensayos de migración con agua a 100°C obligatorios",
+      "Materiales aprobados para contacto con café y té",
+      "Requisitos de limpieza y mantenimiento en manual de usuario"
+    ],
+    status: "Vigente",
+    jurisdiction: "Peru",
+    riskLevel: "medium",
+    riskScore: 62,
+    category: "Food Contact Material",
+    regulatoryCategory: "Food Contact Material",
+    publishedDate: daysAgo(75),
+    effectiveDate: daysAgo(20),
+    regulatoryBody: "SANIPES - Organismo Nacional de Sanidad Pesquera",
+    impactAreas: ["Materials", "Documentation", "Compliance"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Norma Técnica"
+  }
+];
+
 // Split GCC by country for dashboard - with unique IDs
 export const uaeLegislation = gccLegislation.filter(l => l.jurisdiction === "UAE");
 export const saudiLegislation = gccLegislation.filter(l => l.jurisdiction === "Saudi Arabia");

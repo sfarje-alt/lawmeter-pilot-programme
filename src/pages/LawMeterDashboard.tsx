@@ -80,6 +80,7 @@ import {
   costaRicaConfig,
   koreaConfig,
   taiwanConfig,
+  peruConfig,
   GCCCountryCode
 } from "@/config/countryConfigs";
 import {
@@ -95,6 +96,7 @@ import {
   enrichedKuwaitData,
   enrichedBahrainData,
   enrichedQatarData,
+  enrichedPeruData,
   regulatoryCategories,
   defaultPresets,
   convertToEnrichedUnified
@@ -416,15 +418,20 @@ export default function LawMeterDashboard() {
               />
             )}
 
-            {/* Peru Section - Empty placeholder */}
+            {/* Peru Section - Unified System */}
             {selectedCountry === "peru" && (
-              <div className="space-y-4">
-                <RegionHeader region="LATAM" title="Perú Legislation" />
-                <RegionEmptyState 
-                  region="LATAM" 
-                  onAction={(action) => console.log("Peru action:", action)}
-                />
-              </div>
+              <UnifiedLegislationSection
+                config={peruConfig}
+                items={enrichedPeruData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="Perú Legislation"
+                subtitle="Congreso de la República - Regulatory Monitoring"
+                onItemClick={(item) => {
+                  setSelectedUnifiedItem(item);
+                  setUnifiedDrawerConfig(peruConfig);
+                }}
+              />
             )}
 
             {/* Canada Section */}

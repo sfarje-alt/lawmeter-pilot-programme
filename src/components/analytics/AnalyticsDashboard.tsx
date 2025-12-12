@@ -15,6 +15,7 @@ import {
   enrichedTaiwanData,
   enrichedEUData,
   enrichedGCCData,
+  enrichedPeruData,
 } from "@/data/enrichedMockData";
 import { enrichedCostaRicaData } from "@/data/costaRicaEnrichedData";
 
@@ -41,6 +42,7 @@ export function AnalyticsDashboard() {
       ...enrichedEUData,
       ...enrichedGCCData,
       ...enrichedCostaRicaData,
+      ...enrichedPeruData,
     ];
   }, []);
 

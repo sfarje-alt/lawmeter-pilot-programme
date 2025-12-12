@@ -399,6 +399,112 @@ export const qatarConfig: JurisdictionConfig = {
   ]
 };
 
+// ========== PERU CONFIGURATION ==========
+export const peruConfig: JurisdictionConfig = {
+  code: "PE",
+  name: "Perú",
+  region: "LATAM",
+  legalSystem: "civil-law",
+  
+  instrumentTypes: [
+    { id: "ley", label: "Ley", emoji: "⚖️", hierarchyLevel: "primary" },
+    { id: "decreto-supremo", label: "Decreto Supremo", emoji: "📜", hierarchyLevel: "secondary" },
+    { id: "decreto-legislativo", label: "Decreto Legislativo", emoji: "📋", hierarchyLevel: "primary" },
+    { id: "resolucion", label: "Resolución Ministerial", emoji: "📄", hierarchyLevel: "tertiary" },
+    { id: "proyecto", label: "Proyecto de Ley", emoji: "📝", hierarchyLevel: "primary" },
+    { id: "directiva", label: "Directiva", emoji: "💡", hierarchyLevel: "soft-law" },
+    { id: "norma-tecnica", label: "Norma Técnica Peruana", emoji: "🔧", hierarchyLevel: "tertiary" }
+  ],
+  
+  statusMappings: [
+    { localStatus: "Presentado", genericStatus: "proposal", label: "Presentado" },
+    { localStatus: "En Comisión", genericStatus: "in-committee", label: "En Comisión" },
+    { localStatus: "Primera Votación", genericStatus: "in-committee", label: "Primera Votación" },
+    { localStatus: "Segunda Votación", genericStatus: "approved", label: "Segunda Votación" },
+    { localStatus: "Autógrafa", genericStatus: "approved", label: "Autógrafa" },
+    { localStatus: "Promulgada", genericStatus: "in-force", label: "Promulgada" },
+    { localStatus: "Vigente", genericStatus: "in-force", label: "Vigente" },
+    { localStatus: "Publicada", genericStatus: "in-force", label: "Publicada en El Peruano" },
+    { localStatus: "Derogada", genericStatus: "repealed", label: "Derogada" }
+  ],
+  
+  pipelineStages: [
+    { stages: ["Presentación", "Comisión", "Primera Votación", "Segunda Votación", "Autógrafa", "Promulgación"], instrumentType: "proyecto" }
+  ],
+  
+  subnationalUnits: {
+    label: "Departamento",
+    units: [
+      { code: "LIM", name: "Lima" }, { code: "ARE", name: "Arequipa" },
+      { code: "CUS", name: "Cusco" }, { code: "PIU", name: "Piura" },
+      { code: "LAL", name: "La Libertad" }, { code: "CAL", name: "Callao" },
+      { code: "JUN", name: "Junín" }, { code: "LAM", name: "Lambayeque" }
+    ]
+  },
+  
+  authorityLabels: {
+    congreso: "Congreso de la República",
+    ejecutivo: "Poder Ejecutivo",
+    ministerio: "Ministerio",
+    indecopi: "INDECOPI",
+    inacal: "INACAL",
+    mtc: "MTC",
+    osiptel: "OSIPTEL",
+    digesa: "DIGESA",
+    minam: "MINAM"
+  },
+  
+  hierarchyLabels: {
+    constitutional: "Constitución",
+    primary: "Ley/Decreto Legislativo",
+    secondary: "Decreto Supremo/Reglamento",
+    tertiary: "Resolución/Norma Técnica",
+    "soft-law": "Directiva/Circular",
+    "case-law": "Jurisprudencia"
+  },
+  
+  filterLabels: {
+    instrumentType: "Tipo de Norma",
+    hierarchy: "Jerarquía Normativa",
+    status: "Estado",
+    subnational: "Departamento",
+    authority: "Entidad Emisora"
+  },
+  
+  filterPresets: [
+    {
+      id: "high-risk-proyectos",
+      name: "Proyectos Alto Riesgo",
+      description: "Proyectos de ley con alto riesgo regulatorio",
+      filters: { lifecycle: "pipeline", riskLevels: ["high"] }
+    },
+    {
+      id: "seguridad-producto",
+      name: "Seguridad de Producto",
+      description: "Regulaciones de seguridad de productos",
+      filters: { categories: ["Product Safety", "Battery Regulations"] }
+    },
+    {
+      id: "telecomunicaciones",
+      name: "Telecomunicaciones",
+      description: "Regulaciones de radio y conectividad",
+      filters: { categories: ["Radio Regulations", "Cybersecurity"] }
+    },
+    {
+      id: "vigente",
+      name: "Normativa Vigente",
+      description: "Legislación actualmente en vigor",
+      filters: { lifecycle: "in-force" }
+    }
+  ],
+  
+  jurisdictionLevels: [
+    { id: "federal", label: "Nacional", enabled: true },
+    { id: "state", label: "Regional", enabled: false },
+    { id: "local", label: "Local", enabled: false }
+  ]
+};
+
 // ========== COSTA RICA CONFIGURATION ==========
 export const costaRicaConfig: JurisdictionConfig = {
   code: "CR",
