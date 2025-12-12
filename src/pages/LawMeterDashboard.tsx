@@ -101,7 +101,7 @@ import {
   defaultPresets,
   convertToEnrichedUnified
 } from "@/data/enrichedMockData";
-import { enrichedCostaRicaData } from "@/data/costaRicaEnrichedData";
+import { enrichedCostaRicaData } from "@/data/enrichedMockData";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 
 export default function LawMeterDashboard() {

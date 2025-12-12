@@ -17,7 +17,7 @@ import {
   enrichedGCCData,
   enrichedPeruData,
 } from "@/data/enrichedMockData";
-import { enrichedCostaRicaData } from "@/data/costaRicaEnrichedData";
+import { enrichedCostaRicaData } from "@/data/enrichedMockData";
 
 // Default filters
 const defaultFilters: AnalyticsFilters = {
