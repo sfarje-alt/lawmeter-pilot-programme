@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AppRole } from '@/types/certificates';
 
+type AppRole = 'admin' | 'user';
 export const useUserRole = () => {
   return useQuery({
     queryKey: ['user-role'],
