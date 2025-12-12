@@ -7,7 +7,7 @@ import {
   TrendingUp, TrendingDown, Minus, Newspaper, Users, Building2, Info, 
   Facebook, Settings, Download, Calendar, BarChart3, MessageCircle,
   Clock, Bell, FileText, Plus, Eye, Heart, Share2, Mail, Search,
-  ChevronLeft, ChevronRight, MessageSquare, Repeat2, Image as ImageIcon
+  ChevronLeft, ChevronRight, MessageSquare, Repeat2, Image as ImageIcon, X
 } from "lucide-react";
 import { useState, useMemo } from "react";
 
@@ -24,59 +24,71 @@ export function SocialListeningDemo() {
   const [currentPage, setCurrentPage] = useState(1);
   const accountsPerPage = 12; // 4x3 grid
 
-  // 50 tracked accounts data (no emojis)
+  // 50 tracked accounts data
   const trackedAccounts = [
-    { id: "1", platform: "facebook" as const, handle: "World Health Organization (WHO)", profilePic: "https://scontent-lax3-2.xx.fbcdn.net/v/t39.30808-1/488220448_9921581377887156_4002557874571876678_n.jpg", posts: 1847, lastExtraction: "15m ago", followers: 14200000 },
-    { id: "2", platform: "x" as const, handle: "@ATU_GobPeru", profilePic: "https://pbs.twimg.com/profile_images/1819095731623346177/YouKV4kG.jpg", posts: 13398, lastExtraction: "10m ago", followers: 59727 },
-    { id: "3", platform: "facebook" as const, handle: "UNICEF", profilePic: "", posts: 2341, lastExtraction: "20m ago", followers: 16500000 },
-    { id: "4", platform: "x" as const, handle: "@MTC_GobPeru", profilePic: "", posts: 8742, lastExtraction: "5m ago", followers: 125000 },
-    { id: "5", platform: "facebook" as const, handle: "European Commission", profilePic: "", posts: 3256, lastExtraction: "30m ago", followers: 2800000 },
-    { id: "6", platform: "x" as const, handle: "@SUGEF_CR", profilePic: "", posts: 892, lastExtraction: "1h ago", followers: 45000 },
-    { id: "7", platform: "facebook" as const, handle: "BAC Credomatic", profilePic: "", posts: 1567, lastExtraction: "2h ago", followers: 890000 },
-    { id: "8", platform: "x" as const, handle: "@BCCRCostaRica", profilePic: "", posts: 3421, lastExtraction: "45m ago", followers: 78000 },
-    { id: "9", platform: "facebook" as const, handle: "Banco Nacional Costa Rica", profilePic: "", posts: 2103, lastExtraction: "1h ago", followers: 1200000 },
-    { id: "10", platform: "x" as const, handle: "@AsofintechCR", profilePic: "", posts: 456, lastExtraction: "3h ago", followers: 12000 },
-    { id: "11", platform: "facebook" as const, handle: "Ministerio de Salud CR", profilePic: "", posts: 1890, lastExtraction: "25m ago", followers: 450000 },
-    { id: "12", platform: "x" as const, handle: "@presidaborici", profilePic: "", posts: 5678, lastExtraction: "20m ago", followers: 890000 },
-    { id: "13", platform: "facebook" as const, handle: "CCSS Costa Rica", profilePic: "", posts: 2345, lastExtraction: "40m ago", followers: 670000 },
-    { id: "14", platform: "x" as const, handle: "@LaRepublicaCR", profilePic: "", posts: 12456, lastExtraction: "5m ago", followers: 234000 },
-    { id: "15", platform: "facebook" as const, handle: "Defensoría de los Habitantes", profilePic: "", posts: 1234, lastExtraction: "2h ago", followers: 180000 },
-    { id: "16", platform: "x" as const, handle: "@CRHoyNews", profilePic: "", posts: 18923, lastExtraction: "3m ago", followers: 567000 },
-    { id: "17", platform: "facebook" as const, handle: "Camara de Comercio de Costa Rica", profilePic: "", posts: 890, lastExtraction: "4h ago", followers: 95000 },
-    { id: "18", platform: "x" as const, handle: "@elmaborici", profilePic: "", posts: 7845, lastExtraction: "15m ago", followers: 123000 },
-    { id: "19", platform: "facebook" as const, handle: "ICE Costa Rica", profilePic: "", posts: 1567, lastExtraction: "1h ago", followers: 340000 },
-    { id: "20", platform: "x" as const, handle: "@reaborica", profilePic: "", posts: 4532, lastExtraction: "30m ago", followers: 456000 },
-    { id: "21", platform: "facebook" as const, handle: "MOPT Costa Rica", profilePic: "", posts: 987, lastExtraction: "3h ago", followers: 120000 },
-    { id: "22", platform: "x" as const, handle: "@MELOACCR", profilePic: "", posts: 2341, lastExtraction: "2h ago", followers: 67000 },
-    { id: "23", platform: "facebook" as const, handle: "Asamblea Legislativa CR", profilePic: "", posts: 2890, lastExtraction: "45m ago", followers: 210000 },
-    { id: "24", platform: "x" as const, handle: "@AsambleaCR", profilePic: "", posts: 6789, lastExtraction: "20m ago", followers: 189000 },
-    { id: "25", platform: "facebook" as const, handle: "Poder Judicial Costa Rica", profilePic: "", posts: 1456, lastExtraction: "1h ago", followers: 156000 },
-    { id: "26", platform: "x" as const, handle: "@aboricadoj", profilePic: "", posts: 3456, lastExtraction: "35m ago", followers: 134000 },
-    { id: "27", platform: "facebook" as const, handle: "COMEX Costa Rica", profilePic: "", posts: 678, lastExtraction: "5h ago", followers: 45000 },
-    { id: "28", platform: "x" as const, handle: "@ComaboricaR", profilePic: "", posts: 2134, lastExtraction: "1h ago", followers: 56000 },
-    { id: "29", platform: "facebook" as const, handle: "PROCOMER", profilePic: "", posts: 1234, lastExtraction: "2h ago", followers: 78000 },
-    { id: "30", platform: "x" as const, handle: "@PROCOMER_CR", profilePic: "", posts: 4567, lastExtraction: "40m ago", followers: 89000 },
-    { id: "31", platform: "facebook" as const, handle: "CINDE Costa Rica", profilePic: "", posts: 890, lastExtraction: "3h ago", followers: 67000 },
-    { id: "32", platform: "x" as const, handle: "@CABORICASTA", profilePic: "", posts: 2345, lastExtraction: "1h ago", followers: 45000 },
-    { id: "33", platform: "facebook" as const, handle: "AyA Costa Rica", profilePic: "", posts: 1567, lastExtraction: "2h ago", followers: 123000 },
-    { id: "34", platform: "x" as const, handle: "@AyA_CR", profilePic: "", posts: 3421, lastExtraction: "45m ago", followers: 98000 },
-    { id: "35", platform: "facebook" as const, handle: "SETENA Costa Rica", profilePic: "", posts: 456, lastExtraction: "6h ago", followers: 34000 },
-    { id: "36", platform: "x" as const, handle: "@SETENA_CR", profilePic: "", posts: 1234, lastExtraction: "4h ago", followers: 23000 },
-    { id: "37", platform: "facebook" as const, handle: "MAG Costa Rica", profilePic: "", posts: 2103, lastExtraction: "1h ago", followers: 145000 },
-    { id: "38", platform: "x" as const, handle: "@MAG_CostaRica", profilePic: "", posts: 5678, lastExtraction: "30m ago", followers: 112000 },
-    { id: "39", platform: "facebook" as const, handle: "SINAC Costa Rica", profilePic: "", posts: 1890, lastExtraction: "2h ago", followers: 89000 },
-    { id: "40", platform: "x" as const, handle: "@SINAC_CR", profilePic: "", posts: 4532, lastExtraction: "1h ago", followers: 67000 },
-    { id: "41", platform: "facebook" as const, handle: "CNE Costa Rica", profilePic: "", posts: 987, lastExtraction: "3h ago", followers: 234000 },
-    { id: "42", platform: "x" as const, handle: "@CNE_CR", profilePic: "", posts: 6789, lastExtraction: "15m ago", followers: 189000 },
-    { id: "43", platform: "facebook" as const, handle: "TSE Costa Rica", profilePic: "", posts: 1456, lastExtraction: "2h ago", followers: 178000 },
-    { id: "44", platform: "x" as const, handle: "@TSECostaRica", profilePic: "", posts: 3456, lastExtraction: "1h ago", followers: 156000 },
-    { id: "45", platform: "facebook" as const, handle: "SUGEVAL Costa Rica", profilePic: "", posts: 678, lastExtraction: "4h ago", followers: 23000 },
-    { id: "46", platform: "x" as const, handle: "@SUGEVAL_CR", profilePic: "", posts: 1567, lastExtraction: "3h ago", followers: 18000 },
-    { id: "47", platform: "facebook" as const, handle: "SUPEN Costa Rica", profilePic: "", posts: 456, lastExtraction: "5h ago", followers: 19000 },
-    { id: "48", platform: "x" as const, handle: "@SUPEN_CR", profilePic: "", posts: 1234, lastExtraction: "4h ago", followers: 15000 },
-    { id: "49", platform: "facebook" as const, handle: "CONASSIF Costa Rica", profilePic: "", posts: 345, lastExtraction: "6h ago", followers: 12000 },
-    { id: "50", platform: "x" as const, handle: "@CONASSIF_CR", profilePic: "", posts: 890, lastExtraction: "5h ago", followers: 9800 },
+    { id: "1", platform: "facebook" as const, handle: "World Health Organization (WHO)", posts: 1847, lastExtraction: "15m ago", followers: 14200000 },
+    { id: "2", platform: "x" as const, handle: "@ATU_GobPeru", posts: 13398, lastExtraction: "10m ago", followers: 59727 },
+    { id: "3", platform: "facebook" as const, handle: "UNICEF", posts: 2341, lastExtraction: "20m ago", followers: 16500000 },
+    { id: "4", platform: "x" as const, handle: "@MTC_GobPeru", posts: 8742, lastExtraction: "5m ago", followers: 125000 },
+    { id: "5", platform: "facebook" as const, handle: "European Commission", posts: 3256, lastExtraction: "30m ago", followers: 2800000 },
+    { id: "6", platform: "x" as const, handle: "@SUGEF_CR", posts: 892, lastExtraction: "1h ago", followers: 45000 },
+    { id: "7", platform: "facebook" as const, handle: "BAC Credomatic", posts: 1567, lastExtraction: "2h ago", followers: 890000 },
+    { id: "8", platform: "x" as const, handle: "@BCCRCostaRica", posts: 3421, lastExtraction: "45m ago", followers: 78000 },
+    { id: "9", platform: "facebook" as const, handle: "Banco Nacional Costa Rica", posts: 2103, lastExtraction: "1h ago", followers: 1200000 },
+    { id: "10", platform: "x" as const, handle: "@AsofintechCR", posts: 456, lastExtraction: "3h ago", followers: 12000 },
+    { id: "11", platform: "facebook" as const, handle: "Ministerio de Salud CR", posts: 1890, lastExtraction: "25m ago", followers: 450000 },
+    { id: "12", platform: "x" as const, handle: "@presidaborici", posts: 5678, lastExtraction: "20m ago", followers: 890000 },
+    { id: "13", platform: "facebook" as const, handle: "CCSS Costa Rica", posts: 2345, lastExtraction: "40m ago", followers: 670000 },
+    { id: "14", platform: "x" as const, handle: "@LaRepublicaCR", posts: 12456, lastExtraction: "5m ago", followers: 234000 },
+    { id: "15", platform: "facebook" as const, handle: "Defensoría de los Habitantes", posts: 1234, lastExtraction: "2h ago", followers: 180000 },
+    { id: "16", platform: "x" as const, handle: "@CRHoyNews", posts: 18923, lastExtraction: "3m ago", followers: 567000 },
+    { id: "17", platform: "facebook" as const, handle: "Camara de Comercio de Costa Rica", posts: 890, lastExtraction: "4h ago", followers: 95000 },
+    { id: "18", platform: "x" as const, handle: "@elmaborici", posts: 7845, lastExtraction: "15m ago", followers: 123000 },
+    { id: "19", platform: "facebook" as const, handle: "ICE Costa Rica", posts: 1567, lastExtraction: "1h ago", followers: 340000 },
+    { id: "20", platform: "x" as const, handle: "@reaborica", posts: 4532, lastExtraction: "30m ago", followers: 456000 },
+    { id: "21", platform: "facebook" as const, handle: "MOPT Costa Rica", posts: 987, lastExtraction: "3h ago", followers: 120000 },
+    { id: "22", platform: "x" as const, handle: "@MELOACCR", posts: 2341, lastExtraction: "2h ago", followers: 67000 },
+    { id: "23", platform: "facebook" as const, handle: "Asamblea Legislativa CR", posts: 2890, lastExtraction: "45m ago", followers: 210000 },
+    { id: "24", platform: "x" as const, handle: "@AsambleaCR", posts: 6789, lastExtraction: "20m ago", followers: 189000 },
+    { id: "25", platform: "facebook" as const, handle: "Poder Judicial Costa Rica", posts: 1456, lastExtraction: "1h ago", followers: 156000 },
+    { id: "26", platform: "x" as const, handle: "@aboricadoj", posts: 3456, lastExtraction: "35m ago", followers: 134000 },
+    { id: "27", platform: "facebook" as const, handle: "COMEX Costa Rica", posts: 678, lastExtraction: "5h ago", followers: 45000 },
+    { id: "28", platform: "x" as const, handle: "@ComaboricaR", posts: 2134, lastExtraction: "1h ago", followers: 56000 },
+    { id: "29", platform: "facebook" as const, handle: "PROCOMER", posts: 1234, lastExtraction: "2h ago", followers: 78000 },
+    { id: "30", platform: "x" as const, handle: "@PROCOMER_CR", posts: 4567, lastExtraction: "40m ago", followers: 89000 },
+    { id: "31", platform: "facebook" as const, handle: "CINDE Costa Rica", posts: 890, lastExtraction: "3h ago", followers: 67000 },
+    { id: "32", platform: "x" as const, handle: "@CABORICASTA", posts: 2345, lastExtraction: "1h ago", followers: 45000 },
+    { id: "33", platform: "facebook" as const, handle: "AyA Costa Rica", posts: 1567, lastExtraction: "2h ago", followers: 123000 },
+    { id: "34", platform: "x" as const, handle: "@AyA_CR", posts: 3421, lastExtraction: "45m ago", followers: 98000 },
+    { id: "35", platform: "facebook" as const, handle: "SETENA Costa Rica", posts: 456, lastExtraction: "6h ago", followers: 34000 },
+    { id: "36", platform: "x" as const, handle: "@SETENA_CR", posts: 1234, lastExtraction: "4h ago", followers: 23000 },
+    { id: "37", platform: "facebook" as const, handle: "MAG Costa Rica", posts: 2103, lastExtraction: "1h ago", followers: 145000 },
+    { id: "38", platform: "x" as const, handle: "@MAG_CostaRica", posts: 5678, lastExtraction: "30m ago", followers: 112000 },
+    { id: "39", platform: "facebook" as const, handle: "SINAC Costa Rica", posts: 1890, lastExtraction: "2h ago", followers: 89000 },
+    { id: "40", platform: "x" as const, handle: "@SINAC_CR", posts: 4532, lastExtraction: "1h ago", followers: 67000 },
+    { id: "41", platform: "facebook" as const, handle: "CNE Costa Rica", posts: 987, lastExtraction: "3h ago", followers: 234000 },
+    { id: "42", platform: "x" as const, handle: "@CNE_CR", posts: 6789, lastExtraction: "15m ago", followers: 189000 },
+    { id: "43", platform: "facebook" as const, handle: "TSE Costa Rica", posts: 1456, lastExtraction: "2h ago", followers: 178000 },
+    { id: "44", platform: "x" as const, handle: "@TSECostaRica", posts: 3456, lastExtraction: "1h ago", followers: 156000 },
+    { id: "45", platform: "facebook" as const, handle: "SUGEVAL Costa Rica", posts: 678, lastExtraction: "4h ago", followers: 23000 },
+    { id: "46", platform: "x" as const, handle: "@SUGEVAL_CR", posts: 1567, lastExtraction: "3h ago", followers: 18000 },
+    { id: "47", platform: "facebook" as const, handle: "SUPEN Costa Rica", posts: 456, lastExtraction: "5h ago", followers: 19000 },
+    { id: "48", platform: "x" as const, handle: "@SUPEN_CR", posts: 1234, lastExtraction: "4h ago", followers: 15000 },
+    { id: "49", platform: "facebook" as const, handle: "CONASSIF Costa Rica", posts: 345, lastExtraction: "6h ago", followers: 12000 },
+    { id: "50", platform: "x" as const, handle: "@CONASSIF_CR", posts: 890, lastExtraction: "5h ago", followers: 9800 },
   ];
+
+  // Toggle account selection for filtering posts
+  const toggleAccountSelection = (handle: string) => {
+    setSelectedAccounts(prev => 
+      prev.includes(handle) 
+        ? prev.filter(h => h !== handle)
+        : [...prev, handle]
+    );
+  };
+
+  // Clear all selected accounts
+  const clearSelectedAccounts = () => setSelectedAccounts([]);
 
   // Extracted posts with real X and Facebook data structure
   const extractedPosts = [
@@ -94,8 +106,7 @@ export function SocialListeningDemo() {
       replies: 0,
       retweets: 0,
       quotes: 0,
-      sentiment: 0.15,
-      profilePic: "https://pbs.twimg.com/profile_images/1819095731623346177/YouKV4kG.jpg"
+      sentiment: 0.15
     },
     {
       id: "1994397404724879657",
@@ -111,15 +122,14 @@ export function SocialListeningDemo() {
       replies: 1,
       retweets: 1,
       quotes: 0,
-      sentiment: -0.25,
-      profilePic: "https://pbs.twimg.com/profile_images/1819095731623346177/YouKV4kG.jpg"
+      sentiment: -0.25
     },
     {
       id: "fb-1292794656213255",
       url: "https://www.facebook.com/WHO/posts/pfbid02DjVfBJ61LDThkBXYTmYDkg4646MWsS9iMawxHLsez9WJpZYEn1oDzchHjycz54Ttl",
       platform: "facebook" as const,
       verified: true,
-      username: "WHO",
+      username: "World Health Organization (WHO)",
       fullname: "World Health Organization (WHO)",
       timestamp: "2025-11-26T13:34:16.000Z",
       text: "Floods can have a devastating impact on health from drowning, injuries to the risk of electrocution, and even snake bites. Floods can: Contaminate drinking water, Disrupt sanitation, Create mosquito breeding sites. Stay alert. Stay safe.",
@@ -127,8 +137,7 @@ export function SocialListeningDemo() {
       likes: 180,
       comments: 29,
       shares: 54,
-      sentiment: 0.45,
-      profilePic: "https://scontent-lax3-2.xx.fbcdn.net/v/t39.30808-1/488220448_9921581377887156_4002557874571876678_n.jpg"
+      sentiment: 0.45
     },
     {
       id: "1994395678923456789",
@@ -144,8 +153,7 @@ export function SocialListeningDemo() {
       replies: 45,
       retweets: 89,
       quotes: 12,
-      sentiment: 0.65,
-      profilePic: ""
+      sentiment: 0.65
     },
     {
       id: "fb-9876543210123456",
@@ -160,10 +168,15 @@ export function SocialListeningDemo() {
       likes: 567,
       comments: 189,
       shares: 123,
-      sentiment: -0.32,
-      profilePic: ""
+      sentiment: -0.32
     }
   ];
+
+  // Filter posts by selected accounts
+  const filteredPosts = useMemo(() => {
+    if (selectedAccounts.length === 0) return extractedPosts;
+    return extractedPosts.filter(post => selectedAccounts.includes(post.username));
+  }, [selectedAccounts]);
 
   const scheduledReports = [
     { id: "1", name: "Weekly Sentiment Summary", frequency: "Weekly", nextRun: "Monday 8:00 AM", lastRun: "Jan 13, 2025", status: "active" },
@@ -435,39 +448,49 @@ export function SocialListeningDemo() {
               </div>
             </CardHeader>
             <CardContent>
+              {/* Selected accounts filter indicator */}
+              {selectedAccounts.length > 0 && (
+                <div className="flex items-center gap-2 mb-4 p-2 bg-primary/10 rounded-lg">
+                  <span className="text-sm font-medium">Filtering posts by {selectedAccounts.length} account(s)</span>
+                  <Button variant="ghost" size="sm" onClick={clearSelectedAccounts} className="h-6 px-2 text-xs">
+                    <X className="w-3 h-3 mr-1" />
+                    Clear
+                  </Button>
+                </div>
+              )}
+
               {/* 4x3 Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {paginatedAccounts.map((account) => (
-                  <div 
-                    key={account.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {account.profilePic ? (
-                        <img src={account.profilePic} alt={account.handle} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-sm font-semibold text-muted-foreground">
-                          {account.handle.replace('@', '').substring(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
-                        {account.platform === "facebook" ? (
-                          <Facebook className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                        ) : (
-                          <XIcon className="w-3 h-3 flex-shrink-0" />
-                        )}
-                        <span className="text-sm font-medium truncate">{account.handle}</span>
+                {paginatedAccounts.map((account) => {
+                  const isSelected = selectedAccounts.includes(account.handle);
+                  return (
+                    <div 
+                      key={account.id}
+                      onClick={() => toggleAccountSelection(account.handle)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                        isSelected 
+                          ? 'bg-primary/10 border-primary' 
+                          : 'bg-card hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1">
+                          {account.platform === "facebook" ? (
+                            <Facebook className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                          ) : (
+                            <XIcon className="w-3 h-3 flex-shrink-0" />
+                          )}
+                          <span className="text-sm font-medium truncate">{account.handle}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{formatNumber(account.posts)} posts</span>
+                          <span className="hidden sm:inline">-</span>
+                          <span className="hidden sm:inline">{account.lastExtraction}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{formatNumber(account.posts)} posts</span>
-                        <span className="hidden sm:inline">-</span>
-                        <span className="hidden sm:inline">{account.lastExtraction}</span>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Pagination */}
@@ -513,15 +536,13 @@ export function SocialListeningDemo() {
                   <div>
                     <CardTitle className="text-lg">Extracted Posts</CardTitle>
                     <CardDescription>
-                      Recent posts with sentiment analysis
+                      {selectedAccounts.length > 0 
+                        ? `Showing posts from ${selectedAccounts.length} selected account(s)`
+                        : "Recent posts with sentiment analysis"}
                     </CardDescription>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Settings className="w-4 h-4" />
-                    Filters
-                  </Button>
                   <Button variant="outline" size="sm" className="gap-2">
                     <Download className="w-4 h-4" />
                     Export
@@ -530,89 +551,90 @@ export function SocialListeningDemo() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {extractedPosts.map((post) => (
-                <div 
-                  key={post.id}
-                  className="p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                          {post.profilePic ? (
-                            <img src={post.profilePic} alt={post.username} className="w-full h-full object-cover" />
+              {filteredPosts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>No posts found for selected accounts</p>
+                  <Button variant="link" size="sm" onClick={clearSelectedAccounts}>
+                    Clear filter
+                  </Button>
+                </div>
+              ) : (
+                filteredPosts.map((post) => (
+                  <div 
+                    key={post.id}
+                    className="p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {post.platform === "facebook" ? (
+                            <Facebook className="w-4 h-4 text-blue-500" />
                           ) : (
-                            <span className="text-xs font-semibold text-muted-foreground">
-                              {post.username.replace('@', '').substring(0, 2).toUpperCase()}
-                            </span>
+                            <XIcon className="w-4 h-4" />
+                          )}
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{post.fullname}</span>
+                            <span className="text-xs text-muted-foreground">{post.username} - {formatTimestamp(post.timestamp)}</span>
+                          </div>
+                          {post.verified && (
+                            <Badge variant="secondary" className="text-xs">Verified</Badge>
                           )}
                         </div>
-                        {post.platform === "facebook" ? (
-                          <Facebook className="w-4 h-4 text-blue-500" />
-                        ) : (
-                          <XIcon className="w-4 h-4" />
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                          {post.text}
+                        </p>
+                        {post.images && post.images.length > 0 && (
+                          <div className="flex items-center gap-2 mb-3">
+                            <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">{post.images.length} image(s) attached</span>
+                          </div>
                         )}
-                        <div className="flex flex-col">
-                          <span className="font-medium text-sm">{post.fullname}</span>
-                          <span className="text-xs text-muted-foreground">{post.username} - {formatTimestamp(post.timestamp)}</span>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-3 h-3" /> {post.likes}
+                          </span>
+                          {post.platform === "x" ? (
+                            <>
+                              <span className="flex items-center gap-1">
+                                <Repeat2 className="w-3 h-3" /> {post.retweets}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageSquare className="w-3 h-3" /> {post.replies}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="flex items-center gap-1">
+                                <Share2 className="w-3 h-3" /> {post.shares}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageCircle className="w-3 h-3" /> {post.comments}
+                              </span>
+                            </>
+                          )}
                         </div>
-                        {post.verified && (
-                          <Badge variant="secondary" className="text-xs">Verified</Badge>
-                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                        {post.text}
-                      </p>
-                      {post.images && post.images.length > 0 && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">{post.images.length} image(s) attached</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Heart className="w-3 h-3" /> {post.likes}
+                      <div className="flex flex-col items-center gap-1 p-3 rounded-lg border bg-background">
+                        {post.sentiment >= 0.3 ? (
+                          <TrendingUp className="w-4 h-4 text-success" />
+                        ) : post.sentiment <= -0.3 ? (
+                          <TrendingDown className="w-4 h-4 text-destructive" />
+                        ) : (
+                          <Minus className="w-4 h-4 text-muted-foreground" />
+                        )}
+                        <span className={`text-sm font-bold ${
+                          post.sentiment >= 0.3 ? "text-success" : 
+                          post.sentiment <= -0.3 ? "text-destructive" : 
+                          "text-muted-foreground"
+                        }`}>
+                          {post.sentiment > 0 ? '+' : ''}{post.sentiment.toFixed(2)}
                         </span>
-                        {post.platform === "x" ? (
-                          <>
-                            <span className="flex items-center gap-1">
-                              <Repeat2 className="w-3 h-3" /> {post.retweets}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MessageSquare className="w-3 h-3" /> {post.replies}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="flex items-center gap-1">
-                              <Share2 className="w-3 h-3" /> {post.shares}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MessageCircle className="w-3 h-3" /> {post.comments}
-                            </span>
-                          </>
-                        )}
                       </div>
-                    </div>
-                    <div className="flex flex-col items-center gap-1 p-3 rounded-lg border bg-background">
-                      {post.sentiment >= 0.3 ? (
-                        <TrendingUp className="w-4 h-4 text-success" />
-                      ) : post.sentiment <= -0.3 ? (
-                        <TrendingDown className="w-4 h-4 text-destructive" />
-                      ) : (
-                        <Minus className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <span className={`text-sm font-bold ${
-                        post.sentiment >= 0.3 ? "text-success" : 
-                        post.sentiment <= -0.3 ? "text-destructive" : 
-                        "text-muted-foreground"
-                      }`}>
-                        {post.sentiment > 0 ? '+' : ''}{post.sentiment.toFixed(2)}
-                      </span>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
 
@@ -627,9 +649,9 @@ export function SocialListeningDemo() {
                       <Calendar className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Scheduled Reports</CardTitle>
+                      <CardTitle className="text-lg">Social Activity Reports</CardTitle>
                       <CardDescription>
-                        Automated report generation
+                        Automated narrative reports on social media activity
                       </CardDescription>
                     </div>
                   </div>
@@ -675,7 +697,7 @@ export function SocialListeningDemo() {
                     <div>
                       <CardTitle className="text-lg">Report Repository</CardTitle>
                       <CardDescription>
-                        Previously generated reports
+                        Social activity narrative reports
                       </CardDescription>
                     </div>
                   </div>
