@@ -1,64 +1,57 @@
 import { useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+
+const DEMO_USERNAME = "pieromalca";
+const DEMO_PASSWORD = "pieromalca";
+const AUTH_KEY = "lawmeter_demo_auth";
+const EXPIRY_HOURS = 24;
+
+interface AuthState {
+  authenticated: boolean;
+  expiresAt: number;
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    const stored = localStorage.getItem(AUTH_KEY);
+    if (stored) {
+      try {
+        const auth: AuthState = JSON.parse(stored);
+        if (auth.authenticated && auth.expiresAt > Date.now()) {
+          setUser(DEMO_USERNAME);
+        } else {
+          localStorage.removeItem(AUTH_KEY);
+        }
+      } catch {
+        localStorage.removeItem(AUTH_KEY);
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
-  };
-
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
-    });
-    return { error };
+  const signIn = async (username: string, password: string) => {
+    if (username === DEMO_USERNAME && password === DEMO_PASSWORD) {
+      const expiresAt = Date.now() + EXPIRY_HOURS * 60 * 60 * 1000;
+      const auth: AuthState = { authenticated: true, expiresAt };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+      setUser(DEMO_USERNAME);
+      return { error: null };
+    }
+    return { error: { message: "Invalid username or password" } };
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    localStorage.removeItem(AUTH_KEY);
+    setUser(null);
+    return { error: null };
   };
 
   return {
     user,
-    session,
     loading,
     signIn,
-    signUp,
     signOut,
   };
 }
