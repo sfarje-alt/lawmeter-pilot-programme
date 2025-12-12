@@ -307,7 +307,7 @@ function generateRealisticAISummary(item: InternationalLegislation): {
 export function convertToEnrichedUnified(
   items: InternationalLegislation[],
   jurisdiction: string,
-  region: "NAM" | "LATAM" | "EU" | "GCC" | "APAC" | "JP"
+  region: "NAM" | "LATAM" | "EU" | "GCC" | "APAC"
 ): UnifiedLegislationItem[] {
   return items.map(item => {
     const enrichedContent = generateFullContent(item, jurisdiction);
@@ -350,7 +350,7 @@ export function convertToEnrichedUnified(
 // Pre-converted enriched datasets
 export const enrichedUSAData = convertToEnrichedUnified(usStateBills, "USA", "NAM");
 export const enrichedCanadaData = convertToEnrichedUnified(canadaLegislation, "Canada", "NAM");
-export const enrichedJapanData = convertToEnrichedUnified(japanLegislation, "Japan", "JP");
+export const enrichedJapanData = convertToEnrichedUnified(japanLegislation, "Japan", "APAC");
 export const enrichedKoreaData = convertToEnrichedUnified(koreaLegislation, "Korea", "APAC");
 export const enrichedTaiwanData = convertToEnrichedUnified(taiwanLegislation, "Taiwan", "APAC");
 export const enrichedEUData = convertToEnrichedUnified([...euRegulations, ...euDirectives], "EU", "EU");

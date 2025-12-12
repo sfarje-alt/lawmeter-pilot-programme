@@ -13,7 +13,7 @@ interface RegionSelectorProps {
   orientation?: "horizontal" | "vertical";
 }
 
-const REGION_ORDER: RegionCode[] = ["NAM", "LATAM", "EU", "GCC", "APAC", "JP"];
+const REGION_ORDER: RegionCode[] = ["NAM", "LATAM", "EU", "GCC", "APAC"];
 
 export function RegionSelector({ 
   selectedRegion, 

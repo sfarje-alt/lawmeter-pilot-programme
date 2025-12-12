@@ -6,7 +6,6 @@ export {
   EUIcon,
   GCCIcon,
   APACIcon,
-  JPIcon,
   regionThemes,
   type RegionCode,
   type RegionTheme
