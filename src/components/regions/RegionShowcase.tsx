@@ -10,10 +10,10 @@ import {
   RegionBadge,
   RegionSelector
 } from "@/components/regions";
-import { NAMIcon, LATAMIcon, EUIcon, GCCIcon, APACIcon, JPIcon } from "@/components/regions/RegionConfig";
+import { NAMIcon, LATAMIcon, EUIcon, GCCIcon, APACIcon } from "@/components/regions/RegionConfig";
 import { RegionLegislationCard } from "@/components/regions/RegionLegislationCard";
 
-const REGION_ORDER: RegionCode[] = ["NAM", "LATAM", "EU", "GCC", "APAC", "JP"];
+const REGION_ORDER: RegionCode[] = ["NAM", "LATAM", "EU", "GCC", "APAC"];
 
 // Sample legislation data for each region
 const sampleLegislation: Record<RegionCode, Array<{
@@ -82,9 +82,7 @@ const sampleLegislation: Record<RegionCode, Array<{
       riskLevel: "medium",
       date: "Nov 5, 2024",
       deadline: "Feb 1, 2025"
-    }
-  ],
-  JP: [
+    },
     {
       id: "jp-meti-2024-12",
       title: "METI Technical Guidelines for IoT Security",
@@ -106,8 +104,7 @@ export function RegionShowcase() {
     LATAM: 23,
     EU: 89,
     GCC: 34,
-    APAC: 67,
-    JP: 12
+    APAC: 79
   };
 
   return (
@@ -224,7 +221,7 @@ export function RegionShowcase() {
                 riskLevel={item.riskLevel}
                 date={item.date}
                 deadline={item.deadline}
-                isRead={code === "JP" || code === "GCC"}
+                isRead={code === "GCC"}
               />
             );
           })}

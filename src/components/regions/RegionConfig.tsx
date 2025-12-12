@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 // ========== REGION TYPES ==========
-export type RegionCode = "NAM" | "LATAM" | "EU" | "GCC" | "APAC" | "JP";
+export type RegionCode = "NAM" | "LATAM" | "EU" | "GCC" | "APAC";
 
 export interface RegionTheme {
   code: RegionCode;
@@ -116,7 +116,7 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
   APAC: {
     code: "APAC",
     name: "Asia-Pacific",
-    fullName: "Asia-Pacific (excl. Japan)",
+    fullName: "Asia-Pacific (incl. Japan)",
     primaryColor: "hsl(185, 55%, 42%)",
     secondaryColor: "hsl(190, 50%, 48%)",
     accentColor: "hsl(185, 60%, 52%)",
@@ -129,25 +129,6 @@ export const regionThemes: Record<RegionCode, RegionTheme> = {
         "View trade agreements",
         "Track data regulations",
         "Browse tech standards"
-      ]
-    }
-  },
-  JP: {
-    code: "JP",
-    name: "Japan",
-    fullName: "Japan",
-    primaryColor: "hsl(0, 60%, 52%)",
-    secondaryColor: "hsl(0, 50%, 58%)",
-    accentColor: "hsl(0, 65%, 60%)",
-    bgPattern: "linear-gradient(135deg, hsl(0 60% 52% / 0.06) 0%, transparent 100%)",
-    tone: "",
-    emptyStateMessages: {
-      title: "No guidelines pending",
-      subtitle: "Review circulars, implementation rules, and technical standards",
-      suggestions: [
-        "Browse ministry guidelines",
-        "View technical standards",
-        "Track implementation rules"
       ]
     }
   }
@@ -259,8 +240,7 @@ export const RegionIcon: React.FC<RegionIconProps> = ({ region, size = 24, showC
     LATAM: LATAMIcon,
     EU: EUIcon,
     GCC: GCCIcon,
-    APAC: APACIcon,
-    JP: JPIcon
+    APAC: APACIcon
   }[region];
 
   return (

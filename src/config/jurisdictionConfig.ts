@@ -493,7 +493,7 @@ export const gccConfig: JurisdictionConfig = {
 export const japanConfig: JurisdictionConfig = {
   code: "JP",
   name: "Japan",
-  region: "JP",
+  region: "APAC",
   legalSystem: "civil-law",
   
   instrumentTypes: [
@@ -719,8 +719,7 @@ export function getConfigByRegion(region: RegionCode): JurisdictionConfig | null
     LATAM: "LATAM",
     EU: "EU",
     GCC: "GCC",
-    APAC: "APAC",
-    JP: "JP"
+    APAC: "APAC"
   };
   return jurisdictionConfigs[regionToConfig[region]] || null;
 }

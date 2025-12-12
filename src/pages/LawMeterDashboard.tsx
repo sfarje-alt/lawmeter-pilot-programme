@@ -282,8 +282,7 @@ export default function LawMeterDashboard() {
                 else if (region === "costa-rica" || region === "peru") setSelectedRegion("LATAM");
                 else if (region === "eu") setSelectedRegion("EU");
                 else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar"].includes(region)) setSelectedRegion("GCC");
-                else if (region === "japan") setSelectedRegion("JP");
-                else if (region === "korea" || region === "taiwan") setSelectedRegion("APAC");
+                else if (region === "japan" || region === "korea" || region === "taiwan") setSelectedRegion("APAC");
                 setSelectedCountry(region as typeof selectedCountry);
               }}
             />
@@ -303,16 +302,14 @@ export default function LawMeterDashboard() {
                 else if (region === "LATAM") setSelectedCountry("costa-rica");
                 else if (region === "EU") setSelectedCountry("eu");
                 else if (region === "GCC") setSelectedCountry("gcc");
-                else if (region === "JP") setSelectedCountry("japan");
-                else if (region === "APAC") setSelectedCountry("korea");
+                else if (region === "APAC") setSelectedCountry("japan");
               }}
               alertCounts={{
                 NAM: 268,
                 LATAM: 45,
                 EU: 89,
                 GCC: 34,
-                APAC: 56,
-                JP: 23
+                APAC: 79
               }}
             />
 
@@ -370,6 +367,15 @@ export default function LawMeterDashboard() {
                   )}
                   {selectedRegion === "APAC" && (
                     <>
+                      <Button
+                        variant={selectedCountry === "japan" ? "default" : "outline"}
+                        onClick={() => setSelectedCountry("japan")}
+                        size="sm"
+                        className="gap-2"
+                        style={selectedCountry === "japan" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
+                      >
+                        🇯🇵 Japan
+                      </Button>
                       <Button
                         variant={selectedCountry === "korea" ? "default" : "outline"}
                         onClick={() => setSelectedCountry("korea")}
