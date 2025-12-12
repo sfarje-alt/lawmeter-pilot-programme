@@ -2282,6 +2282,125 @@ export const peruLegislation: InternationalLegislation[] = [
   }
 ];
 
+// Costa Rica Legislation (in InternationalLegislation format for WorldMap)
+export const costaRicaLegislation: InternationalLegislation[] = [
+  {
+    id: "cr-cib-2024-001",
+    title: "Proyecto de Ley de Ciberseguridad Nacional",
+    summary: "Marco jurídico para protección de infraestructura crítica digital y coordinación ante incidentes cibernéticos.",
+    bullets: [
+      "Creación de la Agencia Nacional de Ciberseguridad",
+      "Reporte obligatorio de incidentes en 72 horas",
+      "Certificación obligatoria para proveedores críticos"
+    ],
+    status: "En Comisión",
+    jurisdiction: "Costa Rica",
+    riskLevel: "high",
+    riskScore: 88,
+    category: "Ciberseguridad",
+    regulatoryCategory: "Ciberseguridad",
+    publishedDate: daysAgo(90),
+    complianceDeadline: daysFromNow(365),
+    regulatoryBody: "MICIT",
+    impactAreas: ["Software", "Seguridad", "Certificación"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Ley"
+  },
+  {
+    id: "cr-sutel-rf-2024",
+    title: "Reglamento de Equipos de Radiofrecuencia para Dispositivos IoT",
+    summary: "SUTEL actualiza requisitos de homologación para dispositivos inalámbricos conectados.",
+    bullets: [
+      "Homologación obligatoria para WiFi 6E y 6 GHz",
+      "Límites de emisión actualizados según ITU-R",
+      "Etiquetado obligatorio con número de homologación"
+    ],
+    status: "Vigente",
+    jurisdiction: "Costa Rica",
+    riskLevel: "high",
+    riskScore: 82,
+    category: "Regulaciones de Radio",
+    regulatoryCategory: "Regulaciones de Radio",
+    publishedDate: daysAgo(30),
+    effectiveDate: daysAgo(5),
+    regulatoryBody: "SUTEL",
+    impactAreas: ["Inalámbrico", "Certificación", "Etiquetado"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Reglamento"
+  },
+  {
+    id: "cr-meic-safety-2024",
+    title: "Reglamento Técnico de Seguridad para Electrodomésticos",
+    summary: "MEIC establece requisitos de seguridad para aparatos eléctricos de uso doméstico.",
+    bullets: [
+      "Certificación obligatoria antes de comercialización",
+      "Requisitos de protección térmica y eléctrica",
+      "Apagado automático para aparatos de calentamiento"
+    ],
+    status: "En Consulta",
+    jurisdiction: "Costa Rica",
+    riskLevel: "high",
+    riskScore: 85,
+    category: "Seguridad del Producto",
+    regulatoryCategory: "Seguridad del Producto",
+    publishedDate: daysAgo(20),
+    complianceDeadline: daysFromNow(180),
+    regulatoryBody: "MEIC",
+    impactAreas: ["Seguridad del Producto", "Certificación", "Manufactura"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Reglamento"
+  },
+  {
+    id: "cr-minsa-fcm-2024",
+    title: "Norma Sanitaria para Materiales en Contacto con Alimentos",
+    summary: "MINSA actualiza requisitos para materiales que entran en contacto con alimentos y bebidas.",
+    bullets: [
+      "Prohibición de PFAS en superficies de contacto alimentario",
+      "Límites de migración para metales pesados",
+      "Registro sanitario obligatorio para productos importados"
+    ],
+    status: "Vigente",
+    jurisdiction: "Costa Rica",
+    riskLevel: "medium",
+    riskScore: 72,
+    category: "Materiales en Contacto con Alimentos",
+    regulatoryCategory: "Materiales en Contacto con Alimentos",
+    publishedDate: daysAgo(60),
+    effectiveDate: daysAgo(15),
+    regulatoryBody: "MINSA",
+    impactAreas: ["Materiales", "Ensayos", "Registro"],
+    legislationType: "regulation",
+    legislativeCategory: "enacted",
+    localTerminology: "Norma Técnica"
+  },
+  {
+    id: "cr-minaet-battery-2024",
+    title: "Ley de Gestión Integral de Residuos de Baterías",
+    summary: "Regulación para manejo y reciclaje de baterías en productos electrónicos de consumo.",
+    bullets: [
+      "Responsabilidad extendida del productor",
+      "Programa de recolección obligatorio para importadores",
+      "Metas de reciclaje anuales"
+    ],
+    status: "Primer Debate",
+    jurisdiction: "Costa Rica",
+    riskLevel: "medium",
+    riskScore: 68,
+    category: "Regulaciones de Baterías",
+    regulatoryCategory: "Baterías",
+    publishedDate: daysAgo(45),
+    complianceDeadline: daysFromNow(270),
+    regulatoryBody: "MINAE",
+    impactAreas: ["Reciclaje", "Responsabilidad del Productor", "Cumplimiento"],
+    legislationType: "bill",
+    legislativeCategory: "pending",
+    localTerminology: "Proyecto de Ley"
+  }
+];
+
 // Split GCC by country for dashboard - with unique IDs
 export const uaeLegislation = gccLegislation.filter(l => l.jurisdiction === "UAE");
 export const saudiLegislation = gccLegislation.filter(l => l.jurisdiction === "Saudi Arabia");
@@ -2303,7 +2422,9 @@ export const allInternationalLegislation: InternationalLegislation[] = [
   ...koreaLegislation,
   ...taiwanLegislation,
   ...euRegulations,
-  ...gccLegislation
+  ...gccLegislation,
+  ...peruLegislation,
+  ...costaRicaLegislation
 ];
 
 // Export filter helper

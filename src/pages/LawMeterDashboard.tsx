@@ -50,7 +50,8 @@ import {
   kuwaitLegislation,
   bahrainLegislation,
   qatarLegislation,
-  peruLegislation
+  peruLegislation,
+  costaRicaLegislation
 } from "@/data/mockInternationalLegislation";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -280,8 +281,9 @@ export default function LawMeterDashboard() {
                 ...kuwaitLegislation,
                 ...bahrainLegislation,
                 ...qatarLegislation,
-                ...peruLegislation
-              ]} 
+                ...peruLegislation,
+                ...costaRicaLegislation
+              ]}
               onSelectRegion={(region) => {
                 // Map region to our region groups
                 if (region === "usa" || region === "canada") setSelectedRegion("NAM");

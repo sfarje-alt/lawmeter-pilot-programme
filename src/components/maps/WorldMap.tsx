@@ -56,17 +56,17 @@ const euMemberStates = new Set([
 // Jurisdictions that support subnational zoom
 const zoomableJurisdictions = new Set(["usa", "canada"]);
 
-// Map jurisdiction data keys for stats aggregation
+// Map jurisdiction data keys for stats aggregation (matches jurisdiction values in mock data)
 const jurisdictionToDataKey: Record<string, string[]> = {
-  usa: ["USA"],
-  canada: ["Canada"],
-  japan: ["Japan"],
-  korea: ["Korea"],
-  taiwan: ["Taiwan"],
-  gcc: ["UAE", "Saudi Arabia", "Kuwait", "Bahrain", "Qatar", "Oman"],
-  "costa-rica": ["Costa Rica"],
-  peru: ["Peru"],
-  eu: ["EU"],
+  usa: ["USA", "usa"],
+  canada: ["Canada", "canada"],
+  japan: ["Japan", "japan"],
+  korea: ["Korea", "korea"],
+  taiwan: ["Taiwan", "taiwan"],
+  gcc: ["UAE", "uae", "Saudi Arabia", "saudi", "Kuwait", "kuwait", "Bahrain", "bahrain", "Qatar", "qatar", "Oman", "oman", "GCC", "gcc"],
+  "costa-rica": ["Costa Rica", "costa-rica", "CR"],
+  peru: ["Peru", "peru"],
+  eu: ["EU", "eu"],
 };
 
 // US state abbreviation to name mapping
