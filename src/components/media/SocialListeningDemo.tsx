@@ -2,77 +2,166 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
   TrendingUp, TrendingDown, Minus, Newspaper, Users, Building2, Info, 
-  Facebook, Twitter, Settings, Download, Calendar, BarChart3, MessageCircle,
-  Clock, Bell, FileText, Plus, Eye, Heart, Share2, Mail
+  Facebook, Settings, Download, Calendar, BarChart3, MessageCircle,
+  Clock, Bell, FileText, Plus, Eye, Heart, Share2, Mail, Search,
+  ChevronLeft, ChevronRight, MessageSquare, Repeat2, Image as ImageIcon
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+
+// X (Twitter) icon component
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
 
 export function SocialListeningDemo() {
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const accountsPerPage = 12; // 4x3 grid
 
-  // Social Media Monitoring Data
+  // 50 tracked accounts data (no emojis)
   const trackedAccounts = [
-    { id: "1", platform: "facebook", handle: "BAC Credomatic", avatar: "🏦", posts: 156, lastExtraction: "2h ago" },
-    { id: "2", platform: "twitter", handle: "@SUGEF_CR", avatar: "🏛️", posts: 89, lastExtraction: "1h ago" },
-    { id: "3", platform: "facebook", handle: "Banco Nacional CR", avatar: "🏦", posts: 203, lastExtraction: "3h ago" },
-    { id: "4", platform: "twitter", handle: "@BCCRCostaRica", avatar: "🏛️", posts: 124, lastExtraction: "30m ago" },
-    { id: "5", platform: "facebook", handle: "Fintech Costa Rica", avatar: "💳", posts: 67, lastExtraction: "45m ago" },
-    { id: "6", platform: "twitter", handle: "@AsofintechCR", avatar: "💳", posts: 45, lastExtraction: "2h ago" },
-    { id: "7", platform: "facebook", handle: "Cámara de Comercio CR", avatar: "🏢", posts: 78, lastExtraction: "1h ago" },
-    { id: "8", platform: "twitter", handle: "@MELOACCR", avatar: "🏛️", posts: 92, lastExtraction: "4h ago" },
-    { id: "9", platform: "facebook", handle: "Defensoría Habitantes", avatar: "⚖️", posts: 54, lastExtraction: "2h ago" },
-    { id: "10", platform: "twitter", handle: "@LaRepublicaCR", avatar: "📰", posts: 312, lastExtraction: "15m ago" },
-    { id: "11", platform: "facebook", handle: "El Financiero CR", avatar: "📰", posts: 287, lastExtraction: "20m ago" },
-    { id: "12", platform: "twitter", handle: "@CRHoyNews", avatar: "📰", posts: 445, lastExtraction: "10m ago" },
+    { id: "1", platform: "facebook" as const, handle: "World Health Organization (WHO)", profilePic: "https://scontent-lax3-2.xx.fbcdn.net/v/t39.30808-1/488220448_9921581377887156_4002557874571876678_n.jpg", posts: 1847, lastExtraction: "15m ago", followers: 14200000 },
+    { id: "2", platform: "x" as const, handle: "@ATU_GobPeru", profilePic: "https://pbs.twimg.com/profile_images/1819095731623346177/YouKV4kG.jpg", posts: 13398, lastExtraction: "10m ago", followers: 59727 },
+    { id: "3", platform: "facebook" as const, handle: "UNICEF", profilePic: "", posts: 2341, lastExtraction: "20m ago", followers: 16500000 },
+    { id: "4", platform: "x" as const, handle: "@MTC_GobPeru", profilePic: "", posts: 8742, lastExtraction: "5m ago", followers: 125000 },
+    { id: "5", platform: "facebook" as const, handle: "European Commission", profilePic: "", posts: 3256, lastExtraction: "30m ago", followers: 2800000 },
+    { id: "6", platform: "x" as const, handle: "@SUGEF_CR", profilePic: "", posts: 892, lastExtraction: "1h ago", followers: 45000 },
+    { id: "7", platform: "facebook" as const, handle: "BAC Credomatic", profilePic: "", posts: 1567, lastExtraction: "2h ago", followers: 890000 },
+    { id: "8", platform: "x" as const, handle: "@BCCRCostaRica", profilePic: "", posts: 3421, lastExtraction: "45m ago", followers: 78000 },
+    { id: "9", platform: "facebook" as const, handle: "Banco Nacional Costa Rica", profilePic: "", posts: 2103, lastExtraction: "1h ago", followers: 1200000 },
+    { id: "10", platform: "x" as const, handle: "@AsofintechCR", profilePic: "", posts: 456, lastExtraction: "3h ago", followers: 12000 },
+    { id: "11", platform: "facebook" as const, handle: "Ministerio de Salud CR", profilePic: "", posts: 1890, lastExtraction: "25m ago", followers: 450000 },
+    { id: "12", platform: "x" as const, handle: "@presidaborici", profilePic: "", posts: 5678, lastExtraction: "20m ago", followers: 890000 },
+    { id: "13", platform: "facebook" as const, handle: "CCSS Costa Rica", profilePic: "", posts: 2345, lastExtraction: "40m ago", followers: 670000 },
+    { id: "14", platform: "x" as const, handle: "@LaRepublicaCR", profilePic: "", posts: 12456, lastExtraction: "5m ago", followers: 234000 },
+    { id: "15", platform: "facebook" as const, handle: "Defensoría de los Habitantes", profilePic: "", posts: 1234, lastExtraction: "2h ago", followers: 180000 },
+    { id: "16", platform: "x" as const, handle: "@CRHoyNews", profilePic: "", posts: 18923, lastExtraction: "3m ago", followers: 567000 },
+    { id: "17", platform: "facebook" as const, handle: "Camara de Comercio de Costa Rica", profilePic: "", posts: 890, lastExtraction: "4h ago", followers: 95000 },
+    { id: "18", platform: "x" as const, handle: "@elmaborici", profilePic: "", posts: 7845, lastExtraction: "15m ago", followers: 123000 },
+    { id: "19", platform: "facebook" as const, handle: "ICE Costa Rica", profilePic: "", posts: 1567, lastExtraction: "1h ago", followers: 340000 },
+    { id: "20", platform: "x" as const, handle: "@reaborica", profilePic: "", posts: 4532, lastExtraction: "30m ago", followers: 456000 },
+    { id: "21", platform: "facebook" as const, handle: "MOPT Costa Rica", profilePic: "", posts: 987, lastExtraction: "3h ago", followers: 120000 },
+    { id: "22", platform: "x" as const, handle: "@MELOACCR", profilePic: "", posts: 2341, lastExtraction: "2h ago", followers: 67000 },
+    { id: "23", platform: "facebook" as const, handle: "Asamblea Legislativa CR", profilePic: "", posts: 2890, lastExtraction: "45m ago", followers: 210000 },
+    { id: "24", platform: "x" as const, handle: "@AsambleaCR", profilePic: "", posts: 6789, lastExtraction: "20m ago", followers: 189000 },
+    { id: "25", platform: "facebook" as const, handle: "Poder Judicial Costa Rica", profilePic: "", posts: 1456, lastExtraction: "1h ago", followers: 156000 },
+    { id: "26", platform: "x" as const, handle: "@aboricadoj", profilePic: "", posts: 3456, lastExtraction: "35m ago", followers: 134000 },
+    { id: "27", platform: "facebook" as const, handle: "COMEX Costa Rica", profilePic: "", posts: 678, lastExtraction: "5h ago", followers: 45000 },
+    { id: "28", platform: "x" as const, handle: "@ComaboricaR", profilePic: "", posts: 2134, lastExtraction: "1h ago", followers: 56000 },
+    { id: "29", platform: "facebook" as const, handle: "PROCOMER", profilePic: "", posts: 1234, lastExtraction: "2h ago", followers: 78000 },
+    { id: "30", platform: "x" as const, handle: "@PROCOMER_CR", profilePic: "", posts: 4567, lastExtraction: "40m ago", followers: 89000 },
+    { id: "31", platform: "facebook" as const, handle: "CINDE Costa Rica", profilePic: "", posts: 890, lastExtraction: "3h ago", followers: 67000 },
+    { id: "32", platform: "x" as const, handle: "@CABORICASTA", profilePic: "", posts: 2345, lastExtraction: "1h ago", followers: 45000 },
+    { id: "33", platform: "facebook" as const, handle: "AyA Costa Rica", profilePic: "", posts: 1567, lastExtraction: "2h ago", followers: 123000 },
+    { id: "34", platform: "x" as const, handle: "@AyA_CR", profilePic: "", posts: 3421, lastExtraction: "45m ago", followers: 98000 },
+    { id: "35", platform: "facebook" as const, handle: "SETENA Costa Rica", profilePic: "", posts: 456, lastExtraction: "6h ago", followers: 34000 },
+    { id: "36", platform: "x" as const, handle: "@SETENA_CR", profilePic: "", posts: 1234, lastExtraction: "4h ago", followers: 23000 },
+    { id: "37", platform: "facebook" as const, handle: "MAG Costa Rica", profilePic: "", posts: 2103, lastExtraction: "1h ago", followers: 145000 },
+    { id: "38", platform: "x" as const, handle: "@MAG_CostaRica", profilePic: "", posts: 5678, lastExtraction: "30m ago", followers: 112000 },
+    { id: "39", platform: "facebook" as const, handle: "SINAC Costa Rica", profilePic: "", posts: 1890, lastExtraction: "2h ago", followers: 89000 },
+    { id: "40", platform: "x" as const, handle: "@SINAC_CR", profilePic: "", posts: 4532, lastExtraction: "1h ago", followers: 67000 },
+    { id: "41", platform: "facebook" as const, handle: "CNE Costa Rica", profilePic: "", posts: 987, lastExtraction: "3h ago", followers: 234000 },
+    { id: "42", platform: "x" as const, handle: "@CNE_CR", profilePic: "", posts: 6789, lastExtraction: "15m ago", followers: 189000 },
+    { id: "43", platform: "facebook" as const, handle: "TSE Costa Rica", profilePic: "", posts: 1456, lastExtraction: "2h ago", followers: 178000 },
+    { id: "44", platform: "x" as const, handle: "@TSECostaRica", profilePic: "", posts: 3456, lastExtraction: "1h ago", followers: 156000 },
+    { id: "45", platform: "facebook" as const, handle: "SUGEVAL Costa Rica", profilePic: "", posts: 678, lastExtraction: "4h ago", followers: 23000 },
+    { id: "46", platform: "x" as const, handle: "@SUGEVAL_CR", profilePic: "", posts: 1567, lastExtraction: "3h ago", followers: 18000 },
+    { id: "47", platform: "facebook" as const, handle: "SUPEN Costa Rica", profilePic: "", posts: 456, lastExtraction: "5h ago", followers: 19000 },
+    { id: "48", platform: "x" as const, handle: "@SUPEN_CR", profilePic: "", posts: 1234, lastExtraction: "4h ago", followers: 15000 },
+    { id: "49", platform: "facebook" as const, handle: "CONASSIF Costa Rica", profilePic: "", posts: 345, lastExtraction: "6h ago", followers: 12000 },
+    { id: "50", platform: "x" as const, handle: "@CONASSIF_CR", profilePic: "", posts: 890, lastExtraction: "5h ago", followers: 9800 },
   ];
 
+  // Extracted posts with real X and Facebook data structure
   const extractedPosts = [
     {
-      id: "1",
-      account: "@SUGEF_CR",
-      platform: "twitter",
-      content: "COMUNICADO: La SUGEF anuncia nuevos lineamientos para la regulación de entidades fintech. Los requisitos de capital se ajustarán proporcionalmente al volumen de operaciones. #RegulacionFintech #CostaRica",
-      date: "2025-01-16 14:30",
-      sentiment: 0.45,
-      engagement: { likes: 234, shares: 89, comments: 45 }
-    },
-    {
-      id: "2",
-      account: "BAC Credomatic",
-      platform: "facebook",
-      content: "En BAC Credomatic apoyamos la innovación financiera, pero consideramos fundamental que todos los actores del sistema operen bajo las mismas reglas prudenciales para garantizar la estabilidad del sistema financiero costarricense.",
-      date: "2025-01-16 11:15",
-      sentiment: -0.32,
-      engagement: { likes: 567, shares: 123, comments: 189 }
-    },
-    {
-      id: "3",
-      account: "@AsofintechCR",
-      platform: "twitter",
-      content: "¡Gran avance para la innovación financiera en Costa Rica! El proyecto de ley fintech incluye sandbox regulatorio que permitirá a startups probar nuevos productos. Agradecemos el apoyo del @MELOACCR y @BCCRCostaRica #FintechCR",
-      date: "2025-01-16 09:45",
-      sentiment: 0.88,
-      engagement: { likes: 445, shares: 201, comments: 67 }
-    },
-    {
-      id: "4",
-      account: "@BCCRCostaRica",
-      platform: "twitter",
-      content: "El Banco Central reitera su compromiso con un marco regulatorio que equilibre la innovación tecnológica con la estabilidad del sistema de pagos nacional. Continuamos trabajando en coordinación con @SUGEF_CR",
-      date: "2025-01-15 16:20",
+      id: "1994397408550412356",
+      url: "https://x.com/ATU_GobPeru/status/1994397408550412356",
+      platform: "x" as const,
+      verified: true,
+      username: "@ATU_GobPeru",
+      fullname: "Autoridad de Transporte Urbano",
+      timestamp: "2025-11-28T13:26:00.000Z",
+      text: "La persona afectada ha sido trasladada a una clínica cercana para recibir la atención médica correspondiente. Personal de la ATU se encuentra en el lugar a fin de garantizar la circulación de los buses para no afectar la operación y la movilidad de miles de usuarios.",
+      images: [],
+      likes: 2,
+      replies: 0,
+      retweets: 0,
+      quotes: 0,
       sentiment: 0.15,
-      engagement: { likes: 189, shares: 56, comments: 23 }
+      profilePic: "https://pbs.twimg.com/profile_images/1819095731623346177/YouKV4kG.jpg"
     },
     {
-      id: "5",
-      account: "Cámara de Comercio CR",
-      platform: "facebook",
-      content: "Las PYMES costarricenses necesitan acceso a financiamiento más ágil. La regulación fintech puede ser la clave para democratizar el acceso al crédito y reducir costos para los pequeños empresarios del país.",
-      date: "2025-01-15 10:00",
-      sentiment: 0.72,
-      engagement: { likes: 312, shares: 98, comments: 54 }
+      id: "1994397404724879657",
+      url: "https://x.com/ATU_GobPeru/status/1994397404724879657",
+      platform: "x" as const,
+      verified: true,
+      username: "@ATU_GobPeru",
+      fullname: "Autoridad de Transporte Urbano",
+      timestamp: "2025-11-28T13:26:00.000Z",
+      text: "#ATUInforma | Con relación al incidente de tránsito ocurrido hoy a la altura de la estación Izaguirre en Los Olivos, donde un bus del Metropolitano atropelló a un peatón que cruzó de manera imprudente la vía exclusiva, la ATU informa lo siguiente:",
+      images: ["https://pbs.twimg.com/media/G62F3bTWsAAb_7s.jpg"],
+      likes: 3,
+      replies: 1,
+      retweets: 1,
+      quotes: 0,
+      sentiment: -0.25,
+      profilePic: "https://pbs.twimg.com/profile_images/1819095731623346177/YouKV4kG.jpg"
+    },
+    {
+      id: "fb-1292794656213255",
+      url: "https://www.facebook.com/WHO/posts/pfbid02DjVfBJ61LDThkBXYTmYDkg4646MWsS9iMawxHLsez9WJpZYEn1oDzchHjycz54Ttl",
+      platform: "facebook" as const,
+      verified: true,
+      username: "WHO",
+      fullname: "World Health Organization (WHO)",
+      timestamp: "2025-11-26T13:34:16.000Z",
+      text: "Floods can have a devastating impact on health from drowning, injuries to the risk of electrocution, and even snake bites. Floods can: Contaminate drinking water, Disrupt sanitation, Create mosquito breeding sites. Stay alert. Stay safe.",
+      images: ["https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/590434671_1292794642879923_5414104857014688924_n.jpg"],
+      likes: 180,
+      comments: 29,
+      shares: 54,
+      sentiment: 0.45,
+      profilePic: "https://scontent-lax3-2.xx.fbcdn.net/v/t39.30808-1/488220448_9921581377887156_4002557874571876678_n.jpg"
+    },
+    {
+      id: "1994395678923456789",
+      url: "https://x.com/SUGEF_CR/status/1994395678923456789",
+      platform: "x" as const,
+      verified: true,
+      username: "@SUGEF_CR",
+      fullname: "SUGEF Costa Rica",
+      timestamp: "2025-11-28T12:15:00.000Z",
+      text: "COMUNICADO: La SUGEF anuncia nuevos lineamientos para la regulación de entidades fintech. Los requisitos de capital se ajustarán proporcionalmente al volumen de operaciones. #RegulacionFintech #CostaRica",
+      images: [],
+      likes: 234,
+      replies: 45,
+      retweets: 89,
+      quotes: 12,
+      sentiment: 0.65,
+      profilePic: ""
+    },
+    {
+      id: "fb-9876543210123456",
+      url: "https://www.facebook.com/BACCredomatic/posts/9876543210123456",
+      platform: "facebook" as const,
+      verified: true,
+      username: "BAC Credomatic",
+      fullname: "BAC Credomatic",
+      timestamp: "2025-11-28T11:00:00.000Z",
+      text: "En BAC Credomatic apoyamos la innovación financiera, pero consideramos fundamental que todos los actores del sistema operen bajo las mismas reglas prudenciales para garantizar la estabilidad del sistema financiero costarricense.",
+      images: [],
+      likes: 567,
+      comments: 189,
+      shares: 123,
+      sentiment: -0.32,
+      profilePic: ""
     }
   ];
 
@@ -89,6 +178,40 @@ export function SocialListeningDemo() {
     { id: "4", name: "Weekly Sentiment Summary - Dec 30, 2024", date: "Dec 30, 2024", type: "Weekly", size: "2.3 MB" },
     { id: "5", name: "Quarterly Trend Report - Q4 2024", date: "Jan 1, 2025", type: "Quarterly", size: "12.4 MB" },
   ];
+
+  // Filter and paginate tracked accounts
+  const filteredAccounts = useMemo(() => {
+    return trackedAccounts.filter(account => 
+      account.handle.toLowerCase().includes(accountSearchQuery.toLowerCase())
+    );
+  }, [accountSearchQuery]);
+
+  const totalPages = Math.ceil(filteredAccounts.length / accountsPerPage);
+  const paginatedAccounts = useMemo(() => {
+    const startIndex = (currentPage - 1) * accountsPerPage;
+    return filteredAccounts.slice(startIndex, startIndex + accountsPerPage);
+  }, [filteredAccounts, currentPage]);
+
+  // Format large numbers
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  };
+
+  // Format timestamp
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
 
   // Press Coverage Data (renamed from Newspapers)
   const pressCoverage = [
@@ -297,33 +420,85 @@ export function SocialListeningDemo() {
                   Add Account
                 </Button>
               </div>
+              {/* Search Bar */}
+              <div className="relative mt-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search accounts..."
+                  value={accountSearchQuery}
+                  onChange={(e) => {
+                    setAccountSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-10"
+                />
+              </div>
             </CardHeader>
             <CardContent>
+              {/* 4x3 Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {trackedAccounts.map((account) => (
+                {paginatedAccounts.map((account) => (
                   <div 
                     key={account.id}
                     className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
                   >
-                    <div className="text-2xl">{account.avatar}</div>
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {account.profilePic ? (
+                        <img src={account.profilePic} alt={account.handle} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          {account.handle.replace('@', '').substring(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1">
                         {account.platform === "facebook" ? (
-                          <Facebook className="w-3 h-3 text-blue-500" />
+                          <Facebook className="w-3 h-3 text-blue-500 flex-shrink-0" />
                         ) : (
-                          <Twitter className="w-3 h-3 text-sky-500" />
+                          <XIcon className="w-3 h-3 flex-shrink-0" />
                         )}
                         <span className="text-sm font-medium truncate">{account.handle}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{account.posts} posts</span>
-                        <span>•</span>
-                        <span>{account.lastExtraction}</span>
+                        <span>{formatNumber(account.posts)} posts</span>
+                        <span className="hidden sm:inline">-</span>
+                        <span className="hidden sm:inline">{account.lastExtraction}</span>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <span className="text-sm text-muted-foreground">
+                    Showing {((currentPage - 1) * accountsPerPage) + 1}-{Math.min(currentPage * accountsPerPage, filteredAccounts.length)} of {filteredAccounts.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm font-medium px-2">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -363,27 +538,60 @@ export function SocialListeningDemo() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {post.profilePic ? (
+                            <img src={post.profilePic} alt={post.username} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-semibold text-muted-foreground">
+                              {post.username.replace('@', '').substring(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
                         {post.platform === "facebook" ? (
                           <Facebook className="w-4 h-4 text-blue-500" />
                         ) : (
-                          <Twitter className="w-4 h-4 text-sky-500" />
+                          <XIcon className="w-4 h-4" />
                         )}
-                        <span className="font-medium">{post.account}</span>
-                        <span className="text-xs text-muted-foreground">• {post.date}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{post.fullname}</span>
+                          <span className="text-xs text-muted-foreground">{post.username} - {formatTimestamp(post.timestamp)}</span>
+                        </div>
+                        {post.verified && (
+                          <Badge variant="secondary" className="text-xs">Verified</Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                        {post.content}
+                        {post.text}
                       </p>
+                      {post.images && post.images.length > 0 && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">{post.images.length} image(s) attached</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <Heart className="w-3 h-3" /> {post.engagement.likes}
+                          <Heart className="w-3 h-3" /> {post.likes}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Share2 className="w-3 h-3" /> {post.engagement.shares}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="w-3 h-3" /> {post.engagement.comments}
-                        </span>
+                        {post.platform === "x" ? (
+                          <>
+                            <span className="flex items-center gap-1">
+                              <Repeat2 className="w-3 h-3" /> {post.retweets}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MessageSquare className="w-3 h-3" /> {post.replies}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex items-center gap-1">
+                              <Share2 className="w-3 h-3" /> {post.shares}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="w-3 h-3" /> {post.comments}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col items-center gap-1 p-3 rounded-lg border bg-background">
