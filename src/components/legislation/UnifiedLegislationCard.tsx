@@ -84,6 +84,37 @@ export function UnifiedLegislationCard({
     return idx >= 0 ? idx : 0;
   }, [item, pipelineStages]);
 
+  // Compute the most relevant date and label based on lifecycle status
+  const relevantDate = useMemo(() => {
+    if (item.isInForce) {
+      // For enacted legislation, show effective date
+      if (item.effectiveDate) {
+        return { label: "Effective", date: item.effectiveDate };
+      }
+      // Fallback to published date if no effective date
+      return { label: "Published", date: item.publishedDate };
+    }
+    
+    // For pipeline items, find the most recent action with a date
+    if (item.actions && item.actions.length > 0) {
+      const sortedActions = [...item.actions].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      const latestAction = sortedActions[0];
+      // Create a concise label from the action description
+      const actionLabel = latestAction.description
+        .replace(/Legislative process advanced/i, item.status)
+        .replace(/ - Legislative process advanced/i, "")
+        .split(" - ")[0]
+        .substring(0, 25);
+      return { label: actionLabel, date: latestAction.date };
+    }
+    
+    // Use status as label with published date
+    const statusLabel = item.status || "Alert";
+    return { label: statusLabel, date: item.publishedDate };
+  }, [item]);
+
   return (
     <Card 
       className={cn(
@@ -315,10 +346,7 @@ export function UnifiedLegislationCard({
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               <span>
-                {item.effectiveDate 
-                  ? `Effective: ${formatLegislationDate(item.effectiveDate)}`
-                  : `Published: ${formatLegislationDate(item.publishedDate)}`
-                }
+                {relevantDate.label}: {formatLegislationDate(relevantDate.date)}
               </span>
             </div>
             
