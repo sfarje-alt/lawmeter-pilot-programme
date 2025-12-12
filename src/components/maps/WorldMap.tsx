@@ -16,9 +16,9 @@ const geoUrls = {
   korea: "https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-geo.json",
   taiwan: "https://raw.githubusercontent.com/AJLiu/taiwan-atlas/master/taiwan-counties.json",
   peru: "https://raw.githubusercontent.com/juaneladio/peru-geojson/master/peru_departamental_simple.geojson",
-  costaRica: "https://raw.githubusercontent.com/bnoguchi/costa-rica-geo-data/master/cr.geo.json",
-  gcc: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json", // Use world map filtered to GCC
-  eu: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json", // Use world map filtered to EU
+  costaRica: "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/CRI.geo.json",
+  gcc: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
+  eu: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
 };
 
 interface WorldMapProps {
@@ -69,7 +69,7 @@ const gccCountries = new Set([
 
 // All jurisdictions that support subnational zoom
 const zoomableJurisdictions = new Set([
-  "usa", "canada", "japan", "korea", "taiwan", "peru", "costa-rica", "gcc"
+  "usa", "canada", "japan", "korea", "taiwan", "peru", "costa-rica", "gcc", "eu"
 ]);
 
 // Map jurisdiction data keys for stats aggregation
@@ -145,12 +145,14 @@ const subJurisdictionMappings: Record<string, Record<string, string>> = {
   },
   "costa-rica": {
     "San José": "SJ", "Alajuela": "AL", "Cartago": "CA", "Heredia": "HE",
-    "Guanacaste": "GU", "Puntarenas": "PU", "Limón": "LI"
+    "Guanacaste": "GU", "Puntarenas": "PU", "Limón": "LI",
+    "Costa Rica": "CR"
   },
   gcc: {
     "United Arab Emirates": "UAE", "Saudi Arabia": "KSA", "Kuwait": "KWT",
     "Bahrain": "BHR", "Qatar": "QAT", "Oman": "OMN"
-  }
+  },
+  eu: {}
 };
 
 // Map view configurations
@@ -214,22 +216,23 @@ const mapConfigs: Record<MapView, MapConfig> = {
   "costa-rica": {
     geoUrl: geoUrls.costaRica,
     projection: "geoMercator",
-    projectionConfig: { scale: 8000, center: [-84, 9.9] },
-    center: [-84, 9.9]
+    projectionConfig: { scale: 5000, center: [-84, 9.7] },
+    center: [-84, 9.7],
+    nameProperty: "name"
   },
   gcc: {
     geoUrl: geoUrls.gcc,
     projection: "geoMercator",
-    projectionConfig: { scale: 600, center: [50, 24] },
+    projectionConfig: { scale: 800, center: [50, 24] },
     center: [50, 24],
-    filterFn: (geo) => gccCountries.has(geo.properties.name)
+    filterFn: (geo: any) => gccCountries.has(geo.properties.name)
   },
   eu: {
     geoUrl: geoUrls.eu,
     projection: "geoMercator",
-    projectionConfig: { scale: 500, center: [10, 52] },
-    center: [10, 52],
-    filterFn: (geo) => euMemberStates.has(geo.properties.name)
+    projectionConfig: { scale: 600, center: [15, 52] },
+    center: [15, 52],
+    filterFn: (geo: any) => euMemberStates.has(geo.properties.name)
   }
 };
 
@@ -304,9 +307,11 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
     const jurisdiction = countryNameToJurisdiction[countryName];
     if (!jurisdiction) return;
     
-    // EU filters directly (no zoom)
+    // EU member states - zoom to EU view
     if (jurisdiction === "eu") {
-      if (onSelectRegion) onSelectRegion("eu");
+      setSelectedJurisdiction("eu");
+      setCurrentView("eu");
+      setPosition({ coordinates: mapConfigs.eu.center, zoom: 1 });
       return;
     }
     
@@ -348,9 +353,19 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
       return;
     }
     
-    // For EU, clicking a country filters to EU
+    // For EU, clicking any EU country filters to EU legislation
     if (selectedJurisdiction === "eu") {
-      if (onSelectRegion) onSelectRegion("eu");
+      if (onSelectRegion) {
+        onSelectRegion("eu");
+      }
+      return;
+    }
+    
+    // For Costa Rica (single country GeoJSON), filter to costa-rica
+    if (selectedJurisdiction === "costa-rica" && name === "Costa Rica") {
+      if (onSelectRegion) {
+        onSelectRegion("costa-rica");
+      }
       return;
     }
     
