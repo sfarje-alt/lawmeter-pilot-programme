@@ -32,6 +32,29 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Spanish translations for LATAM regions
+const LATAM_LABELS = {
+  inForce: "Vigente",
+  pipeline: "En Trámite",
+  details: "Detalles",
+  aiSummary: "Resumen IA",
+  generate: "Generar",
+  whatChanges: "Qué Cambia",
+  whoImpacted: "Afectados",
+  keyDeadline: "Fecha Clave",
+  analyzing: "Analizando contenido...",
+  clickToGenerate: "Haga clic para generar análisis IA",
+  legislativeProgress: "Progreso Legislativo",
+  due: "Vence",
+  effective: "Vigente desde",
+  published: "Publicado",
+  riskHigh: "Alto",
+  riskMedium: "Medio",
+  riskLow: "Bajo",
+  starred: "Quitar de favoritos",
+  notStarred: "Agregar a favoritos"
+};
+
 interface UnifiedLegislationCardProps {
   item: UnifiedLegislationItem;
   config: JurisdictionConfig;
@@ -60,6 +83,10 @@ export function UnifiedLegislationCard({
   const theme = regionThemes[item.region];
   const instrumentType = getInstrumentType(config, item.instrumentType);
   const pipelineStages = getPipelineStages(config, item.instrumentType);
+  
+  // Determine if this is a LATAM jurisdiction (use Spanish)
+  const isLatam = item.region === "LATAM";
+  const labels = isLatam ? LATAM_LABELS : null;
 
   // Build jurisdiction line
   const jurisdictionLine = useMemo(() => {
@@ -89,10 +116,16 @@ export function UnifiedLegislationCard({
     if (item.isInForce) {
       // For enacted legislation, show effective date
       if (item.effectiveDate) {
-        return { label: "Effective", date: item.effectiveDate };
+        return { 
+          label: isLatam ? labels!.effective : "Effective", 
+          date: item.effectiveDate 
+        };
       }
       // Fallback to published date if no effective date
-      return { label: "Published", date: item.publishedDate };
+      return { 
+        label: isLatam ? labels!.published : "Published", 
+        date: item.publishedDate 
+      };
     }
     
     // For pipeline items, find the most recent action with a date
@@ -111,9 +144,20 @@ export function UnifiedLegislationCard({
     }
     
     // Use status as label with published date
-    const statusLabel = item.status || "Alert";
+    const statusLabel = item.status || (isLatam ? "Alerta" : "Alert");
     return { label: statusLabel, date: item.publishedDate };
-  }, [item]);
+  }, [item, isLatam, labels]);
+  
+  // Get risk level label (Spanish for LATAM)
+  const getRiskLabel = (level: string) => {
+    if (!isLatam) return level.charAt(0).toUpperCase() + level.slice(1);
+    switch (level) {
+      case "high": return labels!.riskHigh;
+      case "medium": return labels!.riskMedium;
+      case "low": return labels!.riskLow;
+      default: return level;
+    }
+  };
 
   return (
     <Card 
@@ -156,7 +200,9 @@ export function UnifiedLegislationCard({
                   : "bg-warning/10 text-warning border-warning/30"
               )}
             >
-              {item.isInForce ? "In Force" : "Pipeline"}
+              {item.isInForce 
+                ? (isLatam ? labels!.inForce : "In Force") 
+                : (isLatam ? labels!.pipeline : "Pipeline")}
             </Badge>
             
             {/* Identifier */}
@@ -190,7 +236,9 @@ export function UnifiedLegislationCard({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
-                  {isStarred ? "Remove from starred" : "Add to starred"}
+                  {isStarred 
+                    ? (isLatam ? labels!.starred : "Remove from starred") 
+                    : (isLatam ? labels!.notStarred : "Add to starred")}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -236,7 +284,9 @@ export function UnifiedLegislationCard({
         >
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles className="h-3.5 w-3.5" style={{ color: theme.primaryColor }} />
-            <span className="text-xs font-medium" style={{ color: theme.primaryColor }}>AI Summary</span>
+            <span className="text-xs font-medium" style={{ color: theme.primaryColor }}>
+              {isLatam ? labels!.aiSummary : "AI Summary"}
+            </span>
             {isGeneratingAI && (
               <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-1" />
             )}
@@ -246,7 +296,9 @@ export function UnifiedLegislationCard({
             <div className="space-y-1.5 text-sm">
               <TooltipProvider delayDuration={300}>
                 <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Changes:</span>
+                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">
+                    {isLatam ? "Cambios:" : "Changes:"}
+                  </span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="text-foreground line-clamp-1 cursor-pointer">{item.aiSummary.whatChanges}</span>
@@ -257,7 +309,9 @@ export function UnifiedLegislationCard({
                   </Tooltip>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Impacts:</span>
+                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">
+                    {isLatam ? "Afecta:" : "Impacts:"}
+                  </span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="text-foreground line-clamp-1 cursor-pointer">{item.aiSummary.whoImpacted}</span>
@@ -268,7 +322,9 @@ export function UnifiedLegislationCard({
                   </Tooltip>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">Timeline:</span>
+                  <span className="text-muted-foreground font-medium min-w-[60px] flex-shrink-0">
+                    {isLatam ? "Fecha:" : "Timeline:"}
+                  </span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="text-foreground line-clamp-1 cursor-pointer">{item.aiSummary.keyDeadline}</span>
@@ -282,7 +338,9 @@ export function UnifiedLegislationCard({
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">
-              {isGeneratingAI ? "Analyzing content..." : "Click to generate AI analysis"}
+              {isGeneratingAI 
+                ? (isLatam ? labels!.analyzing : "Analyzing content...") 
+                : (isLatam ? labels!.clickToGenerate : "Click to generate AI analysis")}
             </div>
           )}
         </div>
@@ -297,7 +355,7 @@ export function UnifiedLegislationCard({
             }}
           >
             <div className="text-xs font-medium text-muted-foreground mb-2">
-              Legislative Progress
+              {isLatam ? labels!.legislativeProgress : "Legislative Progress"}
             </div>
             <div className="flex items-center gap-0.5">
               {pipelineStages.map((stage, index) => (
@@ -353,7 +411,7 @@ export function UnifiedLegislationCard({
             {item.complianceDeadline && (
               <div className="flex items-center gap-1 text-warning">
                 <AlertTriangle className="h-3 w-3" />
-                <span>Due: {formatLegislationDate(item.complianceDeadline)}</span>
+                <span>{isLatam ? labels!.due : "Due"}: {formatLegislationDate(item.complianceDeadline)}</span>
               </div>
             )}
             
@@ -367,7 +425,7 @@ export function UnifiedLegislationCard({
           <div className="flex items-center gap-3">
             {/* Risk badge - larger and more visible */}
             <Badge className={cn("text-sm font-semibold px-3 py-1", getRiskBadgeClass(item.riskLevel))}>
-              {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)}
+              {getRiskLabel(item.riskLevel)}
               {item.riskScore && ` (${item.riskScore})`}
             </Badge>
             
@@ -383,7 +441,7 @@ export function UnifiedLegislationCard({
               onClick={(e) => { e.stopPropagation(); onViewDetails(); }}
             >
               <FileText className="h-4 w-4 mr-1.5" />
-              Details
+              {isLatam ? labels!.details : "Details"}
             </Button>
           </div>
         </div>
