@@ -46,7 +46,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Si se aprueba, obligaría a empresas con infraestructura crítica a implementar controles de ciberseguridad certificados y reportar incidentes.",
       impactosPotenciales: "Fabricantes de electrodomésticos conectados (IoT) deberían cumplir estándares de ciberseguridad para comercializar en CR.",
       fechaClave: "En comisión con dictamen (Ene 2025). Estimado: Primer Debate Q2 2025.",
-      calificadorEstado: "Instrumento en trámite; no aplicable hasta eventual aprobación, sanción y publicación en La Gaceta."
+      calificadorEstado: "Instrumento en trámite; no aplicable hasta eventual aprobación, sanción y publicación en La Gaceta.",
+      
+      resumenEjecutivo: "Proyecto que establecería el primer marco legal integral de ciberseguridad en Costa Rica, con énfasis en protección de infraestructura crítica y dispositivos IoT conectados. Afecta directamente a fabricantes de electrodomésticos inteligentes con conectividad WiFi/Bluetooth.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 450,
+        costoEstimadoCumplimiento: { min: 15000, max: 85000, moneda: "USD" },
+        impactoMercado: "Incremento del 8-15% en costos de certificación para productos IoT en el mercado costarricense",
+        tiempoImplementacionMeses: 18,
+        rangoSanciones: { min: 5000000, max: 100000000, moneda: "CRC" },
+        puntajeComplejidad: 8
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 88,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 85, descripcion: "Nuevo marco legal con requisitos técnicos específicos para dispositivos conectados", estrategiaMitigacion: "Adelantar certificación ISO 27001 e implementar controles de seguridad por diseño" },
+          { categoria: "Riesgo Operativo", puntaje: 82, descripcion: "Necesidad de sistemas de reporte de incidentes y auditorías periódicas", estrategiaMitigacion: "Establecer equipo interno de respuesta a incidentes y protocolo de notificación" },
+          { categoria: "Riesgo Financiero", puntaje: 75, descripcion: "Inversión en certificación y adecuación de productos existentes", estrategiaMitigacion: "Planificar presupuesto de cumplimiento en ciclo 2025-2026" },
+          { categoria: "Riesgo Reputacional", puntaje: 70, descripcion: "Exposición por brechas de seguridad en productos IoT", estrategiaMitigacion: "Desarrollar política de divulgación responsable de vulnerabilidades" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Multas administrativas de ₡5 a ₡100 millones",
+          "Retiro de productos del mercado por incumplimiento",
+          "Prohibición temporal de importación",
+          "Publicación de sanciones en medios oficiales"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con productos ya certificados internacionalmente (UL, CE) tendrán ventaja competitiva. Primeros en cumplir pueden diferenciarse en mercado."
+      },
+      
+      analisisActores: [
+        { actor: "MICIT", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad rectora del marco de ciberseguridad nacional", accionesRequeridas: ["Registro en plataforma de incidentes", "Certificación de productos"], cronograma: "Post-aprobación" },
+        { actor: "CAMTIC", tipo: "gremio", nivelImpacto: "medio", descripcionImpacto: "Cámara empresarial que representará intereses del sector tecnológico", accionesRequeridas: ["Participar en mesas de trabajo", "Capacitación a asociados"], cronograma: "Inmediato" },
+        { actor: "INTECO", tipo: "certificador", nivelImpacto: "alto", descripcionImpacto: "Organismo nacional de normalización que emitirá certificaciones", accionesRequeridas: ["Solicitar certificación de productos IoT"], cronograma: "18 meses post-vigencia" },
+        { actor: "Departamento de TI/Producto", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe evaluar y actualizar firmware de productos conectados", accionesRequeridas: ["Auditoría de seguridad de firmware", "Implementar actualizaciones OTA"], cronograma: "12 meses" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Certificación de seguridad IoT de productos", prioridad: "critica", fechaLimite: "18 meses post-publicación", esfuerzoEstimado: "12-16 semanas", areaResponsable: "Ingeniería + Calidad" },
+        { requisito: "Sistema de reporte de incidentes cibernéticos", prioridad: "critica", fechaLimite: "12 meses post-publicación", esfuerzoEstimado: "8-10 semanas", areaResponsable: "TI + Legal" },
+        { requisito: "Auditoría externa de seguridad anual", prioridad: "alta", fechaLimite: "Anual desde vigencia", esfuerzoEstimado: "4-6 semanas/año", areaResponsable: "TI + Cumplimiento" },
+        { requisito: "Política de divulgación de vulnerabilidades", prioridad: "media", fechaLimite: "18 meses post-publicación", esfuerzoEstimado: "2-3 semanas", areaResponsable: "Legal + TI" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Seguridad Preventiva", descripcion: "Evaluar postura de seguridad actual de productos IoT para identificar brechas antes de la aprobación de la ley", prioridad: "inmediata", recursosNecesarios: "Consultor de ciberseguridad + equipo de producto (4 semanas)" },
+        { titulo: "Certificación ISO 27001 Anticipada", descripcion: "Obtener certificación internacional de seguridad de la información como base para cumplimiento local", prioridad: "corto-plazo", recursosNecesarios: "Gerencia TI + consultor (6-9 meses, presupuesto USD 25,000-40,000)" },
+        { titulo: "Programa de Actualización de Firmware", descripcion: "Implementar capacidad de actualizaciones de seguridad remotas (OTA) en línea de productos conectados", prioridad: "mediano-plazo", recursosNecesarios: "Ingeniería de firmware + infraestructura cloud" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 8968", titulo: "Ley de Protección de la Persona frente al Tratamiento de sus Datos Personales", relacion: "relacionada", relevancia: "Marco de protección de datos que complementa requisitos de seguridad." },
+        { identificador: "Decreto N.º 37554-MICIT", titulo: "Reglamento de Telecomunicaciones", relacion: "relacionada", relevancia: "Normativa técnica de telecomunicaciones aplicable a dispositivos conectados." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "12-18 meses para empresas con productos IoT existentes",
+        nivelPreparacionIndustria: "Bajo - 15% de empresas tienen certificaciones de seguridad IoT, 85% requieren implementación completa",
+        tasaAdopcionCompetidores: "Marcas premium (Philips, Bosch) tienen productos certificados en mercados europeos adaptables a CR",
+        mejoresPracticas: [
+          "Implementar security by design en nuevos desarrollos",
+          "Establecer programa de bug bounty para vulnerabilidades",
+          "Mantener inventario actualizado de componentes de software (SBOM)"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Proyecto que establecería el primer marco legal integral de ciberseguridad en Costa Rica, con énfasis en protección de infraestructura crítica y dispositivos IoT conectados.",
@@ -130,7 +195,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Crearía obligaciones de registro, capital mínimo y cumplimiento AML para cualquier empresa que ofrezca servicios de criptoactivos en CR.",
       impactosPotenciales: "Empresas fintech y cualquier comercio que acepte pagos en cripto deberán cumplir requisitos regulatorios.",
       fechaClave: "Aprobado en Primer Debate (Feb 2025). Pendiente Segundo Debate.",
-      calificadorEstado: "Instrumento en trámite; no aplicable hasta eventual aprobación, sanción y publicación en La Gaceta."
+      calificadorEstado: "Instrumento en trámite; no aplicable hasta eventual aprobación, sanción y publicación en La Gaceta.",
+      
+      resumenEjecutivo: "Proyecto avanzado que regularía el ecosistema cripto en Costa Rica. Alta probabilidad de aprobación dado consenso bipartidista. Establecería el primer marco regulatorio integral para proveedores de servicios de criptoactivos (PSAV).",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 120,
+        costoEstimadoCumplimiento: { min: 50000, max: 250000, moneda: "USD" },
+        impactoMercado: "Capital mínimo de $500,000 USD eliminará operadores pequeños del mercado, consolidando sector",
+        tiempoImplementacionMeses: 6,
+        rangoSanciones: { min: 10000000, max: 200000000, moneda: "CRC" },
+        puntajeComplejidad: 9
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 85,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 90, descripcion: "Nuevo régimen de supervisión SUGEF con requisitos estrictos de licenciamiento", estrategiaMitigacion: "Evaluar tempranamente si operaciones califican como PSAV y preparar documentación de registro" },
+          { categoria: "Riesgo Financiero", puntaje: 88, descripcion: "Requisito de capital mínimo elevado y costos de cumplimiento AML", estrategiaMitigacion: "Analizar estructura de capital y explorar alianzas estratégicas si necesario" },
+          { categoria: "Riesgo Operativo", puntaje: 78, descripcion: "Implementación de controles KYC/AML y sistemas de reporte", estrategiaMitigacion: "Contratar solución de cumplimiento AML especializada en cripto" },
+          { categoria: "Riesgo Legal", puntaje: 75, descripcion: "Responsabilidad personal de directivos por incumplimientos", estrategiaMitigacion: "Revisar estructura de gobierno corporativo y seguros D&O" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Multas hasta ₡200 millones por operación sin licencia",
+          "Suspensión de operaciones",
+          "Responsabilidad penal por lavado de activos",
+          "Inhabilitación de directivos"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con licencias en otras jurisdicciones (Panamá, El Salvador) podrán adaptar procesos. Primeros en obtener licencia SUGEF tendrán ventaja de mercado."
+      },
+      
+      analisisActores: [
+        { actor: "SUGEF", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad supervisora que otorgará licencias y fiscalizará operaciones", accionesRequeridas: ["Solicitud de registro PSAV", "Reportes periódicos de operaciones"], cronograma: "6 meses post-vigencia" },
+        { actor: "CONASSIF", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Consejo que emitirá normativa complementaria de detalle", accionesRequeridas: ["Monitorear emisión de reglamentos"], cronograma: "Post-aprobación" },
+        { actor: "Exchanges locales", tipo: "sector privado", nivelImpacto: "alto", descripcionImpacto: "Competidores que deberán cumplir mismos requisitos", accionesRequeridas: ["Benchmarking de cumplimiento"], cronograma: "Continuo" },
+        { actor: "Departamento Legal/Cumplimiento", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe diseñar e implementar programa AML/KYC", accionesRequeridas: ["Contratar oficial de cumplimiento", "Implementar sistemas de monitoreo"], cronograma: "4 meses" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Registro como PSAV ante SUGEF", prioridad: "critica", fechaLimite: "6 meses post-publicación", esfuerzoEstimado: "8-12 semanas", areaResponsable: "Legal + Cumplimiento" },
+        { requisito: "Demostración de capital mínimo $500,000", prioridad: "critica", fechaLimite: "Inmediato para nuevos operadores", esfuerzoEstimado: "Variable según situación", areaResponsable: "Finanzas + Legal" },
+        { requisito: "Programa AML/KYC documentado", prioridad: "alta", fechaLimite: "Pre-registro", esfuerzoEstimado: "6-8 semanas", areaResponsable: "Cumplimiento" },
+        { requisito: "Sistema de reporte de operaciones sospechosas", prioridad: "alta", fechaLimite: "Pre-operación", esfuerzoEstimado: "4-6 semanas", areaResponsable: "TI + Cumplimiento" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Evaluación de Impacto Operacional", descripcion: "Determinar si operaciones actuales o planificadas califican como servicios de criptoactivos bajo la nueva definición legal", prioridad: "inmediata", recursosNecesarios: "Asesor legal especializado en fintech (2 semanas)" },
+        { titulo: "Análisis de Viabilidad de Licencia", descripcion: "Si aplica, evaluar capacidad de cumplir requisitos de capital y operativos para obtener licencia PSAV", prioridad: "corto-plazo", recursosNecesarios: "CFO + Legal + consultor regulatorio (4 semanas)" },
+        { titulo: "Alternativa de Asociación", descripcion: "Si no viable obtener licencia propia, explorar acuerdos con PSAV licenciados para ofrecer servicios bajo su paraguas regulatorio", prioridad: "mediano-plazo", recursosNecesarios: "Desarrollo de negocios + Legal" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 8204", titulo: "Ley sobre Estupefacientes, Sustancias Psicotrópicas, Drogas de Uso No Autorizado, Actividades Conexas, Legitimación de Capitales y Financiamiento al Terrorismo", relacion: "relacionada", relevancia: "Marco AML/CFT que se aplica a operaciones cripto." },
+        { identificador: "Ley N.º 7558", titulo: "Ley Orgánica del Banco Central de Costa Rica", relacion: "relacionada", relevancia: "Define alcance de supervisión del sistema financiero." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "4-6 meses para empresas con experiencia regulatoria financiera",
+        nivelPreparacionIndustria: "Medio - 40% de exchanges locales tienen algunos controles AML, 60% operan informalmente",
+        tasaAdopcionCompetidores: "Binance y otros exchanges globales ya cumplen estándares similares en otras jurisdicciones",
+        mejoresPracticas: [
+          "Implementar verificación de identidad biométrica para onboarding",
+          "Usar herramientas de análisis blockchain para detección de riesgos",
+          "Mantener reservas líquidas 1:1 con activos de clientes"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Proyecto avanzado que regularía el ecosistema cripto en CR. Alta probabilidad de aprobación dado consenso bipartidista.",
@@ -218,7 +348,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Requeriría etiquetado energético y certificación de eficiencia para hervidores y cafeteras antes de comercialización.",
       impactosPotenciales: "IMPACTO DIRECTO: Fabricantes de hervidores y cafeteras deberán certificar productos ante INTECO. Posible reformulación de líneas menos eficientes.",
       fechaClave: "Enviado al Ejecutivo (Ene 2025). Pendiente sanción o veto presidencial.",
-      calificadorEstado: "Instrumento en trámite; pendiente sanción del Poder Ejecutivo. Posibilidad de veto."
+      calificadorEstado: "Instrumento en trámite; pendiente sanción del Poder Ejecutivo. Posibilidad de veto.",
+      
+      resumenEjecutivo: "Proyecto de alto impacto directo para fabricantes de hervidores y cafeteras. Ya aprobado por la Asamblea Legislativa, ahora pendiente de sanción presidencial. Existe presión de importadores para veto por costos de certificación.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 85,
+        costoEstimadoCumplimiento: { min: 8000, max: 45000, moneda: "USD" },
+        impactoMercado: "Eliminación progresiva de productos clase G/F reducirá oferta de equipos económicos en 25-30%",
+        tiempoImplementacionMeses: 24,
+        rangoSanciones: { min: 2000000, max: 50000000, moneda: "CRC" },
+        puntajeComplejidad: 7
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 92,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 95, descripcion: "Requisitos de etiquetado y certificación obligatorios para toda la línea de productos", estrategiaMitigacion: "Iniciar proceso de certificación INTECO inmediatamente para productos principales" },
+          { categoria: "Riesgo Operativo", puntaje: 88, descripcion: "Necesidad de rediseño de empaques y posible reformulación de productos menos eficientes", estrategiaMitigacion: "Auditar eficiencia de catálogo actual e identificar productos que requieren rediseño" },
+          { categoria: "Riesgo Financiero", puntaje: 75, descripcion: "Inversión en certificación y potencial pérdida de inventario no conforme", estrategiaMitigacion: "Liquidar inventario de productos clase G/F antes de entrada en vigencia" },
+          { categoria: "Riesgo de Producto", puntaje: 85, descripcion: "Posible discontinuación de SKUs menos eficientes", estrategiaMitigacion: "Evaluar roadmap de productos para priorizar modelos de alta eficiencia" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Multas de ₡2 a ₡50 millones por comercialización sin etiquetado",
+          "Decomiso de productos no conformes",
+          "Prohibición de importación de productos clase G/F",
+          "Publicación en lista de infractores"
+        ],
+        evaluacionRiesgoCompetitivo: "Fabricantes con líneas premium de alta eficiencia (clase A/B) tendrán ventaja. Productos europeos con etiquetado EU ya cumplen parcialmente."
+      },
+      
+      analisisActores: [
+        { actor: "MINAE", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Ministerio responsable de política energética y fiscalización", accionesRequeridas: ["Registro de productos", "Reportes de eficiencia"], cronograma: "12 meses post-vigencia" },
+        { actor: "INTECO", tipo: "certificador", nivelImpacto: "alto", descripcionImpacto: "Organismo que emitirá certificaciones de eficiencia energética", accionesRequeridas: ["Solicitud de ensayos", "Obtención de certificado"], cronograma: "18 meses post-vigencia" },
+        { actor: "Cámara de Comercio", tipo: "gremio", nivelImpacto: "medio", descripcionImpacto: "Representa intereses de importadores que podrían cabildear por veto", accionesRequeridas: ["Monitorear posición del gremio"], cronograma: "Inmediato" },
+        { actor: "Departamento de Calidad", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe coordinar certificación y actualización de etiquetado", accionesRequeridas: ["Auditar eficiencia de productos", "Coordinar con INTECO"], cronograma: "6 meses" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Etiquetado energético visible en todos los productos", prioridad: "critica", fechaLimite: "12 meses post-publicación", esfuerzoEstimado: "8-10 semanas", areaResponsable: "Calidad + Marketing" },
+        { requisito: "Certificación INTECO de eficiencia energética", prioridad: "critica", fechaLimite: "18 meses post-publicación", esfuerzoEstimado: "12-16 semanas", areaResponsable: "Calidad + I&D" },
+        { requisito: "Registro de productos en plataforma MINAE", prioridad: "alta", fechaLimite: "12 meses post-publicación", esfuerzoEstimado: "2-4 semanas", areaResponsable: "Regulatorio" },
+        { requisito: "Retiro de productos clase G/F del mercado", prioridad: "alta", fechaLimite: "36 meses post-publicación", esfuerzoEstimado: "Variable según inventario", areaResponsable: "Comercial + Logística" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Eficiencia Energética Urgente", descripcion: "Evaluar consumo energético de toda la línea de hervidores y cafeteras para identificar productos en riesgo de incumplimiento", prioridad: "inmediata", recursosNecesarios: "Laboratorio de ensayos + equipo de I&D (3 semanas)" },
+        { titulo: "Pre-Certificación INTECO", descripcion: "Iniciar proceso de certificación anticipada para productos clave antes de promulgación de la ley", prioridad: "corto-plazo", recursosNecesarios: "Calidad + presupuesto de ensayos (USD 5,000-15,000 por modelo)" },
+        { titulo: "Rediseño de Productos Clase F/G", descripcion: "Evaluar viabilidad técnica de mejorar eficiencia de modelos actuales o desarrollar reemplazos de mayor eficiencia", prioridad: "mediano-plazo", recursosNecesarios: "I&D + Ingeniería (6-12 meses por modelo)" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 7447", titulo: "Ley de Regulación del Uso Racional de la Energía", relacion: "modifica", relevancia: "Marco legal base que este proyecto complementa con requisitos específicos para electrodomésticos." },
+        { identificador: "Decreto N.º 36979-MINAE", titulo: "Reglamento de Etiquetado de Eficiencia Energética", relacion: "relacionada", relevancia: "Normativa vigente de etiquetado que sería ampliada." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "12-18 meses para línea completa de productos",
+        nivelPreparacionIndustria: "Medio - 45% de productos importados ya tienen etiquetado EU equivalente, 55% requieren certificación local",
+        tasaAdopcionCompetidores: "Marcas premium (Breville, Cuisinart) ya ofrecen productos clase A. Marcas económicas (Hamilton Beach, Black+Decker) tienen mezcla de clases.",
+        mejoresPracticas: [
+          "Diseñar nuevos productos con eficiencia clase A como objetivo mínimo",
+          "Usar etiquetado EU como referencia para adelantar cumplimiento",
+          "Comunicar eficiencia como atributo de valor al consumidor"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Proyecto de alto impacto para fabricantes de electrodomésticos. Enviado al Ejecutivo para sanción. Posibilidad de veto por presión de importadores.",
@@ -310,7 +505,72 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       cambiosPropuestos: "Obligaría a fabricantes de electrodomésticos a establecer sistemas de recolección y reciclaje de productos al fin de su vida útil.",
       impactosPotenciales: "Fabricantes de hervidores y cafeteras deberían implementar programas de responsabilidad extendida y financiar gestión de RAEE.",
       fechaClave: "VETADO por Poder Ejecutivo (Nov 2024). Pendiente resello o archivo.",
-      calificadorEstado: "Vetado por el Poder Ejecutivo. Pendiente de decisión de la Asamblea Legislativa (resello o archivo)."
+      calificadorEstado: "Vetado por el Poder Ejecutivo. Pendiente de decisión de la Asamblea Legislativa (resello o archivo).",
+      
+      resumenEjecutivo: "Proyecto vetado por el Poder Ejecutivo por considerarse que impone cargas desproporcionadas a PYMES. La Asamblea Legislativa puede resellar con 38 votos. De aprobarse, establecería sistema obligatorio de responsabilidad extendida del productor para RAEE.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 200,
+        costoEstimadoCumplimiento: { min: 20000, max: 120000, moneda: "USD" },
+        impactoMercado: "Incremento de 5-8% en costos operativos por gestión de residuos electrónicos",
+        tiempoImplementacionMeses: 12,
+        rangoSanciones: { min: 5000000, max: 100000000, moneda: "CRC" },
+        puntajeComplejidad: 8
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 78,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Regulatorio", puntaje: 75, descripcion: "Proyecto vetado pero posibilidad de resello mantiene incertidumbre", estrategiaMitigacion: "Monitorear votaciones en Asamblea y posiciones de fracciones políticas" },
+          { categoria: "Riesgo Operativo", puntaje: 82, descripcion: "Si se resella, necesidad de infraestructura de recolección en cada cantón", estrategiaMitigacion: "Identificar potenciales aliados para gestión compartida de puntos de acopio" },
+          { categoria: "Riesgo Financiero", puntaje: 78, descripcion: "Inversión significativa en logística inversa y convenios con gestores", estrategiaMitigacion: "Evaluar modelos de financiamiento colectivo del sector" },
+          { categoria: "Riesgo Reputacional", puntaje: 65, descripcion: "Presión de ONGs ambientalistas por cumplimiento proactivo", estrategiaMitigacion: "Considerar programa voluntario de reciclaje para posicionamiento ESG" }
+        ],
+        probabilidadFiscalizacion: "incierta",
+        responsabilidadesPotenciales: [
+          "Multas de ₡5 a ₡100 millones por incumplimiento",
+          "Obligación de remediación ambiental",
+          "Prohibición de comercialización de nuevos productos",
+          "Responsabilidad solidaria con gestores de RAEE"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con programas de reciclaje existentes (Sony, Apple) tendrán ventaja. Primeros en implementar pueden capturar mercado de consumidores eco-conscientes."
+      },
+      
+      analisisActores: [
+        { actor: "Asamblea Legislativa", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Decidirá si resella el proyecto con mayoría calificada (38 votos)", accionesRequeridas: ["Monitorear votaciones", "Posible incidencia con diputados"], cronograma: "Q1 2025" },
+        { actor: "Cámara de Industrias", tipo: "gremio", nivelImpacto: "alto", descripcionImpacto: "Lidera oposición al proyecto por costos para PYMES", accionesRequeridas: ["Participar en mesa técnica del gremio"], cronograma: "Inmediato" },
+        { actor: "ONGs Ambientalistas", tipo: "externo", nivelImpacto: "medio", descripcionImpacto: "Presionan por resello y cumplimiento de metas de reciclaje", accionesRequeridas: ["Monitorear campañas públicas"], cronograma: "Continuo" },
+        { actor: "Ministerio de Salud / MINAE", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Serían autoridades fiscalizadoras si proyecto se resella", accionesRequeridas: ["Anticipar requerimientos técnicos"], cronograma: "Post-resello" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Sistema de gestión de RAEE con operadores autorizados", prioridad: "critica", fechaLimite: "12 meses post-publicación (si resello)", esfuerzoEstimado: "16-20 semanas", areaResponsable: "Operaciones + Legal" },
+        { requisito: "Puntos de recolección en cada cantón con operaciones", prioridad: "alta", fechaLimite: "18 meses post-publicación (si resello)", esfuerzoEstimado: "20-24 semanas", areaResponsable: "Comercial + Operaciones" },
+        { requisito: "Metas de reciclaje: 50% año 1, 70% año 3", prioridad: "alta", fechaLimite: "Anual desde vigencia", esfuerzoEstimado: "Continuo", areaResponsable: "Operaciones + Sostenibilidad" },
+        { requisito: "Registro en sistema nacional de gestores RAEE", prioridad: "media", fechaLimite: "6 meses post-publicación (si resello)", esfuerzoEstimado: "2-4 semanas", areaResponsable: "Regulatorio" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Monitoreo Legislativo Activo", descripcion: "Seguir de cerca posiciones de fracciones legislativas y probabilidad de resello para anticipar escenarios", prioridad: "inmediata", recursosNecesarios: "Asesor de asuntos públicos + Legal (continuo)" },
+        { titulo: "Alianza Sectorial Preventiva", descripcion: "Explorar alianza con otros fabricantes/importadores para establecer sistema de gestión RAEE compartido que reduzca costos individuales", prioridad: "corto-plazo", recursosNecesarios: "Gerencia + Legal + representante ante Cámara (8 semanas negociación)" },
+        { titulo: "Programa Voluntario de Reciclaje", descripcion: "Considerar implementar programa piloto de reciclaje voluntario para posicionamiento ESG y preparación ante eventual obligatoriedad", prioridad: "mediano-plazo", recursosNecesarios: "Marketing + Operaciones + presupuesto piloto" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "Ley N.º 8839", titulo: "Ley para la Gestión Integral de Residuos", relacion: "modifica", relevancia: "Marco legal base de gestión de residuos que este proyecto complementa para RAEE." },
+        { identificador: "Decreto N.º 35933-S", titulo: "Reglamento para la Gestión Integral de Residuos Electrónicos", relacion: "relacionada", relevancia: "Normativa vigente de gestión de RAEE que sería fortalecida." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "8-12 meses para implementar sistema de gestión RAEE",
+        nivelPreparacionIndustria: "Bajo - 20% de empresas tienen programas de reciclaje, 80% sin infraestructura de logística inversa",
+        tasaAdopcionCompetidores: "Marcas globales (Samsung, LG, Apple) ya operan programas REP en otros países con modelos adaptables",
+        mejoresPracticas: [
+          "Establecer convenios con retailers para puntos de acopio en tiendas",
+          "Implementar programa de trade-in con incentivo comercial",
+          "Aliarse con gestores de RAEE certificados"
+        ]
+      }
     },
     analisisIA: {
       resumenEjecutivo: "Proyecto vetado por considerarse que impone cargas desproporcionadas a PYMES. La Asamblea puede resellar con 38 votos.",
