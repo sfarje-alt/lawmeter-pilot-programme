@@ -64,7 +64,72 @@ export const peruLegislationData: PeruLegislationItem[] = [
       afectados: "Fabricantes e importadores de hervidores eléctricos y máquinas de café. OEFA fiscalizará cumplimiento con multas hasta 10,000 UIT.",
       fechaClave: `Proyecto publicado ${diasAtras(45)}. Pendiente de aprobación final.`,
       explicacionRiesgo: "Alto impacto operativo y financiero. Requiere infraestructura de recolección y acuerdos con operadores de RAEE autorizados.",
-      actoresClave: ["MINAM", "OEFA", "DIGESA", "Operadores RAEE autorizados"]
+      actoresClave: ["MINAM", "OEFA", "DIGESA", "Operadores RAEE autorizados"],
+      
+      resumenEjecutivo: "Este decreto establece un sistema integral de responsabilidad extendida del productor (REP) para aparatos eléctricos y electrónicos, incluyendo electrodomésticos de cocina. Obliga a fabricantes e importadores a implementar sistemas de recolección, establecer metas de valorización progresivas y registrarse en plataformas del MINAM.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 380,
+        costoEstimadoCumplimiento: { min: 25000, max: 150000, moneda: "USD" },
+        impactoMercado: "Incremento estimado del 12-18% en costos logísticos para el sector de electrodomésticos por implementación de logística inversa",
+        tiempoImplementacionMeses: 8,
+        rangoSanciones: { min: 1, max: 10000, moneda: "UIT", unidad: "UIT (S/ 5,150 cada UIT)" },
+        puntajeComplejidad: 8
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 85,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Operativo", puntaje: 90, descripcion: "Necesidad de implementar infraestructura de recolección y convenios con operadores RAEE", estrategiaMitigacion: "Asociarse con operadores RAEE autorizados y establecer puntos de acopio en distribuidores" },
+          { categoria: "Riesgo Financiero", puntaje: 82, descripcion: "Inversión significativa en sistemas de gestión y logística inversa", estrategiaMitigacion: "Evaluar modelos de responsabilidad compartida con otros productores del sector" },
+          { categoria: "Riesgo de Cumplimiento", puntaje: 88, descripcion: "OEFA realizará fiscalizaciones periódicas con sanciones severas", estrategiaMitigacion: "Implementar sistema de trazabilidad y reportes automatizados al MINAM" },
+          { categoria: "Riesgo Reputacional", puntaje: 75, descripcion: "Exposición mediática por incumplimiento ambiental", estrategiaMitigacion: "Desarrollar programa de comunicación de sostenibilidad proactivo" }
+        ],
+        probabilidadFiscalizacion: "alta",
+        responsabilidadesPotenciales: [
+          "Multas administrativas hasta 10,000 UIT (aprox. S/ 51,500,000)",
+          "Obligación de remediación ambiental",
+          "Suspensión de registro de importador",
+          "Publicación de sanciones en plataforma MINAM"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con sistemas de logística inversa existentes tendrán ventaja competitiva. Marcas premium pueden diferenciarse con programas de reciclaje."
+      },
+      
+      analisisActores: [
+        { actor: "MINAM", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad normativa que define metas y supervisa registro de productores", accionesRequeridas: ["Registro en Sistema RAEE", "Reportes trimestrales de gestión"], cronograma: "Inmediato post-aprobación" },
+        { actor: "OEFA", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Fiscalizador principal que realizará inspecciones y procesará denuncias", accionesRequeridas: ["Mantener documentación de cumplimiento actualizada", "Preparar para auditorías"], cronograma: "Continuo" },
+        { actor: "Operadores RAEE", tipo: "externo", nivelImpacto: "alto", descripcionImpacto: "Empresas autorizadas para tratamiento de residuos electrónicos", accionesRequeridas: ["Negociar contratos de servicio", "Establecer flujos de entrega"], cronograma: "90 días pre-vigencia" },
+        { actor: "Departamento de Supply Chain", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe diseñar e implementar logística inversa", accionesRequeridas: ["Diseñar red de puntos de acopio", "Implementar sistema de tracking"], cronograma: "180 días" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Registro en Sistema Nacional de RAEE del MINAM", prioridad: "critica", fechaLimite: "30 días post-vigencia", esfuerzoEstimado: "2 semanas", areaResponsable: "Legal + Ambiental" },
+        { requisito: "Plan de Manejo de RAEE aprobado", prioridad: "critica", fechaLimite: "90 días post-vigencia", esfuerzoEstimado: "6-8 semanas", areaResponsable: "Ambiental + Operaciones" },
+        { requisito: "Convenios con operadores RAEE autorizados", prioridad: "alta", fechaLimite: "120 días post-vigencia", esfuerzoEstimado: "4-6 semanas", areaResponsable: "Legal + Compras" },
+        { requisito: "Sistema de recolección en puntos de venta", prioridad: "alta", fechaLimite: "180 días post-vigencia", esfuerzoEstimado: "10-12 semanas", areaResponsable: "Comercial + Operaciones" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Evaluación de Infraestructura Actual", descripcion: "Auditar capacidades logísticas existentes para determinar brecha de implementación de logística inversa", prioridad: "inmediata", recursosNecesarios: "Consultor ambiental + equipo operaciones (2-3 semanas)" },
+        { titulo: "Alianza Sectorial", descripcion: "Explorar alianza con otros fabricantes de electrodomésticos para compartir costos de infraestructura RAEE", prioridad: "corto-plazo", recursosNecesarios: "Gerencia + Legal (negociación 8 semanas)" },
+        { titulo: "Programa de Incentivos", descripcion: "Crear programa de trade-in donde clientes entreguen producto viejo al comprar nuevo, convirtiendo obligación en ventaja comercial", prioridad: "mediano-plazo", recursosNecesarios: "Marketing + Comercial (presupuesto campaña)" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "D.S. N° 001-2012-MINAM", titulo: "Reglamento Nacional para la Gestión y Manejo de los RAEE", relacion: "modifica", relevancia: "Norma base que este decreto complementa y actualiza." },
+        { identificador: "Ley N° 27314", titulo: "Ley General de Residuos Sólidos", relacion: "relacionada", relevancia: "Marco legal general de gestión de residuos en Perú." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "6-8 meses para empresas con presencia logística nacional",
+        nivelPreparacionIndustria: "Bajo - 25% de empresas tienen programas piloto de reciclaje, 75% requieren implementación completa",
+        tasaAdopcionCompetidores: "Líderes globales (Samsung, LG) tienen programas REP en otros países adaptables a Perú",
+        mejoresPracticas: [
+          "Aliarse con retailers para puntos de acopio compartidos",
+          "Implementar programa de canje con incentivo al consumidor",
+          "Digitalizar trazabilidad con códigos QR en productos"
+        ]
+      }
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-ds-012-2024-minam",
     acciones: [
@@ -109,7 +174,72 @@ export const peruLegislationData: PeruLegislationItem[] = [
       afectados: "Fabricantes e importadores de hervidores y cafeteras con conectividad WiFi/Bluetooth. Multas INDECOPI por incumplimiento.",
       fechaClave: `Proyecto publicado ${diasAtras(25)}. Pendiente de promulgación.`,
       explicacionRiesgo: "Impacto significativo en desarrollo de producto y ciclo de vida. Requiere actualización de firmware y procesos de seguridad.",
-      actoresClave: ["PCM", "INDECOPI", "Secretaría de Gobierno Digital"]
+      actoresClave: ["PCM", "INDECOPI", "Secretaría de Gobierno Digital"],
+      
+      resumenEjecutivo: "Este decreto legislativo establece el primer marco integral de ciberseguridad para dispositivos IoT en Perú, afectando directamente a electrodomésticos inteligentes conectados. Requiere seguridad por diseño, actualizaciones de seguridad por 3 años mínimo, y política de divulgación de vulnerabilidades.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 220,
+        costoEstimadoCumplimiento: { min: 35000, max: 180000, moneda: "USD" },
+        impactoMercado: "Incremento del 15-25% en costos de desarrollo para productos IoT por implementación de security by design",
+        tiempoImplementacionMeses: 12,
+        rangoSanciones: { min: 1, max: 1000, moneda: "UIT", unidad: "UIT (S/ 5,150 cada UIT)" },
+        puntajeComplejidad: 9
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 82,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Técnico", puntaje: 92, descripcion: "Requiere rediseño de arquitectura de seguridad en productos existentes", estrategiaMitigacion: "Evaluar firmware actual y planificar roadmap de actualización de seguridad" },
+          { categoria: "Riesgo Operativo", puntaje: 78, descripcion: "Necesidad de equipo especializado en ciberseguridad IoT", estrategiaMitigacion: "Contratar consultoría de seguridad o capacitar equipo interno" },
+          { categoria: "Riesgo de Cumplimiento", puntaje: 85, descripcion: "INDECOPI fiscalizará con apoyo técnico de la Secretaría de Gobierno Digital", estrategiaMitigacion: "Obtener certificaciones de seguridad internacionales como referencia" },
+          { categoria: "Riesgo de Producto", puntaje: 80, descripcion: "Productos sin actualizaciones de seguridad no podrán comercializarse", estrategiaMitigacion: "Implementar sistema de actualización OTA (Over-The-Air)" }
+        ],
+        probabilidadFiscalizacion: "media",
+        responsabilidadesPotenciales: [
+          "Multas hasta 1,000 UIT (aprox. S/ 5,150,000)",
+          "Retiro de productos del mercado",
+          "Obligación de recall para productos vulnerables",
+          "Daños y perjuicios por brechas de seguridad"
+        ],
+        evaluacionRiesgoCompetitivo: "Marcas con equipos de desarrollo de firmware propios tendrán ventaja. Productos OEM enfrentarán desafíos para asegurar cumplimiento de proveedores."
+      },
+      
+      analisisActores: [
+        { actor: "PCM", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Órgano rector que define estándares técnicos de ciberseguridad", accionesRequeridas: ["Monitorear reglamento técnico", "Participar en consultas públicas"], cronograma: "Continuo" },
+        { actor: "INDECOPI", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Fiscalizador que procesará denuncias y realizará inspecciones de mercado", accionesRequeridas: ["Documentar cumplimiento de requisitos técnicos"], cronograma: "Post-vigencia" },
+        { actor: "Equipo de Desarrollo", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe implementar security by design en productos nuevos y actualizar existentes", accionesRequeridas: ["Auditoría de seguridad de firmware", "Implementar OTA updates"], cronograma: "12 meses" },
+        { actor: "Proveedores de Componentes", tipo: "externo", nivelImpacto: "medio", descripcionImpacto: "Proveedores de módulos WiFi/Bluetooth deben cumplir requisitos", accionesRequeridas: ["Solicitar certificados de seguridad de componentes"], cronograma: "Inmediato" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Eliminar contraseñas por defecto - credenciales únicas por dispositivo", prioridad: "critica", fechaLimite: "Vigencia del DL", esfuerzoEstimado: "8-12 semanas", areaResponsable: "Desarrollo + Producción" },
+        { requisito: "Sistema de actualizaciones de seguridad por 3 años", prioridad: "critica", fechaLimite: "Vigencia del DL", esfuerzoEstimado: "16-20 semanas", areaResponsable: "Desarrollo + IT" },
+        { requisito: "Política pública de divulgación de vulnerabilidades", prioridad: "alta", fechaLimite: "90 días post-vigencia", esfuerzoEstimado: "4 semanas", areaResponsable: "Legal + Seguridad" },
+        { requisito: "Documentación técnica de seguridad para fiscalización", prioridad: "alta", fechaLimite: "Vigencia del DL", esfuerzoEstimado: "6 semanas", areaResponsable: "Ingeniería + Legal" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Seguridad Inmediata", descripcion: "Contratar pentesting de todos los productos IoT actuales para identificar vulnerabilidades", prioridad: "inmediata", recursosNecesarios: "Firma de ciberseguridad externa (2-4 semanas por producto)" },
+        { titulo: "Roadmap de Firmware Seguro", descripcion: "Desarrollar plan de actualización de firmware con ciclo de vida de 3+ años por producto", prioridad: "corto-plazo", recursosNecesarios: "Equipo de desarrollo (planificación 4 semanas)" },
+        { titulo: "Certificación Internacional", descripcion: "Obtener certificación de ciberseguridad IoT internacional (ETSI EN 303 645 o similar) como evidencia de cumplimiento", prioridad: "mediano-plazo", recursosNecesarios: "Laboratorio acreditado + equipo técnico" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "D.L. N° 1412", titulo: "Ley de Gobierno Digital", relacion: "relacionada", relevancia: "Marco general de gobierno digital que fundamenta requisitos de ciberseguridad." },
+        { identificador: "Ley N° 29733", titulo: "Ley de Protección de Datos Personales", relacion: "relacionada", relevancia: "Dispositivos IoT que capturan datos deben cumplir también con esta ley." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "10-14 meses para empresas con equipos de desarrollo propios",
+        nivelPreparacionIndustria: "Muy bajo - menos del 15% de productos IoT en el mercado peruano cumplen estos requisitos actualmente",
+        tasaAdopcionCompetidores: "Marcas europeas (Philips, Bosch) ya cumplen por ETSI EN 303 645; marcas asiáticas requieren adaptación significativa",
+        mejoresPracticas: [
+          "Implementar módulos de seguridad (TEE/Secure Element) en hardware",
+          "Establecer programa de bug bounty para detección temprana de vulnerabilidades",
+          "Certificar con ETSI EN 303 645 para facilitar cumplimiento en múltiples mercados"
+        ]
+      }
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-dl-1567",
     acciones: [
@@ -150,7 +280,66 @@ export const peruLegislationData: PeruLegislationItem[] = [
       queCambia: "Habilita nuevas bandas de frecuencia WiFi 6E para Perú y actualiza límites de potencia. Simplifica homologación para equipos ya certificados regionalmente.",
       afectados: "Importadores de electrodomésticos con conectividad WiFi/Bluetooth. Certificación MTC obligatoria antes de comercialización.",
       fechaClave: `Vigente desde ${diasAtras(15)}. Aplicable inmediatamente a nuevas importaciones.`,
-      actoresClave: ["MTC", "OSIPTEL", "Laboratorios acreditados"]
+      actoresClave: ["MTC", "OSIPTEL", "Laboratorios acreditados"],
+      
+      resumenEjecutivo: "Esta resolución ministerial actualiza el marco regulatorio de homologación de equipos de telecomunicaciones en Perú, habilitando nuevas bandas de frecuencia y simplificando procedimientos para equipos previamente certificados en la región.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 180,
+        costoEstimadoCumplimiento: { min: 5000, max: 25000, moneda: "USD" },
+        impactoMercado: "Reducción del 20-30% en tiempos de homologación para equipos con certificaciones regionales previas",
+        tiempoImplementacionMeses: 3,
+        rangoSanciones: { min: 1, max: 100, moneda: "UIT", unidad: "UIT (S/ 5,150 cada UIT)" },
+        puntajeComplejidad: 5
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 68,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Técnico", puntaje: 72, descripcion: "Productos con WiFi 6E requieren actualización de certificación", estrategiaMitigacion: "Verificar compatibilidad de módulos actuales con nuevas bandas de frecuencia" },
+          { categoria: "Riesgo Operativo", puntaje: 65, descripcion: "Proceso de homologación puede retrasar importaciones", estrategiaMitigacion: "Iniciar trámites de homologación anticipadamente con laboratorios acreditados" },
+          { categoria: "Riesgo de Cumplimiento", puntaje: 70, descripcion: "OSIPTEL fiscaliza equipos no homologados", estrategiaMitigacion: "Mantener registro actualizado de homologaciones vigentes" }
+        ],
+        probabilidadFiscalizacion: "media",
+        responsabilidadesPotenciales: [
+          "Multas por comercialización sin homologación",
+          "Decomiso de equipos no conformes",
+          "Suspensión de importaciones"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con relaciones establecidas con laboratorios acreditados tendrán ventaja en tiempos de homologación."
+      },
+      
+      analisisActores: [
+        { actor: "MTC", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Autoridad que otorga homologaciones", accionesRequeridas: ["Presentar solicitud de homologación", "Mantener documentación técnica"], cronograma: "Continuo" },
+        { actor: "OSIPTEL", tipo: "regulador", nivelImpacto: "medio", descripcionImpacto: "Fiscaliza cumplimiento en mercado", accionesRequeridas: ["Exhibir certificados de homologación"], cronograma: "Continuo" },
+        { actor: "Laboratorios Acreditados", tipo: "externo", nivelImpacto: "alto", descripcionImpacto: "Realizan pruebas de conformidad", accionesRequeridas: ["Contratar servicios de certificación"], cronograma: "Previo a importación" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Homologación MTC para productos con WiFi/Bluetooth", prioridad: "critica", fechaLimite: "Previo a comercialización", esfuerzoEstimado: "4-6 semanas", areaResponsable: "Regulatorio" },
+        { requisito: "Documentación técnica de conformidad RF", prioridad: "alta", fechaLimite: "Con solicitud de homologación", esfuerzoEstimado: "2 semanas", areaResponsable: "Ingeniería" },
+        { requisito: "Etiquetado de homologación en productos", prioridad: "alta", fechaLimite: "Antes de venta", esfuerzoEstimado: "1 semana", areaResponsable: "Producción + Regulatorio" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Productos RF", descripcion: "Revisar todos los productos con conectividad WiFi/Bluetooth para verificar estado de homologación", prioridad: "inmediata", recursosNecesarios: "Equipo regulatorio (1 semana)" },
+        { titulo: "Relación con Laboratorio Acreditado", descripcion: "Establecer relación comercial preferencial con laboratorio de ensayos para agilizar procesos", prioridad: "corto-plazo", recursosNecesarios: "Gerencia + Regulatorio (negociación)" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "D.S. N° 020-2007-MTC", titulo: "Reglamento General de la Ley de Telecomunicaciones", relacion: "relacionada", relevancia: "Marco general de telecomunicaciones que fundamenta requisitos de homologación." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "4-6 semanas para equipos con certificaciones regionales previas",
+        nivelPreparacionIndustria: "Alto - mayoría de importadores ya tienen procesos de homologación establecidos",
+        tasaAdopcionCompetidores: "Competidores establecidos tienen homologaciones vigentes; nuevos entrantes requieren proceso completo",
+        mejoresPracticas: [
+          "Mantener relación continua con laboratorio acreditado preferido",
+          "Iniciar proceso de homologación 3 meses antes de lanzamiento de producto",
+          "Utilizar certificaciones FCC/CE como base para agilizar proceso peruano"
+        ]
+      }
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-rm-0456-2024"
   },
@@ -312,7 +501,49 @@ export const peruLegislationData: PeruLegislationItem[] = [
       queCambia: "Complementa normativa nacional RAEE con requisitos específicos para Arequipa. Obliga puntos de acopio en centros comerciales grandes.",
       afectados: "Comercializadores con presencia en Región Arequipa. Centros comerciales deben habilitar puntos de acopio.",
       fechaClave: `Proyecto publicado ${diasAtras(40)}. Pendiente de aprobación por Consejo Regional.`,
-      actoresClave: ["GRA", "OEFA", "Municipalidades distritales de Arequipa"]
+      actoresClave: ["GRA", "OEFA", "Municipalidades distritales de Arequipa"],
+      
+      resumenEjecutivo: "Esta ordenanza regional complementa la normativa nacional de gestión de RAEE con requisitos específicos para la Región Arequipa, estableciendo puntos de acopio obligatorios e incentivos para operadores de reciclaje.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 45,
+        costoEstimadoCumplimiento: { min: 3000, max: 15000, moneda: "USD" },
+        impactoMercado: "Impacto local en operaciones de comercialización en la Región Arequipa",
+        tiempoImplementacionMeses: 4,
+        rangoSanciones: { min: 1, max: 50, moneda: "UIT", unidad: "UIT regional" },
+        puntajeComplejidad: 4
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 55,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Operativo", puntaje: 60, descripcion: "Necesidad de coordinar con centros comerciales para puntos de acopio", estrategiaMitigacion: "Negociar espacios compartidos con otros productores" },
+          { categoria: "Riesgo de Cumplimiento", puntaje: 55, descripcion: "Fiscalización coordinada entre OEFA y gobierno regional", estrategiaMitigacion: "Mantener registros de gestión RAEE actualizado" },
+          { categoria: "Riesgo Financiero", puntaje: 45, descripcion: "Costos moderados de implementación local", estrategiaMitigacion: "Aprovechar incentivos tributarios disponibles" }
+        ],
+        probabilidadFiscalizacion: "media",
+        responsabilidadesPotenciales: [
+          "Multas regionales por incumplimiento",
+          "Revocación de licencias de funcionamiento locales"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con presencia nacional pueden aprovechar infraestructura existente; nuevos entrantes a la región enfrentarán costos adicionales."
+      },
+      
+      analisisActores: [
+        { actor: "GRA", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Gobierno Regional que emite y fiscaliza la ordenanza", accionesRequeridas: ["Registro en sistema regional", "Reportes periódicos"], cronograma: "Post-aprobación" },
+        { actor: "OEFA", tipo: "regulador", nivelImpacto: "medio", descripcionImpacto: "Coordina fiscalización ambiental", accionesRequeridas: ["Mantener conformidad con normativa nacional RAEE"], cronograma: "Continuo" },
+        { actor: "Centros Comerciales", tipo: "externo", nivelImpacto: "medio", descripcionImpacto: "Deben habilitar espacios para puntos de acopio", accionesRequeridas: ["Coordinar ubicación de puntos de acopio"], cronograma: "90 días post-vigencia" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Convenio con centro comercial para punto de acopio", prioridad: "alta", fechaLimite: "90 días post-vigencia", esfuerzoEstimado: "4-6 semanas", areaResponsable: "Comercial + Legal" },
+        { requisito: "Registro en sistema regional de gestión RAEE", prioridad: "alta", fechaLimite: "30 días post-vigencia", esfuerzoEstimado: "1 semana", areaResponsable: "Ambiental" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Evaluación de Presencia Regional", descripcion: "Determinar volumen de ventas en Arequipa para evaluar impacto real de la ordenanza", prioridad: "inmediata", recursosNecesarios: "Equipo comercial (1 semana)" },
+        { titulo: "Alianza con Competidores", descripcion: "Explorar puntos de acopio compartidos con otros fabricantes para reducir costos", prioridad: "corto-plazo", recursosNecesarios: "Gerencia comercial" }
+      ]
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-or-435-gra"
   },
@@ -352,7 +583,48 @@ export const peruLegislationData: PeruLegislationItem[] = [
       queCambia: "Impone límites de consumo de agua para establecimientos comerciales e industriales en Lima Metropolitana. Incentivos por eficiencia.",
       afectados: "Fabricantes con plantas de producción en Lima Metropolitana. Multas municipales por exceso de consumo.",
       fechaClave: `Vigente desde ${diasAtras(45)}. Plazo de adecuación de medidores: ${diasAdelante(120)}.`,
-      actoresClave: ["MML", "SEDAPAL", "Gerencia de Fiscalización"]
+      actoresClave: ["MML", "SEDAPAL", "Gerencia de Fiscalización"],
+      
+      resumenEjecutivo: "Esta ordenanza municipal establece regulaciones de eficiencia hídrica para establecimientos comerciales en Lima Metropolitana, con incentivos tributarios para quienes demuestren certificación de eficiencia.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 120,
+        costoEstimadoCumplimiento: { min: 2000, max: 8000, moneda: "USD" },
+        impactoMercado: "Reducción de costos operativos del 5-15% para empresas que optimicen consumo hídrico",
+        tiempoImplementacionMeses: 4,
+        rangoSanciones: { min: 1, max: 10, moneda: "UIT", unidad: "UIT municipal" },
+        puntajeComplejidad: 3
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 42,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Operativo", puntaje: 45, descripcion: "Instalación de medidores diferenciados", estrategiaMitigacion: "Programar instalación en horarios de menor producción" },
+          { categoria: "Riesgo Financiero", puntaje: 35, descripcion: "Inversión moderada en infraestructura de medición", estrategiaMitigacion: "Aprovechar incentivos de reducción de arbitrios" },
+          { categoria: "Riesgo de Cumplimiento", puntaje: 40, descripcion: "Fiscalización municipal periódica", estrategiaMitigacion: "Mantener reportes de consumo actualizados" }
+        ],
+        probabilidadFiscalizacion: "baja",
+        responsabilidadesPotenciales: [
+          "Multas municipales por exceso de consumo",
+          "Pérdida de incentivos tributarios"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con procesos eficientes pueden convertir cumplimiento en ventaja de costos."
+      },
+      
+      analisisActores: [
+        { actor: "MML", tipo: "regulador", nivelImpacto: "medio", descripcionImpacto: "Municipalidad que fiscaliza cumplimiento", accionesRequeridas: ["Reportar consumo hídrico", "Solicitar certificación de eficiencia"], cronograma: "Trimestral" },
+        { actor: "SEDAPAL", tipo: "externo", nivelImpacto: "bajo", descripcionImpacto: "Proveedor de agua que puede proporcionar datos de consumo", accionesRequeridas: ["Coordinar instalación de medidores"], cronograma: "120 días" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Instalación de medidores diferenciados", prioridad: "alta", fechaLimite: diasAdelante(120), esfuerzoEstimado: "2-3 semanas", areaResponsable: "Operaciones" },
+        { requisito: "Reporte mensual de consumo hídrico", prioridad: "media", fechaLimite: "Mensual post-vigencia", esfuerzoEstimado: "1 día/mes", areaResponsable: "Operaciones + Ambiental" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Auditoría de Consumo Hídrico", descripcion: "Evaluar procesos productivos para identificar oportunidades de eficiencia", prioridad: "inmediata", recursosNecesarios: "Consultor ambiental (1 semana)" },
+        { titulo: "Certificación de Eficiencia", descripcion: "Obtener certificación para acceder a reducción de arbitrios", prioridad: "corto-plazo", recursosNecesarios: "Operaciones + Ambiental" }
+      ]
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-om-2567-mml"
   },
@@ -391,7 +663,51 @@ export const peruLegislationData: PeruLegislationItem[] = [
       queCambia: "Refuerza requisitos de SST en Cusco. Reduce umbral para comités de SST de 20 a 10 trabajadores. Capacitación semestral obligatoria.",
       afectados: "Empresas con operaciones en Región Cusco. SUNAFIL fiscaliza en coordinación con gobierno regional.",
       fechaClave: `Proyecto en primera lectura ${diasAtras(35)}. Pendiente de dictamen de comisión.`,
-      actoresClave: ["GRC", "SUNAFIL", "DRTPE Cusco"]
+      actoresClave: ["GRC", "SUNAFIL", "DRTPE Cusco"],
+      
+      resumenEjecutivo: "Esta ordenanza regional refuerza los requisitos de seguridad y salud en el trabajo en la Región Cusco, reduciendo umbrales para comités de SST y estableciendo capacitaciones semestrales obligatorias.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 85,
+        costoEstimadoCumplimiento: { min: 1500, max: 6000, moneda: "USD" },
+        impactoMercado: "Incremento del 10-15% en costos de capacitación SST para empresas con 10-19 trabajadores",
+        tiempoImplementacionMeses: 3,
+        rangoSanciones: { min: 1, max: 100, moneda: "UIT", unidad: "UIT (vía SUNAFIL)" },
+        puntajeComplejidad: 4
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 58,
+        desglosePorCategoria: [
+          { categoria: "Riesgo de Cumplimiento", puntaje: 65, descripcion: "SUNAFIL puede fiscalizar con base en ordenanza regional", estrategiaMitigacion: "Actualizar programa de SST con frecuencia semestral" },
+          { categoria: "Riesgo Operativo", puntaje: 55, descripcion: "Creación de comités SST en unidades más pequeñas", estrategiaMitigacion: "Capacitar supervisores como representantes de SST" },
+          { categoria: "Riesgo Financiero", puntaje: 50, descripcion: "Costos adicionales de capacitación", estrategiaMitigacion: "Utilizar capacitaciones virtuales para reducir costos" }
+        ],
+        probabilidadFiscalizacion: "media",
+        responsabilidadesPotenciales: [
+          "Multas SUNAFIL por incumplimiento de SST",
+          "Responsabilidad penal en caso de accidentes graves",
+          "Sanciones administrativas regionales"
+        ],
+        evaluacionRiesgoCompetitivo: "Empresas con programas SST robustos ya cumplen; empresas informales enfrentarán mayores costos de formalización."
+      },
+      
+      analisisActores: [
+        { actor: "GRC", tipo: "regulador", nivelImpacto: "medio", descripcionImpacto: "Gobierno Regional que emite ordenanza", accionesRequeridas: ["Registro de comités SST en sistema regional"], cronograma: "Post-aprobación" },
+        { actor: "SUNAFIL", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Fiscalizador nacional que puede actuar en coordinación", accionesRequeridas: ["Documentar cumplimiento de capacitaciones", "Mantener actas de comité SST"], cronograma: "Continuo" },
+        { actor: "RRHH", tipo: "interno", nivelImpacto: "alto", descripcionImpacto: "Debe implementar programa de capacitación semestral", accionesRequeridas: ["Diseñar calendario de capacitaciones", "Documentar asistencias"], cronograma: "Semestral" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Establecer comité SST (si aplica umbral de 10 trabajadores)", prioridad: "alta", fechaLimite: "30 días post-vigencia", esfuerzoEstimado: "2 semanas", areaResponsable: "RRHH" },
+        { requisito: "Calendario de capacitaciones semestrales", prioridad: "alta", fechaLimite: "60 días post-vigencia", esfuerzoEstimado: "2 semanas", areaResponsable: "RRHH + SST" },
+        { requisito: "Registro en sistema regional de accidentes", prioridad: "media", fechaLimite: "Continuo", esfuerzoEstimado: "1 día por evento", areaResponsable: "SST" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Revisión de Dotación en Cusco", descripcion: "Verificar número de trabajadores en operaciones de Cusco para determinar si aplica umbral de comité", prioridad: "inmediata", recursosNecesarios: "RRHH (1 día)" },
+        { titulo: "Actualización de Programa SST", descripcion: "Adaptar programa de capacitación a frecuencia semestral", prioridad: "corto-plazo", recursosNecesarios: "SST + proveedor de capacitación" }
+      ]
     },
     linkFuente: "https://busquedas.elperuano.pe/placeholder-or-198-grc"
   },
@@ -433,7 +749,63 @@ export const peruLegislationData: PeruLegislationItem[] = [
       afectados: "Fabricantes e importadores de hervidores y cafeteras que busquen certificación voluntaria o requieran cumplimiento por referencia en otro instrumento.",
       fechaClave: `NTP publicada ${diasAtras(50)}. Aplicable desde publicación.`,
       calificadorVoluntariedad: PERU_UI_LABELS.calificadorNTP,
-      actoresClave: ["INACAL", "Organismos de certificación acreditados", "Laboratorios de ensayo"]
+      actoresClave: ["INACAL", "Organismos de certificación acreditados", "Laboratorios de ensayo"],
+      
+      resumenEjecutivo: "Esta NTP adopta la norma internacional IEC 60335-2-15 para hervidores eléctricos con modificaciones nacionales, estableciendo requisitos de seguridad para protección contra sobrecalentamiento, funcionamiento en seco y estabilidad.",
+      
+      estadisticas: {
+        empresasAfectadasEstimadas: 200,
+        costoEstimadoCumplimiento: { min: 8000, max: 35000, moneda: "USD" },
+        impactoMercado: "Certificación voluntaria puede generar ventaja competitiva y facilitar exportaciones",
+        tiempoImplementacionMeses: 4,
+        puntajeComplejidad: 6
+      },
+      
+      analisisRiesgo: {
+        puntajeRiesgoGeneral: 65,
+        desglosePorCategoria: [
+          { categoria: "Riesgo Técnico", puntaje: 70, descripcion: "Productos deben cumplir ensayos específicos de seguridad", estrategiaMitigacion: "Verificar conformidad con IEC 60335-2-15 antes de certificación" },
+          { categoria: "Riesgo de Mercado", puntaje: 60, descripcion: "Grandes compradores pueden exigir certificación NTP", estrategiaMitigacion: "Obtener certificación proactivamente para acceder a licitaciones" },
+          { categoria: "Riesgo de Cumplimiento", puntaje: 55, descripcion: "Puede volverse obligatoria si se referencia en reglamento técnico", estrategiaMitigacion: "Monitorear propuestas de reglamentos técnicos del INDECOPI" }
+        ],
+        probabilidadFiscalizacion: "baja",
+        responsabilidadesPotenciales: [
+          "Pérdida de acceso a grandes clientes que exigen certificación",
+          "Posible obligatoriedad futura si se incorpora en reglamento técnico"
+        ],
+        evaluacionRiesgoCompetitivo: "Marcas certificadas tendrán ventaja en licitaciones públicas y con grandes retailers."
+      },
+      
+      analisisActores: [
+        { actor: "INACAL", tipo: "regulador", nivelImpacto: "alto", descripcionImpacto: "Organismo que emite y administra la NTP", accionesRequeridas: ["Adquirir texto oficial de la NTP"], cronograma: "Inmediato" },
+        { actor: "Laboratorios Acreditados", tipo: "externo", nivelImpacto: "alto", descripcionImpacto: "Realizan ensayos de conformidad", accionesRequeridas: ["Contratar ensayos de seguridad según NTP"], cronograma: "Previo a certificación" },
+        { actor: "Organismos de Certificación", tipo: "externo", nivelImpacto: "medio", descripcionImpacto: "Emiten certificados de conformidad", accionesRequeridas: ["Solicitar certificación de producto"], cronograma: "Post-ensayos" }
+      ],
+      
+      requisitosCumplimiento: [
+        { requisito: "Ensayos de seguridad según IEC 60335-2-15", prioridad: "alta", fechaLimite: "Voluntario", esfuerzoEstimado: "4-6 semanas", areaResponsable: "Ingeniería + Calidad" },
+        { requisito: "Documentación técnica en español", prioridad: "media", fechaLimite: "Con solicitud de certificación", esfuerzoEstimado: "2 semanas", areaResponsable: "Ingeniería" },
+        { requisito: "Marcado conforme a NTP", prioridad: "media", fechaLimite: "Post-certificación", esfuerzoEstimado: "1 semana", areaResponsable: "Producción" }
+      ],
+      
+      recomendacionesEstrategicas: [
+        { titulo: "Evaluación de Gap", descripcion: "Comparar productos actuales contra requisitos de la NTP para identificar brechas", prioridad: "inmediata", recursosNecesarios: "Ingeniería de producto (2 semanas)" },
+        { titulo: "Certificación Proactiva", descripcion: "Obtener certificación NTP para diferenciación en mercado y preparación para posible obligatoriedad", prioridad: "corto-plazo", recursosNecesarios: "Laboratorio + organismo de certificación" }
+      ],
+      
+      legislacionRelacionada: [
+        { identificador: "IEC 60335-2-15", titulo: "Household electrical appliances - Safety - Part 2-15: Particular requirements for appliances for heating liquids", relacion: "implementa", relevancia: "Norma internacional base que la NTP adopta con modificaciones nacionales." }
+      ],
+      
+      benchmarksIndustria: {
+        tiempoPromedioCumplimiento: "2-4 meses para productos ya conformes con IEC internacional",
+        nivelPreparacionIndustria: "Medio - productos de marcas internacionales generalmente cumplen; productos locales/económicos requieren evaluación",
+        tasaAdopcionCompetidores: "Marcas premium ya cuentan con certificaciones IEC; certificación NTP adicional como diferenciador local",
+        mejoresPracticas: [
+          "Utilizar resultados de ensayos IEC previos como base para certificación NTP",
+          "Mantener relación continua con laboratorio acreditado para actualizaciones"
+        ]
+      }
     },
     linkFuente: "https://catalogo.inacal.gob.pe/placeholder-ntp-60335-2-15"
   },
