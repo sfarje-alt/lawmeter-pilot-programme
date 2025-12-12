@@ -17,7 +17,7 @@ import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
 import { FilterState, Alert, BillItem } from "@/types/legislation";
 import { FilterBar } from "@/components/shared/FilterBar";
-import { ChartsPanel } from "@/components/shared/ChartsPanel";
+import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { AlertActCard } from "@/components/acts/AlertActCard";
 import { AlertActDrawer } from "@/components/acts/AlertActDrawer";
 import { BillCard } from "@/components/bills/BillCard";
@@ -640,10 +640,7 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
-            <ChartsPanel 
-              data={activeTab === "bills" ? filteredBills : filteredAlerts} 
-              type={activeTab === "bills" ? "bills" : "acts"} 
-            />
+            <AnalyticsDashboard />
           </TabsContent>
 
           <TabsContent value="media" className="mt-6">
