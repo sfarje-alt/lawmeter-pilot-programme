@@ -43,7 +43,7 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
             <img 
               src={lawmeterIcon} 
               alt="LawMeter" 
-              className="w-8 h-8 object-contain" 
+              className="w-10 h-10 object-contain" 
             />
           </div>
         ) : (
