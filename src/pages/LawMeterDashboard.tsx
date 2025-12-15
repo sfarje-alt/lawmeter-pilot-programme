@@ -146,7 +146,7 @@ const JURISDICTION_TO_COUNTRY: Record<string, "usa" | "canada" | "costa-rica" | 
 
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("legislation");
   const [selectedRegion, setSelectedRegion] = useState<RegionCode>("NAM");
@@ -156,8 +156,8 @@ export default function LawMeterDashboard() {
   const [selectedSubJurisdiction, setSelectedSubJurisdiction] = useState<string | null>(null);
   
   // New: Legislation view mode (alerts, map-insights, focus)
-  const [legislationViewMode, setLegislationViewMode] = useState<LegislationViewMode>("alerts");
-  const [analyticsFilters, setAnalyticsFilters] = useState<AnalyticsFilters>({
+  const [legislationViewMode, setLegislationViewModeState] = useState<LegislationViewMode>("alerts");
+  const [analyticsFilters, setAnalyticsFiltersState] = useState<AnalyticsFilters>({
     dateRange: "90",
     jurisdictions: [],
     riskLevels: [],
@@ -165,8 +165,49 @@ export default function LawMeterDashboard() {
     categories: [],
   });
   const [mapInsightsExpanded, setMapInsightsExpanded] = useState(false);
-  const [mapJurisdictionFilter, setMapJurisdictionFilter] = useState<string | null>(null);
-  const [mapSubdivisionFilter, setMapSubdivisionFilter] = useState<string | null>(null);
+  const [mapJurisdictionFilter, setMapJurisdictionFilterState] = useState<string | null>(null);
+  const [mapSubdivisionFilter, setMapSubdivisionFilterState] = useState<string | null>(null);
+
+  // URL-synced setters
+  const updateUrlParams = (updates: Record<string, string | null>) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === "" || value === "all" || value === "90") {
+          newParams.delete(key);
+        } else {
+          newParams.set(key, value);
+        }
+      });
+      return newParams;
+    }, { replace: true });
+  };
+
+  const setLegislationViewMode = (mode: LegislationViewMode) => {
+    setLegislationViewModeState(mode);
+    updateUrlParams({ view: mode === "alerts" ? null : mode });
+  };
+
+  const setAnalyticsFilters = (filters: AnalyticsFilters) => {
+    setAnalyticsFiltersState(filters);
+    updateUrlParams({
+      period: filters.dateRange,
+      jurisdictions: filters.jurisdictions.length > 0 ? filters.jurisdictions.join(",") : null,
+      risk: filters.riskLevels.length > 0 ? filters.riskLevels.join(",") : null,
+      lifecycle: filters.lifecycle,
+      categories: filters.categories.length > 0 ? filters.categories.join(",") : null,
+    });
+  };
+
+  const setMapJurisdictionFilter = (jurisdiction: string | null) => {
+    setMapJurisdictionFilterState(jurisdiction);
+    updateUrlParams({ country: jurisdiction });
+  };
+
+  const setMapSubdivisionFilter = (subdivision: string | null) => {
+    setMapSubdivisionFilterState(subdivision);
+    updateUrlParams({ subdivision });
+  };
   
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
@@ -324,17 +365,46 @@ export default function LawMeterDashboard() {
     setMapSubdivisionFilter(null);
   };
 
-  // Handle URL tab parameter
+  // Handle URL parameters on mount
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
     }
+    
+    // View mode
     const viewModeParam = searchParams.get('view');
     if (viewModeParam && ['alerts', 'map-insights', 'focus'].includes(viewModeParam)) {
-      setLegislationViewMode(viewModeParam as LegislationViewMode);
+      setLegislationViewModeState(viewModeParam as LegislationViewMode);
     }
-  }, [searchParams]);
+    
+    // Analytics filters
+    const periodParam = searchParams.get('period');
+    const jurisdictionsParam = searchParams.get('jurisdictions');
+    const riskParam = searchParams.get('risk');
+    const lifecycleParam = searchParams.get('lifecycle');
+    const categoriesParam = searchParams.get('categories');
+    
+    if (periodParam || jurisdictionsParam || riskParam || lifecycleParam || categoriesParam) {
+      setAnalyticsFiltersState({
+        dateRange: periodParam || "90",
+        jurisdictions: jurisdictionsParam ? jurisdictionsParam.split(",") : [],
+        riskLevels: riskParam ? riskParam.split(",") as ("high" | "medium" | "low")[] : [],
+        lifecycle: (lifecycleParam as "all" | "in-force" | "pipeline") || "all",
+        categories: categoriesParam ? categoriesParam.split(",") : [],
+      });
+    }
+    
+    // Map filters
+    const countryParam = searchParams.get('country');
+    const subdivisionParam = searchParams.get('subdivision');
+    if (countryParam) {
+      setMapJurisdictionFilterState(countryParam);
+    }
+    if (subdivisionParam) {
+      setMapSubdivisionFilterState(subdivisionParam);
+    }
+  }, []); // Only run on mount
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading legislation data...</div>;
