@@ -42,6 +42,7 @@ interface CountryAnalyticsPanelProps {
   onSelectSubdivision: (subdivision: string | null) => void;
   onBack: () => void;
   onViewAlerts: () => void;
+  showHeader?: boolean;
 }
 
 export function CountryAnalyticsPanel({
