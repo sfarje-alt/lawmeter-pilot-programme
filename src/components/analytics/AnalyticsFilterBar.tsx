@@ -30,7 +30,7 @@ export function AnalyticsFilterBar({
   totalItems,
   filteredItems,
 }: AnalyticsFilterBarProps) {
-  const hasActiveFilters = filters.lifecycle !== "all" || filters.dateRange !== "90";
+  const hasActiveFilters = filters.dateRange !== "90";
 
   const resetFilters = () => {
     onFiltersChange({
@@ -66,29 +66,6 @@ export function AnalyticsFilterBar({
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="h-6 w-px bg-border/50" />
-
-        {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Status:</span>
-          <div className="flex gap-1">
-            {(["all", "in-force", "pipeline"] as const).map((lifecycle) => (
-              <Button
-                key={lifecycle}
-                variant={filters.lifecycle === lifecycle ? "default" : "outline"}
-                size="sm"
-                onClick={() => onFiltersChange({ ...filters, lifecycle })}
-                className={cn(
-                  "text-xs",
-                  filters.lifecycle === lifecycle && "bg-primary text-primary-foreground"
-                )}
-              >
-                {lifecycle === "all" ? "All" : lifecycle === "in-force" ? "In Force" : "Pipeline"}
-              </Button>
-            ))}
-          </div>
         </div>
 
         <div className="flex-1" />

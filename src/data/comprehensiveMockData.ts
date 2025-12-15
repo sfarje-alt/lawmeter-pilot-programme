@@ -4,21 +4,23 @@
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { subDays, format } from "date-fns";
 
+// Each jurisdiction has a risk profile that determines the distribution of risk levels
+// This creates natural variation in colors across the map
 const JURISDICTIONS = [
-  { code: "USA", region: "NAM" as const },
-  { code: "Canada", region: "NAM" as const },
-  { code: "Japan", region: "APAC" as const },
-  { code: "Korea", region: "APAC" as const },
-  { code: "Taiwan", region: "APAC" as const },
-  { code: "EU", region: "EU" as const },
-  { code: "UAE", region: "GCC" as const },
-  { code: "Saudi Arabia", region: "GCC" as const },
-  { code: "Oman", region: "GCC" as const },
-  { code: "Kuwait", region: "GCC" as const },
-  { code: "Bahrain", region: "GCC" as const },
-  { code: "Qatar", region: "GCC" as const },
-  { code: "Peru", region: "LATAM" as const },
-  { code: "Costa Rica", region: "LATAM" as const },
+  { code: "USA", region: "NAM" as const, riskProfile: { high: 0.5, medium: 0.3, low: 0.2 } },
+  { code: "Canada", region: "NAM" as const, riskProfile: { high: 0.2, medium: 0.5, low: 0.3 } },
+  { code: "Japan", region: "APAC" as const, riskProfile: { high: 0.1, medium: 0.3, low: 0.6 } },
+  { code: "Korea", region: "APAC" as const, riskProfile: { high: 0.3, medium: 0.4, low: 0.3 } },
+  { code: "Taiwan", region: "APAC" as const, riskProfile: { high: 0.15, medium: 0.35, low: 0.5 } },
+  { code: "EU", region: "EU" as const, riskProfile: { high: 0.4, medium: 0.4, low: 0.2 } },
+  { code: "UAE", region: "GCC" as const, riskProfile: { high: 0.25, medium: 0.35, low: 0.4 } },
+  { code: "Saudi Arabia", region: "GCC" as const, riskProfile: { high: 0.35, medium: 0.4, low: 0.25 } },
+  { code: "Oman", region: "GCC" as const, riskProfile: { high: 0.1, medium: 0.25, low: 0.65 } },
+  { code: "Kuwait", region: "GCC" as const, riskProfile: { high: 0.15, medium: 0.4, low: 0.45 } },
+  { code: "Bahrain", region: "GCC" as const, riskProfile: { high: 0.2, medium: 0.3, low: 0.5 } },
+  { code: "Qatar", region: "GCC" as const, riskProfile: { high: 0.3, medium: 0.35, low: 0.35 } },
+  { code: "Peru", region: "LATAM" as const, riskProfile: { high: 0.2, medium: 0.45, low: 0.35 } },
+  { code: "Costa Rica", region: "LATAM" as const, riskProfile: { high: 0.15, medium: 0.35, low: 0.5 } },
 ];
 
 const RISK_LEVELS: ("high" | "medium" | "low")[] = ["high", "medium", "low"];
@@ -36,12 +38,23 @@ const LIFECYCLE_STATES = [
   { isInForce: false, isPipeline: true, genericStatus: "proposal" as const }
 ];
 
-// Date ranges: 7d, 30d, 90d
+// Date ranges: 7d, 30d, 90d - varied per jurisdiction
 const DATE_WINDOWS = [
-  { days: 3, label: "recent" },   // Within 7 days
-  { days: 15, label: "monthly" }, // Within 30 days
-  { days: 60, label: "quarterly" } // Within 90 days
+  { days: 2, label: "7d" },    // Within 7 days
+  { days: 5, label: "7d-2" },  // Within 7 days
+  { days: 12, label: "30d" },  // Within 30 days
+  { days: 25, label: "30d-2" }, // Within 30 days
+  { days: 45, label: "90d" },  // Within 90 days
+  { days: 75, label: "90d-2" } // Within 90 days
 ];
+
+// Function to select risk level based on jurisdiction's risk profile
+function selectRiskLevel(profile: { high: number; medium: number; low: number }, seed: number): "high" | "medium" | "low" {
+  const rand = (seed % 100) / 100;
+  if (rand < profile.high) return "high";
+  if (rand < profile.high + profile.medium) return "medium";
+  return "low";
+}
 
 function generateItemTitle(category: string, jurisdiction: string, isInForce: boolean): string {
   const action = isInForce ? "Regulation" : "Proposed Rule";
@@ -118,42 +131,48 @@ function generateComprehensiveItem(
   };
 }
 
-// Generate comprehensive data ensuring all filter combinations are covered
+// Generate comprehensive data with VARIED risk levels per jurisdiction
 export function generateComprehensiveMockData(): UnifiedLegislationItem[] {
   const items: UnifiedLegislationItem[] = [];
+  let seedCounter = 0;
   
-  // For each jurisdiction, create COMPLETE coverage of all filter combinations
-  JURISDICTIONS.forEach(jurisdiction => {
-    // Create items for EVERY combination of risk level, category, lifecycle, and date window
-    RISK_LEVELS.forEach(riskLevel => {
-      CATEGORIES.forEach(category => {
-        LIFECYCLE_STATES.forEach(lifecycle => {
-          DATE_WINDOWS.forEach(dateWindow => {
-            items.push(generateComprehensiveItem(
-              jurisdiction,
-              riskLevel,
-              category,
-              lifecycle,
-              dateWindow
-            ));
-          });
+  // For each jurisdiction, create items with risk levels based on their profile
+  JURISDICTIONS.forEach((jurisdiction, jIdx) => {
+    // Create items for each date window to ensure all time periods have data
+    DATE_WINDOWS.forEach((dateWindow, dwIdx) => {
+      CATEGORIES.forEach((category, cIdx) => {
+        LIFECYCLE_STATES.forEach((lifecycle, lIdx) => {
+          // Use jurisdiction's risk profile to determine risk level
+          seedCounter++;
+          const seed = (jIdx * 100 + dwIdx * 10 + cIdx + lIdx + seedCounter) % 100;
+          const riskLevel = selectRiskLevel(jurisdiction.riskProfile, seed);
+          
+          items.push(generateComprehensiveItem(
+            jurisdiction,
+            riskLevel,
+            category,
+            lifecycle,
+            dateWindow
+          ));
         });
       });
     });
     
-    // Add extra high-value items for better analytics visualization
-    // Additional recent items (last 7 days) for each jurisdiction
-    for (let i = 0; i < 5; i++) {
-      const riskLevel = RISK_LEVELS[i % RISK_LEVELS.length];
+    // Add extra items for each jurisdiction to ensure visible presence
+    // These use the jurisdiction's risk profile for natural variation
+    for (let i = 0; i < 8; i++) {
+      seedCounter++;
+      const riskLevel = selectRiskLevel(jurisdiction.riskProfile, seedCounter);
       const category = CATEGORIES[i % CATEGORIES.length];
       const lifecycle = LIFECYCLE_STATES[i % LIFECYCLE_STATES.length];
+      const dateWindow = DATE_WINDOWS[i % DATE_WINDOWS.length];
       
       items.push(generateComprehensiveItem(
         jurisdiction,
         riskLevel,
         category,
         lifecycle,
-        { days: 1 + i, label: `urgent-${i}` }
+        dateWindow
       ));
     }
   });
