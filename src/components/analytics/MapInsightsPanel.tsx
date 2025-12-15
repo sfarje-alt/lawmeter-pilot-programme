@@ -17,25 +17,6 @@ import { CountryAnalyticsPanel } from "./CountryAnalyticsPanel";
 import { UnifiedImpactUrgencyMatrix } from "./UnifiedImpactUrgencyMatrix";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { AnalyticsFilters, AnalyticsFilterBar } from "./AnalyticsFilterBar";
-import { 
-  usStateBills, 
-  canadaLegislation, 
-  japanLegislation, 
-  koreaLegislation, 
-  taiwanLegislation,
-  euRegulations,
-  euDirectives,
-  euParliament,
-  euCouncil,
-  uaeLegislation,
-  saudiLegislation,
-  omanLegislation,
-  kuwaitLegislation,
-  bahrainLegislation,
-  qatarLegislation,
-  peruLegislation,
-  costaRicaLegislation
-} from "@/data/mockInternationalLegislation";
 
 // Country display info
 const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
@@ -94,26 +75,66 @@ export function MapInsightsPanel({
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
   const [selectedSubdivision, setSelectedSubdivision] = useState<string | null>(null);
 
-  // All legislation for the map
-  const allLegislation = useMemo(() => [
-    ...usStateBills,
-    ...canadaLegislation,
-    ...japanLegislation,
-    ...koreaLegislation,
-    ...taiwanLegislation,
-    ...euRegulations,
-    ...euDirectives,
-    ...euParliament,
-    ...euCouncil,
-    ...uaeLegislation,
-    ...saudiLegislation,
-    ...omanLegislation,
-    ...kuwaitLegislation,
-    ...bahrainLegislation,
-    ...qatarLegislation,
-    ...peruLegislation,
-    ...costaRicaLegislation
-  ], []);
+  // Convert filtered UnifiedLegislationItem data to InternationalLegislation format for WorldMap
+  const filteredLegislationForMap = useMemo(() => {
+    // Apply filters first, then convert to map format
+    let result = [...data];
+
+    // Date range filter
+    if (filters.dateRange !== "all") {
+      const days = parseInt(filters.dateRange);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      result = result.filter((item) => {
+        const itemDate = new Date(item.publishedDate || item.effectiveDate || "");
+        return itemDate >= cutoffDate;
+      });
+    }
+
+    // Risk level filter
+    if (filters.riskLevels.length > 0) {
+      result = result.filter((item) => filters.riskLevels.includes(item.riskLevel));
+    }
+
+    // Lifecycle filter
+    if (filters.lifecycle !== "all") {
+      if (filters.lifecycle === "in-force") {
+        result = result.filter((item) => item.isInForce);
+      } else if (filters.lifecycle === "pipeline") {
+        result = result.filter((item) => item.isPipeline);
+      }
+    }
+
+    // Category filter
+    if (filters.categories.length > 0) {
+      result = result.filter(
+        (item) =>
+          item.regulatoryCategory && filters.categories.includes(item.regulatoryCategory)
+      );
+    }
+
+    // Convert to InternationalLegislation format for WorldMap
+    return result.map((item) => ({
+      id: item.id,
+      title: item.title,
+      summary: item.summary || "",
+      bullets: item.bullets || [],
+      status: item.status,
+      jurisdiction: item.region as string,
+      subJurisdiction: item.subnationalUnit,
+      riskLevel: item.riskLevel,
+      riskScore: item.riskScore,
+      category: item.policyArea || "General",
+      regulatoryCategory: (item.regulatoryCategory || "Product Safety") as any,
+      publishedDate: item.publishedDate || new Date().toISOString().slice(0, 10),
+      effectiveDate: item.effectiveDate,
+      complianceDeadline: item.complianceDeadline,
+      regulatoryBody: item.authority,
+      impactAreas: item.impactAreas || [],
+      legislationType: "enacted" as any,
+      legislativeCategory: "enacted" as any,
+    }));
+  }, [data, filters]);
 
   // Apply global filters to data
   const filteredData = useMemo(() => {
@@ -247,7 +268,7 @@ export function MapInsightsPanel({
           <div className={`grid gap-4 ${isExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
             <div className={isExpanded ? "" : "lg:col-span-2"}>
               <WorldMap
-                legislation={allLegislation}
+                legislation={filteredLegislationForMap}
                 onSelectRegion={handleMapSelectRegion}
                 onSelectSubJurisdiction={(jurisdiction, sub) => {
                   const mappedKey = JURISDICTION_DATA_MAP[jurisdiction] || jurisdiction;

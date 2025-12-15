@@ -1,31 +1,41 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronRight, TrendingUp, AlertTriangle } from "lucide-react";
+import { ChevronRight, TrendingUp } from "lucide-react";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
+import { RegionIcon, regionThemes, RegionCode } from "@/components/regions/RegionConfig";
 import { cn } from "@/lib/utils";
 
-// ISO 3166-1 alpha-2 country codes with display labels
-const JURISDICTION_LABELS: Record<string, { flag: string; name: string; iso: string }> = {
-  "USA": { flag: "🇺🇸", name: "United States", iso: "US" },
-  "Canada": { flag: "🇨🇦", name: "Canada", iso: "CA" },
-  "Japan": { flag: "🇯🇵", name: "Japan", iso: "JP" },
-  "Korea": { flag: "🇰🇷", name: "South Korea", iso: "KR" },
-  "Taiwan": { flag: "🇹🇼", name: "Taiwan", iso: "TW" },
-  "EU": { flag: "🇪🇺", name: "European Union", iso: "EU" },
-  "UAE": { flag: "🇦🇪", name: "United Arab Emirates", iso: "AE" },
-  "Saudi Arabia": { flag: "🇸🇦", name: "Saudi Arabia", iso: "SA" },
-  "Oman": { flag: "🇴🇲", name: "Oman", iso: "OM" },
-  "Kuwait": { flag: "🇰🇼", name: "Kuwait", iso: "KW" },
-  "Bahrain": { flag: "🇧🇭", name: "Bahrain", iso: "BH" },
-  "Qatar": { flag: "🇶🇦", name: "Qatar", iso: "QA" },
-  "Peru": { flag: "🇵🇪", name: "Peru", iso: "PE" },
-  "Costa Rica": { flag: "🇨🇷", name: "Costa Rica", iso: "CR" },
+// Map jurisdiction regions to commercial region codes
+const JURISDICTION_TO_REGION: Record<string, RegionCode> = {
+  "USA": "NAM",
+  "Canada": "NAM",
+  "Japan": "APAC",
+  "Korea": "APAC",
+  "Taiwan": "APAC",
+  "EU": "EU",
+  "UAE": "GCC",
+  "Saudi Arabia": "GCC",
+  "Oman": "GCC",
+  "Kuwait": "GCC",
+  "Bahrain": "GCC",
+  "Qatar": "GCC",
+  "Peru": "LATAM",
+  "Costa Rica": "LATAM",
 };
 
-interface JurisdictionStats {
-  jurisdiction: string;
+// Region display names
+const REGION_NAMES: Record<RegionCode, string> = {
+  NAM: "North America",
+  LATAM: "Latin America",
+  EU: "European Union",
+  GCC: "Gulf States",
+  APAC: "Asia-Pacific",
+};
+
+interface RegionStats {
+  region: RegionCode;
+  name: string;
   total: number;
   high: number;
   medium: number;
@@ -46,22 +56,31 @@ export function TopJurisdictionsList({
   selectedJurisdiction,
   maxItems = 10,
 }: TopJurisdictionsListProps) {
-  const jurisdictionStats = useMemo(() => {
-    const stats = new Map<string, JurisdictionStats>();
+  // Aggregate by commercial region (NAM, LATAM, EU, GCC, APAC)
+  const regionStats = useMemo(() => {
+    const stats = new Map<RegionCode, RegionStats>();
+
+    // Initialize all regions
+    (["NAM", "LATAM", "EU", "GCC", "APAC"] as RegionCode[]).forEach((region) => {
+      stats.set(region, {
+        region,
+        name: REGION_NAMES[region],
+        total: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        activityIndex: 0,
+      });
+    });
 
     data.forEach((item) => {
-      const key = item.region;
-      if (!stats.has(key)) {
-        stats.set(key, {
-          jurisdiction: key,
-          total: 0,
-          high: 0,
-          medium: 0,
-          low: 0,
-          activityIndex: 0,
-        });
-      }
-      const s = stats.get(key)!;
+      // Map item's region to commercial region
+      const commercialRegion = JURISDICTION_TO_REGION[item.region] || 
+        (item.region as RegionCode in REGION_NAMES ? item.region as RegionCode : null);
+      
+      if (!commercialRegion || !stats.has(commercialRegion)) return;
+
+      const s = stats.get(commercialRegion)!;
       s.total++;
       if (item.riskLevel === "high") s.high++;
       else if (item.riskLevel === "medium") s.medium++;
@@ -74,11 +93,21 @@ export function TopJurisdictionsList({
     });
 
     return Array.from(stats.values())
+      .filter((s) => s.total > 0) // Only show regions with data
       .sort((a, b) => b.activityIndex - a.activityIndex)
       .slice(0, maxItems);
   }, [data, maxItems]);
 
-  const maxActivity = jurisdictionStats[0]?.activityIndex || 1;
+  const maxActivity = regionStats[0]?.activityIndex || 1;
+
+  // Map region back to a representative jurisdiction for navigation
+  const regionToJurisdiction: Record<RegionCode, string> = {
+    NAM: "USA",
+    LATAM: "Costa Rica",
+    EU: "EU",
+    GCC: "UAE",
+    APAC: "Japan",
+  };
 
   return (
     <Card className="glass-card">
@@ -90,19 +119,16 @@ export function TopJurisdictionsList({
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border/50">
-          {jurisdictionStats.map((stat) => {
-            const info = JURISDICTION_LABELS[stat.jurisdiction] || {
-              flag: "🌍",
-              name: stat.jurisdiction,
-              iso: stat.jurisdiction.slice(0, 2).toUpperCase(),
-            };
-            const isSelected = selectedJurisdiction === stat.jurisdiction;
+          {regionStats.map((stat) => {
+            const theme = regionThemes[stat.region];
             const barWidth = (stat.activityIndex / maxActivity) * 100;
+            const isSelected = selectedJurisdiction && 
+              JURISDICTION_TO_REGION[selectedJurisdiction] === stat.region;
 
             return (
               <button
-                key={stat.jurisdiction}
-                onClick={() => onSelectJurisdiction(stat.jurisdiction)}
+                key={stat.region}
+                onClick={() => onSelectJurisdiction(regionToJurisdiction[stat.region])}
                 className={cn(
                   "w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors relative",
                   isSelected && "bg-primary/10"
@@ -110,16 +136,20 @@ export function TopJurisdictionsList({
               >
                 {/* Activity bar background */}
                 <div
-                  className="absolute inset-y-0 left-0 bg-primary/10 transition-all"
-                  style={{ width: `${barWidth}%` }}
+                  className="absolute inset-y-0 left-0 transition-all opacity-20"
+                  style={{ 
+                    width: `${barWidth}%`,
+                    backgroundColor: theme.primaryColor
+                  }}
                 />
 
                 <div className="relative flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-lg">{info.flag}</span>
+                    <RegionIcon region={stat.region} size={20} showCode={false} />
                     <div className="min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {info.name}
+                      <div className="font-medium text-sm truncate flex items-center gap-2">
+                        <span style={{ color: theme.primaryColor }}>{stat.region}</span>
+                        <span className="text-muted-foreground font-normal">{stat.name}</span>
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {stat.total} items • Index: {stat.activityIndex}
@@ -127,11 +157,11 @@ export function TopJurisdictionsList({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {stat.high > 0 && (
                       <Badge
                         variant="outline"
-                        className="bg-risk-high/20 border-risk-high/30 text-risk-high text-xs px-1.5"
+                        className="bg-risk-high/20 border-risk-high/50 text-risk-high text-xs px-2 min-w-[28px] justify-center"
                       >
                         {stat.high}
                       </Badge>
@@ -139,7 +169,7 @@ export function TopJurisdictionsList({
                     {stat.medium > 0 && (
                       <Badge
                         variant="outline"
-                        className="bg-risk-medium/20 border-risk-medium/30 text-risk-medium text-xs px-1.5"
+                        className="bg-risk-medium/20 border-risk-medium/50 text-risk-medium text-xs px-2 min-w-[28px] justify-center"
                       >
                         {stat.medium}
                       </Badge>
@@ -147,12 +177,12 @@ export function TopJurisdictionsList({
                     {stat.low > 0 && (
                       <Badge
                         variant="outline"
-                        className="bg-risk-low/20 border-risk-low/30 text-risk-low text-xs px-1.5"
+                        className="bg-risk-low/20 border-risk-low/50 text-risk-low text-xs px-2 min-w-[28px] justify-center"
                       >
                         {stat.low}
                       </Badge>
                     )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-1" />
                   </div>
                 </div>
               </button>
@@ -160,9 +190,9 @@ export function TopJurisdictionsList({
           })}
         </div>
 
-        {jurisdictionStats.length === 0 && (
+        {regionStats.length === 0 && (
           <div className="px-4 py-8 text-center text-muted-foreground text-sm">
-            No jurisdiction data available
+            No jurisdiction data available for current filters
           </div>
         )}
       </CardContent>
