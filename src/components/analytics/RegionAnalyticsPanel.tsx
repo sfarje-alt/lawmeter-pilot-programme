@@ -42,6 +42,7 @@ interface RegionAnalyticsPanelProps {
   onSelectCountry: (country: string | null) => void;
   onBack: () => void;
   onViewAlerts: () => void;
+  showHeader?: boolean;
 }
 
 export function RegionAnalyticsPanel({

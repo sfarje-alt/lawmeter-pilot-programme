@@ -245,45 +245,67 @@ export function MapInsightsPanel({
 
       {/* Content */}
       {activeTab === "map" ? (
-        selectedJurisdiction ? (
-          isSelectedRegion ? (
-            // Region drill-down view with countries
-            <RegionAnalyticsPanel
-              regionKey={selectedJurisdiction as RegionCode}
-              regionName={regionInfo?.name || selectedJurisdiction}
-              data={filteredData}
-              selectedCountry={selectedSubdivision}
-              onSelectCountry={setSelectedSubdivision}
-              onBack={handleBackToMap}
-              onViewAlerts={handleViewAlerts}
+        <div className="space-y-4">
+          {/* Map always visible at top */}
+          <div className="w-full">
+            <WorldMap
+              legislation={filteredLegislationForMap}
+              onSelectRegion={handleMapSelectRegion}
+              onSelectSubJurisdiction={(jurisdiction, sub) => {
+                const mappedKey = JURISDICTION_DATA_MAP[jurisdiction] || jurisdiction;
+                setSelectedJurisdiction(mappedKey);
+                setSelectedSubdivision(sub);
+              }}
             />
-          ) : (
-            // Country drill-down view with subdivisions
-            <CountryAnalyticsPanel
-              countryKey={selectedJurisdiction}
-              countryName={countryInfo?.name || selectedJurisdiction}
-              countryFlag={countryInfo?.flag || "🌍"}
-              data={countryData}
-              selectedSubdivision={selectedSubdivision}
-              onSelectSubdivision={setSelectedSubdivision}
-              onBack={handleBackToMap}
-              onViewAlerts={handleViewAlerts}
-            />
-          )
-        ) : (
-          // World map view - full width with Top Jurisdictions below
-          <div className="space-y-4">
-            <div className="w-full">
-              <WorldMap
-                legislation={filteredLegislationForMap}
-                onSelectRegion={handleMapSelectRegion}
-                onSelectSubJurisdiction={(jurisdiction, sub) => {
-                  const mappedKey = JURISDICTION_DATA_MAP[jurisdiction] || jurisdiction;
-                  setSelectedJurisdiction(mappedKey);
-                  setSelectedSubdivision(sub);
-                }}
-              />
+          </div>
+
+          {/* Selected jurisdiction indicator */}
+          {selectedJurisdiction && (
+            <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+              {isSelectedRegion ? (
+                <RegionIcon region={selectedJurisdiction as RegionCode} size={24} />
+              ) : (
+                <span className="text-xl">{countryInfo?.flag || "🌍"}</span>
+              )}
+              <span className="font-medium">
+                Viewing: {isSelectedRegion ? regionInfo?.name : countryInfo?.name || selectedJurisdiction}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleBackToMap} className="ml-auto">
+                Clear Selection
+              </Button>
             </div>
+          )}
+
+          {/* Analytics section below map */}
+          {selectedJurisdiction ? (
+            isSelectedRegion ? (
+              // Region analytics
+              <RegionAnalyticsPanel
+                regionKey={selectedJurisdiction as RegionCode}
+                regionName={regionInfo?.name || selectedJurisdiction}
+                data={filteredData}
+                selectedCountry={selectedSubdivision}
+                onSelectCountry={setSelectedSubdivision}
+                onBack={handleBackToMap}
+                onViewAlerts={handleViewAlerts}
+                showHeader={false}
+              />
+            ) : (
+              // Country analytics
+              <CountryAnalyticsPanel
+                countryKey={selectedJurisdiction}
+                countryName={countryInfo?.name || selectedJurisdiction}
+                countryFlag={countryInfo?.flag || "🌍"}
+                data={countryData}
+                selectedSubdivision={selectedSubdivision}
+                onSelectSubdivision={setSelectedSubdivision}
+                onBack={handleBackToMap}
+                onViewAlerts={handleViewAlerts}
+                showHeader={false}
+              />
+            )
+          ) : (
+            // Top Jurisdictions list when no selection
             <TopJurisdictionsList
               data={filteredData}
               onSelectJurisdiction={(key) => {
@@ -292,8 +314,8 @@ export function MapInsightsPanel({
               }}
               selectedJurisdiction={selectedJurisdiction}
             />
-          </div>
-        )
+          )}
+        </div>
       ) : (
         // Impact vs Urgency Matrix (always global)
         <div>
