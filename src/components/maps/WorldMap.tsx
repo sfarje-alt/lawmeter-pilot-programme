@@ -371,11 +371,13 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
     const jurisdiction = countryNameToJurisdiction[countryName];
     if (!jurisdiction) return;
     
-    // EU member states - direct navigation (no zoom, treat as single region)
+    // ALWAYS notify parent when a country is clicked (for analytics)
+    if (onSelectRegion) {
+      onSelectRegion(jurisdiction);
+    }
+    
+    // EU member states - no zoom, treat as single region
     if (jurisdiction === "eu") {
-      if (onSelectRegion) {
-        onSelectRegion("eu");
-      }
       return;
     }
     
@@ -393,11 +395,6 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
         if (config) {
           setPosition({ coordinates: config.center, zoom: 1 });
         }
-      }
-    } else {
-      // Direct navigation for non-zoomable jurisdictions
-      if (onSelectRegion) {
-        onSelectRegion(jurisdiction);
       }
     }
   }, [onSelectRegion]);

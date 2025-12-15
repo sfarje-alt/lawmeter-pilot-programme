@@ -10,42 +10,42 @@ import { CountryAnalyticsPanel } from "./CountryAnalyticsPanel";
 import { RegionAnalyticsPanel } from "./RegionAnalyticsPanel";
 import { UnifiedImpactUrgencyMatrix } from "./UnifiedImpactUrgencyMatrix";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
-import { AnalyticsFilters, AnalyticsFilterBar } from "./AnalyticsFilterBar";
+import { AnalyticsFilters } from "./AnalyticsFilterBar";
 import { RegionCode, regionThemes, RegionIcon } from "@/components/regions/RegionConfig";
 
-// Country display info
-const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
-  "USA": { flag: "🇺🇸", name: "United States" },
-  "Canada": { flag: "🇨🇦", name: "Canada" },
-  "Japan": { flag: "🇯🇵", name: "Japan" },
-  "Korea": { flag: "🇰🇷", name: "South Korea" },
-  "Taiwan": { flag: "🇹🇼", name: "Taiwan" },
-  "EU": { flag: "🇪🇺", name: "European Union" },
-  "UAE": { flag: "🇦🇪", name: "United Arab Emirates" },
-  "Saudi Arabia": { flag: "🇸🇦", name: "Saudi Arabia" },
-  "Oman": { flag: "🇴🇲", name: "Oman" },
-  "Kuwait": { flag: "🇰🇼", name: "Kuwait" },
-  "Bahrain": { flag: "🇧🇭", name: "Bahrain" },
-  "Qatar": { flag: "🇶🇦", name: "Qatar" },
-  "Peru": { flag: "🇵🇪", name: "Peru" },
-  "Costa Rica": { flag: "🇨🇷", name: "Costa Rica" },
+// Country display info with commercial region mapping
+const COUNTRY_INFO: Record<string, { flag: string; name: string; region: RegionCode }> = {
+  "USA": { flag: "🇺🇸", name: "United States", region: "NAM" },
+  "Canada": { flag: "🇨🇦", name: "Canada", region: "NAM" },
+  "Japan": { flag: "🇯🇵", name: "Japan", region: "APAC" },
+  "Korea": { flag: "🇰🇷", name: "South Korea", region: "APAC" },
+  "Taiwan": { flag: "🇹🇼", name: "Taiwan", region: "APAC" },
+  "EU": { flag: "🇪🇺", name: "European Union", region: "EU" },
+  "UAE": { flag: "🇦🇪", name: "United Arab Emirates", region: "GCC" },
+  "Saudi Arabia": { flag: "🇸🇦", name: "Saudi Arabia", region: "GCC" },
+  "Oman": { flag: "🇴🇲", name: "Oman", region: "GCC" },
+  "Kuwait": { flag: "🇰🇼", name: "Kuwait", region: "GCC" },
+  "Bahrain": { flag: "🇧🇭", name: "Bahrain", region: "GCC" },
+  "Qatar": { flag: "🇶🇦", name: "Qatar", region: "GCC" },
+  "Peru": { flag: "🇵🇪", name: "Peru", region: "LATAM" },
+  "Costa Rica": { flag: "🇨🇷", name: "Costa Rica", region: "LATAM" },
 };
 
 // Region display info
-const REGION_INFO: Record<string, { name: string; countries: string[] }> = {
-  "NAM": { name: "North America", countries: ["USA", "Canada"] },
-  "LATAM": { name: "Latin America", countries: ["Peru", "Costa Rica"] },
-  "EU": { name: "European Union", countries: ["EU"] },
-  "GCC": { name: "Gulf States", countries: ["UAE", "Saudi Arabia", "Oman", "Kuwait", "Bahrain", "Qatar"] },
-  "APAC": { name: "Asia-Pacific", countries: ["Japan", "Korea", "Taiwan"] },
+const REGION_INFO: Record<RegionCode, { name: string; countries: string[] }> = {
+  NAM: { name: "North America", countries: ["USA", "Canada"] },
+  LATAM: { name: "Latin America", countries: ["Peru", "Costa Rica"] },
+  EU: { name: "European Union", countries: ["EU"] },
+  GCC: { name: "Gulf States", countries: ["UAE", "Saudi Arabia", "Oman", "Kuwait", "Bahrain", "Qatar"] },
+  APAC: { name: "Asia-Pacific", countries: ["Japan", "Korea", "Taiwan"] },
 };
 
-// Check if key is a region
+// Check if key is a commercial region
 const isRegionKey = (key: string): key is RegionCode => {
   return ["NAM", "LATAM", "EU", "GCC", "APAC"].includes(key);
 };
 
-// Map old jurisdiction names to data keys
+// Map WorldMap jurisdiction codes to our data keys
 const JURISDICTION_DATA_MAP: Record<string, string> = {
   "usa": "USA",
   "canada": "Canada",
@@ -77,12 +77,14 @@ export function MapInsightsPanel({
   onNavigateToAlerts,
 }: MapInsightsPanelProps) {
   const [activeTab, setActiveTab] = useState<"map" | "matrix">("map");
-  const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
+  // selectedRegion is always a commercial region (NAM, LATAM, EU, GCC, APAC)
+  const [selectedRegion, setSelectedRegion] = useState<RegionCode | null>(null);
+  // selectedCountry is the country within the region (USA, Canada, Japan, etc.)
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedSubdivision, setSelectedSubdivision] = useState<string | null>(null);
 
   // Convert filtered UnifiedLegislationItem data to InternationalLegislation format for WorldMap
   const filteredLegislationForMap = useMemo(() => {
-    // Apply filters first, then convert to map format
     let result = [...data];
 
     // Date range filter
@@ -91,14 +93,13 @@ export function MapInsightsPanel({
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       result = result.filter((item) => {
-        // If no publishedDate, include the item
         if (!item.publishedDate && !item.effectiveDate) return true;
         const itemDate = new Date(item.publishedDate || item.effectiveDate || "");
         return !isNaN(itemDate.getTime()) && itemDate >= cutoffDate;
       });
     }
 
-    // Lifecycle filter (Status)
+    // Lifecycle filter
     if (filters.lifecycle !== "all") {
       if (filters.lifecycle === "in-force") {
         result = result.filter((item) => item.isInForce);
@@ -107,14 +108,14 @@ export function MapInsightsPanel({
       }
     }
 
-    // Convert to InternationalLegislation format for WorldMap
+    // Convert to WorldMap format
     return result.map((item) => ({
       id: item.id,
       title: item.title,
       summary: item.summary || "",
       bullets: item.bullets || [],
       status: item.status,
-      jurisdiction: item.jurisdictionCode || item.region as string,
+      jurisdiction: item.jurisdictionCode || (item.region as string),
       subJurisdiction: item.subnationalUnit,
       riskLevel: item.riskLevel,
       riskScore: item.riskScore,
@@ -130,24 +131,21 @@ export function MapInsightsPanel({
     }));
   }, [data, filters]);
 
-  // Apply global filters to data (only Period and Status)
+  // Apply global filters to data
   const filteredData = useMemo(() => {
     let result = [...data];
 
-    // Date range filter
     if (filters.dateRange !== "all") {
       const days = parseInt(filters.dateRange);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       result = result.filter((item) => {
-        // If no publishedDate, include the item (don't filter it out)
         if (!item.publishedDate && !item.effectiveDate) return true;
         const itemDate = new Date(item.publishedDate || item.effectiveDate || "");
         return !isNaN(itemDate.getTime()) && itemDate >= cutoffDate;
       });
     }
 
-    // Lifecycle filter (Status)
     if (filters.lifecycle !== "all") {
       if (filters.lifecycle === "in-force") {
         result = result.filter((item) => item.isInForce);
@@ -159,49 +157,42 @@ export function MapInsightsPanel({
     return result;
   }, [data, filters]);
 
-  // Check if selected jurisdiction is a commercial region
-  const isSelectedRegion = selectedJurisdiction ? isRegionKey(selectedJurisdiction) : false;
-  
-  // Region info for display
-  const regionInfo = selectedJurisdiction && isSelectedRegion
-    ? REGION_INFO[selectedJurisdiction]
-    : null;
-
-  // Country-specific data (when a country is selected, not a region)
-  const countryData = useMemo(() => {
-    if (!selectedJurisdiction) return [];
+  // Handle map country click - determines region and pre-selects country
+  const handleMapSelectRegion = (jurisdictionCode: string) => {
+    const countryKey = JURISDICTION_DATA_MAP[jurisdictionCode] || jurisdictionCode;
+    const countryInfo = COUNTRY_INFO[countryKey];
     
-    // If it's a region, filter by region field
-    if (isSelectedRegion) {
-      return filteredData.filter((item) => item.region === selectedJurisdiction);
+    if (countryInfo) {
+      // Set the commercial region and pre-select the country
+      setSelectedRegion(countryInfo.region);
+      setSelectedCountry(countryKey);
+      setSelectedSubdivision(null);
     }
-    
-    // Otherwise filter by jurisdictionCode (country)
-    return filteredData.filter((item) => item.jurisdictionCode === selectedJurisdiction);
-  }, [filteredData, selectedJurisdiction, isSelectedRegion]);
+  };
 
-  const handleMapSelectRegion = (region: string) => {
-    const mappedKey = JURISDICTION_DATA_MAP[region] || region;
-    setSelectedJurisdiction(mappedKey);
-    setSelectedSubdivision(null);
+  // Handle region selection from TopJurisdictionsList
+  const handleSelectRegion = (regionKey: string) => {
+    if (isRegionKey(regionKey)) {
+      setSelectedRegion(regionKey);
+      setSelectedCountry(null);
+      setSelectedSubdivision(null);
+    }
   };
 
   const handleBackToMap = () => {
-    setSelectedJurisdiction(null);
+    setSelectedRegion(null);
+    setSelectedCountry(null);
     setSelectedSubdivision(null);
   };
 
   const handleViewAlerts = () => {
-    onNavigateToAlerts(selectedJurisdiction || undefined, selectedSubdivision || undefined);
+    onNavigateToAlerts(selectedCountry || selectedRegion || undefined, selectedSubdivision || undefined);
   };
 
-  const countryInfo = selectedJurisdiction && !isSelectedRegion
-    ? COUNTRY_INFO[selectedJurisdiction] || { flag: "🌍", name: selectedJurisdiction }
-    : null;
+  const regionInfo = selectedRegion ? REGION_INFO[selectedRegion] : null;
 
   return (
     <div className="space-y-4">
-
       {/* Tab Toggle */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "map" | "matrix")}>
         <TabsList className="bg-muted/50">
@@ -225,23 +216,24 @@ export function MapInsightsPanel({
               legislation={filteredLegislationForMap}
               onSelectRegion={handleMapSelectRegion}
               onSelectSubJurisdiction={(jurisdiction, sub) => {
-                const mappedKey = JURISDICTION_DATA_MAP[jurisdiction] || jurisdiction;
-                setSelectedJurisdiction(mappedKey);
-                setSelectedSubdivision(sub);
+                const countryKey = JURISDICTION_DATA_MAP[jurisdiction] || jurisdiction;
+                const countryInfo = COUNTRY_INFO[countryKey];
+                if (countryInfo) {
+                  setSelectedRegion(countryInfo.region);
+                  setSelectedCountry(countryKey);
+                  setSelectedSubdivision(sub);
+                }
               }}
             />
           </div>
 
-          {/* Selected jurisdiction indicator */}
-          {selectedJurisdiction && (
+          {/* Selected region/country indicator */}
+          {selectedRegion && (
             <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
-              {isSelectedRegion ? (
-                <RegionIcon region={selectedJurisdiction as RegionCode} size={24} />
-              ) : (
-                <span className="text-xl">{countryInfo?.flag || "🌍"}</span>
-              )}
+              <RegionIcon region={selectedRegion} size={24} />
               <span className="font-medium">
-                Viewing: {isSelectedRegion ? regionInfo?.name : countryInfo?.name || selectedJurisdiction}
+                Viewing: {regionInfo?.name}
+                {selectedCountry && ` → ${COUNTRY_INFO[selectedCountry]?.name || selectedCountry}`}
               </span>
               <Button variant="ghost" size="sm" onClick={handleBackToMap} className="ml-auto">
                 Clear Selection
@@ -250,42 +242,23 @@ export function MapInsightsPanel({
           )}
 
           {/* Analytics section below map */}
-          {selectedJurisdiction ? (
-            isSelectedRegion ? (
-              // Region analytics
-              <RegionAnalyticsPanel
-                regionKey={selectedJurisdiction as RegionCode}
-                regionName={regionInfo?.name || selectedJurisdiction}
-                data={filteredData}
-                selectedCountry={selectedSubdivision}
-                onSelectCountry={setSelectedSubdivision}
-                onBack={handleBackToMap}
-                onViewAlerts={handleViewAlerts}
-                showHeader={false}
-              />
-            ) : (
-              // Country analytics
-              <CountryAnalyticsPanel
-                countryKey={selectedJurisdiction}
-                countryName={countryInfo?.name || selectedJurisdiction}
-                countryFlag={countryInfo?.flag || "🌍"}
-                data={countryData}
-                selectedSubdivision={selectedSubdivision}
-                onSelectSubdivision={setSelectedSubdivision}
-                onBack={handleBackToMap}
-                onViewAlerts={handleViewAlerts}
-                showHeader={false}
-              />
-            )
+          {selectedRegion ? (
+            <RegionAnalyticsPanel
+              regionKey={selectedRegion}
+              regionName={regionInfo?.name || selectedRegion}
+              data={filteredData}
+              selectedCountry={selectedCountry}
+              onSelectCountry={setSelectedCountry}
+              onBack={handleBackToMap}
+              onViewAlerts={handleViewAlerts}
+              showHeader={false}
+            />
           ) : (
-            // Top Jurisdictions list when no selection
+            // Commercial regions list when no selection
             <TopJurisdictionsList
               data={filteredData}
-              onSelectJurisdiction={(key) => {
-                setSelectedJurisdiction(key);
-                setSelectedSubdivision(null);
-              }}
-              selectedJurisdiction={selectedJurisdiction}
+              onSelectJurisdiction={handleSelectRegion}
+              selectedJurisdiction={selectedRegion}
             />
           )}
         </div>
