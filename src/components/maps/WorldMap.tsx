@@ -280,6 +280,13 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
   const [currentView, setCurrentView] = useState<MapView>("world");
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("weekly");
+  const [hoveredCountry, setHoveredCountry] = useState<{
+    name: string;
+    stats: { total: number; high: number; medium: number; low: number } | null;
+    canZoom: boolean;
+    x: number;
+    y: number;
+  } | null>(null);
   
   // Filter legislation by time period
   const filteredLegislation = useMemo(() => {
@@ -614,44 +621,46 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
                           ["uae", "saudi", "kuwait", "bahrain", "qatar", "oman"].includes(jurisdiction));
                         
                         return (
-                          <Tooltip key={geo.rsmKey}>
-                            <TooltipTrigger asChild>
-                              <Geography
-                                geography={geo}
-                                fill={getCountryColor(countryName)}
-                                stroke="hsl(215, 25%, 27%)"
-                                strokeWidth={0.5}
-                                style={{
-                                  default: { outline: "none", cursor: isClickable ? "pointer" : "default" },
-                                  hover: { 
-                                    fill: isClickable ? "hsl(217, 91%, 60%)" : getCountryColor(countryName), 
-                                    outline: "none", 
-                                    cursor: isClickable ? "pointer" : "default" 
-                                  },
-                                  pressed: { fill: isClickable ? "hsl(217, 91%, 50%)" : getCountryColor(countryName), outline: "none" },
-                                }}
-                                onClick={() => isClickable && handleCountryClick(countryName)}
-                              />
-                            </TooltipTrigger>
-                            {isClickable && (
-                              <TooltipContent>
-                                <p className="font-semibold">{displayName}</p>
-                                {jurisdictionStats ? (
-                                  <div className="space-y-1">
-                                    <p className="text-xs text-muted-foreground">Total: {jurisdictionStats.total} alerts</p>
-                                    <div className="flex gap-2">
-                                      <Badge variant="destructive" className="text-xs">{jurisdictionStats.high} High</Badge>
-                                      <Badge className="bg-risk-medium text-xs">{jurisdictionStats.medium} Med</Badge>
-                                      <Badge className="bg-risk-low text-foreground text-xs">{jurisdictionStats.low} Low</Badge>
-                                    </div>
-                                    <p className="text-xs text-primary mt-1">
-                                      {canZoom ? "Click to zoom" : "Click to view"}
-                                    </p>
-                                  </div>
-                                ) : <p className="text-xs text-muted-foreground">Click to view</p>}
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
+                          <Geography
+                            key={geo.rsmKey}
+                            geography={geo}
+                            fill={getCountryColor(countryName)}
+                            stroke="hsl(215, 25%, 27%)"
+                            strokeWidth={0.5}
+                            style={{
+                              default: { outline: "none", cursor: isClickable ? "pointer" : "default" },
+                              hover: { 
+                                fill: isClickable ? "hsl(217, 91%, 60%)" : getCountryColor(countryName), 
+                                outline: "none", 
+                                cursor: isClickable ? "pointer" : "default" 
+                              },
+                              pressed: { fill: isClickable ? "hsl(217, 91%, 50%)" : getCountryColor(countryName), outline: "none" },
+                            }}
+                            onClick={() => isClickable && handleCountryClick(countryName)}
+                            onMouseEnter={(e) => {
+                              if (isClickable) {
+                                const rect = (e.target as SVGElement).closest('svg')?.getBoundingClientRect();
+                                setHoveredCountry({
+                                  name: displayName,
+                                  stats: jurisdictionStats,
+                                  canZoom: !!canZoom,
+                                  x: e.clientX - (rect?.left || 0),
+                                  y: e.clientY - (rect?.top || 0)
+                                });
+                              }
+                            }}
+                            onMouseLeave={() => setHoveredCountry(null)}
+                            onMouseMove={(e) => {
+                              if (isClickable && hoveredCountry) {
+                                const rect = (e.target as SVGElement).closest('svg')?.getBoundingClientRect();
+                                setHoveredCountry(prev => prev ? {
+                                  ...prev,
+                                  x: e.clientX - (rect?.left || 0),
+                                  y: e.clientY - (rect?.top || 0)
+                                } : null);
+                              }
+                            }}
+                          />
                         );
                       })
                     }
@@ -761,6 +770,33 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
                   }}
                 </Geographies>
               </ComposableMap>
+            )}
+            
+            {/* Custom tooltip overlay */}
+            {hoveredCountry && (
+              <div 
+                className="absolute pointer-events-none z-50 bg-popover border border-border rounded-lg shadow-lg px-3 py-2"
+                style={{
+                  left: Math.min(hoveredCountry.x + 10, 300),
+                  top: hoveredCountry.y - 10,
+                  transform: 'translateY(-100%)'
+                }}
+              >
+                <p className="font-semibold text-sm">{hoveredCountry.name}</p>
+                {hoveredCountry.stats ? (
+                  <div className="space-y-1 mt-1">
+                    <p className="text-xs text-muted-foreground">Total: {hoveredCountry.stats.total} alerts</p>
+                    <div className="flex gap-1.5">
+                      <Badge variant="destructive" className="text-xs px-1.5 py-0">{hoveredCountry.stats.high} High</Badge>
+                      <Badge className="bg-amber-500 text-white text-xs px-1.5 py-0">{hoveredCountry.stats.medium} Med</Badge>
+                      <Badge className="bg-emerald-500 text-white text-xs px-1.5 py-0">{hoveredCountry.stats.low} Low</Badge>
+                    </div>
+                    <p className="text-xs text-primary mt-1">
+                      {hoveredCountry.canZoom ? "Click to zoom" : "Click to view"}
+                    </p>
+                  </div>
+                ) : <p className="text-xs text-muted-foreground">Click to view</p>}
+              </div>
             )}
           </div>
         </TooltipProvider>
