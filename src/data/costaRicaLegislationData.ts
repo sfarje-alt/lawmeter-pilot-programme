@@ -1424,12 +1424,74 @@ export function convertCostaRicaToUnified(items: CostaRicaLegislationItem[]): Un
     regulatoryCategory: item.categoria,
     impactAreas: [item.sector, item.categoria],
     currentStageIndex: item.indiceEtapaActual,
-    aiSummary: {
+    aiSummary: item.resumenIA ? {
       whatChanges: item.resumenIA.cambiosPropuestos,
       whoImpacted: item.resumenIA.impactosPotenciales,
       keyDeadline: item.resumenIA.fechaClave,
-      riskExplanation: item.resumenIA.calificadorEstado
-    },
+      riskExplanation: item.resumenIA.calificadorEstado,
+      executiveSummary: item.resumenIA.resumenEjecutivo,
+      statistics: item.resumenIA.estadisticas ? {
+        estimatedAffectedCompanies: item.resumenIA.estadisticas.empresasAfectadasEstimadas,
+        estimatedComplianceCost: item.resumenIA.estadisticas.costoEstimadoCumplimiento ? {
+          min: item.resumenIA.estadisticas.costoEstimadoCumplimiento.min,
+          max: item.resumenIA.estadisticas.costoEstimadoCumplimiento.max,
+          currency: item.resumenIA.estadisticas.costoEstimadoCumplimiento.moneda
+        } : undefined,
+        marketSizeImpact: item.resumenIA.estadisticas.impactoMercado,
+        implementationTimeMonths: item.resumenIA.estadisticas.tiempoImplementacionMeses,
+        penaltyRange: item.resumenIA.estadisticas.rangoSanciones ? {
+          min: item.resumenIA.estadisticas.rangoSanciones.min,
+          max: item.resumenIA.estadisticas.rangoSanciones.max,
+          currency: item.resumenIA.estadisticas.rangoSanciones.moneda
+        } : undefined,
+        complianceComplexityScore: item.resumenIA.estadisticas.puntajeComplejidad
+      } : undefined,
+      riskAnalysis: item.resumenIA.analisisRiesgo ? {
+        overallRiskScore: item.resumenIA.analisisRiesgo.puntajeRiesgoGeneral,
+        riskBreakdown: item.resumenIA.analisisRiesgo.desglosePorCategoria?.map(r => ({
+          category: r.categoria,
+          score: r.puntaje,
+          description: r.descripcion,
+          mitigationStrategy: r.estrategiaMitigacion
+        })),
+        probabilityOfEnforcement: item.resumenIA.analisisRiesgo.probabilidadFiscalizacion === "alta" ? "high" : item.resumenIA.analisisRiesgo.probabilidadFiscalizacion === "media" ? "medium" : "low",
+        potentialLiabilities: item.resumenIA.analisisRiesgo.responsabilidadesPotenciales,
+        competitiveRiskAssessment: item.resumenIA.analisisRiesgo.evaluacionRiesgoCompetitivo
+      } : undefined,
+      stakeholderAnalysis: item.resumenIA.analisisActores?.map(a => ({
+        stakeholder: a.actor,
+        type: (a.tipo === "regulador" ? "regulatory" : a.tipo === "gremio" ? "industry" : a.tipo === "certificador" ? "external" : a.tipo === "interno" ? "internal" : "external") as "regulatory" | "industry" | "internal" | "external",
+        impactLevel: a.nivelImpacto === "alto" ? "high" : a.nivelImpacto === "medio" ? "medium" : "low",
+        impactDescription: a.descripcionImpacto,
+        requiredActions: a.accionesRequeridas,
+        timeline: a.cronograma
+      })),
+      complianceRequirements: item.resumenIA.requisitosCumplimiento?.map(r => ({
+        requirement: r.requisito,
+        priority: (r.prioridad === "critica" ? "critical" : r.prioridad === "alta" ? "high" : r.prioridad === "media" ? "medium" : "low") as "critical" | "high" | "medium" | "low",
+        deadline: r.fechaLimite,
+        estimatedEffort: r.esfuerzoEstimado,
+        responsibleDepartment: r.areaResponsable
+      })),
+      strategicRecommendations: item.resumenIA.recomendacionesEstrategicas?.map(r => ({
+        title: r.titulo,
+        description: r.descripcion,
+        priority: r.prioridad === "inmediata" ? "immediate" : r.prioridad === "corto-plazo" ? "short-term" : r.prioridad === "mediano-plazo" ? "medium-term" : "long-term",
+        resourcesRequired: r.recursosNecesarios
+      })),
+      relatedLegislation: item.resumenIA.legislacionRelacionada?.map(l => ({
+        identifier: l.identificador,
+        title: l.titulo,
+        relationship: l.relacion === "modifica" ? "amends" : l.relacion === "deroga" ? "repeals" : l.relacion === "implementa" ? "implements" : l.relacion === "conflicto" ? "conflicts" : "related",
+        relevance: l.relevancia
+      })),
+      industryBenchmarks: item.resumenIA.benchmarksIndustria ? {
+        averageComplianceTime: item.resumenIA.benchmarksIndustria.tiempoPromedioCumplimiento,
+        industryReadinessLevel: item.resumenIA.benchmarksIndustria.nivelPreparacionIndustria,
+        competitorAdoptionRate: item.resumenIA.benchmarksIndustria.tasaAdopcionCompetidores,
+        bestPractices: item.resumenIA.benchmarksIndustria.mejoresPracticas
+      } : undefined
+    } : undefined,
     votingRecords: item.registrosVotacion?.map(v => ({
       chamber: v.etapa,
       date: v.fecha,
