@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, BarChart3, Star, Users, AlertTriangle, Settings, Calendar, BookOpen, Grid, List, Building2 } from "lucide-react";
+import { FileText, Clock, Star, Users, AlertTriangle, Settings, Calendar, BookOpen, Grid, List, Building2, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,7 +17,6 @@ import { useStarredAlerts } from "@/hooks/useStarredAlerts";
 import { mockBills } from "@/data/mockBills";
 import { FilterState, Alert, BillItem } from "@/types/legislation";
 import { FilterBar } from "@/components/shared/FilterBar";
-import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { ComplianceTimeline } from "@/components/analytics/ComplianceTimeline";
 import { AlertActCard } from "@/components/acts/AlertActCard";
 import { AlertActDrawer } from "@/components/acts/AlertActDrawer";
@@ -33,7 +32,10 @@ import { CongressBillsSection } from "@/components/congress/CongressBillsSection
 import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
 import { CongressBill } from "@/types/congress";
 import { UnifiedLegislationSection, UnifiedLegislationDrawer, UnifiedCongressSection } from "@/components/legislation";
+import { LegislationViewToggle, LegislationViewMode } from "@/components/legislation/LegislationViewToggle";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
+import { MapInsightsPanel } from "@/components/analytics/MapInsightsPanel";
+import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilterBar";
 import { 
   usStateBills, 
   canadaLegislation, 
@@ -53,7 +55,7 @@ import {
   peruLegislation,
   costaRicaLegislation
 } from "@/data/mockInternationalLegislation";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { GlobalLegislationSearch } from "@/components/search/GlobalLegislationSearch";
 import { 
@@ -106,6 +108,42 @@ import {
 import { enrichedCostaRicaData } from "@/data/enrichedMockData";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 
+// Jurisdiction key to region mapping
+const JURISDICTION_TO_REGION: Record<string, RegionCode> = {
+  "USA": "NAM",
+  "Canada": "NAM",
+  "Japan": "APAC",
+  "Korea": "APAC",
+  "Taiwan": "APAC",
+  "EU": "EU",
+  "UAE": "GCC",
+  "Saudi Arabia": "GCC",
+  "Oman": "GCC",
+  "Kuwait": "GCC",
+  "Bahrain": "GCC",
+  "Qatar": "GCC",
+  "Peru": "LATAM",
+  "Costa Rica": "LATAM",
+};
+
+// Jurisdiction key to country mapping
+const JURISDICTION_TO_COUNTRY: Record<string, "usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu"> = {
+  "USA": "usa",
+  "Canada": "canada",
+  "Japan": "japan",
+  "Korea": "korea",
+  "Taiwan": "taiwan",
+  "EU": "eu",
+  "UAE": "gcc",
+  "Saudi Arabia": "gcc",
+  "Oman": "gcc",
+  "Kuwait": "gcc",
+  "Bahrain": "gcc",
+  "Qatar": "gcc",
+  "Peru": "peru",
+  "Costa Rica": "costa-rica",
+};
+
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -116,6 +154,19 @@ export default function LawMeterDashboard() {
   const [selectedGCCCountry, setSelectedGCCCountry] = useState<GCCCountryCode>("uae");
   const [usaDataSource, setUsaDataSource] = useState<"congress" | "mock">("congress");
   const [selectedSubJurisdiction, setSelectedSubJurisdiction] = useState<string | null>(null);
+  
+  // New: Legislation view mode (alerts, map-insights, focus)
+  const [legislationViewMode, setLegislationViewMode] = useState<LegislationViewMode>("alerts");
+  const [analyticsFilters, setAnalyticsFilters] = useState<AnalyticsFilters>({
+    dateRange: "90",
+    jurisdictions: [],
+    riskLevels: [],
+    lifecycle: "all",
+    categories: [],
+  });
+  const [mapInsightsExpanded, setMapInsightsExpanded] = useState(false);
+  const [mapJurisdictionFilter, setMapJurisdictionFilter] = useState<string | null>(null);
+  const [mapSubdivisionFilter, setMapSubdivisionFilter] = useState<string | null>(null);
   
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [selectedBill, setSelectedBill] = useState<BillItem | null>(null);
@@ -233,11 +284,55 @@ export default function LawMeterDashboard() {
   const totalActsPages = Math.ceil(filteredAlerts.length / actsPerPage);
   const totalBillsPages = Math.ceil(filteredBills.length / billsPerPage);
 
+  // All enriched data for analytics
+  const allEnrichedData = useMemo<UnifiedLegislationItem[]>(() => [
+    ...enrichedUSAData,
+    ...enrichedCanadaData,
+    ...enrichedJapanData,
+    ...enrichedKoreaData,
+    ...enrichedTaiwanData,
+    ...enrichedEUData,
+    ...enrichedUAEData,
+    ...enrichedSaudiData,
+    ...enrichedOmanData,
+    ...enrichedKuwaitData,
+    ...enrichedBahrainData,
+    ...enrichedQatarData,
+    ...enrichedCostaRicaData,
+    ...enrichedPeruData,
+  ], []);
+
+  // Handler for navigating to alerts from map
+  const handleNavigateToAlerts = (jurisdiction?: string, subdivision?: string) => {
+    setLegislationViewMode("alerts");
+    if (jurisdiction) {
+      const region = JURISDICTION_TO_REGION[jurisdiction];
+      const country = JURISDICTION_TO_COUNTRY[jurisdiction];
+      if (region) setSelectedRegion(region);
+      if (country) setSelectedCountry(country);
+      setMapJurisdictionFilter(jurisdiction);
+    }
+    if (subdivision) {
+      setSelectedSubJurisdiction(subdivision);
+      setMapSubdivisionFilter(subdivision);
+    }
+  };
+
+  // Clear map filters
+  const handleClearMapFilters = () => {
+    setMapJurisdictionFilter(null);
+    setMapSubdivisionFilter(null);
+  };
+
   // Handle URL tab parameter
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
+    }
+    const viewModeParam = searchParams.get('view');
+    if (viewModeParam && ['alerts', 'map-insights', 'focus'].includes(viewModeParam)) {
+      setLegislationViewMode(viewModeParam as LegislationViewMode);
     }
   }, [searchParams]);
 
@@ -264,70 +359,104 @@ export default function LawMeterDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
-            {/* World Map - National/Federal Overview */}
-            <WorldMap
-              legislation={[
-                ...usStateBills,
-                ...canadaLegislation,
-                ...japanLegislation,
-                ...koreaLegislation,
-                ...taiwanLegislation,
-                ...euRegulations,
-                ...euDirectives,
-                ...euParliament,
-                ...euCouncil,
-                ...uaeLegislation,
-                ...saudiLegislation,
-                ...omanLegislation,
-                ...kuwaitLegislation,
-                ...bahrainLegislation,
-                ...qatarLegislation,
-                ...peruLegislation,
-                ...costaRicaLegislation
-              ]}
-              onSelectRegion={(region) => {
-                // Map region to our region groups and navigate
-                if (region === "usa" || region === "canada") setSelectedRegion("NAM");
-                else if (region === "costa-rica" || region === "peru") setSelectedRegion("LATAM");
-                else if (region === "eu") setSelectedRegion("EU");
-                else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar", "gcc"].includes(region)) setSelectedRegion("GCC");
-                else if (region === "japan" || region === "korea" || region === "taiwan") setSelectedRegion("APAC");
-                setSelectedCountry(region as typeof selectedCountry);
-                setSelectedSubJurisdiction(null); // Clear sub-jurisdiction when changing country
-              }}
-              onSelectSubJurisdiction={(jurisdiction, subJurisdiction) => {
-                // Handle state/province/department selection from map - auto-select and filter
-                if (jurisdiction === "usa") {
-                  setSelectedRegion("NAM");
-                  setSelectedCountry("usa");
-                  setSelectedSubJurisdiction(subJurisdiction);
-                } else if (jurisdiction === "canada") {
-                  setSelectedRegion("NAM");
-                  setSelectedCountry("canada");
-                  setSelectedSubJurisdiction(subJurisdiction);
-                } else if (jurisdiction === "japan") {
-                  setSelectedRegion("APAC");
-                  setSelectedCountry("japan");
-                  setSelectedSubJurisdiction(subJurisdiction);
-                } else if (jurisdiction === "korea") {
-                  setSelectedRegion("APAC");
-                  setSelectedCountry("korea");
-                  setSelectedSubJurisdiction(subJurisdiction);
-                } else if (jurisdiction === "taiwan") {
-                  setSelectedRegion("APAC");
-                  setSelectedCountry("taiwan");
-                  setSelectedSubJurisdiction(subJurisdiction);
-                } else if (jurisdiction === "peru") {
-                  setSelectedRegion("LATAM");
-                  setSelectedCountry("peru");
-                  setSelectedSubJurisdiction(subJurisdiction);
-                } else if (jurisdiction === "costa-rica") {
-                  setSelectedRegion("LATAM");
-                  setSelectedCountry("costa-rica");
-                  setSelectedSubJurisdiction(subJurisdiction);
-                }
-              }}
-            />
+            {/* View Mode Toggle */}
+            <div className="flex items-center justify-between">
+              <LegislationViewToggle 
+                mode={legislationViewMode} 
+                onModeChange={setLegislationViewMode} 
+              />
+              {(mapJurisdictionFilter || mapSubdivisionFilter) && (
+                <div className="flex items-center gap-2">
+                  {mapJurisdictionFilter && (
+                    <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
+                      Country: {mapJurisdictionFilter}
+                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapJurisdictionFilter(null)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </Badge>
+                  )}
+                  {mapSubdivisionFilter && (
+                    <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
+                      Subdivision: {mapSubdivisionFilter}
+                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapSubdivisionFilter(null)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </Badge>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={handleClearMapFilters}>
+                    Clear filters
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Map + Insights Mode */}
+            {legislationViewMode === "map-insights" && (
+              <MapInsightsPanel
+                data={allEnrichedData}
+                filters={analyticsFilters}
+                onFiltersChange={setAnalyticsFilters}
+                onNavigateToAlerts={handleNavigateToAlerts}
+                isExpanded={mapInsightsExpanded}
+                onToggleExpand={() => setMapInsightsExpanded(!mapInsightsExpanded)}
+              />
+            )}
+
+            {/* Focus Mode - Minimal UI, just alerts */}
+            {legislationViewMode === "focus" && (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                  Focus mode: Analytics hidden. Click "Alerts" or "Map + Insights" to restore.
+                </div>
+              </div>
+            )}
+
+            {/* Regular Alerts Mode (or Focus mode alerts) */}
+            {(legislationViewMode === "alerts" || legislationViewMode === "focus") && (
+              <>
+                {/* World Map - Only show in Alerts mode, not Focus */}
+                {legislationViewMode === "alerts" && (
+                  <WorldMap
+                    legislation={[
+                      ...usStateBills,
+                      ...canadaLegislation,
+                      ...japanLegislation,
+                      ...koreaLegislation,
+                      ...taiwanLegislation,
+                      ...euRegulations,
+                      ...euDirectives,
+                      ...euParliament,
+                      ...euCouncil,
+                      ...uaeLegislation,
+                      ...saudiLegislation,
+                      ...omanLegislation,
+                      ...kuwaitLegislation,
+                      ...bahrainLegislation,
+                      ...qatarLegislation,
+                      ...peruLegislation,
+                      ...costaRicaLegislation
+                    ]}
+                    onSelectRegion={(region) => {
+                      if (region === "usa" || region === "canada") setSelectedRegion("NAM");
+                      else if (region === "costa-rica" || region === "peru") setSelectedRegion("LATAM");
+                      else if (region === "eu") setSelectedRegion("EU");
+                      else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar", "gcc"].includes(region)) setSelectedRegion("GCC");
+                      else if (region === "japan" || region === "korea" || region === "taiwan") setSelectedRegion("APAC");
+                      setSelectedCountry(region as typeof selectedCountry);
+                      setSelectedSubJurisdiction(null);
+                    }}
+                    onSelectSubJurisdiction={(jurisdiction, subJurisdiction) => {
+                      if (jurisdiction === "usa") { setSelectedRegion("NAM"); setSelectedCountry("usa"); }
+                      else if (jurisdiction === "canada") { setSelectedRegion("NAM"); setSelectedCountry("canada"); }
+                      else if (jurisdiction === "japan") { setSelectedRegion("APAC"); setSelectedCountry("japan"); }
+                      else if (jurisdiction === "korea") { setSelectedRegion("APAC"); setSelectedCountry("korea"); }
+                      else if (jurisdiction === "taiwan") { setSelectedRegion("APAC"); setSelectedCountry("taiwan"); }
+                      else if (jurisdiction === "peru") { setSelectedRegion("LATAM"); setSelectedCountry("peru"); }
+                      else if (jurisdiction === "costa-rica") { setSelectedRegion("LATAM"); setSelectedCountry("costa-rica"); }
+                      setSelectedSubJurisdiction(subJurisdiction);
+                    }}
+                  />
+                )}
 
             {/* Global Search Bar - Below map, above regions */}
             <GlobalLegislationSearch 
@@ -610,6 +739,8 @@ export default function LawMeterDashboard() {
                 onItemClick={(item) => { setSelectedUnifiedItem(item); setUnifiedDrawerConfig(euConfig); }}
               />
             )}
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="starred" className="space-y-6 mt-6">
@@ -716,9 +847,7 @@ export default function LawMeterDashboard() {
             />
           </TabsContent>
 
-          <TabsContent value="analytics" className="mt-6">
-            <AnalyticsDashboard />
-          </TabsContent>
+          {/* Analytics tab removed - now integrated into Legislation */}
 
           <TabsContent value="media" className="mt-6">
             <MediaSection />

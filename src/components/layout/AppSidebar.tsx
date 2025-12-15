@@ -30,7 +30,6 @@ const menuItems = [
   { id: "media", title: "Legislative Session Monitor", icon: FileText },
   { id: "social", title: "Social Listening", icon: Users },
   { id: "calendar", title: "Calendar", icon: Calendar },
-  { id: "analytics", title: "Analytics", icon: BarChart3 },
   { id: "contact", title: "Contact", icon: MessageSquare },
 ];
 
