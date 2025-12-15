@@ -96,16 +96,20 @@ const sampleLegislation: Record<RegionCode, Array<{
 };
 
 export function RegionShowcase() {
-  const [selectedRegion, setSelectedRegion] = useState<RegionCode>("NAM");
+  const [selectedRegion, setSelectedRegion] = useState<RegionCode | "ALL">("NAM");
   const [selectedTab, setSelectedTab] = useState("overview");
 
-  const alertCounts: Partial<Record<RegionCode, number>> = {
+  const alertCounts: Partial<Record<RegionCode | "ALL", number>> = {
+    ALL: 381,
     NAM: 156,
     LATAM: 23,
     EU: 89,
     GCC: 34,
     APAC: 79
   };
+  
+  // Get current region code for components that don't support "ALL"
+  const currentRegionCode: RegionCode = selectedRegion === "ALL" ? "NAM" : selectedRegion;
 
   return (
     <div className="space-y-8 p-6">

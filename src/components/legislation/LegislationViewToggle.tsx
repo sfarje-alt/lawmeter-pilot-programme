@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Map, List, Focus, Grid3X3 } from "lucide-react";
+import { Map, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type LegislationViewMode = "alerts" | "map-insights" | "focus";
+export type LegislationViewMode = "alerts" | "map-insights";
 
 interface LegislationViewToggleProps {
   mode: LegislationViewMode;
@@ -35,18 +35,6 @@ export function LegislationViewToggle({ mode, onModeChange }: LegislationViewTog
       >
         <Map className="w-4 h-4" />
         Map + Insights
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onModeChange("focus")}
-        className={cn(
-          "gap-2 px-3",
-          mode === "focus" && "bg-background shadow-sm"
-        )}
-      >
-        <Focus className="w-4 h-4" />
-        Focus
       </Button>
     </div>
   );
