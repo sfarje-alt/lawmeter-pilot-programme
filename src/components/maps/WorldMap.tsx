@@ -16,7 +16,7 @@ const geoUrls = {
   korea: "https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-geo.json",
   taiwan: "https://raw.githubusercontent.com/AJLiu/taiwan-atlas/master/taiwan-counties.json",
   peru: "https://raw.githubusercontent.com/juaneladio/peru-geojson/master/peru_departamental_simple.geojson",
-  costaRica: "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/CRI.geo.json",
+  costaRica: "/maps/costa-rica-provinces.geojson",
   gcc: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
   eu: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
 };
@@ -216,9 +216,9 @@ const mapConfigs: Record<MapView, MapConfig> = {
   "costa-rica": {
     geoUrl: geoUrls.costaRica,
     projection: "geoMercator",
-    projectionConfig: { scale: 5000, center: [-84, 9.7] },
-    center: [-84, 9.7],
-    nameProperty: "name"
+    projectionConfig: { scale: 8000, center: [-84, 9.9] },
+    center: [-84, 9.9],
+    nameProperty: "NAME_1"
   },
   gcc: {
     geoUrl: geoUrls.gcc,
@@ -361,10 +361,10 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
       return;
     }
     
-    // For Costa Rica (single country GeoJSON), filter to costa-rica
-    if (selectedJurisdiction === "costa-rica" && name === "Costa Rica") {
-      if (onSelectRegion) {
-        onSelectRegion("costa-rica");
+    // For Costa Rica provinces, filter by province name
+    if (selectedJurisdiction === "costa-rica") {
+      if (onSelectSubJurisdiction) {
+        onSelectSubJurisdiction("costa-rica", abbr);
       }
       return;
     }
