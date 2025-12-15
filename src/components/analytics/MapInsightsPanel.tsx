@@ -114,13 +114,15 @@ export function MapInsightsPanel({
     }
 
     // Convert to InternationalLegislation format for WorldMap
+    // IMPORTANT: jurisdiction must be the country-level code that matches WorldMap's jurisdictionToDataKey
     return result.map((item) => ({
       id: item.id,
       title: item.title,
       summary: item.summary || "",
       bullets: item.bullets || [],
       status: item.status,
-      jurisdiction: item.region as string,
+      // Use jurisdictionCode (e.g., "USA", "Canada") not region (e.g., "NAM", "LATAM")
+      jurisdiction: item.jurisdictionCode || item.region as string,
       subJurisdiction: item.subnationalUnit,
       riskLevel: item.riskLevel,
       riskScore: item.riskScore,
