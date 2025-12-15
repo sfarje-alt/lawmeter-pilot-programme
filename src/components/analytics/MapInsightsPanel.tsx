@@ -212,13 +212,6 @@ export function MapInsightsPanel({
 
   return (
     <div className="space-y-4">
-      {/* Filter Bar */}
-      <AnalyticsFilterBar
-        filters={filters}
-        onFiltersChange={onFiltersChange}
-        totalItems={data.length}
-        filteredItems={filteredData.length}
-      />
 
       {/* Tab Toggle */}
       <div className="flex items-center justify-between">
