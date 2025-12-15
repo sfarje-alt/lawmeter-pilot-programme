@@ -3,11 +3,27 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { InternationalLegislation } from "@/data/mockInternationalLegislation";
-import { Globe, ZoomIn, ZoomOut, RotateCcw, ArrowLeft, Info } from "lucide-react";
+import { Globe, ZoomIn, ZoomOut, RotateCcw, ArrowLeft, Info, Calendar } from "lucide-react";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { calculateActivityScore, getJurisdictionGradientColor } from "./JurisdictionMapUtils";
+import { subDays, subMonths, isAfter, parseISO } from "date-fns";
+
+type TimePeriod = "weekly" | "monthly" | "quarterly";
+
+const timePeriodLabels: Record<TimePeriod, string> = {
+  weekly: "Weekly",
+  monthly: "Monthly",
+  quarterly: "Quarterly"
+};
+
+const timePeriodDays: Record<TimePeriod, number> = {
+  weekly: 7,
+  monthly: 30,
+  quarterly: 90
+};
 
 // TopoJSON/GeoJSON URLs for different map views
 const geoUrls = {
@@ -263,11 +279,31 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
   const [position, setPosition] = useState({ coordinates: [20, 30] as [number, number], zoom: 1 });
   const [currentView, setCurrentView] = useState<MapView>("world");
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("weekly");
   
-  // Aggregate stats by jurisdiction
+  // Filter legislation by time period
+  const filteredLegislation = useMemo(() => {
+    const now = new Date();
+    const cutoffDate = subDays(now, timePeriodDays[timePeriod]);
+    
+    return legislation.filter(item => {
+      // Try to parse date from various fields
+      const dateStr = item.publishedDate || item.effectiveDate || item.complianceDeadline;
+      if (!dateStr) return true; // Include items without dates
+      
+      try {
+        const itemDate = parseISO(dateStr);
+        return isAfter(itemDate, cutoffDate);
+      } catch {
+        return true; // Include items with unparseable dates
+      }
+    });
+  }, [legislation, timePeriod]);
+  
+  // Aggregate stats by jurisdiction (using filtered legislation)
   const stats = useMemo(() => {
     const map = new Map<string, { total: number; high: number; medium: number; low: number }>();
-    legislation.forEach(item => {
+    filteredLegislation.forEach(item => {
       const key = item.jurisdiction;
       const existing = map.get(key) || { total: 0, high: 0, medium: 0, low: 0 };
       existing.total++;
@@ -277,12 +313,12 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
       map.set(key, existing);
     });
     return map;
-  }, [legislation]);
+  }, [filteredLegislation]);
 
-  // Aggregate stats by sub-jurisdiction
+  // Aggregate stats by sub-jurisdiction (using filtered legislation)
   const subJurisdictionStats = useMemo(() => {
     const map = new Map<string, { total: number; high: number; medium: number; low: number }>();
-    legislation.forEach(item => {
+    filteredLegislation.forEach(item => {
       if (item.subJurisdiction) {
         const key = item.subJurisdiction;
         const existing = map.get(key) || { total: 0, high: 0, medium: 0, low: 0 };
@@ -294,7 +330,7 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
       }
     });
     return map;
-  }, [legislation]);
+  }, [filteredLegislation]);
 
   // Calculate max activity scores for gradient normalization
   const { maxJurisdictionScore, maxSubJurisdictionScore } = useMemo(() => {
@@ -504,7 +540,7 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-sm flex items-center gap-2">
             {!isWorld && (
               <Button variant="ghost" size="icon" className="h-6 w-6 mr-1" onClick={handleBackToWorld}>
@@ -517,7 +553,26 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
               <span className="text-xs text-muted-foreground ml-2">(Click a country to zoom)</span>
             )}
           </CardTitle>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 mr-2">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <ToggleGroup 
+                type="single" 
+                value={timePeriod} 
+                onValueChange={(value) => value && setTimePeriod(value as TimePeriod)}
+                className="h-7"
+              >
+                <ToggleGroupItem value="weekly" className="h-7 px-2 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  7d
+                </ToggleGroupItem>
+                <ToggleGroupItem value="monthly" className="h-7 px-2 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  30d
+                </ToggleGroupItem>
+                <ToggleGroupItem value="quarterly" className="h-7 px-2 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  90d
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
             <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleZoomIn} disabled={position.zoom >= 8}>
               <ZoomIn className="h-3.5 w-3.5" />
             </Button>
@@ -727,9 +782,9 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
             </PopoverTrigger>
             <PopoverContent className="w-72 text-sm" side="top">
               <div className="space-y-2">
-                <h4 className="font-semibold">Regulatory Activity Index (Weekly)</h4>
+                <h4 className="font-semibold">Regulatory Activity Index ({timePeriodLabels[timePeriod]})</h4>
                 <p className="text-xs text-muted-foreground">
-                  This gradient shows the volume of regulatory activity affecting each jurisdiction over the past week.
+                  This gradient shows the volume of regulatory activity affecting each jurisdiction over the past {timePeriodDays[timePeriod]} days.
                 </p>
                 <div className="space-y-1 text-xs">
                   <p className="font-medium">How it's calculated:</p>
