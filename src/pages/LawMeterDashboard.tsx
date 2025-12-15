@@ -487,49 +487,6 @@ export default function LawMeterDashboard() {
             {/* Regular Alerts Mode (or Focus mode alerts) */}
             {(legislationViewMode === "alerts" || legislationViewMode === "focus") && (
               <>
-                {/* World Map - Only show in Alerts mode, not Focus */}
-                {legislationViewMode === "alerts" && (
-                  <WorldMap
-                    legislation={[
-                      ...usStateBills,
-                      ...canadaLegislation,
-                      ...japanLegislation,
-                      ...koreaLegislation,
-                      ...taiwanLegislation,
-                      ...euRegulations,
-                      ...euDirectives,
-                      ...euParliament,
-                      ...euCouncil,
-                      ...uaeLegislation,
-                      ...saudiLegislation,
-                      ...omanLegislation,
-                      ...kuwaitLegislation,
-                      ...bahrainLegislation,
-                      ...qatarLegislation,
-                      ...peruLegislation,
-                      ...costaRicaLegislation
-                    ]}
-                    onSelectRegion={(region) => {
-                      if (region === "usa" || region === "canada") setSelectedRegion("NAM");
-                      else if (region === "costa-rica" || region === "peru") setSelectedRegion("LATAM");
-                      else if (region === "eu") setSelectedRegion("EU");
-                      else if (["uae", "saudi", "oman", "kuwait", "bahrain", "qatar", "gcc"].includes(region)) setSelectedRegion("GCC");
-                      else if (region === "japan" || region === "korea" || region === "taiwan") setSelectedRegion("APAC");
-                      setSelectedCountry(region as typeof selectedCountry);
-                      setSelectedSubJurisdiction(null);
-                    }}
-                    onSelectSubJurisdiction={(jurisdiction, subJurisdiction) => {
-                      if (jurisdiction === "usa") { setSelectedRegion("NAM"); setSelectedCountry("usa"); }
-                      else if (jurisdiction === "canada") { setSelectedRegion("NAM"); setSelectedCountry("canada"); }
-                      else if (jurisdiction === "japan") { setSelectedRegion("APAC"); setSelectedCountry("japan"); }
-                      else if (jurisdiction === "korea") { setSelectedRegion("APAC"); setSelectedCountry("korea"); }
-                      else if (jurisdiction === "taiwan") { setSelectedRegion("APAC"); setSelectedCountry("taiwan"); }
-                      else if (jurisdiction === "peru") { setSelectedRegion("LATAM"); setSelectedCountry("peru"); }
-                      else if (jurisdiction === "costa-rica") { setSelectedRegion("LATAM"); setSelectedCountry("costa-rica"); }
-                      setSelectedSubJurisdiction(subJurisdiction);
-                    }}
-                  />
-                )}
 
             {/* Global Search Bar - Below map, above regions */}
             <GlobalLegislationSearch 
