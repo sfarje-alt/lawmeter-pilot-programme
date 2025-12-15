@@ -7,8 +7,47 @@ export interface JurisdictionStats {
   high: number;
   medium: number;
   low: number;
+  activityScore?: number;
 }
 
+// Calculate weighted activity score
+export function calculateActivityScore(high: number, medium: number, low: number): number {
+  return (high * 3) + (medium * 2) + (low * 1);
+}
+
+// Get gradient color based on activity intensity (0 to 1)
+// Green (low activity) → Yellow (moderate) → Red (high activity)
+export function getActivityGradientColor(intensity: number): string {
+  // Clamp intensity between 0 and 1
+  const t = Math.max(0, Math.min(1, intensity));
+  
+  if (t === 0) return "hsl(215, 14%, 34%)"; // No activity - muted gray
+  
+  if (t <= 0.5) {
+    // Green to Yellow (hue: 120 → 60)
+    const hue = 120 - (t * 2 * 60);
+    return `hsl(${hue}, 70%, 45%)`;
+  } else {
+    // Yellow to Red (hue: 60 → 0)
+    const hue = 60 - ((t - 0.5) * 2 * 60);
+    return `hsl(${hue}, 75%, 50%)`;
+  }
+}
+
+// Calculate color for a jurisdiction based on its stats and max score
+export function getJurisdictionGradientColor(
+  high: number, 
+  medium: number, 
+  low: number, 
+  maxScore: number
+): string {
+  const score = calculateActivityScore(high, medium, low);
+  if (score === 0) return "hsl(215, 14%, 34%)"; // No alerts - muted gray
+  const intensity = maxScore > 0 ? score / maxScore : 0;
+  return getActivityGradientColor(intensity);
+}
+
+// Legacy function for backward compatibility
 export function getAlertColor(high: number, medium: number, low: number): string {
   if (high > 0) return "hsl(var(--risk-high))";
   if (medium > 0) return "hsl(var(--risk-medium))";
