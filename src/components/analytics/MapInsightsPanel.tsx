@@ -271,9 +271,9 @@ export function MapInsightsPanel({
             />
           )
         ) : (
-          // World map view
-          <div className={`grid gap-4 ${isExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
-            <div className={isExpanded ? "" : "lg:col-span-2"}>
+          // World map view - full width with Top Jurisdictions below
+          <div className="space-y-4">
+            <div className="w-full">
               <WorldMap
                 legislation={filteredLegislationForMap}
                 onSelectRegion={handleMapSelectRegion}
@@ -284,18 +284,14 @@ export function MapInsightsPanel({
                 }}
               />
             </div>
-            {!isExpanded && (
-              <div>
-                <TopJurisdictionsList
-                  data={filteredData}
-                  onSelectJurisdiction={(key) => {
-                    setSelectedJurisdiction(key);
-                    setSelectedSubdivision(null);
-                  }}
-                  selectedJurisdiction={selectedJurisdiction}
-                />
-              </div>
-            )}
+            <TopJurisdictionsList
+              data={filteredData}
+              onSelectJurisdiction={(key) => {
+                setSelectedJurisdiction(key);
+                setSelectedSubdivision(null);
+              }}
+              selectedJurisdiction={selectedJurisdiction}
+            />
           </div>
         )
       ) : (
