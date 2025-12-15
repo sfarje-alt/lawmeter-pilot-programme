@@ -87,7 +87,7 @@ const gccCountries = new Set([
 
 // All jurisdictions that support subnational zoom
 const zoomableJurisdictions = new Set([
-  "usa", "canada", "japan", "korea", "taiwan", "peru", "costa-rica", "gcc", "eu"
+  "usa", "canada", "japan", "korea", "taiwan", "peru", "costa-rica", "gcc"
 ]);
 
 // Map jurisdiction data keys for stats aggregation
@@ -364,11 +364,11 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
     const jurisdiction = countryNameToJurisdiction[countryName];
     if (!jurisdiction) return;
     
-    // EU member states - zoom to EU view
+    // EU member states - direct navigation (no zoom, treat as single region)
     if (jurisdiction === "eu") {
-      setSelectedJurisdiction("eu");
-      setCurrentView("eu");
-      setPosition({ coordinates: mapConfigs.eu.center, zoom: 1 });
+      if (onSelectRegion) {
+        onSelectRegion("eu");
+      }
       return;
     }
     
