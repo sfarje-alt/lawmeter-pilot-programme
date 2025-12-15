@@ -167,19 +167,31 @@ export function generateComprehensiveMockData(): UnifiedLegislationItem[] {
 // Pre-generated comprehensive mock data
 export const comprehensiveMockData = generateComprehensiveMockData();
 
-// Utility to merge with existing enriched data
+// Utility to merge with existing enriched data - ensures all jurisdictions have sufficient data
 export function mergeWithComprehensiveData(existingData: UnifiedLegislationItem[]): UnifiedLegislationItem[] {
-  // Create a set of existing jurisdiction-category-lifecycle combinations
-  const existingCombinations = new Set(
-    existingData.map(item => 
-      `${item.jurisdictionCode}-${item.regulatoryCategory}-${item.genericStatus}`
-    )
-  );
+  // Count items per jurisdiction in existing data
+  const jurisdictionCounts = new Map<string, number>();
+  existingData.forEach(item => {
+    const count = jurisdictionCounts.get(item.jurisdictionCode || "") || 0;
+    jurisdictionCounts.set(item.jurisdictionCode || "", count + 1);
+  });
   
-  // Add comprehensive items only for missing combinations
-  const additionalItems = comprehensiveMockData.filter(item => 
-    !existingCombinations.has(`${item.jurisdictionCode}-${item.regulatoryCategory}-${item.genericStatus}`)
-  );
+  // Add comprehensive items for jurisdictions with fewer than 5 items
+  const additionalItems = comprehensiveMockData.filter(item => {
+    const existingCount = jurisdictionCounts.get(item.jurisdictionCode) || 0;
+    return existingCount < 5; // Add more data for under-represented jurisdictions
+  });
   
-  return [...existingData, ...additionalItems];
+  // Also ensure we always have some recent items (within last 30 days) for each jurisdiction
+  const recentItems = comprehensiveMockData.filter(item => {
+    const pubDate = new Date(item.publishedDate || "");
+    const cutoff = subDays(new Date(), 30);
+    return pubDate >= cutoff;
+  });
+  
+  // Deduplicate by ID
+  const allItems = [...existingData, ...additionalItems, ...recentItems];
+  const uniqueItems = Array.from(new Map(allItems.map(item => [item.id, item])).values());
+  
+  return uniqueItems;
 }

@@ -102,17 +102,14 @@ export function MapInsightsPanel({
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       result = result.filter((item) => {
+        // If no publishedDate, include the item
+        if (!item.publishedDate && !item.effectiveDate) return true;
         const itemDate = new Date(item.publishedDate || item.effectiveDate || "");
-        return itemDate >= cutoffDate;
+        return !isNaN(itemDate.getTime()) && itemDate >= cutoffDate;
       });
     }
 
-    // Risk level filter
-    if (filters.riskLevels.length > 0) {
-      result = result.filter((item) => filters.riskLevels.includes(item.riskLevel));
-    }
-
-    // Lifecycle filter
+    // Lifecycle filter (Status)
     if (filters.lifecycle !== "all") {
       if (filters.lifecycle === "in-force") {
         result = result.filter((item) => item.isInForce);
@@ -121,23 +118,13 @@ export function MapInsightsPanel({
       }
     }
 
-    // Category filter
-    if (filters.categories.length > 0) {
-      result = result.filter(
-        (item) =>
-          item.regulatoryCategory && filters.categories.includes(item.regulatoryCategory)
-      );
-    }
-
     // Convert to InternationalLegislation format for WorldMap
-    // IMPORTANT: jurisdiction must be the country-level code that matches WorldMap's jurisdictionToDataKey
     return result.map((item) => ({
       id: item.id,
       title: item.title,
       summary: item.summary || "",
       bullets: item.bullets || [],
       status: item.status,
-      // Use jurisdictionCode (e.g., "USA", "Canada") not region (e.g., "NAM", "LATAM")
       jurisdiction: item.jurisdictionCode || item.region as string,
       subJurisdiction: item.subnationalUnit,
       riskLevel: item.riskLevel,
@@ -154,7 +141,7 @@ export function MapInsightsPanel({
     }));
   }, [data, filters]);
 
-  // Apply global filters to data
+  // Apply global filters to data (only Period and Status)
   const filteredData = useMemo(() => {
     let result = [...data];
 
@@ -164,25 +151,14 @@ export function MapInsightsPanel({
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       result = result.filter((item) => {
+        // If no publishedDate, include the item (don't filter it out)
+        if (!item.publishedDate && !item.effectiveDate) return true;
         const itemDate = new Date(item.publishedDate || item.effectiveDate || "");
-        return itemDate >= cutoffDate;
+        return !isNaN(itemDate.getTime()) && itemDate >= cutoffDate;
       });
     }
 
-    // Jurisdiction filter (only for matrix when global)
-    if (filters.jurisdictions.length > 0 && !selectedJurisdiction) {
-      result = result.filter((item) =>
-        filters.jurisdictions.includes(item.region) ||
-        filters.jurisdictions.includes(item.jurisdictionCode || "")
-      );
-    }
-
-    // Risk level filter
-    if (filters.riskLevels.length > 0) {
-      result = result.filter((item) => filters.riskLevels.includes(item.riskLevel));
-    }
-
-    // Lifecycle filter
+    // Lifecycle filter (Status)
     if (filters.lifecycle !== "all") {
       if (filters.lifecycle === "in-force") {
         result = result.filter((item) => item.isInForce);
@@ -191,16 +167,8 @@ export function MapInsightsPanel({
       }
     }
 
-    // Category filter
-    if (filters.categories.length > 0) {
-      result = result.filter(
-        (item) =>
-          item.regulatoryCategory && filters.categories.includes(item.regulatoryCategory)
-      );
-    }
-
     return result;
-  }, [data, filters, selectedJurisdiction]);
+  }, [data, filters]);
 
   // Check if selected jurisdiction is a commercial region
   const isSelectedRegion = selectedJurisdiction ? isRegionKey(selectedJurisdiction) : false;
