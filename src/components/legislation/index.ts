@@ -6,3 +6,5 @@ export { UnifiedCongressSection } from "./UnifiedCongressSection";
 export { InternationalLegislationCard } from "./InternationalLegislationCard";
 export { InternationalLegislationSection } from "./InternationalLegislationSection";
 export { LegislationAdvancedFilters, defaultLegislationFilters } from "./LegislationAdvancedFilters";
+export { LegislationViewToggle } from "./LegislationViewToggle";
+export type { LegislationViewMode } from "./LegislationViewToggle";
