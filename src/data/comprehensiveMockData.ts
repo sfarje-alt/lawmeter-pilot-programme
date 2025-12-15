@@ -122,43 +122,40 @@ function generateComprehensiveItem(
 export function generateComprehensiveMockData(): UnifiedLegislationItem[] {
   const items: UnifiedLegislationItem[] = [];
   
-  // For each jurisdiction, create items covering all filter dimensions
+  // For each jurisdiction, create COMPLETE coverage of all filter combinations
   JURISDICTIONS.forEach(jurisdiction => {
-    // Ensure at least one item per risk level
+    // Create items for EVERY combination of risk level, category, lifecycle, and date window
     RISK_LEVELS.forEach(riskLevel => {
-      // At least one category per risk level
-      const categoryIndex = RISK_LEVELS.indexOf(riskLevel);
-      const category = CATEGORIES[categoryIndex % CATEGORIES.length];
-      
-      // Both lifecycle states
-      LIFECYCLE_STATES.forEach(lifecycle => {
-        // Distribute across date windows
-        const dateWindow = DATE_WINDOWS[Math.floor(Math.random() * DATE_WINDOWS.length)];
-        
-        items.push(generateComprehensiveItem(
-          jurisdiction,
-          riskLevel,
-          category,
-          lifecycle,
-          dateWindow
-        ));
+      CATEGORIES.forEach(category => {
+        LIFECYCLE_STATES.forEach(lifecycle => {
+          DATE_WINDOWS.forEach(dateWindow => {
+            items.push(generateComprehensiveItem(
+              jurisdiction,
+              riskLevel,
+              category,
+              lifecycle,
+              dateWindow
+            ));
+          });
+        });
       });
     });
     
-    // Add additional items for each category to ensure full category coverage
-    CATEGORIES.forEach((category, idx) => {
-      const riskLevel = RISK_LEVELS[idx % RISK_LEVELS.length];
-      const lifecycle = LIFECYCLE_STATES[idx % LIFECYCLE_STATES.length];
-      const dateWindow = DATE_WINDOWS[idx % DATE_WINDOWS.length];
+    // Add extra high-value items for better analytics visualization
+    // Additional recent items (last 7 days) for each jurisdiction
+    for (let i = 0; i < 5; i++) {
+      const riskLevel = RISK_LEVELS[i % RISK_LEVELS.length];
+      const category = CATEGORIES[i % CATEGORIES.length];
+      const lifecycle = LIFECYCLE_STATES[i % LIFECYCLE_STATES.length];
       
       items.push(generateComprehensiveItem(
         jurisdiction,
         riskLevel,
         category,
         lifecycle,
-        dateWindow
+        { days: 1 + i, label: `urgent-${i}` }
       ));
-    });
+    }
   });
   
   return items;
