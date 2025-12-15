@@ -31,7 +31,7 @@ import { isUpcomingDeadline } from "@/lib/dateUtils";
 import { CongressBillsSection } from "@/components/congress/CongressBillsSection";
 import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
 import { CongressBill } from "@/types/congress";
-import { UnifiedLegislationSection, UnifiedLegislationDrawer, UnifiedCongressSection } from "@/components/legislation";
+import { UnifiedLegislationSection, UnifiedLegislationDrawer, UnifiedCongressSection, AllLegislationSection } from "@/components/legislation";
 import { LegislationViewToggle, LegislationViewMode } from "@/components/legislation/LegislationViewToggle";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { MapInsightsPanel } from "@/components/analytics/MapInsightsPanel";
@@ -596,13 +596,8 @@ export default function LawMeterDashboard() {
 
             {/* ALL Regions Section - Mixed alerts from all jurisdictions */}
             {selectedRegion === "ALL" && (
-              <UnifiedLegislationSection
-                config={usaConfig}
+              <AllLegislationSection
                 items={allEnrichedData}
-                presets={defaultPresets}
-                categories={regulatoryCategories}
-                title="All Legislation"
-                subtitle="All jurisdictions - Regulatory Monitoring"
                 onItemClick={(item) => {
                   // Determine config based on item's region
                   const itemRegion = item.region;
