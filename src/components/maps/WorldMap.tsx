@@ -90,23 +90,23 @@ const zoomableJurisdictions = new Set([
   "usa", "canada", "japan", "korea", "taiwan", "peru", "costa-rica", "gcc"
 ]);
 
-// Map jurisdiction data keys for stats aggregation
+// Map jurisdiction data keys for stats aggregation - expanded mappings for better data matching
 const jurisdictionToDataKey: Record<string, string[]> = {
-  usa: ["USA", "usa"],
-  canada: ["Canada", "canada"],
-  japan: ["Japan", "japan"],
-  korea: ["Korea", "korea"],
-  taiwan: ["Taiwan", "taiwan"],
+  usa: ["USA", "usa", "United States", "US", "United States of America"],
+  canada: ["Canada", "canada", "CA"],
+  japan: ["Japan", "japan", "JP"],
+  korea: ["Korea", "korea", "South Korea", "KR"],
+  taiwan: ["Taiwan", "taiwan", "TW"],
   gcc: ["UAE", "uae", "Saudi Arabia", "saudi", "Kuwait", "kuwait", "Bahrain", "bahrain", "Qatar", "qatar", "Oman", "oman", "GCC", "gcc"],
-  uae: ["UAE", "uae"],
-  saudi: ["Saudi Arabia", "saudi"],
-  kuwait: ["Kuwait", "kuwait"],
-  bahrain: ["Bahrain", "bahrain"],
-  qatar: ["Qatar", "qatar"],
-  oman: ["Oman", "oman"],
-  "costa-rica": ["Costa Rica", "costa-rica", "CR"],
-  peru: ["Peru", "peru"],
-  eu: ["EU", "eu"],
+  uae: ["UAE", "uae", "United Arab Emirates"],
+  saudi: ["Saudi Arabia", "saudi", "KSA"],
+  kuwait: ["Kuwait", "kuwait", "KWT"],
+  bahrain: ["Bahrain", "bahrain", "BHR"],
+  qatar: ["Qatar", "qatar", "QAT"],
+  oman: ["Oman", "oman", "OMN"],
+  "costa-rica": ["Costa Rica", "costa-rica", "CR", "CRI"],
+  peru: ["Peru", "peru", "PE", "PER"],
+  eu: ["EU", "eu", "European Union"],
 };
 
 // Subnational unit abbreviation mappings
