@@ -1402,7 +1402,7 @@ export function convertCostaRicaToUnified(items: CostaRicaLegislationItem[]): Un
     summary: item.resumen,
     bullets: item.puntosImportantes,
     region: "LATAM" as const,
-    jurisdictionCode: "CR",
+    jurisdictionCode: "Costa Rica",
     jurisdictionLevel: item.nivel === "nacional" ? "federal" as const : 
                        item.nivel === "municipal" ? "local" as const : 
                        "federal" as const, // institucional maps to federal for display

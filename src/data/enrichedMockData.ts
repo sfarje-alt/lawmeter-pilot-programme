@@ -38,7 +38,7 @@ export function convertToEnrichedUnified(
       summary: item.summary,
       bullets: item.bullets,
       region,
-      jurisdictionCode: jurisdiction === "USA" && item.subJurisdiction ? item.subJurisdiction : jurisdiction,
+      jurisdictionCode: jurisdiction,  // Always use country-level code for map aggregation
       jurisdictionLevel: item.subJurisdiction ? "state" as const : "federal" as const,
       subnationalUnit: item.subJurisdiction,
       authority: item.regulatoryBody,

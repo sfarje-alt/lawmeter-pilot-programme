@@ -106,6 +106,7 @@ import {
   convertToEnrichedUnified
 } from "@/data/enrichedMockData";
 import { enrichedCostaRicaData } from "@/data/enrichedMockData";
+import { mergeWithComprehensiveData } from "@/data/comprehensiveMockData";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 
 // Jurisdiction key to region mapping
@@ -325,23 +326,27 @@ export default function LawMeterDashboard() {
   const totalActsPages = Math.ceil(filteredAlerts.length / actsPerPage);
   const totalBillsPages = Math.ceil(filteredBills.length / billsPerPage);
 
-  // All enriched data for analytics
-  const allEnrichedData = useMemo<UnifiedLegislationItem[]>(() => [
-    ...enrichedUSAData,
-    ...enrichedCanadaData,
-    ...enrichedJapanData,
-    ...enrichedKoreaData,
-    ...enrichedTaiwanData,
-    ...enrichedEUData,
-    ...enrichedUAEData,
-    ...enrichedSaudiData,
-    ...enrichedOmanData,
-    ...enrichedKuwaitData,
-    ...enrichedBahrainData,
-    ...enrichedQatarData,
-    ...enrichedCostaRicaData,
-    ...enrichedPeruData,
-  ], []);
+  // All enriched data for analytics - merged with comprehensive data for full filter coverage
+  const allEnrichedData = useMemo<UnifiedLegislationItem[]>(() => {
+    const baseData = [
+      ...enrichedUSAData,
+      ...enrichedCanadaData,
+      ...enrichedJapanData,
+      ...enrichedKoreaData,
+      ...enrichedTaiwanData,
+      ...enrichedEUData,
+      ...enrichedUAEData,
+      ...enrichedSaudiData,
+      ...enrichedOmanData,
+      ...enrichedKuwaitData,
+      ...enrichedBahrainData,
+      ...enrichedQatarData,
+      ...enrichedCostaRicaData,
+      ...enrichedPeruData,
+    ];
+    // Merge with comprehensive mock data to ensure all filter combinations are covered
+    return mergeWithComprehensiveData(baseData);
+  }, []);
 
   // Handler for navigating to alerts from map
   const handleNavigateToAlerts = (jurisdiction?: string, subdivision?: string) => {
