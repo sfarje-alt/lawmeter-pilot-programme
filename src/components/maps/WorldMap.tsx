@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { InternationalLegislation } from "@/data/mockInternationalLegislation";
-import { Globe, ZoomIn, ZoomOut, RotateCcw, ArrowLeft } from "lucide-react";
+import { Globe, ZoomIn, ZoomOut, RotateCcw, ArrowLeft, Info } from "lucide-react";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { calculateActivityScore, getJurisdictionGradientColor } from "./JurisdictionMapUtils";
 
 // TopoJSON/GeoJSON URLs for different map views
 const geoUrls = {
@@ -249,12 +251,13 @@ const viewTitles: Record<MapView, string> = {
   eu: "European Union - Select a Country"
 };
 
-function getAlertFillColor(high: number, medium: number, low: number): string {
-  if (high > 0) return "hsl(0, 84%, 60%)";
-  if (medium > 0) return "hsl(38, 92%, 50%)";
-  if (low > 0) return "hsl(142, 71%, 45%)";
-  return "hsl(215, 14%, 34%)";
-}
+// Legacy function kept for reference but no longer used
+// function getAlertFillColor(high: number, medium: number, low: number): string {
+//   if (high > 0) return "hsl(0, 84%, 60%)";
+//   if (medium > 0) return "hsl(38, 92%, 50%)";
+//   if (low > 0) return "hsl(142, 71%, 45%)";
+//   return "hsl(215, 14%, 34%)";
+// }
 
 export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction }: WorldMapProps) {
   const [position, setPosition] = useState({ coordinates: [20, 30] as [number, number], zoom: 1 });
@@ -292,6 +295,24 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
     });
     return map;
   }, [legislation]);
+
+  // Calculate max activity scores for gradient normalization
+  const { maxJurisdictionScore, maxSubJurisdictionScore } = useMemo(() => {
+    let maxJuris = 0;
+    let maxSubJuris = 0;
+    
+    stats.forEach(s => {
+      const score = calculateActivityScore(s.high, s.medium, s.low);
+      if (score > maxJuris) maxJuris = score;
+    });
+    
+    subJurisdictionStats.forEach(s => {
+      const score = calculateActivityScore(s.high, s.medium, s.low);
+      if (score > maxSubJuris) maxSubJuris = score;
+    });
+    
+    return { maxJurisdictionScore: maxJuris, maxSubJurisdictionScore: maxSubJuris };
+  }, [stats, subJurisdictionStats]);
 
   const getJurisdictionStats = useCallback((jurisdiction: string) => {
     const dataKeys = jurisdictionToDataKey[jurisdiction] || [];
@@ -385,8 +406,13 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
     if (!jurisdiction) return "hsl(215, 28%, 17%)";
     const jurisdictionStats = getJurisdictionStats(jurisdiction);
     if (!jurisdictionStats) return "hsl(215, 14%, 34%)";
-    return getAlertFillColor(jurisdictionStats.high, jurisdictionStats.medium, jurisdictionStats.low);
-  }, [getJurisdictionStats]);
+    return getJurisdictionGradientColor(
+      jurisdictionStats.high, 
+      jurisdictionStats.medium, 
+      jurisdictionStats.low, 
+      maxJurisdictionScore
+    );
+  }, [getJurisdictionStats, maxJurisdictionScore]);
 
   const getSubJurisdictionColor = useCallback((name: string) => {
     if (!selectedJurisdiction) return "hsl(215, 14%, 34%)";
@@ -400,7 +426,12 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
       if (countryJurisdiction) {
         const jurisdictionStats = getJurisdictionStats(countryJurisdiction);
         if (jurisdictionStats) {
-          return getAlertFillColor(jurisdictionStats.high, jurisdictionStats.medium, jurisdictionStats.low);
+          return getJurisdictionGradientColor(
+            jurisdictionStats.high, 
+            jurisdictionStats.medium, 
+            jurisdictionStats.low, 
+            maxJurisdictionScore
+          );
         }
       }
       return "hsl(215, 14%, 34%)";
@@ -408,8 +439,13 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
     
     const subStats = subJurisdictionStats.get(abbr);
     if (!subStats) return "hsl(215, 14%, 34%)";
-    return getAlertFillColor(subStats.high, subStats.medium, subStats.low);
-  }, [selectedJurisdiction, subJurisdictionStats, getJurisdictionStats]);
+    return getJurisdictionGradientColor(
+      subStats.high, 
+      subStats.medium, 
+      subStats.low, 
+      maxSubJurisdictionScore
+    );
+  }, [selectedJurisdiction, subJurisdictionStats, getJurisdictionStats, maxJurisdictionScore, maxSubJurisdictionScore]);
 
   const handleZoomIn = useCallback(() => {
     if (position.zoom >= 8) return;
@@ -674,11 +710,56 @@ export function WorldMap({ legislation, onSelectRegion, onSelectSubJurisdiction 
           </div>
         </TooltipProvider>
         
-        <div className="flex gap-4 mt-2 justify-center text-xs flex-wrap">
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "hsl(0, 84%, 60%)"}} /><span className="text-foreground">High Risk</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "hsl(38, 92%, 50%)"}} /><span className="text-foreground">Medium Risk</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "hsl(142, 71%, 45%)"}} /><span className="text-foreground">Low Risk</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "hsl(215, 14%, 34%)"}} /><span className="text-foreground">Tracked</span></div>
+        <div className="flex items-center gap-3 mt-3 justify-center">
+          <span className="text-xs text-muted-foreground">Least Activity</span>
+          <div 
+            className="w-32 h-3 rounded-full" 
+            style={{
+              background: "linear-gradient(to right, hsl(120, 70%, 45%), hsl(60, 70%, 45%), hsl(0, 75%, 50%))"
+            }} 
+          />
+          <span className="text-xs text-muted-foreground">Most Activity</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-5 w-5 ml-1">
+                <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 text-sm" side="top">
+              <div className="space-y-2">
+                <h4 className="font-semibold">Regulatory Activity Index (Weekly)</h4>
+                <p className="text-xs text-muted-foreground">
+                  This gradient shows the volume of regulatory activity affecting each jurisdiction over the past week.
+                </p>
+                <div className="space-y-1 text-xs">
+                  <p className="font-medium">How it's calculated:</p>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+                    <li>High-risk alerts: ×3 weight</li>
+                    <li>Medium-risk alerts: ×2 weight</li>
+                    <li>Low-risk alerts: ×1 weight</li>
+                  </ul>
+                </div>
+                <div className="space-y-1 text-xs">
+                  <p className="font-medium">Color scale:</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded" style={{background: "hsl(0, 75%, 50%)"}} />
+                    <span className="text-muted-foreground">Red = Highest regulatory activity</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded" style={{background: "hsl(60, 70%, 45%)"}} />
+                    <span className="text-muted-foreground">Yellow = Moderate activity</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded" style={{background: "hsl(120, 70%, 45%)"}} />
+                    <span className="text-muted-foreground">Green = Lowest activity</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Intensity is relative to the jurisdiction with the most activity.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </CardContent>
     </Card>

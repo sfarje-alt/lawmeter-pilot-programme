@@ -1,10 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { InternationalLegislation } from "@/data/mockInternationalLegislation";
-import { aggregateByJurisdiction } from "./JurisdictionMapUtils";
-import { MapPin } from "lucide-react";
+import { aggregateByJurisdiction, calculateActivityScore, getJurisdictionGradientColor } from "./JurisdictionMapUtils";
+import { MapPin, Info } from "lucide-react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
 
 interface CanadaProvincesMapProps {
   legislation: InternationalLegislation[];
@@ -29,15 +32,18 @@ const provinceNameToAbbr: Record<string, string> = {
   "Yukon": "YT",
 };
 
-function getAlertFillColor(high: number, medium: number, low: number): string {
-  if (high > 0) return "#ef4444";
-  if (medium > 0) return "#f59e0b";
-  if (low > 0) return "#22c55e";
-  return "#374151";
-}
-
 export function CanadaProvincesMap({ legislation }: CanadaProvincesMapProps) {
   const stats = aggregateByJurisdiction(legislation, "Canada");
+  
+  // Calculate max score for gradient normalization
+  const maxScore = useMemo(() => {
+    let max = 0;
+    stats.forEach(s => {
+      const score = calculateActivityScore(s.high, s.medium, s.low);
+      if (score > max) max = score;
+    });
+    return max;
+  }, [stats]);
   
   const getProvinceStats = (provinceName: string) => {
     const abbr = provinceNameToAbbr[provinceName];
@@ -47,7 +53,7 @@ export function CanadaProvincesMap({ legislation }: CanadaProvincesMapProps) {
   const getProvinceColor = (provinceName: string) => {
     const stat = getProvinceStats(provinceName);
     if (!stat) return "#1f2937";
-    return getAlertFillColor(stat.high, stat.medium, stat.low);
+    return getJurisdictionGradientColor(stat.high, stat.medium, stat.low, maxScore);
   };
   
   return (
@@ -109,11 +115,30 @@ export function CanadaProvincesMap({ legislation }: CanadaProvincesMapProps) {
           </div>
         </TooltipProvider>
         
-        <div className="flex gap-4 mt-4 justify-center text-xs">
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#ef4444"}} /><span>High</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#f59e0b"}} /><span>Medium</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#22c55e"}} /><span>Low</span></div>
-          <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{background: "#1f2937"}} /><span>None</span></div>
+        <div className="flex items-center gap-3 mt-3 justify-center">
+          <span className="text-xs text-muted-foreground">Least Activity</span>
+          <div 
+            className="w-24 h-3 rounded-full" 
+            style={{
+              background: "linear-gradient(to right, hsl(120, 70%, 45%), hsl(60, 70%, 45%), hsl(0, 75%, 50%))"
+            }} 
+          />
+          <span className="text-xs text-muted-foreground">Most Activity</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-5 w-5">
+                <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 text-sm" side="top">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-xs">Regulatory Activity Index (Weekly)</h4>
+                <p className="text-xs text-muted-foreground">
+                  High-risk ×3, Medium ×2, Low ×1. Intensity relative to province with most activity.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </CardContent>
     </Card>
