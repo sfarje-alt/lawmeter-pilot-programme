@@ -150,7 +150,7 @@ export default function LawMeterDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { alerts, loading } = useLegislationData();
   const [activeTab, setActiveTab] = useState("legislation");
-  const [selectedRegion, setSelectedRegion] = useState<RegionCode>("NAM");
+  const [selectedRegion, setSelectedRegion] = useState<RegionCode | "ALL">("ALL");
   const [selectedCountry, setSelectedCountry] = useState<"usa" | "canada" | "costa-rica" | "peru" | "japan" | "korea" | "taiwan" | "gcc" | "eu">("usa");
   const [selectedGCCCountry, setSelectedGCCCountry] = useState<GCCCountryCode>("uae");
   const [usaDataSource, setUsaDataSource] = useState<"congress" | "mock">("congress");
@@ -475,17 +475,8 @@ export default function LawMeterDashboard() {
               />
             )}
 
-            {/* Focus Mode - Minimal UI, just alerts */}
-            {legislationViewMode === "focus" && (
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Focus mode: Analytics hidden. Click "Alerts" or "Map + Insights" to restore.
-                </div>
-              </div>
-            )}
-
-            {/* Regular Alerts Mode (or Focus mode alerts) */}
-            {(legislationViewMode === "alerts" || legislationViewMode === "focus") && (
+            {/* Regular Alerts Mode */}
+            {legislationViewMode === "alerts" && (
               <>
 
             {/* Global Search Bar - Below map, above regions */}
@@ -498,7 +489,8 @@ export default function LawMeterDashboard() {
               selectedRegion={selectedRegion}
               onSelectRegion={(region) => {
                 setSelectedRegion(region);
-                // Auto-select first country in region
+                // Auto-select first country in region (not for "ALL")
+                if (region === "ALL") return;
                 if (region === "NAM") setSelectedCountry("usa");
                 else if (region === "LATAM") setSelectedCountry("costa-rica");
                 else if (region === "EU") setSelectedCountry("eu");
@@ -506,6 +498,7 @@ export default function LawMeterDashboard() {
                 else if (region === "APAC") setSelectedCountry("japan");
               }}
               alertCounts={{
+                ALL: allEnrichedData.length,
                 NAM: 268,
                 LATAM: 45,
                 EU: 89,
@@ -601,9 +594,41 @@ export default function LawMeterDashboard() {
               </div>
             )}
 
+            {/* ALL Regions Section - Mixed alerts from all jurisdictions */}
+            {selectedRegion === "ALL" && (
+              <UnifiedLegislationSection
+                config={usaConfig}
+                items={allEnrichedData}
+                presets={defaultPresets}
+                categories={regulatoryCategories}
+                title="All Legislation"
+                subtitle="All jurisdictions - Regulatory Monitoring"
+                onItemClick={(item) => {
+                  // Determine config based on item's region
+                  const itemRegion = item.region;
+                  let config = usaConfig;
+                  if (itemRegion === "LATAM") {
+                    if (item.jurisdictionCode === "Peru") config = peruConfig;
+                    else config = costaRicaConfig;
+                  } else if (itemRegion === "APAC") {
+                    if (item.jurisdictionCode === "Japan") config = japanConfig;
+                    else if (item.jurisdictionCode === "Korea") config = koreaConfig;
+                    else config = taiwanConfig;
+                  } else if (itemRegion === "EU") {
+                    config = euConfig;
+                  } else if (itemRegion === "GCC") {
+                    config = gccConfig;
+                  } else if (item.jurisdictionCode === "Canada") {
+                    config = canadaConfig;
+                  }
+                  setSelectedUnifiedItem(item);
+                  setUnifiedDrawerConfig(config);
+                }}
+              />
+            )}
 
             {/* USA Section - Live Congress API with unified cards */}
-            {selectedCountry === "usa" && (
+            {selectedRegion !== "ALL" && selectedCountry === "usa" && (
               <UnifiedCongressSection
                 initialSubnationalFilter={selectedSubJurisdiction}
                 onClearSubnationalFilter={() => setSelectedSubJurisdiction(null)}
@@ -618,7 +643,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* Peru Section - Unified System */}
-            {selectedCountry === "peru" && (
+            {selectedRegion !== "ALL" && selectedCountry === "peru" && (
               <UnifiedLegislationSection
                 config={peruConfig}
                 items={enrichedPeruData}
@@ -636,7 +661,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* Canada Section */}
-            {selectedCountry === "canada" && (
+            {selectedRegion !== "ALL" && selectedCountry === "canada" && (
               <UnifiedLegislationSection
                 config={canadaConfig}
                 items={enrichedCanadaData}
@@ -654,7 +679,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* Costa Rica Section - Unified System */}
-            {selectedCountry === "costa-rica" && (
+            {selectedRegion !== "ALL" && selectedCountry === "costa-rica" && (
               <UnifiedLegislationSection
                 config={costaRicaConfig}
                 items={enrichedCostaRicaData}
@@ -672,7 +697,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* GCC Section - With country selector */}
-            {selectedCountry === "gcc" && (
+            {selectedRegion !== "ALL" && selectedCountry === "gcc" && (
               <div className="space-y-4">
                 {/* GCC Country Selector */}
                 <div className="flex items-center gap-4 px-4 py-3 rounded-lg border" style={{
@@ -713,7 +738,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* Japan Section */}
-            {selectedCountry === "japan" && (
+            {selectedRegion !== "ALL" && selectedCountry === "japan" && (
               <UnifiedLegislationSection
                 config={japanConfig}
                 items={enrichedJapanData}
@@ -728,7 +753,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* Korea Section */}
-            {selectedCountry === "korea" && (
+            {selectedRegion !== "ALL" && selectedCountry === "korea" && (
               <UnifiedLegislationSection
                 config={koreaConfig}
                 items={enrichedKoreaData}
@@ -743,7 +768,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* Taiwan Section */}
-            {selectedCountry === "taiwan" && (
+            {selectedRegion !== "ALL" && selectedCountry === "taiwan" && (
               <UnifiedLegislationSection
                 config={taiwanConfig}
                 items={enrichedTaiwanData}
@@ -758,7 +783,7 @@ export default function LawMeterDashboard() {
             )}
 
             {/* EU Section */}
-            {selectedCountry === "eu" && (
+            {selectedRegion !== "ALL" && selectedCountry === "eu" && (
               <UnifiedLegislationSection
                 config={euConfig}
                 items={enrichedEUData}

@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { RegionCode, regionThemes, RegionIcon } from "./RegionConfig";
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Globe } from "lucide-react";
 
 interface RegionSelectorProps {
-  selectedRegion: RegionCode | null;
-  onSelectRegion: (region: RegionCode) => void;
-  alertCounts?: Partial<Record<RegionCode, number>>;
+  selectedRegion: RegionCode | "ALL" | null;
+  onSelectRegion: (region: RegionCode | "ALL") => void;
+  alertCounts?: Partial<Record<RegionCode | "ALL", number>>;
   className?: string;
   orientation?: "horizontal" | "vertical";
 }
@@ -22,9 +22,37 @@ export function RegionSelector({
   className,
   orientation = "horizontal"
 }: RegionSelectorProps) {
+  const allCount = alertCounts["ALL"] || 0;
+
   if (orientation === "vertical") {
     return (
       <div className={cn("space-y-1", className)}>
+        {/* ALL option */}
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-between h-auto py-2 px-3 transition-colors",
+            selectedRegion === "ALL" && "bg-muted"
+          )}
+          onClick={() => onSelectRegion("ALL")}
+        >
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">All Regions</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {allCount > 0 && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-primary">
+                {allCount}
+              </span>
+            )}
+            <ChevronRight className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform",
+              selectedRegion === "ALL" && "text-primary rotate-90"
+            )} />
+          </div>
+        </Button>
+
         {REGION_ORDER.map((regionCode) => {
           const theme = regionThemes[regionCode];
           const isSelected = selectedRegion === regionCode;
@@ -68,6 +96,30 @@ export function RegionSelector({
   return (
     <ScrollArea className={cn("w-full", className)}>
       <div className="flex gap-2 pb-2">
+        {/* ALL option */}
+        <Button
+          variant={selectedRegion === "ALL" ? "default" : "ghost"}
+          size="sm"
+          className={cn(
+            "flex-shrink-0 gap-2 h-9 px-3 transition-colors border",
+            selectedRegion === "ALL"
+              ? "text-white border-transparent bg-primary"
+              : "border-border/50 hover:bg-muted"
+          )}
+          onClick={() => onSelectRegion("ALL")}
+        >
+          <Globe className="w-4 h-4" />
+          <span className="font-medium">All</span>
+          {allCount > 0 && (
+            <span className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+              selectedRegion === "ALL" ? "bg-white/20" : "bg-muted"
+            )}>
+              {allCount}
+            </span>
+          )}
+        </Button>
+
         {REGION_ORDER.map((regionCode) => {
           const theme = regionThemes[regionCode];
           const isSelected = selectedRegion === regionCode;
