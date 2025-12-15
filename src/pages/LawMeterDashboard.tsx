@@ -472,8 +472,6 @@ export default function LawMeterDashboard() {
                 filters={analyticsFilters}
                 onFiltersChange={setAnalyticsFilters}
                 onNavigateToAlerts={handleNavigateToAlerts}
-                isExpanded={mapInsightsExpanded}
-                onToggleExpand={() => setMapInsightsExpanded(!mapInsightsExpanded)}
               />
             )}
 

@@ -3,14 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Map, 
-  Grid3X3, 
-  ChevronDown, 
-  ChevronUp,
-  Maximize2,
-  Minimize2
-} from "lucide-react";
+import { Map, Grid3X3 } from "lucide-react";
 import { WorldMap } from "@/components/maps";
 import { TopJurisdictionsList } from "./TopJurisdictionsList";
 import { CountryAnalyticsPanel } from "./CountryAnalyticsPanel";
@@ -75,8 +68,6 @@ interface MapInsightsPanelProps {
   filters: AnalyticsFilters;
   onFiltersChange: (filters: AnalyticsFilters) => void;
   onNavigateToAlerts: (jurisdiction?: string, subdivision?: string) => void;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
 }
 
 export function MapInsightsPanel({
@@ -84,8 +75,6 @@ export function MapInsightsPanel({
   filters,
   onFiltersChange,
   onNavigateToAlerts,
-  isExpanded,
-  onToggleExpand,
 }: MapInsightsPanelProps) {
   const [activeTab, setActiveTab] = useState<"map" | "matrix">("map");
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
@@ -214,34 +203,18 @@ export function MapInsightsPanel({
     <div className="space-y-4">
 
       {/* Tab Toggle */}
-      <div className="flex items-center justify-between">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "map" | "matrix")}>
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="map" className="gap-2">
-              <Map className="w-4 h-4" />
-              Map
-            </TabsTrigger>
-            <TabsTrigger value="matrix" className="gap-2">
-              <Grid3X3 className="w-4 h-4" />
-              Impact vs Urgency (Global)
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <Button variant="ghost" size="sm" onClick={onToggleExpand} className="gap-2">
-          {isExpanded ? (
-            <>
-              <Minimize2 className="w-4 h-4" />
-              Collapse
-            </>
-          ) : (
-            <>
-              <Maximize2 className="w-4 h-4" />
-              Expand
-            </>
-          )}
-        </Button>
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "map" | "matrix")}>
+        <TabsList className="bg-muted/50">
+          <TabsTrigger value="map" className="gap-2">
+            <Map className="w-4 h-4" />
+            Map
+          </TabsTrigger>
+          <TabsTrigger value="matrix" className="gap-2">
+            <Grid3X3 className="w-4 h-4" />
+            Impact vs Urgency (Global)
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Content */}
       {activeTab === "map" ? (
