@@ -28,7 +28,7 @@ export function JurisdictionAnalyticsDashboard({
   jurisdictionName
 }: JurisdictionAnalyticsDashboardProps) {
   // Controls
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>("90");
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>("90d");
   const [normalizeBy, setNormalizeBy] = useState<NormalizeBy>("raw");
   
   // Drilldown state
@@ -77,25 +77,19 @@ export function JurisdictionAnalyticsDashboard({
   }, [handleDrilldown]);
   
   const handleStageBarClick = useCallback((
-    stage: string, 
+    title: string,
+    description: string,
     items: UnifiedLegislationItem[]
   ) => {
-    handleDrilldown(
-      `Stage: ${stage}`,
-      `Bills/proposals currently at stage "${stage}"`,
-      items
-    );
+    handleDrilldown(title, description, items);
   }, [handleDrilldown]);
   
   const handleRunwayBarClick = useCallback((
-    bucket: string, 
+    title: string,
+    description: string,
     items: UnifiedLegislationItem[]
   ) => {
-    handleDrilldown(
-      `Runway: ${bucket}`,
-      `Items with implementation runway of ${bucket}`,
-      items
-    );
+    handleDrilldown(title, description, items);
   }, [handleDrilldown]);
   
   const handleStabilitySegmentClick = useCallback((
@@ -133,9 +127,9 @@ export function JurisdictionAnalyticsDashboard({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="30">30 days</SelectItem>
-                    <SelectItem value="90">90 days</SelectItem>
-                    <SelectItem value="365">12 months</SelectItem>
+                    <SelectItem value="30d">30 days</SelectItem>
+                    <SelectItem value="90d">90 days</SelectItem>
+                    <SelectItem value="12m">12 months</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

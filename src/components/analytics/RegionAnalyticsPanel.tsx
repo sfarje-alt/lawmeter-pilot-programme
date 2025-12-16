@@ -4,18 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowLeft, 
-  FileText, 
-  AlertTriangle, 
-  Clock, 
-  TrendingUp,
   ExternalLink,
-  Globe
+  Globe,
+  Info
 } from "lucide-react";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
-import { RiskTrendChart } from "./RiskTrendChart";
-import { CategoryBreakdownChart } from "./CategoryBreakdownChart";
 import { RegionCode, regionThemes, RegionIcon } from "@/components/regions/RegionConfig";
 import { CountryFlag, getCountryInfo } from "@/components/shared/CountryFlag";
+import {
+  JurisdictionPulseKPIs,
+  InstitutionalShapeKPIs,
+  ThroughputInstrumentMixChart,
+  LegislativeProcessAnalyticsChart,
+  EffectiveDateRunwayChart,
+  StabilityChurnChart,
+  AnalyticsDrilldownSheet,
+  TimeWindow,
+  NormalizeBy,
+} from "./jurisdiction";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RegionAnalyticsPanelProps {
   regionKey: RegionCode;
@@ -39,6 +46,16 @@ export function RegionAnalyticsPanel({
 }: RegionAnalyticsPanelProps) {
   const theme = regionThemes[regionKey];
   
+  // Time window and normalization state
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>("90d");
+  const [normalizeBy, setNormalizeBy] = useState<NormalizeBy>("raw");
+  
+  // Drilldown state
+  const [drilldownOpen, setDrilldownOpen] = useState(false);
+  const [drilldownTitle, setDrilldownTitle] = useState("");
+  const [drilldownDescription, setDrilldownDescription] = useState("");
+  const [drilldownItems, setDrilldownItems] = useState<UnifiedLegislationItem[]>([]);
+  
   // Filter data for this region
   const regionData = useMemo(() => {
     return data.filter((item) => item.region === regionKey);
@@ -51,25 +68,6 @@ export function RegionAnalyticsPanel({
       (item) => item.jurisdictionCode === selectedCountry
     );
   }, [regionData, selectedCountry]);
-
-  // KPIs
-  const kpis = useMemo(() => {
-    const total = filteredData.length;
-    const high = filteredData.filter((d) => d.riskLevel === "high").length;
-    const highPct = total > 0 ? Math.round((high / total) * 100) : 0;
-    const criticalUrgent = filteredData.filter(
-      (d) => d.riskLevel === "high" && d.complianceDeadline
-    ).length;
-    const upcomingDeadlines = filteredData.filter((d) => {
-      if (!d.complianceDeadline) return false;
-      const deadline = new Date(d.complianceDeadline);
-      const now = new Date();
-      const thirtyDays = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      return deadline >= now && deadline <= thirtyDays;
-    }).length;
-
-    return { total, high, highPct, criticalUrgent, upcomingDeadlines };
-  }, [filteredData]);
 
   // Country distribution within region
   const countryStats = useMemo(() => {
@@ -103,10 +101,21 @@ export function RegionAnalyticsPanel({
       .sort((a, b) => b.total - a.total);
   }, [regionData]);
 
+  // Drilldown handler
+  const handleDrilldown = (title: string, description: string, items: UnifiedLegislationItem[]) => {
+    setDrilldownTitle(title);
+    setDrilldownDescription(description);
+    setDrilldownItems(items);
+    setDrilldownOpen(true);
+  };
+
+  // Get jurisdiction code for terminology (use first country in region or selected country)
+  const jurisdictionCode = selectedCountry || countryStats[0]?.code || "USA";
+
   return (
     <div className="space-y-4">
       {/* Header with breadcrumb */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
             <ArrowLeft className="w-4 h-4" />
@@ -117,10 +126,26 @@ export function RegionAnalyticsPanel({
             Analytics / Map / {regionName}
           </span>
         </div>
-        <Button variant="outline" size="sm" onClick={onViewAlerts} className="gap-2">
-          <ExternalLink className="w-4 h-4" />
-          View Alerts
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Time Window Control */}
+          <div className="flex items-center rounded-md border border-border/50 bg-muted/30">
+            {(["30d", "90d", "12m"] as TimeWindow[]).map((tw) => (
+              <Button
+                key={tw}
+                variant={timeWindow === tw ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 px-2.5 text-xs"
+                onClick={() => setTimeWindow(tw)}
+              >
+                {tw}
+              </Button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={onViewAlerts} className="gap-2">
+            <ExternalLink className="w-4 h-4" />
+            View Alerts
+          </Button>
+        </div>
       </div>
 
       {/* Region title */}
@@ -134,7 +159,7 @@ export function RegionAnalyticsPanel({
         <div>
           <h2 className="text-xl font-bold">{regionName}</h2>
           <p className="text-sm text-muted-foreground">
-            {kpis.total} tracked items across {countryStats.length} jurisdictions
+            {filteredData.length} tracked items across {countryStats.length} jurisdictions
           </p>
         </div>
       </div>
@@ -159,66 +184,76 @@ export function RegionAnalyticsPanel({
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="glass-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <FileText className="w-4 h-4" />
-              <span className="text-xs">Total Items</span>
-            </div>
-            <div className="text-2xl font-bold">{kpis.total}</div>
-          </CardContent>
-        </Card>
+      {/* Jurisdiction Pulse KPIs */}
+      <JurisdictionPulseKPIs 
+        data={filteredData} 
+        timeWindow={timeWindow}
+        onKpiClick={handleDrilldown}
+      />
 
-        <Card className="glass-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <AlertTriangle className="w-4 h-4 text-risk-high" />
-              <span className="text-xs">High Risk</span>
-            </div>
-            <div className="text-2xl font-bold text-risk-high">
-              {kpis.high}
-              <span className="text-sm font-normal text-muted-foreground ml-1">
-                ({kpis.highPct}%)
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Institutional Shape KPIs */}
+      <InstitutionalShapeKPIs 
+        data={filteredData} 
+        timeWindow={timeWindow}
+        onKpiClick={handleDrilldown}
+      />
 
-        <Card className="glass-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
-              <span className="text-xs">Critical & Urgent</span>
-            </div>
-            {kpis.criticalUrgent > 0 ? (
-              <div className="text-2xl font-bold text-amber-500">{kpis.criticalUrgent}</div>
-            ) : (
-              <div className="text-sm text-muted-foreground">No urgent items</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Clock className="w-4 h-4 text-blue-500" />
-              <span className="text-xs">Deadlines (30d)</span>
-            </div>
-            {kpis.upcomingDeadlines > 0 ? (
-              <div className="text-2xl font-bold text-blue-500">{kpis.upcomingDeadlines}</div>
-            ) : (
-              <div className="text-sm text-muted-foreground">No upcoming</div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Normalize Control */}
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-xs text-muted-foreground">Normalize:</span>
+        <div className="flex items-center rounded-md border border-border/50 bg-muted/30">
+          {([
+            { value: "raw", label: "Raw" },
+            { value: "per-week", label: "Per Week" },
+            { value: "percent", label: "%" },
+          ] as { value: NormalizeBy; label: string }[]).map((opt) => (
+            <Button
+              key={opt.value}
+              variant={normalizeBy === opt.value ? "secondary" : "ghost"}
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => setNormalizeBy(opt.value)}
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
       </div>
 
-      {/* Charts Grid */}
+      {/* Chart Block A: Throughput & Instrument Mix */}
+      <ThroughputInstrumentMixChart
+        data={filteredData}
+        jurisdictionCode={jurisdictionCode}
+        normalizeBy={normalizeBy}
+        onBarClick={handleDrilldown}
+      />
+
+      {/* Chart Block B: Legislative Process Analytics */}
+      <LegislativeProcessAnalyticsChart
+        data={filteredData}
+        jurisdictionCode={jurisdictionCode}
+        onBarClick={handleDrilldown}
+      />
+
+      {/* Charts Grid: Runway + Stability */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <RiskTrendChart data={filteredData} />
-        <CategoryBreakdownChart data={filteredData} />
+        {/* Chart Block C: Effective Date Runway */}
+        <EffectiveDateRunwayChart
+          data={filteredData}
+          onBarClick={handleDrilldown}
+        />
+
+        {/* Chart Block D: Stability & Churn (optional) */}
+        <StabilityChurnChart
+          data={filteredData}
+          onSegmentClick={(type, items) => {
+            handleDrilldown(
+              type === "original" ? "Original Documents" : "Amending Documents",
+              `${items.length} ${type} documents in this jurisdiction`,
+              items
+            );
+          }}
+        />
       </div>
 
       {/* Country Distribution within Region */}
@@ -295,6 +330,34 @@ export function RegionAnalyticsPanel({
           </div>
         </CardContent>
       </Card>
+
+      {/* Footer Disclaimer */}
+      <TooltipProvider>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70 pt-2 border-t border-border/30">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3 h-3 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-xs text-xs">
+                Analytics derived from tracked legislative data. Metadata may include AI-extracted fields.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+          <span>
+            Informational analytics; may include AI-extracted metadata; verify with official sources.
+          </span>
+        </div>
+      </TooltipProvider>
+
+      {/* Drilldown Sheet */}
+      <AnalyticsDrilldownSheet
+        open={drilldownOpen}
+        onOpenChange={setDrilldownOpen}
+        title={drilldownTitle}
+        description={drilldownDescription}
+        items={drilldownItems}
+      />
     </div>
   );
 }

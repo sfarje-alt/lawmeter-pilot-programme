@@ -2,8 +2,18 @@
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { subDays, differenceInDays, parseISO, isValid, startOfWeek, format } from "date-fns";
 
-export type TimeWindow = "30" | "90" | "365" | "custom";
+export type TimeWindow = "30d" | "90d" | "12m" | "custom";
 export type NormalizeBy = "raw" | "per-week" | "percent";
+
+// Convert time window to days
+export function timeWindowToDays(window: TimeWindow): number {
+  switch (window) {
+    case "30d": return 30;
+    case "90d": return 90;
+    case "12m": return 365;
+    default: return 90;
+  }
+}
 export type SourceType = "gazette" | "parliament" | "regulator" | "court" | "executive";
 
 // Infer source type from authority/instrument
@@ -42,7 +52,7 @@ export function filterByTimeWindow(
     });
   }
   
-  const days = parseInt(window);
+  const days = timeWindowToDays(window);
   cutoff = subDays(now, days);
   
   return items.filter(item => {
@@ -149,7 +159,11 @@ export function calculateAmendmentIntensity(
   items: UnifiedLegislationItem[],
   days: number = 90
 ): { percentage: number | null; amendingCount: number; originalCount: number } {
-  const filtered = filterByTimeWindow(items, days.toString() as TimeWindow);
+  const cutoff = subDays(new Date(), days);
+  const filtered = items.filter(item => {
+    const date = parseItemDate(item.publishedDate);
+    return date && date >= cutoff;
+  });
   
   // Check if any items have amendment data
   const itemsWithAmendment = filtered.filter(item => 
@@ -173,7 +187,11 @@ export function calculateTopAuthorityShare(
   items: UnifiedLegislationItem[],
   days: number = 30
 ): { topAuthority: string; share: number; count: number } {
-  const filtered = filterByTimeWindow(items, days.toString() as TimeWindow);
+  const cutoff = subDays(new Date(), days);
+  const filtered = items.filter(item => {
+    const date = parseItemDate(item.publishedDate);
+    return date && date >= cutoff;
+  });
   
   if (filtered.length === 0) {
     return { topAuthority: "N/A", share: 0, count: 0 };
@@ -199,7 +217,11 @@ export function calculateConcentrationIndex(
   items: UnifiedLegislationItem[],
   days: number = 90
 ): { index: number; level: "Low" | "Medium" | "High" } {
-  const filtered = filterByTimeWindow(items, days.toString() as TimeWindow);
+  const cutoff = subDays(new Date(), days);
+  const filtered = items.filter(item => {
+    const date = parseItemDate(item.publishedDate);
+    return date && date >= cutoff;
+  });
   
   if (filtered.length === 0) {
     return { index: 0, level: "Low" };
