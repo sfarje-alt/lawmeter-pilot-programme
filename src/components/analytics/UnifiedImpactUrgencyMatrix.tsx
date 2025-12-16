@@ -3,7 +3,7 @@ import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Target, Info, X, Maximize2 } from "lucide-react";
+import { Target, Info, X, Maximize2, Calendar } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RegionCode, RegionIcon } from "@/components/regions/RegionConfig";
 
 interface UnifiedImpactUrgencyMatrixProps {
   data: UnifiedLegislationItem[];
+  onItemClick?: (item: UnifiedLegislationItem) => void;
 }
 
 // Country display info with commercial region mapping
@@ -61,9 +63,10 @@ interface CategorizedItem {
   urgency: "high" | "medium" | "low";
 }
 
-export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixProps) {
+export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactUrgencyMatrixProps) {
   const [selectedRegion, setSelectedRegion] = useState<RegionCode | "all">("all");
   const [selectedCountry, setSelectedCountry] = useState<string | "all">("all");
+  const [deadlineFilter, setDeadlineFilter] = useState<"all" | "7d" | "30d" | "90d">("all");
   const [expandedQuadrant, setExpandedQuadrant] = useState<{
     key: QuadrantKey;
     title: string;
@@ -78,7 +81,7 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
     return REGION_INFO[selectedRegion].countries;
   }, [selectedRegion]);
 
-  // Filter data based on region and country
+  // Filter data based on region, country, and deadline
   const filteredData = useMemo(() => {
     let result = data;
 
@@ -91,8 +94,22 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
       result = result.filter(item => item.jurisdictionCode === selectedCountry);
     }
 
+    // Deadline filter
+    if (deadlineFilter !== "all") {
+      const now = new Date();
+      const days = deadlineFilter === "7d" ? 7 : deadlineFilter === "30d" ? 30 : 90;
+      const cutoff = new Date();
+      cutoff.setDate(now.getDate() + days);
+      
+      result = result.filter(item => {
+        if (!item.complianceDeadline) return false;
+        const deadline = new Date(item.complianceDeadline);
+        return deadline >= now && deadline <= cutoff;
+      });
+    }
+
     return result;
-  }, [data, selectedRegion, selectedCountry]);
+  }, [data, selectedRegion, selectedCountry, deadlineFilter]);
 
   const now = new Date();
   const next30Days = new Date();
@@ -137,8 +154,16 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
     ),
   }), [categorizedItems]);
 
+  const handleItemClick = (item: UnifiedLegislationItem) => {
+    setExpandedQuadrant(null);
+    onItemClick?.(item);
+  };
+
   const ItemRow = ({ item, showDetails = false }: { item: UnifiedLegislationItem; showDetails?: boolean }) => (
-    <div className="text-xs p-2 bg-background rounded border hover:bg-muted/50 transition-colors">
+    <div 
+      className="text-xs p-2 bg-background rounded border hover:bg-muted/50 transition-colors cursor-pointer"
+      onClick={() => handleItemClick(item)}
+    >
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground shrink-0">
           {COUNTRY_INFO[item.jurisdictionCode]?.flag || "🌐"} {item.jurisdictionCode}
@@ -148,7 +173,7 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
       {showDetails && (
         <div className="mt-2 pt-2 border-t space-y-1">
           <p className="text-muted-foreground">{item.regulatoryCategory}</p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge variant={item.riskLevel === "high" ? "destructive" : item.riskLevel === "medium" ? "secondary" : "outline"} className="text-[10px]">
               {item.riskLevel} risk
             </Badge>
@@ -219,6 +244,7 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
                         Deadline: {new Date(item.complianceDeadline).toLocaleDateString()}
                       </p>
                     )}
+                    <p className="text-xs text-primary mt-1">Click to view details →</p>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -247,9 +273,10 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
   const handleClearFilters = () => {
     setSelectedRegion("all");
     setSelectedCountry("all");
+    setDeadlineFilter("all");
   };
 
-  const hasActiveFilters = selectedRegion !== "all" || selectedCountry !== "all";
+  const hasActiveFilters = selectedRegion !== "all" || selectedCountry !== "all" || deadlineFilter !== "all";
 
   return (
     <>
@@ -293,6 +320,16 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
 
             {/* Filters */}
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Deadline Filter */}
+              <Tabs value={deadlineFilter} onValueChange={(v) => setDeadlineFilter(v as typeof deadlineFilter)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="all" className="text-xs px-2 h-6">All</TabsTrigger>
+                  <TabsTrigger value="7d" className="text-xs px-2 h-6">7d</TabsTrigger>
+                  <TabsTrigger value="30d" className="text-xs px-2 h-6">30d</TabsTrigger>
+                  <TabsTrigger value="90d" className="text-xs px-2 h-6">90d</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
               <Select
                 value={selectedRegion}
                 onValueChange={(v) => {
@@ -300,7 +337,7 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
                   setSelectedCountry("all");
                 }}
               >
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-[140px] h-8 text-xs">
                   <SelectValue placeholder="Region" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -320,7 +357,7 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
                 value={selectedCountry}
                 onValueChange={(v) => setSelectedCountry(v)}
               >
-                <SelectTrigger className="w-[160px] h-8 text-xs">
+                <SelectTrigger className="w-[150px] h-8 text-xs">
                   <SelectValue placeholder="Country" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -345,8 +382,14 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
           {/* Active filters summary */}
           <div className="text-xs text-muted-foreground mt-2">
             Showing {filteredData.length} of {data.length} items
-            {selectedRegion !== "all" && (
+            {deadlineFilter !== "all" && (
               <Badge variant="secondary" className="ml-2 text-[10px]">
+                <Calendar className="h-3 w-3 mr-1" />
+                Next {deadlineFilter}
+              </Badge>
+            )}
+            {selectedRegion !== "all" && (
+              <Badge variant="secondary" className="ml-1 text-[10px]">
                 {REGION_INFO[selectedRegion].name}
               </Badge>
             )}
@@ -397,20 +440,20 @@ export function UnifiedImpactUrgencyMatrix({ data }: UnifiedImpactUrgencyMatrixP
 
       {/* Expanded Quadrant Modal */}
       <Dialog open={!!expandedQuadrant} onOpenChange={(open) => !open && setExpandedQuadrant(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+          <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle className="flex items-center gap-2">
               {expandedQuadrant?.title}
               <Badge variant="secondary">{expandedQuadrant?.items.length} items</Badge>
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <div className="flex-1 overflow-y-auto p-6 pt-4">
             <div className="space-y-2">
               {expandedQuadrant?.items.map(({ item }) => (
                 <ItemRow key={item.id} item={item} showDetails />
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </>
