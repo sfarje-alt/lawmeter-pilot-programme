@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useTransition, useCallback } from "react";
+import legislationHeaderBg from "@/assets/legislation-header-watermark.png";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -446,47 +447,46 @@ export default function LawMeterDashboard() {
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
             {/* Header Banner with background image */}
-            <div className="relative rounded-xl overflow-hidden">
-              {/* Background image - visible header */}
-              <img 
-                src="/legislation-header-watermark.png" 
-                alt="" 
-                className="absolute inset-0 w-full h-full object-cover"
-              />
+            <div 
+              className="relative rounded-xl overflow-hidden min-h-[120px]"
+              style={{ 
+                backgroundImage: `url(${legislationHeaderBg})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center top' 
+              }}
+            >
               {/* Semi-transparent overlay for readability */}
-              <div className="absolute inset-0 bg-background/60" />
+              <div className="absolute inset-0 bg-background/30" />
               
               {/* Content overlapping the background */}
-              <div className="relative z-10 p-4">
-                <div className="flex items-center justify-between">
-                  <LegislationViewToggle 
-                    mode={legislationViewMode} 
-                    onModeChange={setLegislationViewMode} 
-                  />
-                  {(mapJurisdictionFilter || mapSubdivisionFilter) && (
-                    <div className="flex items-center gap-2">
-                      {mapJurisdictionFilter && (
-                        <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
-                          Country: {mapJurisdictionFilter}
-                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapJurisdictionFilter(null)}>
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </Badge>
-                      )}
-                      {mapSubdivisionFilter && (
-                        <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
-                          Subdivision: {mapSubdivisionFilter}
-                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapSubdivisionFilter(null)}>
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </Badge>
-                      )}
-                      <Button variant="ghost" size="sm" onClick={handleClearMapFilters}>
-                        Clear filters
-                      </Button>
-                    </div>
-                  )}
-                </div>
+              <div className="relative z-10 p-4 flex items-center justify-between min-h-[120px]">
+                <LegislationViewToggle 
+                  mode={legislationViewMode} 
+                  onModeChange={setLegislationViewMode} 
+                />
+                {(mapJurisdictionFilter || mapSubdivisionFilter) && (
+                  <div className="flex items-center gap-2">
+                    {mapJurisdictionFilter && (
+                      <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
+                        Country: {mapJurisdictionFilter}
+                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapJurisdictionFilter(null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    {mapSubdivisionFilter && (
+                      <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
+                        Subdivision: {mapSubdivisionFilter}
+                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapSubdivisionFilter(null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={handleClearMapFilters}>
+                      Clear filters
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
