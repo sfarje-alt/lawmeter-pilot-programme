@@ -15,24 +15,7 @@ import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { RiskTrendChart } from "./RiskTrendChart";
 import { CategoryBreakdownChart } from "./CategoryBreakdownChart";
 import { RegionCode, regionThemes, RegionIcon } from "@/components/regions/RegionConfig";
-
-// Country info mapping
-const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
-  "USA": { flag: "🇺🇸", name: "United States" },
-  "Canada": { flag: "🇨🇦", name: "Canada" },
-  "Japan": { flag: "🇯🇵", name: "Japan" },
-  "Korea": { flag: "🇰🇷", name: "South Korea" },
-  "Taiwan": { flag: "🇹🇼", name: "Taiwan" },
-  "EU": { flag: "🇪🇺", name: "European Union" },
-  "UAE": { flag: "🇦🇪", name: "United Arab Emirates" },
-  "Saudi Arabia": { flag: "🇸🇦", name: "Saudi Arabia" },
-  "Oman": { flag: "🇴🇲", name: "Oman" },
-  "Kuwait": { flag: "🇰🇼", name: "Kuwait" },
-  "Bahrain": { flag: "🇧🇭", name: "Bahrain" },
-  "Qatar": { flag: "🇶🇦", name: "Qatar" },
-  "Peru": { flag: "🇵🇪", name: "Peru" },
-  "Costa Rica": { flag: "🇨🇷", name: "Costa Rica" },
-};
+import { CountryFlag, getCountryInfo } from "@/components/shared/CountryFlag";
 
 interface RegionAnalyticsPanelProps {
   regionKey: RegionCode;
@@ -92,18 +75,17 @@ export function RegionAnalyticsPanel({
   const countryStats = useMemo(() => {
     const stats = new Map<
       string,
-      { code: string; name: string; flag: string; total: number; high: number; medium: number; low: number }
+      { code: string; name: string; total: number; high: number; medium: number; low: number }
     >();
 
     regionData.forEach((item) => {
       const countryCode = item.jurisdictionCode || "Unknown";
-      const countryInfo = COUNTRY_INFO[countryCode] || { flag: "🌍", name: countryCode };
+      const countryInfo = getCountryInfo(countryCode);
       
       if (!stats.has(countryCode)) {
         stats.set(countryCode, { 
           code: countryCode,
-          name: countryInfo.name, 
-          flag: countryInfo.flag,
+          name: countryInfo?.name || countryCode, 
           total: 0, 
           high: 0, 
           medium: 0, 
@@ -161,8 +143,7 @@ export function RegionAnalyticsPanel({
       {selectedCountry && (
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-2 pl-3 pr-2 py-1.5">
-            <span>{COUNTRY_INFO[selectedCountry]?.flag || "🌍"}</span>
-            {COUNTRY_INFO[selectedCountry]?.name || selectedCountry}
+            <CountryFlag countryKey={selectedCountry} variant="full" size="sm" showTooltip={false} />
             <Button
               variant="ghost"
               size="sm"
@@ -266,7 +247,7 @@ export function RegionAnalyticsPanel({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-xl">{stat.flag}</span>
+                      <CountryFlag countryKey={stat.code} variant="flag" size="lg" showTooltip={false} />
                       <div className="min-w-0">
                         <div className="font-medium text-sm truncate">
                           {stat.name}

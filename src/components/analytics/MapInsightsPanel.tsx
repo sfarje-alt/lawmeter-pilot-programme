@@ -12,23 +12,15 @@ import { UnifiedImpactUrgencyMatrix } from "./UnifiedImpactUrgencyMatrix";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { AnalyticsFilters } from "./AnalyticsFilterBar";
 import { RegionCode, regionThemes, RegionIcon } from "@/components/regions/RegionConfig";
+import { CountryFlag, getCountryInfo } from "@/components/shared/CountryFlag";
 
-// Country display info with commercial region mapping
-const COUNTRY_INFO: Record<string, { flag: string; name: string; region: RegionCode }> = {
-  "USA": { flag: "🇺🇸", name: "United States", region: "NAM" },
-  "Canada": { flag: "🇨🇦", name: "Canada", region: "NAM" },
-  "Japan": { flag: "🇯🇵", name: "Japan", region: "APAC" },
-  "Korea": { flag: "🇰🇷", name: "South Korea", region: "APAC" },
-  "Taiwan": { flag: "🇹🇼", name: "Taiwan", region: "APAC" },
-  "EU": { flag: "🇪🇺", name: "European Union", region: "EU" },
-  "UAE": { flag: "🇦🇪", name: "United Arab Emirates", region: "GCC" },
-  "Saudi Arabia": { flag: "🇸🇦", name: "Saudi Arabia", region: "GCC" },
-  "Oman": { flag: "🇴🇲", name: "Oman", region: "GCC" },
-  "Kuwait": { flag: "🇰🇼", name: "Kuwait", region: "GCC" },
-  "Bahrain": { flag: "🇧🇭", name: "Bahrain", region: "GCC" },
-  "Qatar": { flag: "🇶🇦", name: "Qatar", region: "GCC" },
-  "Peru": { flag: "🇵🇪", name: "Peru", region: "LATAM" },
-  "Costa Rica": { flag: "🇨🇷", name: "Costa Rica", region: "LATAM" },
+// Country to region mapping
+const COUNTRY_REGION_MAP: Record<string, RegionCode> = {
+  "USA": "NAM", "Canada": "NAM",
+  "Japan": "APAC", "Korea": "APAC", "Taiwan": "APAC",
+  "EU": "EU",
+  "UAE": "GCC", "Saudi Arabia": "GCC", "Oman": "GCC", "Kuwait": "GCC", "Bahrain": "GCC", "Qatar": "GCC",
+  "Peru": "LATAM", "Costa Rica": "LATAM",
 };
 
 // Region display info
@@ -43,6 +35,11 @@ const REGION_INFO: Record<RegionCode, { name: string; countries: string[] }> = {
 // Check if key is a commercial region
 const isRegionKey = (key: string): key is RegionCode => {
   return ["NAM", "LATAM", "EU", "GCC", "APAC"].includes(key);
+};
+
+// Helper to get country region
+const getCountryRegion = (countryKey: string): RegionCode | undefined => {
+  return COUNTRY_REGION_MAP[countryKey];
 };
 
 // Map WorldMap jurisdiction codes to our data keys
@@ -162,11 +159,11 @@ export function MapInsightsPanel({
   // Handle map country click - determines region and pre-selects country
   const handleMapSelectRegion = (jurisdictionCode: string) => {
     const countryKey = JURISDICTION_DATA_MAP[jurisdictionCode] || jurisdictionCode;
-    const countryInfo = COUNTRY_INFO[countryKey];
+    const region = getCountryRegion(countryKey);
     
-    if (countryInfo) {
+    if (region) {
       // Set the commercial region and pre-select the country
-      setSelectedRegion(countryInfo.region);
+      setSelectedRegion(region);
       setSelectedCountry(countryKey);
       setSelectedSubdivision(null);
     }
@@ -217,27 +214,32 @@ export function MapInsightsPanel({
             <WorldMap
               legislation={filteredLegislationForMap}
               onSelectRegion={handleMapSelectRegion}
-              onSelectSubJurisdiction={(jurisdiction, sub) => {
-                const countryKey = JURISDICTION_DATA_MAP[jurisdiction] || jurisdiction;
-                const countryInfo = COUNTRY_INFO[countryKey];
-                if (countryInfo) {
-                  setSelectedRegion(countryInfo.region);
-                  setSelectedCountry(countryKey);
-                  setSelectedSubdivision(sub);
-                }
-              }}
-            />
-          </div>
+                onSelectSubJurisdiction={(jurisdiction, sub) => {
+                  const countryKey = JURISDICTION_DATA_MAP[jurisdiction] || jurisdiction;
+                  const region = getCountryRegion(countryKey);
+                  if (region) {
+                    setSelectedRegion(region);
+                    setSelectedCountry(countryKey);
+                    setSelectedSubdivision(sub);
+                  }
+                }}
+              />
+            </div>
 
-          {/* Selected region/country indicator */}
-          {selectedRegion && (
-            <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
-              <RegionIcon region={selectedRegion} size={24} />
-              <span className="font-medium">
-                Viewing: {regionInfo?.name}
-                {selectedCountry && ` → ${COUNTRY_INFO[selectedCountry]?.name || selectedCountry}`}
-              </span>
-              <Button variant="ghost" size="sm" onClick={handleBackToMap} className="ml-auto">
+            {/* Selected region/country indicator */}
+            {selectedRegion && (
+              <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                <RegionIcon region={selectedRegion} size={24} />
+                <span className="font-medium flex items-center gap-1">
+                  Viewing: {regionInfo?.name}
+                  {selectedCountry && (
+                    <>
+                      {" → "}
+                      <CountryFlag countryKey={selectedCountry} variant="full" size="sm" showTooltip={false} />
+                    </>
+                  )}
+                </span>
+                <Button variant="ghost" size="sm" onClick={handleBackToMap} className="ml-auto">
                 Clear Selection
               </Button>
             </div>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 
 interface ComplianceTimelineProps {
   data: UnifiedLegislationItem[];
@@ -71,11 +72,15 @@ export function ComplianceTimeline({ data }: ComplianceTimelineProps) {
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {item.jurisdictionCode}
-                      </span>
+                      <CountryFlag 
+                        countryKey={item.jurisdictionCode} 
+                        variant="compact" 
+                        size="xs" 
+                        showTooltip={false}
+                        className="text-muted-foreground"
+                      />
                       {item.riskLevel === "high" && (
                         <AlertTriangle className="w-3 h-3 text-risk-high" />
                       )}

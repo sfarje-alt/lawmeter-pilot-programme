@@ -11,31 +11,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 
-// Jurisdiction flags and labels
+// Jurisdiction options with countryKey for flag lookup
 const jurisdictions = [
-  { id: "all", label: "All Jurisdictions", flag: "" },
-  { id: "usa", label: "USA", flag: "🇺🇸" },
-  { id: "canada", label: "Canada", flag: "🇨🇦" },
-  { id: "costa-rica", label: "Costa Rica", flag: "🇨🇷" },
-  { id: "peru", label: "Perú", flag: "🇵🇪" },
-  { id: "eu", label: "European Union", flag: "🇪🇺" },
-  { id: "uae", label: "UAE", flag: "🇦🇪" },
-  { id: "saudi", label: "Saudi Arabia", flag: "🇸🇦" },
-  { id: "oman", label: "Oman", flag: "🇴🇲" },
-  { id: "kuwait", label: "Kuwait", flag: "🇰🇼" },
-  { id: "bahrain", label: "Bahrain", flag: "🇧🇭" },
-  { id: "qatar", label: "Qatar", flag: "🇶🇦" },
-  { id: "japan", label: "Japan", flag: "🇯🇵" },
-  { id: "korea", label: "Korea", flag: "🇰🇷" },
-  { id: "taiwan", label: "Taiwan", flag: "🇹🇼" },
+  { id: "all", label: "All Jurisdictions", countryKey: "" },
+  { id: "usa", label: "USA", countryKey: "USA" },
+  { id: "canada", label: "Canada", countryKey: "Canada" },
+  { id: "costa-rica", label: "Costa Rica", countryKey: "Costa Rica" },
+  { id: "peru", label: "Perú", countryKey: "Peru" },
+  { id: "eu", label: "European Union", countryKey: "EU" },
+  { id: "uae", label: "UAE", countryKey: "UAE" },
+  { id: "saudi", label: "Saudi Arabia", countryKey: "Saudi Arabia" },
+  { id: "oman", label: "Oman", countryKey: "Oman" },
+  { id: "kuwait", label: "Kuwait", countryKey: "Kuwait" },
+  { id: "bahrain", label: "Bahrain", countryKey: "Bahrain" },
+  { id: "qatar", label: "Qatar", countryKey: "Qatar" },
+  { id: "japan", label: "Japan", countryKey: "Japan" },
+  { id: "korea", label: "Korea", countryKey: "Korea" },
+  { id: "taiwan", label: "Taiwan", countryKey: "Taiwan" },
 ];
 
 interface SearchResult {
   id: string;
   title: string;
   jurisdiction: string;
-  flag: string;
+  countryKey: string;
   subJurisdiction?: string;
   riskLevel: "low" | "medium" | "high";
   documentType: string;
@@ -74,27 +75,26 @@ export function GlobalLegislationSearch({ onSearch, onSelectResult, allData = []
 
     // Group results by jurisdiction
     const mockResults: Record<string, SearchResult[]> = {
-      "🇺🇸 USA": [
-        { id: "us-1", title: `Smart Appliance Safety Act - ${query}`, jurisdiction: "USA", flag: "🇺🇸", riskLevel: "high", documentType: "Bill" },
-        { id: "us-2", title: `FCC RF Standards Update - ${query}`, jurisdiction: "USA", flag: "🇺🇸", subJurisdiction: "Federal", riskLevel: "medium", documentType: "Regulation" },
+      "USA": [
+        { id: "us-1", title: `Smart Appliance Safety Act - ${query}`, jurisdiction: "USA", countryKey: "USA", riskLevel: "high", documentType: "Bill" },
+        { id: "us-2", title: `FCC RF Standards Update - ${query}`, jurisdiction: "USA", countryKey: "USA", subJurisdiction: "Federal", riskLevel: "medium", documentType: "Regulation" },
       ],
-      "🇨🇦 Canada": [
-        { id: "ca-1", title: `ISED Wireless Requirements - ${query}`, jurisdiction: "Canada", flag: "🇨🇦", riskLevel: "medium", documentType: "Regulation" },
+      "Canada": [
+        { id: "ca-1", title: `ISED Wireless Requirements - ${query}`, jurisdiction: "Canada", countryKey: "Canada", riskLevel: "medium", documentType: "Regulation" },
       ],
-      "🇪🇺 EU": [
-        { id: "eu-1", title: `Radio Equipment Directive Amendment - ${query}`, jurisdiction: "EU", flag: "🇪🇺", riskLevel: "high", documentType: "Directive" },
+      "EU": [
+        { id: "eu-1", title: `Radio Equipment Directive Amendment - ${query}`, jurisdiction: "EU", countryKey: "EU", riskLevel: "high", documentType: "Directive" },
       ],
-      "🇯🇵 Japan": [
-        { id: "jp-1", title: `電波法改正 - ${query}`, jurisdiction: "Japan", flag: "🇯🇵", riskLevel: "low", documentType: "Law" },
+      "Japan": [
+        { id: "jp-1", title: `電波法改正 - ${query}`, jurisdiction: "Japan", countryKey: "Japan", riskLevel: "low", documentType: "Law" },
       ],
     };
 
     // Filter by selected jurisdiction
     if (selectedJurisdiction !== "all") {
       const jurisdictionInfo = jurisdictions.find(j => j.id === selectedJurisdiction);
-      if (jurisdictionInfo) {
-        const key = `${jurisdictionInfo.flag} ${jurisdictionInfo.label}`;
-        setSuggestions({ [key]: mockResults[key] || [] });
+      if (jurisdictionInfo && jurisdictionInfo.countryKey) {
+        setSuggestions({ [jurisdictionInfo.countryKey]: mockResults[jurisdictionInfo.countryKey] || [] });
       }
     } else {
       setSuggestions(mockResults);
@@ -124,9 +124,18 @@ export function GlobalLegislationSearch({ onSearch, onSelectResult, allData = []
       <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg border border-border p-2">
         {/* Jurisdiction Selector */}
         <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
-          <SelectTrigger className="w-[180px] border-none bg-transparent">
+          <SelectTrigger className="w-[200px] border-none bg-transparent">
             <div className="flex items-center gap-2">
-              <span>{jurisdictions.find(j => j.id === selectedJurisdiction)?.flag}</span>
+              {jurisdictions.find(j => j.id === selectedJurisdiction)?.countryKey ? (
+                <CountryFlag 
+                  countryKey={jurisdictions.find(j => j.id === selectedJurisdiction)!.countryKey} 
+                  variant="flag" 
+                  size="sm" 
+                  showTooltip={false} 
+                />
+              ) : (
+                <Globe className="w-4 h-4" />
+              )}
               <SelectValue />
             </div>
           </SelectTrigger>
@@ -134,7 +143,11 @@ export function GlobalLegislationSearch({ onSearch, onSelectResult, allData = []
             {jurisdictions.map(j => (
               <SelectItem key={j.id} value={j.id}>
                 <span className="flex items-center gap-2">
-                  <span>{j.flag}</span>
+                  {j.countryKey ? (
+                    <CountryFlag countryKey={j.countryKey} variant="flag" size="sm" showTooltip={false} />
+                  ) : (
+                    <Globe className="w-4 h-4" />
+                  )}
                   {j.label}
                 </span>
               </SelectItem>
@@ -177,11 +190,11 @@ export function GlobalLegislationSearch({ onSearch, onSelectResult, allData = []
         <Card className="absolute top-full mt-2 left-0 right-0 z-50 max-h-96 overflow-auto bg-background border border-border shadow-lg">
           {hasResults ? (
             <div className="p-2 space-y-4">
-              {Object.entries(suggestions).map(([jurisdiction, results]) => (
+              {Object.entries(suggestions).map(([jurisdictionKey, results]) => (
                 results.length > 0 && (
-                  <div key={jurisdiction}>
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      {jurisdiction}
+                  <div key={jurisdictionKey}>
+                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                      <CountryFlag countryKey={jurisdictionKey} variant="full" size="sm" showTooltip={false} />
                     </div>
                     <div className="space-y-1">
                       {results.map(result => (
@@ -196,7 +209,7 @@ export function GlobalLegislationSearch({ onSearch, onSelectResult, allData = []
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span>{result.flag}</span>
+                              <CountryFlag countryKey={result.countryKey} variant="flag" size="xs" showTooltip={false} />
                               <span className="truncate font-medium">{result.title}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">

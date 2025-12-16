@@ -3,31 +3,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RegionSelector, RegionHeader, RegionEmptyState } from "@/components/regions";
 import type { RegionCode } from "@/components/regions/RegionConfig";
 import { MediaMonitoringDemo } from "./MediaMonitoringDemo";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 
-// Country options for each region
-const REGION_COUNTRIES: Record<RegionCode, { code: string; name: string; flag: string }[]> = {
+// Country options for each region (countryKey maps to COUNTRY_FLAGS keys)
+const REGION_COUNTRIES: Record<RegionCode, { code: string; countryKey: string; name: string }[]> = {
   NAM: [
-    { code: "usa", name: "United States", flag: "🇺🇸" },
-    { code: "canada", name: "Canada", flag: "🇨🇦" },
+    { code: "usa", countryKey: "USA", name: "United States" },
+    { code: "canada", countryKey: "Canada", name: "Canada" },
   ],
   LATAM: [
-    { code: "costa-rica", name: "Costa Rica", flag: "🇨🇷" },
+    { code: "costa-rica", countryKey: "Costa Rica", name: "Costa Rica" },
   ],
   EU: [
-    { code: "eu", name: "European Union", flag: "🇪🇺" },
+    { code: "eu", countryKey: "EU", name: "European Union" },
   ],
   GCC: [
-    { code: "uae", name: "UAE", flag: "🇦🇪" },
-    { code: "saudi", name: "Saudi Arabia", flag: "🇸🇦" },
-    { code: "oman", name: "Oman", flag: "🇴🇲" },
-    { code: "kuwait", name: "Kuwait", flag: "🇰🇼" },
-    { code: "bahrain", name: "Bahrain", flag: "🇧🇭" },
-    { code: "qatar", name: "Qatar", flag: "🇶🇦" },
+    { code: "uae", countryKey: "UAE", name: "UAE" },
+    { code: "saudi", countryKey: "Saudi Arabia", name: "Saudi Arabia" },
+    { code: "oman", countryKey: "Oman", name: "Oman" },
+    { code: "kuwait", countryKey: "Kuwait", name: "Kuwait" },
+    { code: "bahrain", countryKey: "Bahrain", name: "Bahrain" },
+    { code: "qatar", countryKey: "Qatar", name: "Qatar" },
   ],
   APAC: [
-    { code: "japan", name: "Japan", flag: "🇯🇵" },
-    { code: "korea", name: "Korea", flag: "🇰🇷" },
-    { code: "taiwan", name: "Taiwan", flag: "🇹🇼" },
+    { code: "japan", countryKey: "Japan", name: "Japan" },
+    { code: "korea", countryKey: "Korea", name: "Korea" },
+    { code: "taiwan", countryKey: "Taiwan", name: "Taiwan" },
   ],
 };
 
@@ -72,14 +73,13 @@ export function MediaSection() {
                 <button
                   key={country.code}
                   onClick={() => setSelectedCountry(country.code)}
-                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all inline-flex items-center gap-2 ${
                     selectedCountry === country.code
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-background hover:bg-muted border-border"
                   }`}
                 >
-                  <span className="mr-2">{country.flag}</span>
-                  {country.name}
+                  <CountryFlag countryKey={country.countryKey} variant="full" size="sm" showTooltip={false} />
                 </button>
               ))}
             </div>
