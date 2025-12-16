@@ -28,6 +28,7 @@ import {
   Calendar
 } from "lucide-react";
 import { usaLegislationData } from "@/data/usaLegislationMockData";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 import { UnifiedAlertCard } from "./UnifiedAlertCard";
 import { USALegislationDrawer } from "./USALegislationDrawer";
 import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
@@ -655,7 +656,8 @@ export function USALegislationSection() {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold flex items-center gap-2">
-          🇺🇸 USA Legislation
+          <CountryFlag countryKey="USA" variant="flag" size="lg" showTooltip={false} />
+          USA Legislation
         </h2>
       </div>
 

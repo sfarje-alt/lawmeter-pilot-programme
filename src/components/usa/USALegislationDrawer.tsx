@@ -26,6 +26,7 @@ import {
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 import {
   Drawer,
   DrawerClose,
@@ -122,10 +123,14 @@ export function USALegislationDrawer({ item, open, onClose }: USALegislationDraw
                   {item.subJurisdiction ? (
                     <Badge variant="outline" className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      🇺🇸 {item.subJurisdiction}
+                      <CountryFlag countryKey="USA" variant="flag" size="xs" showTooltip={false} />
+                      {item.subJurisdiction}
                     </Badge>
                   ) : (
-                    <Badge variant="outline">🇺🇸 Federal</Badge>
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <CountryFlag countryKey="USA" variant="flag" size="xs" showTooltip={false} />
+                      Federal
+                    </Badge>
                   )}
                 </div>
                 <DrawerTitle className="text-xl">{item.title}</DrawerTitle>
