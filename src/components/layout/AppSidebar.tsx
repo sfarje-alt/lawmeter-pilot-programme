@@ -1,4 +1,4 @@
-import { FileText, BarChart3, Star, Users, Calendar, Settings, BookOpen, Clock, MessageSquare, LogOut } from "lucide-react";
+import { Scale, BarChart3, Star, Users, Calendar, Settings, BookOpen, Clock, MessageSquare, LogOut, Play } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,8 +26,8 @@ interface AppSidebarProps {
 
 const menuItems = [
   { id: "starred", title: "Starred", icon: Star },
-  { id: "legislation", title: "Legislation", icon: FileText },
-  { id: "media", title: "Legislative Session Monitor", icon: FileText },
+  { id: "legislation", title: "Legislation", icon: Scale },
+  { id: "media", title: "Legislative Session Monitor", icon: Play },
   { id: "social", title: "Social Listening", icon: Users },
   { id: "calendar", title: "Calendar", icon: Calendar },
   { id: "contact", title: "Contact", icon: MessageSquare },
