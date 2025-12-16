@@ -1521,7 +1521,7 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       "Certificación SUTEL obligatoria",
       "Período de transición de 180 días"
     ],
-    tipoNorma: "reglamento_tecnico",
+    tipoNorma: "normativa_regulatoria",
     tipoEmisor: "regulador",
     nivel: "institucional",
     organoEmisor: "SUTEL - Superintendencia de Telecomunicaciones",
@@ -1755,7 +1755,7 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       "Vigencia de certificados: 3 años",
       "Proceso de renovación simplificado"
     ],
-    tipoNorma: "reglamento_tecnico",
+    tipoNorma: "normativa_regulatoria",
     tipoEmisor: "regulador",
     nivel: "institucional",
     organoEmisor: "ARESEP",
@@ -1908,7 +1908,7 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
       "Proceso de certificación simplificado",
       "Equivalencias con UL, IEC, CE"
     ],
-    tipoNorma: "reglamento_tecnico",
+    tipoNorma: "normativa_regulatoria",
     tipoEmisor: "regulador",
     nivel: "institucional",
     organoEmisor: "INTECO",
