@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useTransition, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -155,6 +155,7 @@ export default function LawMeterDashboard() {
   const [selectedGCCCountry, setSelectedGCCCountry] = useState<GCCCountryCode>("uae");
   const [usaDataSource, setUsaDataSource] = useState<"congress" | "mock">("congress");
   const [selectedSubJurisdiction, setSelectedSubJurisdiction] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   
   // New: Legislation view mode (alerts, map-insights, focus)
   const [legislationViewMode, setLegislationViewModeState] = useState<LegislationViewMode>("alerts");
@@ -348,14 +349,23 @@ export default function LawMeterDashboard() {
     return mergeWithComprehensiveData(baseData);
   }, []);
 
+  // Wrapped setters with startTransition for smooth navigation
+  const handleSelectCountry = useCallback((country: typeof selectedCountry) => {
+    startTransition(() => {
+      setSelectedCountry(country);
+    });
+  }, []);
+
   // Handler for navigating to alerts from map
   const handleNavigateToAlerts = (jurisdiction?: string, subdivision?: string) => {
     setLegislationViewMode("alerts");
     if (jurisdiction) {
       const region = JURISDICTION_TO_REGION[jurisdiction];
       const country = JURISDICTION_TO_COUNTRY[jurisdiction];
-      if (region) setSelectedRegion(region);
-      if (country) setSelectedCountry(country);
+      startTransition(() => {
+        if (region) setSelectedRegion(region);
+        if (country) setSelectedCountry(country);
+      });
       setMapJurisdictionFilter(jurisdiction);
     }
     if (subdivision) {
@@ -509,14 +519,16 @@ export default function LawMeterDashboard() {
             <RegionSelector
               selectedRegion={selectedRegion}
               onSelectRegion={(region) => {
-                setSelectedRegion(region);
-                // Auto-select first country in region (not for "ALL")
-                if (region === "ALL") return;
-                if (region === "NAM") setSelectedCountry("usa");
-                else if (region === "LATAM") setSelectedCountry("costa-rica");
-                else if (region === "EU") setSelectedCountry("eu");
-                else if (region === "GCC") setSelectedCountry("gcc");
-                else if (region === "APAC") setSelectedCountry("japan");
+                startTransition(() => {
+                  setSelectedRegion(region);
+                  // Auto-select first country in region (not for "ALL")
+                  if (region === "ALL") return;
+                  if (region === "NAM") setSelectedCountry("usa");
+                  else if (region === "LATAM") setSelectedCountry("costa-rica");
+                  else if (region === "EU") setSelectedCountry("eu");
+                  else if (region === "GCC") setSelectedCountry("gcc");
+                  else if (region === "APAC") setSelectedCountry("japan");
+                });
               }}
               alertCounts={{
                 ALL: allEnrichedData.length,
@@ -540,7 +552,7 @@ export default function LawMeterDashboard() {
                     <>
                       <Button
                         variant={selectedCountry === "usa" ? "default" : "outline"}
-                        onClick={() => setSelectedCountry("usa")}
+                        onClick={() => handleSelectCountry("usa")}
                         size="sm"
                         className="gap-2"
                         style={selectedCountry === "usa" ? { backgroundColor: regionThemes.NAM.primaryColor } : undefined}
@@ -549,7 +561,7 @@ export default function LawMeterDashboard() {
                       </Button>
                       <Button
                         variant={selectedCountry === "canada" ? "default" : "outline"}
-                        onClick={() => setSelectedCountry("canada")}
+                        onClick={() => handleSelectCountry("canada")}
                         size="sm"
                         className="gap-2"
                         style={selectedCountry === "canada" ? { backgroundColor: regionThemes.NAM.primaryColor } : undefined}
@@ -562,7 +574,7 @@ export default function LawMeterDashboard() {
                     <>
                       <Button
                         variant={selectedCountry === "costa-rica" ? "default" : "outline"}
-                        onClick={() => setSelectedCountry("costa-rica")}
+                        onClick={() => handleSelectCountry("costa-rica")}
                         size="sm"
                         className="gap-2"
                         style={selectedCountry === "costa-rica" ? { backgroundColor: regionThemes.LATAM.primaryColor } : undefined}
@@ -571,7 +583,7 @@ export default function LawMeterDashboard() {
                       </Button>
                       <Button
                         variant={selectedCountry === "peru" ? "default" : "outline"}
-                        onClick={() => setSelectedCountry("peru")}
+                        onClick={() => handleSelectCountry("peru")}
                         size="sm"
                         className="gap-2"
                         style={selectedCountry === "peru" ? { backgroundColor: regionThemes.LATAM.primaryColor } : undefined}
@@ -584,7 +596,7 @@ export default function LawMeterDashboard() {
                     <>
                       <Button
                         variant={selectedCountry === "japan" ? "default" : "outline"}
-                        onClick={() => setSelectedCountry("japan")}
+                        onClick={() => handleSelectCountry("japan")}
                         size="sm"
                         className="gap-2"
                         style={selectedCountry === "japan" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
@@ -593,7 +605,7 @@ export default function LawMeterDashboard() {
                       </Button>
                       <Button
                         variant={selectedCountry === "korea" ? "default" : "outline"}
-                        onClick={() => setSelectedCountry("korea")}
+                        onClick={() => handleSelectCountry("korea")}
                         size="sm"
                         className="gap-2"
                         style={selectedCountry === "korea" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
@@ -602,7 +614,7 @@ export default function LawMeterDashboard() {
                       </Button>
                       <Button
                         variant={selectedCountry === "taiwan" ? "default" : "outline"}
-                        onClick={() => setSelectedCountry("taiwan")}
+                        onClick={() => handleSelectCountry("taiwan")}
                         size="sm"
                         className="gap-2"
                         style={selectedCountry === "taiwan" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
