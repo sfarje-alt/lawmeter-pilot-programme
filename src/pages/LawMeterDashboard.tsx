@@ -445,6 +445,16 @@ export default function LawMeterDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
+            {/* Header Watermark Banner */}
+            <div className="relative h-16 rounded-lg overflow-hidden">
+              <img 
+                src="/legislation-header-watermark.png" 
+                alt="" 
+                className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background" />
+            </div>
+
             {/* View Mode Toggle */}
             <div className="flex items-center justify-between">
               <LegislationViewToggle 
