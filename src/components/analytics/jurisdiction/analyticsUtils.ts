@@ -435,7 +435,7 @@ export function getInstrumentLocalLabel(
   return localLabels[jurisdictionCode]?.[instrumentType] || instrumentType;
 }
 
-// Chart color palette - vibrant colors for dark theme
+// Chart color palette - vibrant colors for dark theme (16 colors for many segments)
 export const chartColors = [
   "hsl(200, 80%, 55%)",   // Bright blue
   "hsl(160, 70%, 45%)",   // Teal/green
@@ -445,4 +445,12 @@ export const chartColors = [
   "hsl(210, 70%, 50%)",   // Blue variant
   "hsl(120, 50%, 50%)",   // Green
   "hsl(50, 80%, 50%)",    // Yellow
+  "hsl(0, 70%, 55%)",     // Red
+  "hsl(180, 60%, 45%)",   // Cyan
+  "hsl(260, 55%, 55%)",   // Violet
+  "hsl(20, 75%, 50%)",    // Burnt orange
+  "hsl(90, 55%, 45%)",    // Lime green
+  "hsl(300, 50%, 55%)",   // Magenta
+  "hsl(45, 90%, 50%)",    // Gold
+  "hsl(195, 75%, 50%)",   // Sky blue
 ];
