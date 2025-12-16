@@ -26,28 +26,21 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { CountryFlag, getCountryInfo } from "@/components/shared/CountryFlag";
+import { COUNTRY_FLAGS } from "@/config/countryFlags";
 
 interface UnifiedImpactUrgencyMatrixProps {
   data: UnifiedLegislationItem[];
   onItemClick?: (item: UnifiedLegislationItem) => void;
 }
 
-// Country display info with commercial region mapping
-const COUNTRY_INFO: Record<string, { flag: string; name: string; code: string; region: RegionCode }> = {
-  "USA": { flag: "🇺🇸", name: "United States", code: "US", region: "NAM" },
-  "Canada": { flag: "🇨🇦", name: "Canada", code: "CA", region: "NAM" },
-  "Japan": { flag: "🇯🇵", name: "Japan", code: "JP", region: "APAC" },
-  "Korea": { flag: "🇰🇷", name: "South Korea", code: "KR", region: "APAC" },
-  "Taiwan": { flag: "🇹🇼", name: "Taiwan", code: "TW", region: "APAC" },
-  "EU": { flag: "🇪🇺", name: "European Union", code: "EU", region: "EU" },
-  "UAE": { flag: "🇦🇪", name: "United Arab Emirates", code: "AE", region: "GCC" },
-  "Saudi Arabia": { flag: "🇸🇦", name: "Saudi Arabia", code: "SA", region: "GCC" },
-  "Oman": { flag: "🇴🇲", name: "Oman", code: "OM", region: "GCC" },
-  "Kuwait": { flag: "🇰🇼", name: "Kuwait", code: "KW", region: "GCC" },
-  "Bahrain": { flag: "🇧🇭", name: "Bahrain", code: "BH", region: "GCC" },
-  "Qatar": { flag: "🇶🇦", name: "Qatar", code: "QA", region: "GCC" },
-  "Peru": { flag: "🇵🇪", name: "Peru", code: "PE", region: "LATAM" },
-  "Costa Rica": { flag: "🇨🇷", name: "Costa Rica", code: "CR", region: "LATAM" },
+// Region info for grouping
+const COUNTRY_REGION_MAP: Record<string, RegionCode> = {
+  "USA": "NAM", "Canada": "NAM",
+  "Japan": "APAC", "Korea": "APAC", "Taiwan": "APAC",
+  "EU": "EU",
+  "UAE": "GCC", "Saudi Arabia": "GCC", "Oman": "GCC", "Kuwait": "GCC", "Bahrain": "GCC", "Qatar": "GCC",
+  "Peru": "LATAM", "Costa Rica": "LATAM",
 };
 
 // Region display info
@@ -58,6 +51,9 @@ const REGION_INFO: Record<RegionCode, { name: string; countries: string[] }> = {
   GCC: { name: "Gulf States", countries: ["UAE", "Saudi Arabia", "Oman", "Kuwait", "Bahrain", "Qatar"] },
   APAC: { name: "Asia-Pacific", countries: ["Japan", "Korea", "Taiwan"] },
 };
+
+// All country keys for dropdown
+const ALL_COUNTRIES = Object.keys(COUNTRY_REGION_MAP);
 
 type ImpactLevel = "high" | "medium" | "low";
 type UrgencyLevel = "high" | "medium" | "low";
@@ -217,7 +213,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
   // Get available countries based on selected region
   const availableCountries = useMemo(() => {
     if (selectedRegion === "all") {
-      return Object.keys(COUNTRY_INFO);
+      return ALL_COUNTRIES;
     }
     return REGION_INFO[selectedRegion].countries;
   }, [selectedRegion]);
@@ -346,8 +342,8 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
 
   // Country pill component for cells
   const CountryPill = ({ country, count, cellKey }: { country: string; count: number; cellKey: CellKey }) => {
-    const info = COUNTRY_INFO[country];
     const config = CELL_CONFIG[cellKey];
+    const countryInfo = getCountryInfo(country);
     
     return (
       <TooltipProvider>
@@ -357,13 +353,12 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
               className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] font-medium transition-all ${config.pillClass}`}
               onClick={() => handleExpandCell(cellKey)}
             >
-              <span>{info?.flag || "🌐"}</span>
-              <span>{info?.code || country}</span>
+              <CountryFlag countryKey={country} variant="compact" size="xs" showTooltip={false} />
               <span className="font-bold">({count})</span>
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-popover text-xs">
-            {info?.name || country}: {count} items
+            {countryInfo?.name || country}: {count} items
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -556,11 +551,16 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
                   <SelectItem value="all">All Countries</SelectItem>
-                  {availableCountries.map(country => (
-                    <SelectItem key={country} value={country}>
-                      <span>{COUNTRY_INFO[country]?.flag} {COUNTRY_INFO[country]?.name || country}</span>
-                    </SelectItem>
-                  ))}
+                  {availableCountries.map(country => {
+                    const info = getCountryInfo(country);
+                    return (
+                      <SelectItem key={country} value={country}>
+                        <span className="flex items-center gap-2">
+                          <CountryFlag countryKey={country} variant="full" size="sm" showTooltip={false} />
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
 
@@ -590,8 +590,8 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                   </Badge>
                 )}
                 {selectedCountry !== "all" && (
-                  <Badge variant="secondary" className="text-[10px] h-5">
-                    {COUNTRY_INFO[selectedCountry]?.flag} {selectedCountry}
+                  <Badge variant="secondary" className="text-[10px] h-5 flex items-center gap-1">
+                    <CountryFlag countryKey={selectedCountry} variant="compact" size="xs" showTooltip={false} />
                   </Badge>
                 )}
               </div>
@@ -731,7 +731,8 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                     className="h-7 text-xs"
                     onClick={() => setModalCountryFilter(country)}
                   >
-                    {COUNTRY_INFO[country]?.flag} {COUNTRY_INFO[country]?.code || country} ({items.length})
+                    <CountryFlag countryKey={country} variant="compact" size="xs" showTooltip={false} />
+                    <span>({items.length})</span>
                   </Button>
                 ))}
               </div>
@@ -746,13 +747,12 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                   onClick={() => handleItemClick(item)}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-lg shrink-0">
-                      {COUNTRY_INFO[item.jurisdictionCode]?.flag || "🌐"}
-                    </span>
+                    <CountryFlag countryKey={item.jurisdictionCode} variant="flag" size="lg" />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm">{item.title}</h4>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {COUNTRY_INFO[item.jurisdictionCode]?.name || item.jurisdictionCode} • {item.regulatoryCategory}
+                        <CountryFlag countryKey={item.jurisdictionCode} variant="full" size="xs" showTooltip={false} className="inline" />
+                        {" • "}{item.regulatoryCategory}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap mt-2">
                         <Badge 

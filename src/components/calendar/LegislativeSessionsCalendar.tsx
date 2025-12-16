@@ -45,18 +45,19 @@ import {
   unifiedGCCData
 } from "@/data/unifiedMockData";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 
-// Jurisdiction definitions for filtering
+// Jurisdiction definitions for filtering (with countryKey for CountryFlag)
 const JURISDICTIONS = [
-  { code: "USA", name: "United States", flag: "🇺🇸", region: "NAM" },
-  { code: "CAN", name: "Canada", flag: "🇨🇦", region: "NAM" },
-  { code: "CRI", name: "Costa Rica", flag: "🇨🇷", region: "LATAM" },
-  { code: "EU", name: "European Union", flag: "🇪🇺", region: "EU" },
-  { code: "UAE", name: "UAE", flag: "🇦🇪", region: "GCC" },
-  { code: "SAU", name: "Saudi Arabia", flag: "🇸🇦", region: "GCC" },
-  { code: "JPN", name: "Japan", flag: "🇯🇵", region: "JAPAN" },
-  { code: "KOR", name: "South Korea", flag: "🇰🇷", region: "APAC" },
-  { code: "TWN", name: "Taiwan", flag: "🇹🇼", region: "APAC" },
+  { code: "USA", name: "United States", countryKey: "USA", region: "NAM" },
+  { code: "CAN", name: "Canada", countryKey: "Canada", region: "NAM" },
+  { code: "CRI", name: "Costa Rica", countryKey: "Costa Rica", region: "LATAM" },
+  { code: "EU", name: "European Union", countryKey: "EU", region: "EU" },
+  { code: "UAE", name: "UAE", countryKey: "UAE", region: "GCC" },
+  { code: "SAU", name: "Saudi Arabia", countryKey: "Saudi Arabia", region: "GCC" },
+  { code: "JPN", name: "Japan", countryKey: "Japan", region: "APAC" },
+  { code: "KOR", name: "South Korea", countryKey: "Korea", region: "APAC" },
+  { code: "TWN", name: "Taiwan", countryKey: "Taiwan", region: "APAC" },
 ] as const;
 
 interface LegislativeSession {
@@ -225,16 +226,16 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
   const selectAllJurisdictions = () => setSelectedJurisdictions(JURISDICTIONS.map(j => j.code));
   const clearAllJurisdictions = () => setSelectedJurisdictions([]);
 
-  // Get jurisdiction flag by code
-  const getJurisdictionFlag = (code: string): string => {
+  // Get jurisdiction countryKey for flag display
+  const getJurisdictionCountryKey = (code: string): string => {
     const jurisdiction = JURISDICTIONS.find(j => j.code === code);
-    return jurisdiction?.flag || "🌐";
+    return jurisdiction?.countryKey || code;
   };
 
   // Convert unified legislation data to EffectiveDate format
   const convertUnifiedToEffectiveDates = (items: UnifiedLegislationItem[], jurisdictionCode: string): EffectiveDate[] => {
     const results: EffectiveDate[] = [];
-    const flag = getJurisdictionFlag(jurisdictionCode);
+    const countryKey = getJurisdictionCountryKey(jurisdictionCode);
 
     items.forEach(item => {
       // Add effective dates
@@ -251,7 +252,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
               alertId: item.id,
               description: item.summary?.substring(0, 150),
               jurisdiction: jurisdictionCode,
-              jurisdictionFlag: flag
+              jurisdictionFlag: countryKey
             });
           }
         } catch {}
@@ -271,7 +272,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
               alertId: item.id,
               description: item.summary?.substring(0, 150),
               jurisdiction: jurisdictionCode,
-              jurisdictionFlag: flag
+              jurisdictionFlag: countryKey
             });
           }
         } catch {}
@@ -1060,8 +1061,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                         )}
                         onClick={() => toggleJurisdiction(jurisdiction.code)}
                       >
-                        <span>{jurisdiction.flag}</span>
-                        <span>{jurisdiction.name}</span>
+                        <CountryFlag countryKey={jurisdiction.countryKey} variant="compact" size="sm" showTooltip={false} />
                         {count > 0 && (
                           <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
                             {count}
@@ -1237,8 +1237,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                             </h4>
                             <div className="flex items-center gap-2 flex-wrap">
                               {effectiveDate.jurisdictionFlag && (
-                                <Badge variant="outline" className="text-xs border-white/30 text-white/90">
-                                  {effectiveDate.jurisdictionFlag} {effectiveDate.jurisdiction}
+                                <Badge variant="outline" className="text-xs border-white/30 text-white/90 flex items-center gap-1">
+                                  <CountryFlag countryKey={effectiveDate.jurisdictionFlag} variant="compact" size="xs" showTooltip={false} />
                                 </Badge>
                               )}
                               <Badge variant="outline" className="text-xs border-white/30 text-white/90">
@@ -1364,16 +1364,12 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   .map((session, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <span className="text-base">
-                        {session.jurisdiction === "USA" ? "🇺🇸" : 
-                         session.jurisdiction === "CAN" ? "🇨🇦" : 
-                         session.jurisdiction === "EU" ? "🇪🇺" : 
-                         session.jurisdiction === "JPN" ? "🇯🇵" : 
-                         session.jurisdiction === "KOR" ? "🇰🇷" : 
-                         session.jurisdiction === "TWN" ? "🇹🇼" : 
-                         session.jurisdiction === "UAE" ? "🇦🇪" : 
-                         session.jurisdiction === "CRI" ? "🇨🇷" : "🌐"}
-                      </span>
+                      <CountryFlag 
+                        countryKey={getJurisdictionCountryKey(session.jurisdiction || "USA")} 
+                        variant="compact" 
+                        size="sm" 
+                        showTooltip={false} 
+                      />
                     </TableCell>
                     <TableCell className="font-medium">{session.organType}</TableCell>
                     <TableCell className="max-w-[300px] truncate" title={session.organName}>
