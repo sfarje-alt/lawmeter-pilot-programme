@@ -84,6 +84,13 @@
 
     --radius: 0.5rem;
 
+    /* Chart Colors - Vibrant palette for dark theme */
+    --chart-1: 200 80% 55%;
+    --chart-2: 160 70% 45%;
+    --chart-3: 280 65% 60%;
+    --chart-4: 35 85% 55%;
+    --chart-5: 340 70% 55%;
+
     --sidebar-background: 220 35% 10%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 90% 55%;
