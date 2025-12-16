@@ -452,9 +452,9 @@ export default function LawMeterDashboard() {
                 <img 
                   src="/legislation-header-watermark.png" 
                   alt="" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-10 grayscale"
+                  className="absolute inset-0 w-full h-full object-cover opacity-30"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background" />
+                <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
               </div>
               <LegislationViewToggle 
                 mode={legislationViewMode} 
