@@ -243,6 +243,22 @@ export const RegionIcon: React.FC<RegionIconProps> = ({ region, size = 24, showC
     APAC: APACIcon
   }[region];
 
+  // Fallback if region is invalid
+  if (!theme || !IconComponent) {
+    return (
+      <div className={`inline-flex items-center gap-1.5 ${className || ''}`}>
+        <div className="flex items-center justify-center rounded-md p-1 bg-muted/50 text-muted-foreground">
+          <Globe size={size} />
+        </div>
+        {showCode && (
+          <span className="text-xs font-bold tracking-wide text-muted-foreground">
+            {region}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`inline-flex items-center gap-1.5 ${className || ''}`}>
       <div 

@@ -12,6 +12,17 @@ interface RegionEmptyStateProps {
 
 export function RegionEmptyState({ region, onAction, className }: RegionEmptyStateProps) {
   const theme = regionThemes[region];
+  
+  // Fallback if region is invalid
+  if (!theme) {
+    return (
+      <div className={cn("flex flex-col items-center justify-center py-12 px-6 rounded-lg border border-dashed", className)}>
+        <h3 className="text-lg font-semibold mb-1 text-foreground">No data available</h3>
+        <p className="text-sm text-muted-foreground">Region not configured</p>
+      </div>
+    );
+  }
+  
   const { emptyStateMessages } = theme;
 
   return (
