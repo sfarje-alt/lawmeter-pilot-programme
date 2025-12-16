@@ -385,7 +385,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
       .sort((a, b) => a.getTime() - b.getTime())[0];
     
     return (
-      <div className={`border-2 ${config.borderClass} rounded-xl p-2.5 ${config.bgClass} flex flex-col h-full min-h-[120px] transition-all hover:shadow-md`}>
+      <div className={`border-2 ${config.borderClass} rounded-xl p-3 ${config.bgClass} flex flex-col h-full min-h-[160px] transition-all hover:shadow-md`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
@@ -667,7 +667,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                 </div>
                 
                 {/* 3x3 Grid */}
-                <div className="flex-1 grid grid-cols-3 gap-2" style={{ minHeight: "380px" }}>
+                <div className="flex-1 grid grid-cols-3 gap-3" style={{ minHeight: "520px" }}>
                   {gridOrder.map((cellKey) => (
                     <CellSection
                       key={cellKey}
