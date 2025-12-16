@@ -188,32 +188,17 @@ const CELL_CONFIG: Record<CellKey, {
   },
 };
 
-// Legend items grouped by priority
-const LEGEND_GROUPS = [
-  {
-    label: "High Priority",
-    items: [
-      { key: "high_high" as CellKey, description: "Immediate action required" },
-      { key: "high_medium" as CellKey, description: "Plan action within days" },
-      { key: "medium_high" as CellKey, description: "Address soon" },
-    ],
-  },
-  {
-    label: "Medium Priority", 
-    items: [
-      { key: "high_low" as CellKey, description: "Schedule for review" },
-      { key: "medium_medium" as CellKey, description: "Review when possible" },
-      { key: "low_high" as CellKey, description: "Quick wins" },
-    ],
-  },
-  {
-    label: "Low Priority",
-    items: [
-      { key: "medium_low" as CellKey, description: "Monitor passively" },
-      { key: "low_medium" as CellKey, description: "Track periodically" },
-      { key: "low_low" as CellKey, description: "Archive/minimal" },
-    ],
-  },
+// Legend items with classification criteria
+const LEGEND_ITEMS: { key: CellKey; criteria: string }[] = [
+  { key: "high_high", criteria: "High Risk + Deadline ≤30d or Stage ≥3" },
+  { key: "high_medium", criteria: "High Risk + Deadline ≤90d or Stage ≥1" },
+  { key: "high_low", criteria: "High Risk + No imminent deadline" },
+  { key: "medium_high", criteria: "Medium Risk + Deadline ≤30d or Stage ≥3" },
+  { key: "medium_medium", criteria: "Medium Risk + Deadline ≤90d or Stage ≥1" },
+  { key: "medium_low", criteria: "Medium Risk + No imminent deadline" },
+  { key: "low_high", criteria: "Low Risk + Deadline ≤30d or Stage ≥3" },
+  { key: "low_medium", criteria: "Low Risk + Deadline ≤90d or Stage ≥1" },
+  { key: "low_low", criteria: "Low Risk + No imminent deadline" },
 ];
 
 export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactUrgencyMatrixProps) {
@@ -618,25 +603,43 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent>
-              <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border/50">
-                <div className="grid grid-cols-3 gap-4">
-                  {LEGEND_GROUPS.map((group) => (
-                    <div key={group.label}>
-                      <h5 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{group.label}</h5>
-                      <div className="space-y-1.5">
-                        {group.items.map(({ key, description }) => {
-                          const config = CELL_CONFIG[key];
-                          return (
-                            <div key={key} className="flex items-center gap-2">
-                              <span className="text-sm">{config.emoji}</span>
-                              <span className="text-[11px] font-medium">{config.shortTitle}</span>
-                              <span className="text-[10px] text-muted-foreground">– {description}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+              <div className="mt-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+                <div className="mb-3 pb-3 border-b border-border/50">
+                  <h5 className="text-xs font-semibold mb-2">How Alerts Are Classified</h5>
+                  <div className="grid grid-cols-2 gap-3 text-[11px]">
+                    <div>
+                      <p className="font-medium text-muted-foreground mb-1">Impact (Y-Axis) = Risk Level</p>
+                      <ul className="space-y-0.5 text-muted-foreground">
+                        <li><span className="text-destructive font-medium">High</span>: Alert has high risk assessment</li>
+                        <li><span className="text-warning font-medium">Medium</span>: Alert has medium risk assessment</li>
+                        <li><span className="text-muted-foreground">Low</span>: Alert has low risk assessment</li>
+                      </ul>
                     </div>
-                  ))}
+                    <div>
+                      <p className="font-medium text-muted-foreground mb-1">Urgency (X-Axis) = Time Pressure</p>
+                      <ul className="space-y-0.5 text-muted-foreground">
+                        <li><span className="text-destructive font-medium">High</span>: Deadline ≤30 days OR pipeline stage ≥3</li>
+                        <li><span className="text-warning font-medium">Medium</span>: Deadline ≤90 days OR pipeline stage ≥1</li>
+                        <li><span className="text-muted-foreground">Low</span>: No deadline or early pipeline stage</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <h5 className="text-xs font-semibold mb-2">Matrix Cell Meanings</h5>
+                <div className="grid grid-cols-3 gap-2">
+                  {LEGEND_ITEMS.map(({ key, criteria }) => {
+                    const config = CELL_CONFIG[key];
+                    return (
+                      <div key={key} className={`p-2 rounded-md border ${config.borderClass} ${config.bgClass}`}>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-sm">{config.emoji}</span>
+                          <span className="text-[11px] font-semibold">{config.shortTitle}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-tight">{config.description}</p>
+                        <p className="text-[9px] text-muted-foreground/70 mt-1 italic">{criteria}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </CollapsibleContent>
