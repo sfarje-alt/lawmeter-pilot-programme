@@ -905,7 +905,7 @@ export function convertirPeruAUnificado(item: PeruLegislationItem): UnifiedLegis
     summary: item.resumen,
     bullets: item.puntosClave,
     region: "LATAM" as const,
-    jurisdictionCode: "Peru",
+    jurisdictionCode: "PE",
     jurisdictionLevel: jurisdictionLevelMap[item.nivel],
     subnationalUnit: item.departamento,
     instrumentType: item.tipoNorma,
