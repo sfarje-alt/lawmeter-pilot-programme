@@ -31,6 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 
 // Spanish translations for LATAM regions
 const LATAM_LABELS = {
@@ -377,8 +378,27 @@ export const UnifiedLegislationCard = memo(function UnifiedLegislationCard({
           </Tooltip>
         </TooltipProvider>
 
-        {/* Row 3: Jurisdiction line */}
+        {/* Row 3: Jurisdiction line with country flag */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+          <CountryFlag 
+            countryKey={item.jurisdictionCode === "PE" ? "Peru" : 
+                       item.jurisdictionCode === "CR" ? "Costa Rica" : 
+                       item.jurisdictionCode === "US" ? "USA" :
+                       item.jurisdictionCode === "CA" ? "Canada" :
+                       item.jurisdictionCode === "JP" ? "Japan" :
+                       item.jurisdictionCode === "KR" ? "Korea" :
+                       item.jurisdictionCode === "TW" ? "Taiwan" :
+                       item.jurisdictionCode === "AE" ? "UAE" :
+                       item.jurisdictionCode === "SA" ? "Saudi Arabia" :
+                       item.jurisdictionCode === "OM" ? "Oman" :
+                       item.jurisdictionCode === "KW" ? "Kuwait" :
+                       item.jurisdictionCode === "BH" ? "Bahrain" :
+                       item.jurisdictionCode === "QA" ? "Qatar" :
+                       item.jurisdictionCode} 
+            variant="flag" 
+            size="sm" 
+            showTooltip={false}
+          />
           {(isCostaRica && crData?.nivel === "municipal") || (isPeru && peruData?.nivel !== "nacional") || item.jurisdictionLevel !== "federal" ? (
             <MapPin className="h-3 w-3" />
           ) : (

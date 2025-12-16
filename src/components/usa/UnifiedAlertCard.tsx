@@ -27,6 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 
 interface UnifiedAlertCardProps {
   isRead: boolean;
@@ -364,8 +365,14 @@ export function UnifiedAlertCard({
           {data.title}
         </h3>
 
-        {/* Row 3: Jurisdiction line with document type */}
+        {/* Row 3: Jurisdiction line with document type and flag */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+          <CountryFlag 
+            countryKey="USA" 
+            variant="flag" 
+            size="sm" 
+            showTooltip={false}
+          />
           <span className="text-muted-foreground">{docTypeInfo.emoji}</span>
           {data.jurisdictionLevel !== "Federal" ? (
             <MapPin className="h-3 w-3" />
