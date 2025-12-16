@@ -263,15 +263,9 @@ export function MapInsightsPanel({
           )}
         </div>
       ) : (
-        // Impact vs Urgency Matrix (always global)
-        <div>
-          <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <p className="text-sm text-blue-400">
-              <strong>Global View:</strong> This matrix shows all jurisdictions matching your current filters.
-              It provides cross-jurisdiction prioritization for triage.
-            </p>
-          </div>
-          <UnifiedImpactUrgencyMatrix data={filteredData} />
+        // Impact vs Urgency Matrix - Full page
+        <div className="h-full min-h-[600px]">
+          <UnifiedImpactUrgencyMatrix data={data} />
         </div>
       )}
     </div>
