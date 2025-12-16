@@ -3,7 +3,7 @@ import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Target, Info, X, Maximize2, Calendar } from "lucide-react";
+import { Target, Info, X, Maximize2, Calendar, ArrowRight, ArrowUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -55,20 +55,105 @@ const REGION_INFO: Record<RegionCode, { name: string; countries: string[] }> = {
   APAC: { name: "Asia-Pacific", countries: ["Japan", "Korea", "Taiwan"] },
 };
 
-type QuadrantKey = "highImpactHighUrgency" | "highImpactLowUrgency" | "lowImpactHighUrgency" | "lowImpactLowUrgency";
+type ImpactLevel = "high" | "medium" | "low";
+type UrgencyLevel = "high" | "medium" | "low";
+type CellKey = `${ImpactLevel}_${UrgencyLevel}`;
 
 interface CategorizedItem {
   item: UnifiedLegislationItem;
-  impact: "high" | "medium" | "low";
-  urgency: "high" | "medium" | "low";
+  impact: ImpactLevel;
+  urgency: UrgencyLevel;
 }
+
+// Cell configuration for 3x3 grid
+const CELL_CONFIG: Record<CellKey, {
+  title: string;
+  emoji: string;
+  borderClass: string;
+  bgClass: string;
+  badgeClass: string;
+  priority: number;
+}> = {
+  high_high: {
+    title: "Critical - Act Now",
+    emoji: "🔴",
+    borderClass: "border-destructive",
+    bgClass: "bg-gradient-to-br from-destructive/15 to-destructive/5",
+    badgeClass: "bg-destructive text-destructive-foreground",
+    priority: 1,
+  },
+  high_medium: {
+    title: "Important - Plan Action",
+    emoji: "🟠",
+    borderClass: "border-orange-500",
+    bgClass: "bg-gradient-to-br from-orange-500/12 to-orange-500/4",
+    badgeClass: "bg-orange-500 text-white",
+    priority: 2,
+  },
+  high_low: {
+    title: "Strategic - Schedule",
+    emoji: "🟡",
+    borderClass: "border-yellow-500",
+    bgClass: "bg-gradient-to-br from-yellow-500/10 to-yellow-500/3",
+    badgeClass: "bg-yellow-500 text-yellow-950",
+    priority: 3,
+  },
+  medium_high: {
+    title: "Urgent - Address Soon",
+    emoji: "🟠",
+    borderClass: "border-orange-400",
+    bgClass: "bg-gradient-to-br from-orange-400/10 to-orange-400/3",
+    badgeClass: "bg-orange-400 text-white",
+    priority: 4,
+  },
+  medium_medium: {
+    title: "Moderate - Review",
+    emoji: "🟡",
+    borderClass: "border-amber-400",
+    bgClass: "bg-gradient-to-br from-amber-400/8 to-amber-400/2",
+    badgeClass: "bg-amber-400 text-amber-950",
+    priority: 5,
+  },
+  medium_low: {
+    title: "Normal - Monitor",
+    emoji: "⚪",
+    borderClass: "border-slate-400",
+    bgClass: "bg-gradient-to-br from-slate-400/8 to-slate-400/2",
+    badgeClass: "bg-slate-400 text-slate-950",
+    priority: 6,
+  },
+  low_high: {
+    title: "Quick Win - Easy Fix",
+    emoji: "🟡",
+    borderClass: "border-yellow-400",
+    bgClass: "bg-gradient-to-br from-yellow-400/8 to-yellow-400/2",
+    badgeClass: "bg-yellow-400 text-yellow-950",
+    priority: 7,
+  },
+  low_medium: {
+    title: "Low Priority - Track",
+    emoji: "⚪",
+    borderClass: "border-slate-300",
+    bgClass: "bg-gradient-to-br from-slate-300/6 to-slate-300/2",
+    badgeClass: "bg-slate-300 text-slate-800",
+    priority: 8,
+  },
+  low_low: {
+    title: "Archive - Minimal",
+    emoji: "⚪",
+    borderClass: "border-muted",
+    bgClass: "bg-muted/20",
+    badgeClass: "bg-muted text-muted-foreground",
+    priority: 9,
+  },
+};
 
 export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactUrgencyMatrixProps) {
   const [selectedRegion, setSelectedRegion] = useState<RegionCode | "all">("all");
   const [selectedCountry, setSelectedCountry] = useState<string | "all">("all");
   const [deadlineFilter, setDeadlineFilter] = useState<"all" | "7d" | "30d" | "90d">("all");
-  const [expandedQuadrant, setExpandedQuadrant] = useState<{
-    key: QuadrantKey;
+  const [expandedCell, setExpandedCell] = useState<{
+    key: CellKey;
     title: string;
     items: CategorizedItem[];
   } | null>(null);
@@ -119,7 +204,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
 
   const categorizedItems = useMemo(() => filteredData.map((item): CategorizedItem => {
     const impact = item.riskLevel;
-    let urgency: "high" | "medium" | "low" = "low";
+    let urgency: UrgencyLevel = "low";
 
     if (item.complianceDeadline) {
       const deadline = new Date(item.complianceDeadline);
@@ -139,47 +224,58 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
     return { item, impact, urgency };
   }), [filteredData, now, next30Days, next90Days]);
 
-  const quadrants = useMemo(() => ({
-    highImpactHighUrgency: categorizedItems.filter(
-      (i) => i.impact === "high" && i.urgency === "high"
-    ),
-    highImpactLowUrgency: categorizedItems.filter(
-      (i) => i.impact === "high" && (i.urgency === "low" || i.urgency === "medium")
-    ),
-    lowImpactHighUrgency: categorizedItems.filter(
-      (i) => (i.impact === "low" || i.impact === "medium") && i.urgency === "high"
-    ),
-    lowImpactLowUrgency: categorizedItems.filter(
-      (i) => (i.impact === "low" || i.impact === "medium") && (i.urgency === "low" || i.urgency === "medium")
-    ),
-  }), [categorizedItems]);
+  // Create 9 cells for the 3x3 grid
+  const cells = useMemo(() => {
+    const result: Record<CellKey, CategorizedItem[]> = {
+      high_high: [],
+      high_medium: [],
+      high_low: [],
+      medium_high: [],
+      medium_medium: [],
+      medium_low: [],
+      low_high: [],
+      low_medium: [],
+      low_low: [],
+    };
+
+    categorizedItems.forEach((item) => {
+      const key: CellKey = `${item.impact}_${item.urgency}`;
+      result[key].push(item);
+    });
+
+    return result;
+  }, [categorizedItems]);
 
   const handleItemClick = (item: UnifiedLegislationItem) => {
-    setExpandedQuadrant(null);
+    setExpandedCell(null);
     onItemClick?.(item);
   };
 
   const ItemRow = ({ item, showDetails = false }: { item: UnifiedLegislationItem; showDetails?: boolean }) => (
     <div 
-      className="text-xs p-2 bg-background rounded border hover:bg-muted/50 transition-colors cursor-pointer"
+      className="text-xs p-2 bg-background/80 rounded border border-border/50 hover:bg-accent/50 hover:border-primary/30 transition-all cursor-pointer"
       onClick={() => handleItemClick(item)}
     >
       <div className="flex items-center gap-2">
-        <span className="text-muted-foreground shrink-0">
-          {COUNTRY_INFO[item.jurisdictionCode]?.flag || "🌐"} {item.jurisdictionCode}
+        <span className="text-muted-foreground shrink-0 text-[11px]">
+          {COUNTRY_INFO[item.jurisdictionCode]?.flag || "🌐"}
         </span>
-        <span className={showDetails ? "" : "truncate flex-1"}>{item.title}</span>
+        <span className={`${showDetails ? "" : "truncate"} flex-1 font-medium`}>{item.title}</span>
       </div>
       {showDetails && (
-        <div className="mt-2 pt-2 border-t space-y-1">
+        <div className="mt-2 pt-2 border-t border-border/50 space-y-1.5">
           <p className="text-muted-foreground">{item.regulatoryCategory}</p>
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant={item.riskLevel === "high" ? "destructive" : item.riskLevel === "medium" ? "secondary" : "outline"} className="text-[10px]">
+            <Badge 
+              variant={item.riskLevel === "high" ? "destructive" : item.riskLevel === "medium" ? "secondary" : "outline"} 
+              className="text-[10px]"
+            >
               {item.riskLevel} risk
             </Badge>
             {item.complianceDeadline && (
-              <span className="text-warning text-[10px]">
-                Deadline: {new Date(item.complianceDeadline).toLocaleDateString()}
+              <span className="text-warning text-[10px] flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {new Date(item.complianceDeadline).toLocaleDateString()}
               </span>
             )}
           </div>
@@ -188,87 +284,88 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
     </div>
   );
 
-  const QuadrantSection = ({
-    title,
-    quadrantKey,
+  const CellSection = ({
+    cellKey,
     items,
-    badgeVariant,
-    borderClass,
-    bgClass,
   }: {
-    title: string;
-    quadrantKey: QuadrantKey;
+    cellKey: CellKey;
     items: CategorizedItem[];
-    badgeVariant: "destructive" | "secondary" | "outline";
-    borderClass: string;
-    bgClass: string;
-  }) => (
-    <div className={`border-2 ${borderClass} rounded-lg p-4 ${bgClass} flex flex-col h-full`}>
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-sm">{title}</h4>
-        <div className="flex items-center gap-2">
-          <Badge variant={badgeVariant}>{items.length}</Badge>
-          {items.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => setExpandedQuadrant({ key: quadrantKey, title, items })}
-            >
-              <Maximize2 className="h-3.5 w-3.5" />
-            </Button>
-          )}
+  }) => {
+    const config = CELL_CONFIG[cellKey];
+    
+    return (
+      <div className={`border-2 ${config.borderClass} rounded-xl p-3 ${config.bgClass} flex flex-col h-full min-h-[140px] transition-all hover:shadow-md`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">{config.emoji}</span>
+            <h4 className="font-semibold text-xs leading-tight">{config.title}</h4>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Badge className={`${config.badgeClass} text-[10px] px-1.5 py-0 h-5 font-bold`}>
+              {items.length}
+            </Badge>
+            {items.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 w-5 p-0 hover:bg-background/50"
+                onClick={() => setExpandedCell({ key: cellKey, title: config.title, items })}
+              >
+                <Maximize2 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="space-y-2 pr-2">
-          <TooltipProvider>
-            {items.slice(0, 10).map(({ item }) => (
-              <Tooltip key={item.id}>
-                <TooltipTrigger asChild>
-                  <div>
-                    <ItemRow item={item} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-[300px] z-50 bg-popover">
-                  <div className="space-y-1">
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.jurisdictionCode} • {item.regulatoryCategory}
-                    </p>
-                    <p className="text-xs">
-                      Risk: <span className={item.riskLevel === "high" ? "text-destructive" : item.riskLevel === "medium" ? "text-warning" : "text-muted-foreground"}>{item.riskLevel}</span>
-                    </p>
-                    {item.complianceDeadline && (
-                      <p className="text-xs text-warning">
-                        Deadline: {new Date(item.complianceDeadline).toLocaleDateString()}
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="space-y-1.5 pr-1">
+            <TooltipProvider>
+              {items.slice(0, 4).map(({ item }) => (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <ItemRow item={item} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-[280px] z-50 bg-popover">
+                    <div className="space-y-1">
+                      <p className="font-medium text-sm">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {COUNTRY_INFO[item.jurisdictionCode]?.flag} {item.jurisdictionCode} • {item.regulatoryCategory}
                       </p>
-                    )}
-                    <p className="text-xs text-primary mt-1">Click to view details →</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </TooltipProvider>
-          {items.length > 10 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full text-xs text-muted-foreground"
-              onClick={() => setExpandedQuadrant({ key: quadrantKey, title, items })}
-            >
-              +{items.length - 10} more items - Click to expand
-            </Button>
-          )}
-          {items.length === 0 && (
-            <div className="text-xs text-muted-foreground text-center py-4">
-              No items in this quadrant
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-    </div>
-  );
+                      <p className="text-xs">
+                        Risk: <span className={item.riskLevel === "high" ? "text-destructive font-medium" : item.riskLevel === "medium" ? "text-warning font-medium" : "text-muted-foreground"}>{item.riskLevel}</span>
+                      </p>
+                      {item.complianceDeadline && (
+                        <p className="text-xs text-warning">
+                          Deadline: {new Date(item.complianceDeadline).toLocaleDateString()}
+                        </p>
+                      )}
+                      <p className="text-xs text-primary mt-1">Click to view details →</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+            {items.length > 4 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full text-[10px] text-muted-foreground h-6 hover:bg-background/50"
+                onClick={() => setExpandedCell({ key: cellKey, title: config.title, items })}
+              >
+                +{items.length - 4} more
+              </Button>
+            )}
+            {items.length === 0 && (
+              <div className="text-[10px] text-muted-foreground text-center py-3 opacity-60">
+                No items
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  };
 
   const handleClearFilters = () => {
     setSelectedRegion("all");
@@ -278,10 +375,17 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
 
   const hasActiveFilters = selectedRegion !== "all" || selectedCountry !== "all" || deadlineFilter !== "all";
 
+  // Grid order: rows are Impact (High → Low), columns are Urgency (High → Low)
+  const gridOrder: CellKey[] = [
+    "high_high", "high_medium", "high_low",
+    "medium_high", "medium_medium", "medium_low",
+    "low_high", "low_medium", "low_low",
+  ];
+
   return (
     <>
       <Card className="glass-card border-border/30 h-full flex flex-col">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Target className="h-5 w-5 text-primary" />
@@ -297,21 +401,20 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                     <p className="font-semibold text-sm">How the Matrix is Calculated</p>
                     <div className="space-y-2">
                       <div>
-                        <p className="font-medium">Impact</p>
-                        <p className="text-muted-foreground">Determined by the risk level assigned to each legislation item (High, Medium, or Low).</p>
+                        <p className="font-medium">Impact (Y-Axis)</p>
+                        <p className="text-muted-foreground">Determined by the risk level: High, Medium, or Low.</p>
                       </div>
                       <div>
-                        <p className="font-medium">Urgency</p>
-                        <p className="text-muted-foreground">Calculated based on:</p>
-                        <ul className="list-disc list-inside pl-2 space-y-0.5 mt-1">
-                          <li><span className="text-destructive font-medium">High</span>: Deadline within 30 days, or pipeline item in late stage (stage 3+)</li>
-                          <li><span className="text-warning font-medium">Medium</span>: Deadline within 90 days, or pipeline item in mid stage</li>
-                          <li><span className="text-muted-foreground">Low</span>: No imminent deadline or early-stage item</li>
+                        <p className="font-medium">Urgency (X-Axis)</p>
+                        <ul className="list-disc list-inside pl-2 space-y-0.5 mt-1 text-muted-foreground">
+                          <li><span className="text-destructive font-medium">High</span>: Deadline ≤30 days or pipeline stage ≥3</li>
+                          <li><span className="text-warning font-medium">Medium</span>: Deadline ≤90 days or pipeline stage ≥1</li>
+                          <li><span className="text-muted-foreground">Low</span>: No imminent deadline</li>
                         </ul>
                       </div>
                     </div>
                     <div className="pt-2 border-t mt-2">
-                      <p className="text-muted-foreground">Currently showing: <span className="text-foreground font-medium">{filteredData.length}</span> of {data.length} total items</p>
+                      <p className="text-muted-foreground">Showing: <span className="text-foreground font-medium">{filteredData.length}</span> of {data.length} items</p>
                     </div>
                   </div>
                 </PopoverContent>
@@ -337,7 +440,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                   setSelectedCountry("all");
                 }}
               >
-                <SelectTrigger className="w-[140px] h-8 text-xs">
+                <SelectTrigger className="w-[130px] h-8 text-xs">
                   <SelectValue placeholder="Region" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -357,7 +460,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                 value={selectedCountry}
                 onValueChange={(v) => setSelectedCountry(v)}
               >
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-[140px] h-8 text-xs">
                   <SelectValue placeholder="Country" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -380,76 +483,95 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
           </div>
 
           {/* Active filters summary */}
-          <div className="text-xs text-muted-foreground mt-2">
-            Showing {filteredData.length} of {data.length} items
+          <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5 flex-wrap">
+            <span>{filteredData.length} of {data.length} items</span>
             {deadlineFilter !== "all" && (
-              <Badge variant="secondary" className="ml-2 text-[10px]">
+              <Badge variant="secondary" className="text-[10px] h-5">
                 <Calendar className="h-3 w-3 mr-1" />
                 Next {deadlineFilter}
               </Badge>
             )}
             {selectedRegion !== "all" && (
-              <Badge variant="secondary" className="ml-1 text-[10px]">
+              <Badge variant="secondary" className="text-[10px] h-5">
                 {REGION_INFO[selectedRegion].name}
               </Badge>
             )}
             {selectedCountry !== "all" && (
-              <Badge variant="secondary" className="ml-1 text-[10px]">
+              <Badge variant="secondary" className="text-[10px] h-5">
                 {COUNTRY_INFO[selectedCountry]?.flag} {selectedCountry}
               </Badge>
             )}
           </div>
         </CardHeader>
-        <CardContent className="flex-1 min-h-0">
-          <div className="grid grid-cols-2 gap-3 h-full" style={{ minHeight: "500px" }}>
-            <QuadrantSection
-              title="Critical & Urgent"
-              quadrantKey="highImpactHighUrgency"
-              items={quadrants.highImpactHighUrgency}
-              badgeVariant="destructive"
-              borderClass="border-risk-high"
-              bgClass="bg-risk-high/5"
-            />
-            <QuadrantSection
-              title="Critical but Not Urgent"
-              quadrantKey="highImpactLowUrgency"
-              items={quadrants.highImpactLowUrgency}
-              badgeVariant="secondary"
-              borderClass="border-risk-medium"
-              bgClass="bg-risk-medium/5"
-            />
-            <QuadrantSection
-              title="Urgent but Lower Impact"
-              quadrantKey="lowImpactHighUrgency"
-              items={quadrants.lowImpactHighUrgency}
-              badgeVariant="outline"
-              borderClass="border-warning"
-              bgClass="bg-warning/5"
-            />
-            <QuadrantSection
-              title="Monitor"
-              quadrantKey="lowImpactLowUrgency"
-              items={quadrants.lowImpactLowUrgency}
-              badgeVariant="outline"
-              borderClass="border-muted"
-              bgClass="bg-muted/30"
-            />
+        <CardContent className="flex-1 min-h-0 pt-2">
+          {/* 3x3 Grid with Axis Labels */}
+          <div className="flex h-full gap-2">
+            {/* Y-Axis Label */}
+            <div className="flex flex-col items-center justify-center w-6 shrink-0">
+              <div className="flex items-center gap-1 -rotate-90 whitespace-nowrap">
+                <ArrowUp className="h-3 w-3 text-muted-foreground rotate-90" />
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Impact</span>
+              </div>
+            </div>
+            
+            <div className="flex-1 flex flex-col gap-2">
+              {/* Y-Axis Level Labels + Grid */}
+              <div className="flex-1 flex gap-2">
+                {/* Y-Axis Level Labels */}
+                <div className="flex flex-col justify-around w-14 shrink-0 text-right pr-1">
+                  <span className="text-[10px] font-medium text-destructive">High</span>
+                  <span className="text-[10px] font-medium text-warning">Medium</span>
+                  <span className="text-[10px] font-medium text-muted-foreground">Low</span>
+                </div>
+                
+                {/* 3x3 Grid */}
+                <div className="flex-1 grid grid-cols-3 gap-2" style={{ minHeight: "420px" }}>
+                  {gridOrder.map((cellKey) => (
+                    <CellSection
+                      key={cellKey}
+                      cellKey={cellKey}
+                      items={cells[cellKey]}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              {/* X-Axis Level Labels */}
+              <div className="flex gap-2 pl-16">
+                <div className="flex-1 text-center">
+                  <span className="text-[10px] font-medium text-destructive">High</span>
+                </div>
+                <div className="flex-1 text-center">
+                  <span className="text-[10px] font-medium text-warning">Medium</span>
+                </div>
+                <div className="flex-1 text-center">
+                  <span className="text-[10px] font-medium text-muted-foreground">Low</span>
+                </div>
+              </div>
+              
+              {/* X-Axis Label */}
+              <div className="flex items-center justify-center gap-1 pl-16">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Urgency</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Expanded Quadrant Modal */}
-      <Dialog open={!!expandedQuadrant} onOpenChange={(open) => !open && setExpandedQuadrant(null)}>
+      {/* Expanded Cell Modal */}
+      <Dialog open={!!expandedCell} onOpenChange={(open) => !open && setExpandedCell(null)}>
         <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-          <DialogHeader className="p-6 pb-4 border-b">
+          <DialogHeader className="p-6 pb-4 border-b shrink-0">
             <DialogTitle className="flex items-center gap-2">
-              {expandedQuadrant?.title}
-              <Badge variant="secondary">{expandedQuadrant?.items.length} items</Badge>
+              {expandedCell && CELL_CONFIG[expandedCell.key].emoji}
+              {expandedCell?.title}
+              <Badge variant="secondary">{expandedCell?.items.length} items</Badge>
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 pt-4">
             <div className="space-y-2">
-              {expandedQuadrant?.items.map(({ item }) => (
+              {expandedCell?.items.map(({ item }) => (
                 <ItemRow key={item.id} item={item} showDetails />
               ))}
             </div>
