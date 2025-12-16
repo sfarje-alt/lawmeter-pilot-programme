@@ -19,7 +19,7 @@ import { getRunwayDistribution, calculateShortRunwayShare, chartColors } from ".
 
 interface EffectiveDateRunwayChartProps {
   data: UnifiedLegislationItem[];
-  onBarClick: (bucket: string, items: UnifiedLegislationItem[]) => void;
+  onBarClick: (title: string, description: string, items: UnifiedLegislationItem[]) => void;
 }
 
 export function EffectiveDateRunwayChart({ data, onBarClick }: EffectiveDateRunwayChartProps) {
@@ -111,7 +111,11 @@ export function EffectiveDateRunwayChart({ data, onBarClick }: EffectiveDateRunw
                   <Bar
                     dataKey="count"
                     cursor="pointer"
-                    onClick={(data) => onBarClick(data.bucket, data.items)}
+                    onClick={(data) => onBarClick(
+                      `Runway: ${data.bucket}`,
+                      `${data.items.length} items with ${data.bucket} implementation runway`,
+                      data.items
+                    )}
                   >
                     {distribution.map((entry, index) => (
                       <Cell 

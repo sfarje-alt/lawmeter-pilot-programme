@@ -19,7 +19,7 @@ import { getStageDistribution, getThroughputByWeek, chartColors } from "./analyt
 interface LegislativeProcessAnalyticsChartProps {
   data: UnifiedLegislationItem[];
   jurisdictionCode: string;
-  onBarClick: (stage: string, items: UnifiedLegislationItem[]) => void;
+  onBarClick: (title: string, description: string, items: UnifiedLegislationItem[]) => void;
 }
 
 export function LegislativeProcessAnalyticsChart({ 
@@ -122,7 +122,11 @@ export function LegislativeProcessAnalyticsChart({
                   <Bar
                     dataKey="count"
                     cursor="pointer"
-                    onClick={(data) => onBarClick(data.stage, data.items)}
+                    onClick={(data) => onBarClick(
+                      `Stage: ${data.stage}`,
+                      `${data.items.length} items at this legislative stage`,
+                      data.items
+                    )}
                   >
                     {stageData.map((entry, index) => (
                       <Cell 
