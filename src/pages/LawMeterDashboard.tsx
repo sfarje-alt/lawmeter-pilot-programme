@@ -533,8 +533,12 @@ export default function LawMeterDashboard() {
               onSelectRegion={(region) => {
                 startTransition(() => {
                   setSelectedRegion(region);
-                  // Auto-select first country in region (not for "ALL")
-                  if (region === "ALL") return;
+                  // Clear map filters when switching to ALL
+                  if (region === "ALL") {
+                    handleClearMapFilters();
+                    return;
+                  }
+                  // Auto-select first country in region
                   if (region === "NAM") setSelectedCountry("usa");
                   else if (region === "LATAM") setSelectedCountry("costa-rica");
                   else if (region === "EU") setSelectedCountry("eu");
