@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, Star, Users, AlertTriangle, Settings, Calendar, BookOpen, Grid, List, Building2, X } from "lucide-react";
+import { FileText, Clock, Star, Users, AlertTriangle, Settings, Calendar, BookOpen, Grid, List, Building2, X, Globe } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -35,6 +35,7 @@ import { UnifiedLegislationSection, UnifiedLegislationDrawer, UnifiedCongressSec
 import { LegislationViewToggle, LegislationViewMode } from "@/components/legislation/LegislationViewToggle";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { MapInsightsPanel } from "@/components/analytics/MapInsightsPanel";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilterBar";
 import { 
   usStateBills, 
@@ -557,7 +558,7 @@ export default function LawMeterDashboard() {
                         className="gap-2"
                         style={selectedCountry === "usa" ? { backgroundColor: regionThemes.NAM.primaryColor } : undefined}
                       >
-                        🇺🇸 USA
+                        <CountryFlag countryKey="USA" variant="full" size="sm" showTooltip={false} />
                       </Button>
                       <Button
                         variant={selectedCountry === "canada" ? "default" : "outline"}
@@ -566,7 +567,7 @@ export default function LawMeterDashboard() {
                         className="gap-2"
                         style={selectedCountry === "canada" ? { backgroundColor: regionThemes.NAM.primaryColor } : undefined}
                       >
-                        🇨🇦 Canada
+                        <CountryFlag countryKey="Canada" variant="full" size="sm" showTooltip={false} />
                       </Button>
                     </>
                   )}
@@ -579,7 +580,7 @@ export default function LawMeterDashboard() {
                         className="gap-2"
                         style={selectedCountry === "costa-rica" ? { backgroundColor: regionThemes.LATAM.primaryColor } : undefined}
                       >
-                        🇨🇷 Costa Rica
+                        <CountryFlag countryKey="Costa Rica" variant="full" size="sm" showTooltip={false} />
                       </Button>
                       <Button
                         variant={selectedCountry === "peru" ? "default" : "outline"}
@@ -588,7 +589,7 @@ export default function LawMeterDashboard() {
                         className="gap-2"
                         style={selectedCountry === "peru" ? { backgroundColor: regionThemes.LATAM.primaryColor } : undefined}
                       >
-                        🇵🇪 Perú
+                        <CountryFlag countryKey="Peru" variant="full" size="sm" showTooltip={false} />
                       </Button>
                     </>
                   )}
@@ -601,7 +602,7 @@ export default function LawMeterDashboard() {
                         className="gap-2"
                         style={selectedCountry === "japan" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
                       >
-                        🇯🇵 Japan
+                        <CountryFlag countryKey="Japan" variant="full" size="sm" showTooltip={false} />
                       </Button>
                       <Button
                         variant={selectedCountry === "korea" ? "default" : "outline"}
@@ -610,7 +611,7 @@ export default function LawMeterDashboard() {
                         className="gap-2"
                         style={selectedCountry === "korea" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
                       >
-                        🇰🇷 Korea
+                        <CountryFlag countryKey="Korea" variant="full" size="sm" showTooltip={false} />
                       </Button>
                       <Button
                         variant={selectedCountry === "taiwan" ? "default" : "outline"}
@@ -619,7 +620,7 @@ export default function LawMeterDashboard() {
                         className="gap-2"
                         style={selectedCountry === "taiwan" ? { backgroundColor: regionThemes.APAC.primaryColor } : undefined}
                       >
-                        🇹🇼 Taiwan
+                        <CountryFlag countryKey="Taiwan" variant="full" size="sm" showTooltip={false} />
                       </Button>
                     </>
                   )}
@@ -734,12 +735,24 @@ export default function LawMeterDashboard() {
                 }}>
                   <span className="text-sm font-medium text-muted-foreground">Select Country:</span>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant={selectedGCCCountry === "uae" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("uae")} size="sm" className="gap-2">🇦🇪 UAE</Button>
-                    <Button variant={selectedGCCCountry === "saudi" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("saudi")} size="sm" className="gap-2">🇸🇦 Saudi</Button>
-                    <Button variant={selectedGCCCountry === "oman" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("oman")} size="sm" className="gap-2">🇴🇲 Oman</Button>
-                    <Button variant={selectedGCCCountry === "kuwait" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("kuwait")} size="sm" className="gap-2">🇰🇼 Kuwait</Button>
-                    <Button variant={selectedGCCCountry === "bahrain" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("bahrain")} size="sm" className="gap-2">🇧🇭 Bahrain</Button>
-                    <Button variant={selectedGCCCountry === "qatar" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("qatar")} size="sm" className="gap-2">🇶🇦 Qatar</Button>
+                    <Button variant={selectedGCCCountry === "uae" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("uae")} size="sm" className="gap-2">
+                      <CountryFlag countryKey="UAE" variant="full" size="sm" showTooltip={false} />
+                    </Button>
+                    <Button variant={selectedGCCCountry === "saudi" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("saudi")} size="sm" className="gap-2">
+                      <CountryFlag countryKey="Saudi Arabia" variant="full" size="sm" showTooltip={false} />
+                    </Button>
+                    <Button variant={selectedGCCCountry === "oman" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("oman")} size="sm" className="gap-2">
+                      <CountryFlag countryKey="Oman" variant="full" size="sm" showTooltip={false} />
+                    </Button>
+                    <Button variant={selectedGCCCountry === "kuwait" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("kuwait")} size="sm" className="gap-2">
+                      <CountryFlag countryKey="Kuwait" variant="full" size="sm" showTooltip={false} />
+                    </Button>
+                    <Button variant={selectedGCCCountry === "bahrain" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("bahrain")} size="sm" className="gap-2">
+                      <CountryFlag countryKey="Bahrain" variant="full" size="sm" showTooltip={false} />
+                    </Button>
+                    <Button variant={selectedGCCCountry === "qatar" ? "default" : "outline"} onClick={() => setSelectedGCCCountry("qatar")} size="sm" className="gap-2">
+                      <CountryFlag countryKey="Qatar" variant="full" size="sm" showTooltip={false} />
+                    </Button>
                   </div>
                 </div>
                 
@@ -838,16 +851,16 @@ export default function LawMeterDashboard() {
                     <SelectValue placeholder="Filter by country" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">🌍 All Countries</SelectItem>
-                    <SelectItem value="usa">🇺🇸 USA</SelectItem>
-                    <SelectItem value="canada">🇨🇦 Canada</SelectItem>
-                    <SelectItem value="costa-rica">🇨🇷 Costa Rica</SelectItem>
-                    <SelectItem value="eu">🇪🇺 European Union</SelectItem>
-                    <SelectItem value="uae">🇦🇪 UAE</SelectItem>
-                    <SelectItem value="saudi">🇸🇦 Saudi Arabia</SelectItem>
-                    <SelectItem value="japan">🇯🇵 Japan</SelectItem>
-                    <SelectItem value="korea">🇰🇷 Korea</SelectItem>
-                    <SelectItem value="taiwan">🇹🇼 Taiwan</SelectItem>
+                    <SelectItem value="all"><span className="flex items-center gap-2"><Globe className="h-4 w-4" /> All Countries</span></SelectItem>
+                    <SelectItem value="usa"><CountryFlag countryKey="USA" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="canada"><CountryFlag countryKey="Canada" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="costa-rica"><CountryFlag countryKey="Costa Rica" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="eu"><CountryFlag countryKey="EU" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="uae"><CountryFlag countryKey="UAE" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="saudi"><CountryFlag countryKey="Saudi Arabia" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="japan"><CountryFlag countryKey="Japan" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="korea"><CountryFlag countryKey="Korea" variant="full" size="sm" showTooltip={false} /></SelectItem>
+                    <SelectItem value="taiwan"><CountryFlag countryKey="Taiwan" variant="full" size="sm" showTooltip={false} /></SelectItem>
                   </SelectContent>
                 </Select>
                 <Select 

@@ -57,7 +57,7 @@ export function CountryFlag({
       alt={`${info.name} flag`}
       loading="lazy"
       onError={() => setImageError(true)}
-      className="inline-block rounded-[2px] object-cover"
+      className="inline-block rounded-sm object-contain shadow-sm"
       style={{
         height: sizeConfig.height,
         width: Math.round(sizeConfig.height * 1.5), // 3:2 aspect ratio
