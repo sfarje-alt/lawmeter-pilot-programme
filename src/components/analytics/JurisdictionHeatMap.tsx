@@ -2,6 +2,7 @@ import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CountryFlag, getCountryInfo } from "@/components/shared/CountryFlag";
 
 interface JurisdictionHeatMapProps {
   data: UnifiedLegislationItem[];
@@ -10,42 +11,59 @@ interface JurisdictionHeatMapProps {
 interface JurisdictionStats {
   code: string;
   label: string;
-  flag: string;
+  countryKey: string;
   total: number;
   high: number;
   medium: number;
   low: number;
 }
 
+// Map jurisdiction codes to CountryFlag keys
+const JURISDICTION_TO_COUNTRY_KEY: Record<string, string> = {
+  USA: "USA",
+  US: "USA",
+  Canada: "Canada",
+  CA: "Canada",
+  EU: "EU",
+  Japan: "Japan",
+  JP: "Japan",
+  Korea: "Korea",
+  KR: "Korea",
+  Taiwan: "Taiwan",
+  TW: "Taiwan",
+  UAE: "UAE",
+  AE: "UAE",
+  "Saudi Arabia": "Saudi Arabia",
+  SA: "Saudi Arabia",
+  Oman: "Oman",
+  OM: "Oman",
+  Kuwait: "Kuwait",
+  KW: "Kuwait",
+  Bahrain: "Bahrain",
+  BH: "Bahrain",
+  Qatar: "Qatar",
+  QA: "Qatar",
+  "Costa Rica": "Costa Rica",
+  CR: "Costa Rica",
+  Peru: "Peru",
+  PE: "Peru",
+};
+
 export function JurisdictionHeatMap({ data }: JurisdictionHeatMapProps) {
   // Aggregate by jurisdiction
   const jurisdictionMap = new Map<string, JurisdictionStats>();
 
-  const jurisdictionMeta: Record<string, { label: string; flag: string }> = {
-    USA: { label: "United States", flag: "🇺🇸" },
-    Canada: { label: "Canada", flag: "🇨🇦" },
-    EU: { label: "European Union", flag: "🇪🇺" },
-    Japan: { label: "Japan", flag: "🇯🇵" },
-    Korea: { label: "Korea", flag: "🇰🇷" },
-    Taiwan: { label: "Taiwan", flag: "🇹🇼" },
-    UAE: { label: "UAE", flag: "🇦🇪" },
-    "Saudi Arabia": { label: "Saudi Arabia", flag: "🇸🇦" },
-    Oman: { label: "Oman", flag: "🇴🇲" },
-    Kuwait: { label: "Kuwait", flag: "🇰🇼" },
-    Bahrain: { label: "Bahrain", flag: "🇧🇭" },
-    Qatar: { label: "Qatar", flag: "🇶🇦" },
-    "Costa Rica": { label: "Costa Rica", flag: "🇨🇷" },
-  };
-
   data.forEach((item) => {
     const code = item.jurisdictionCode;
-    const meta = jurisdictionMeta[code] || { label: code, flag: "🌐" };
+    const countryKey = JURISDICTION_TO_COUNTRY_KEY[code] || code;
+    const info = getCountryInfo(countryKey);
+    const label = info?.name || code;
     
     if (!jurisdictionMap.has(code)) {
       jurisdictionMap.set(code, {
         code,
-        label: meta.label,
-        flag: meta.flag,
+        label,
+        countryKey,
         total: 0,
         high: 0,
         medium: 0,
@@ -89,7 +107,7 @@ export function JurisdictionHeatMap({ data }: JurisdictionHeatMapProps) {
               <div key={j.code} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <span>{j.flag}</span>
+                    <CountryFlag countryKey={j.countryKey} variant="flag" size="sm" showTooltip={false} />
                     <span className="font-medium">{j.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
