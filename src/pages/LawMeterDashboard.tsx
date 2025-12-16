@@ -513,7 +513,18 @@ export default function LawMeterDashboard() {
 
             {/* Global Search Bar - Below map, above regions */}
             <GlobalLegislationSearch 
+              allData={allEnrichedData}
               onSearch={(query, jurisdiction) => console.log("Search:", query, jurisdiction)}
+              onSelectResult={(result) => {
+                // Navigate to the item's jurisdiction and open drawer
+                if (result.originalItem) {
+                  const region = JURISDICTION_TO_REGION[result.jurisdiction] || "NAM";
+                  const country = JURISDICTION_TO_COUNTRY[result.jurisdiction] || "usa";
+                  startTransition(() => setSelectedRegion(region));
+                  startTransition(() => setSelectedCountry(country));
+                  setSelectedUnifiedItem(result.originalItem);
+                }
+              }}
             />
 
             {/* Regional Selector with themed icons */}
