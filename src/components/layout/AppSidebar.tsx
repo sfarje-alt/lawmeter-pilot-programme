@@ -30,7 +30,6 @@ const menuItems = [
   { id: "media", title: "Legislative Session Monitor", icon: Play },
   { id: "social", title: "Social Listening", icon: Users },
   { id: "calendar", title: "Calendar", icon: Calendar },
-  { id: "contact", title: "Contact", icon: MessageSquare },
 ];
 
 export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSidebarProps) {
@@ -99,6 +98,15 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
       <SidebarSeparator className="bg-white/10" />
 
       <div className="p-2 space-y-1">
+        <SidebarMenuButton
+          onClick={() => onTabChange("contact")}
+          tooltip="Contact"
+          className="text-sidebar-foreground hover:bg-white/10"
+        >
+          <MessageSquare className="h-4 w-4" />
+          {!isCollapsed && <span>Contact</span>}
+        </SidebarMenuButton>
+
         <SidebarMenuButton
           onClick={() => window.open("/documentation", "_self")}
           tooltip="Documentation"
