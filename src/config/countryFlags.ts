@@ -15,12 +15,16 @@ export interface CountryFlagInfo {
 export const COUNTRY_FLAGS: Record<string, CountryFlagInfo> = {
   // North America (NAM)
   "USA": { code: "US", name: "United States", flagUrl: "https://flagcdn.com/w80/us.png", emoji: "🇺🇸", region: "NAM" },
+  "US": { code: "US", name: "United States", flagUrl: "https://flagcdn.com/w80/us.png", emoji: "🇺🇸", region: "NAM" },
   "Canada": { code: "CA", name: "Canada", flagUrl: "https://flagcdn.com/w80/ca.png", emoji: "🇨🇦", region: "NAM" },
+  "CA": { code: "CA", name: "Canada", flagUrl: "https://flagcdn.com/w80/ca.png", emoji: "🇨🇦", region: "NAM" },
   "CAN": { code: "CA", name: "Canada", flagUrl: "https://flagcdn.com/w80/ca.png", emoji: "🇨🇦", region: "NAM" },
   
   // Latin America (LATAM)
   "Peru": { code: "PE", name: "Peru", flagUrl: "https://flagcdn.com/w80/pe.png", emoji: "🇵🇪", region: "LATAM" },
+  "PE": { code: "PE", name: "Peru", flagUrl: "https://flagcdn.com/w80/pe.png", emoji: "🇵🇪", region: "LATAM" },
   "Costa Rica": { code: "CR", name: "Costa Rica", flagUrl: "https://flagcdn.com/w80/cr.png", emoji: "🇨🇷", region: "LATAM" },
+  "CR": { code: "CR", name: "Costa Rica", flagUrl: "https://flagcdn.com/w80/cr.png", emoji: "🇨🇷", region: "LATAM" },
   "CRI": { code: "CR", name: "Costa Rica", flagUrl: "https://flagcdn.com/w80/cr.png", emoji: "🇨🇷", region: "LATAM" },
   
   // European Union (EU)
@@ -28,7 +32,9 @@ export const COUNTRY_FLAGS: Record<string, CountryFlagInfo> = {
   
   // Gulf Cooperation Council (GCC)
   "UAE": { code: "AE", name: "United Arab Emirates", flagUrl: "https://flagcdn.com/w80/ae.png", emoji: "🇦🇪", region: "GCC" },
+  "AE": { code: "AE", name: "United Arab Emirates", flagUrl: "https://flagcdn.com/w80/ae.png", emoji: "🇦🇪", region: "GCC" },
   "Saudi Arabia": { code: "SA", name: "Saudi Arabia", flagUrl: "https://flagcdn.com/w80/sa.png", emoji: "🇸🇦", region: "GCC" },
+  "SA": { code: "SA", name: "Saudi Arabia", flagUrl: "https://flagcdn.com/w80/sa.png", emoji: "🇸🇦", region: "GCC" },
   "SAU": { code: "SA", name: "Saudi Arabia", flagUrl: "https://flagcdn.com/w80/sa.png", emoji: "🇸🇦", region: "GCC" },
   "KSA": { code: "SA", name: "Saudi Arabia", flagUrl: "https://flagcdn.com/w80/sa.png", emoji: "🇸🇦", region: "GCC" },
   "Oman": { code: "OM", name: "Oman", flagUrl: "https://flagcdn.com/w80/om.png", emoji: "🇴🇲", region: "GCC" },
@@ -42,10 +48,13 @@ export const COUNTRY_FLAGS: Record<string, CountryFlagInfo> = {
   
   // Asia-Pacific (APAC)
   "Japan": { code: "JP", name: "Japan", flagUrl: "https://flagcdn.com/w80/jp.png", emoji: "🇯🇵", region: "APAC" },
+  "JP": { code: "JP", name: "Japan", flagUrl: "https://flagcdn.com/w80/jp.png", emoji: "🇯🇵", region: "APAC" },
   "JPN": { code: "JP", name: "Japan", flagUrl: "https://flagcdn.com/w80/jp.png", emoji: "🇯🇵", region: "APAC" },
   "Korea": { code: "KR", name: "South Korea", flagUrl: "https://flagcdn.com/w80/kr.png", emoji: "🇰🇷", region: "APAC" },
+  "KR": { code: "KR", name: "South Korea", flagUrl: "https://flagcdn.com/w80/kr.png", emoji: "🇰🇷", region: "APAC" },
   "KOR": { code: "KR", name: "South Korea", flagUrl: "https://flagcdn.com/w80/kr.png", emoji: "🇰🇷", region: "APAC" },
   "Taiwan": { code: "TW", name: "Taiwan", flagUrl: "https://flagcdn.com/w80/tw.png", emoji: "🇹🇼", region: "APAC" },
+  "TW": { code: "TW", name: "Taiwan", flagUrl: "https://flagcdn.com/w80/tw.png", emoji: "🇹🇼", region: "APAC" },
   "TWN": { code: "TW", name: "Taiwan", flagUrl: "https://flagcdn.com/w80/tw.png", emoji: "🇹🇼", region: "APAC" },
 };
 
