@@ -124,7 +124,7 @@ export const UnifiedLegislationCard = memo(function UnifiedLegislationCard({
     // Costa Rica handling - NO "Federal" label
     if (isCostaRica && crData) {
       const parts = [];
-      // Use CR levels: Nacional, Municipal (Cantonal), Institucional (NEVER "Federal")
+      // Use CR levels: Nacional, Municipal (NEVER "Federal" or "Cantonal")
       const nivelLabel = crData.nivel === "nacional" ? LATAM_LABELS.nacional :
                         crData.nivel === "municipal" ? LATAM_LABELS.municipal :
                         LATAM_LABELS.institucional;

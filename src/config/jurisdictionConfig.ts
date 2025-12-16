@@ -404,11 +404,10 @@ export const costaRicaConfig: JurisdictionConfig = {
     }
   ],
   
-  // Niveles jurisdiccionales para Costa Rica (SIN "Federal")
+  // Niveles jurisdiccionales para Costa Rica (Estado unitario - NO "Federal")
   jurisdictionLevels: [
-    { id: "federal", label: "Nacional", enabled: true }, // Mapea a "federal" pero muestra "Nacional"
-    { id: "local", label: "Municipal (Cantonal)", enabled: true },
-    { id: "state", label: "Institucional/Regulatorio", enabled: true } // Para entes reguladores
+    { id: "federal", label: "Nacional", enabled: true },
+    { id: "local", label: "Municipal", enabled: true }
   ],
   
   // Provincias (solo relevantes para filtrar por ubicación geográfica de impacto, NO nivel normativo)
@@ -480,7 +479,7 @@ export const costaRicaConfig: JurisdictionConfig = {
     {
       id: "municipal",
       name: "Ordenanzas Municipales",
-      description: "Normativa municipal/cantonal",
+      description: "Normativa municipal",
       filters: { jurisdictionLevel: "local" }
     }
   ]

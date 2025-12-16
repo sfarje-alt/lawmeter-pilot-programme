@@ -531,12 +531,11 @@ export const peruConfig: JurisdictionConfig = {
     }
   ],
   
-  // IMPORTANTE: Perú es Estado UNITARIO - NO usar "federal"
-  // Mapeo: "federal" -> "Nacional" (solo para compatibilidad con sistema genérico)
+  // IMPORTANTE: Perú es Estado UNITARIO - NO "Federal"
   jurisdictionLevels: [
-    { id: "federal", label: "Nacional", enabled: true },    // Renderiza como "Nacional"
-    { id: "state", label: "Regional", enabled: true },      // Gobiernos regionales
-    { id: "local", label: "Municipal/Local", enabled: true } // Municipalidades
+    { id: "federal", label: "Nacional", enabled: true },
+    { id: "state", label: "Regional", enabled: true },
+    { id: "local", label: "Municipal", enabled: true }
   ]
 };
 
@@ -636,11 +635,10 @@ export const costaRicaConfig: JurisdictionConfig = {
     }
   ],
   
-  // Costa Rica is unitary - mostly national legislation
+  // Costa Rica es Estado unitario - NO "Federal"
   jurisdictionLevels: [
     { id: "federal", label: "Nacional", enabled: true },
-    { id: "state", label: "Provincial", enabled: false },
-    { id: "local", label: "Cantonal", enabled: true }
+    { id: "local", label: "Municipal", enabled: true }
   ]
 };
 
