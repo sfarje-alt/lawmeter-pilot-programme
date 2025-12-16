@@ -109,12 +109,12 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
         </SidebarMenuButton>
         
         <SidebarMenuButton
-          onClick={onSettingsOpen}
-          tooltip="Alert Settings"
+          onClick={() => navigate('/settings')}
+          tooltip="Settings"
           className="text-sidebar-foreground hover:bg-white/10"
         >
           <Settings className="h-4 w-4" />
-          {!isCollapsed && <span>Alert Settings</span>}
+          {!isCollapsed && <span>Settings</span>}
         </SidebarMenuButton>
 
         <SidebarMenuButton
