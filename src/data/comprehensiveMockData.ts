@@ -6,6 +6,7 @@ import { subDays, format } from "date-fns";
 
 // Each jurisdiction has a risk profile that determines the distribution of risk levels
 // This creates natural variation in colors across the map
+// Peru and Costa Rica excluded - they have dedicated legal system data files
 const JURISDICTIONS = [
   { code: "USA", region: "NAM" as const, riskProfile: { high: 0.5, medium: 0.3, low: 0.2 } },
   { code: "Canada", region: "NAM" as const, riskProfile: { high: 0.2, medium: 0.5, low: 0.3 } },
@@ -19,8 +20,6 @@ const JURISDICTIONS = [
   { code: "Kuwait", region: "GCC" as const, riskProfile: { high: 0.15, medium: 0.4, low: 0.45 } },
   { code: "Bahrain", region: "GCC" as const, riskProfile: { high: 0.2, medium: 0.3, low: 0.5 } },
   { code: "Qatar", region: "GCC" as const, riskProfile: { high: 0.3, medium: 0.35, low: 0.35 } },
-  { code: "Peru", region: "LATAM" as const, riskProfile: { high: 0.2, medium: 0.45, low: 0.35 } },
-  { code: "Costa Rica", region: "LATAM" as const, riskProfile: { high: 0.15, medium: 0.35, low: 0.5 } },
 ];
 
 const RISK_LEVELS: ("high" | "medium" | "low")[] = ["high", "medium", "low"];
