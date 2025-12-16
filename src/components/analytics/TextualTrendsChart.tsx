@@ -2,40 +2,18 @@ import { Alert, BillItem } from "@/types/legislation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
+import { useBusinessProfile } from "@/contexts/BusinessProfileContext";
 
 interface TextualTrendsChartProps {
   data: Alert[] | BillItem[];
   type: "acts" | "bills";
 }
 
-// Portfolio keywords from client requirements
-const PORTFOLIO_KEYWORDS = [
-  "hospital", "hospitals", "health service", "health facility", "medical facility", "clinic", 
-  "doctor", "doctors", "outpatient", "inpatient", "ED", "emergency department", "ICU", 
-  "intensive care", "aged care", "nursing home", "residential care", "disability service", 
-  "disability provider", "NDIS", "therapeutic goods", "TGA", "pharmaceutical", "pharma", 
-  "pharmacy", "medicine", "medicines", "drug", "drugs", "biologics", "biologic", "vaccine", 
-  "vaccines", "blood product", "tissue product", "organ transplant", "prosthesis", "implant", 
-  "implantable device", "diagnostic", "diagnostics", "pathology", "laboratory", "clinical trial", 
-  "clinical research", "infection control", "communicable disease", "infectious disease", 
-  "mental health", "psychiatric", "rehabilitation", "rehab", "physiotherapy", "occupational therapy", 
-  "prosthetics", "biomedical", "biotechnology", "biotech", "medtech", "medical device", "device",
-  "patient safety", "accreditation", "electronic health record", "EHR", "health IT", "e-health", 
-  "telehealth", "telemedicine", "consent", "treatment", "therapy", "care plan", "surgery", 
-  "surgical", "radiology", "medical imaging", "imaging", "MRI", "CT", "PET", "oncology", 
-  "cancer care", "dialysis", "renal", "nephrology", "blood transfusion", "transfusion",
-  "privacy", "data protection", "data breach", "cyber", "cybersecurity", "encryption", 
-  "confidentiality", "discrimination", "liability", "negligence", "compliance", "IP", 
-  "intellectual property", "WHS", "OHS", "workplace health and safety", "nurse", "nurses",
-  "staffing ratios", "rostering", "fatigue", "burnout", "shift work", "industrial relations",
-  "GST", "taxation", "tax", "pricing", "subsidy", "rebate", "PBS", "Medicare", "funding"
-];
-
-function extractPortfolioKeywords(text: string): string[] {
+function extractPortfolioKeywords(text: string, keywords: string[]): string[] {
   const lowerText = text.toLowerCase();
   const foundKeywords: string[] = [];
   
-  PORTFOLIO_KEYWORDS.forEach(keyword => {
+  keywords.forEach(keyword => {
     const keywordLower = keyword.toLowerCase();
     // Use word boundary regex for more accurate matching
     const regex = new RegExp(`\\b${keywordLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
@@ -49,6 +27,7 @@ function extractPortfolioKeywords(text: string): string[] {
 }
 
 export function TextualTrendsChart({ data, type }: TextualTrendsChartProps) {
+  const { profile } = useBusinessProfile();
   const keywordCounts: Record<string, number> = {};
   
   if (type === "acts") {
@@ -60,7 +39,7 @@ export function TextualTrendsChart({ data, type }: TextualTrendsChartProps) {
         ...(alert.AI_triage?.alert_bullets || [])
       ].join(" ");
       
-      extractPortfolioKeywords(text).forEach(keyword => {
+      extractPortfolioKeywords(text, profile.portfolioKeywords).forEach(keyword => {
         keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
       });
     });
@@ -69,7 +48,7 @@ export function TextualTrendsChart({ data, type }: TextualTrendsChartProps) {
     bills.forEach(bill => {
       const text = [bill.title, bill.summary, ...bill.bullets].join(" ");
       
-      extractPortfolioKeywords(text).forEach(keyword => {
+      extractPortfolioKeywords(text, profile.portfolioKeywords).forEach(keyword => {
         keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
       });
     });
