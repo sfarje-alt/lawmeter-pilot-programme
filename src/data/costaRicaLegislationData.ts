@@ -1390,6 +1390,549 @@ export const costaRicaLegislationData: CostaRicaLegislationItem[] = [
     ],
     numeroGaceta: "N.º 189",
     fuenteUrl: "https://www.sugef.fi.cr/normativa/acuerdo-5-2024"
+  },
+
+  // ========== ADDITIONAL ENRICHED DATA FOR ANALYTICS (15 MORE ITEMS) ==========
+  // Recent items (1-7 days ago)
+  {
+    id: "cr-proy-015",
+    identificador: "Expediente N.º 24.567",
+    titulo: "Proyecto de Ley de Etiquetado Energético de Electrodomésticos",
+    resumen: "Establece requisitos de etiquetado de eficiencia energética para todos los electrodomésticos comercializados en Costa Rica.",
+    puntosImportantes: [
+      "Escala de eficiencia energética A-G obligatoria",
+      "Información de consumo anual en kWh",
+      "Sanciones por etiquetado incorrecto"
+    ],
+    tipoNorma: "proyecto_ley",
+    tipoEmisor: "legislativo",
+    nivel: "nacional",
+    organoEmisor: "Asamblea Legislativa",
+    organoCompetente: "MINAE / ARESEP",
+    comisionLegislativa: "Comisión de Ambiente",
+    estado: "dictamen_comision",
+    estadoGenerico: "en_tramite",
+    indiceEtapaActual: 2,
+    fechaPresentacion: "2024-11-01",
+    fechaDictamenComision: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Energía",
+    obligacionesAfectadas: ["Etiquetado energético", "Certificación", "Registro de productos"],
+    nivelRiesgo: "alto",
+    puntajeRiesgo: 82,
+    resumenIA: {
+      cambiosPropuestos: "Etiquetado energético obligatorio A-G para hervidores y cafeteras. Información de consumo anual.",
+      impactosPotenciales: "Fabricantes deberán certificar eficiencia energética y actualizar empaques.",
+      fechaClave: `Dictamen de comisión emitido hace 3 días. Pendiente de Primer Debate.`,
+      calificadorEstado: "Instrumento en trámite; no aplicable hasta eventual aprobación, sanción y publicación en La Gaceta."
+    },
+    acciones: [
+      { fecha: "2024-11-01", descripcion: "Proyecto presentado a la Asamblea Legislativa", actor: "Diputados proponentes" },
+      { fecha: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Dictamen afirmativo de comisión emitido", actor: "Comisión de Ambiente" }
+    ],
+    fuenteUrl: "https://www.asamblea.go.cr/expediente/24567"
+  },
+  {
+    id: "cr-exec-015",
+    identificador: "Decreto Ejecutivo N.º 44892-MEIC",
+    titulo: "Reglamento de Seguridad de Electrodomésticos de Cocina",
+    resumen: "Establece requisitos técnicos de seguridad para hervidores eléctricos, cafeteras y otros electrodomésticos de cocina.",
+    puntosImportantes: [
+      "Certificación UL/IEC obligatoria",
+      "Sistemas de apagado automático requeridos",
+      "Etiquetado de seguridad en español"
+    ],
+    tipoNorma: "decreto_ejecutivo",
+    tipoEmisor: "ejecutivo",
+    nivel: "nacional",
+    organoEmisor: "Poder Ejecutivo (MEIC)",
+    organoCompetente: "MEIC - Dirección de Apoyo al Consumidor",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Electrodomésticos",
+    obligacionesAfectadas: ["Certificación de seguridad", "Etiquetado", "Documentación técnica"],
+    nivelRiesgo: "alto",
+    puntajeRiesgo: 85,
+    resumenIA: {
+      cambiosPropuestos: "Certificación UL/IEC obligatoria para hervidores y cafeteras. Sistemas de apagado automático.",
+      impactosPotenciales: "Productos sin certificación no podrán comercializarse. Requiere documentación técnica en español.",
+      fechaClave: `Vigente desde hace 5 días. Cumplimiento inmediato requerido.`,
+      calificadorEstado: "Norma vigente. Cumplimiento obligatorio para todas las importaciones."
+    },
+    numeroGaceta: "N.º 245",
+    acciones: [
+      { fecha: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Firma del Presidente", actor: "Presidencia" },
+      { fecha: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación en La Gaceta", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.pgrweb.go.cr/SCIJ/placeholder-44892-meic"
+  },
+  // Items 8-14 days ago
+  {
+    id: "cr-proy-016",
+    identificador: "Expediente N.º 24.234",
+    titulo: "Proyecto de Ley de Economía Circular para Electrodomésticos",
+    resumen: "Establece obligaciones de responsabilidad extendida del productor para electrodomésticos.",
+    puntosImportantes: [
+      "Sistema de recolección de RAEE obligatorio",
+      "Metas de reciclaje: 25% (2026), 40% (2028)",
+      "Fondo ambiental financiado por productores"
+    ],
+    tipoNorma: "proyecto_ley",
+    tipoEmisor: "legislativo",
+    nivel: "nacional",
+    organoEmisor: "Asamblea Legislativa",
+    organoCompetente: "MINAE / SINAC",
+    comisionLegislativa: "Comisión de Ambiente",
+    estado: "primer_debate",
+    estadoGenerico: "en_tramite",
+    indiceEtapaActual: 3,
+    fechaPresentacion: "2024-08-15",
+    fechaDictamenComision: "2024-11-01",
+    fechaPrimerDebate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Medio Ambiente",
+    obligacionesAfectadas: ["Sistema REP", "Recolección RAEE", "Contribución a fondo"],
+    nivelRiesgo: "alto",
+    puntajeRiesgo: 88,
+    resumenIA: {
+      cambiosPropuestos: "REP obligatorio para electrodomésticos. Sistema de recolección y metas de reciclaje progresivas.",
+      impactosPotenciales: "Fabricantes e importadores deberán financiar sistema de gestión de residuos.",
+      fechaClave: `Primer Debate realizado hace 10 días. Pendiente de Segundo Debate.`,
+      calificadorEstado: "Proyecto avanzado con alto consenso. Alta probabilidad de aprobación en 2025."
+    },
+    acciones: [
+      { fecha: "2024-08-15", descripcion: "Proyecto presentado", actor: "Diputados proponentes" },
+      { fecha: "2024-11-01", descripcion: "Dictamen de comisión", actor: "Comisión de Ambiente" },
+      { fecha: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Aprobación en Primer Debate", actor: "Plenario" }
+    ],
+    fuenteUrl: "https://www.asamblea.go.cr/expediente/24234"
+  },
+  {
+    id: "cr-reg-005",
+    identificador: "Resolución N.º SUTEL-001-2024",
+    titulo: "Actualización de Requisitos de Homologación RF para Dispositivos IoT",
+    resumen: "Actualiza requisitos de homologación de radiofrecuencia para dispositivos conectados del consumidor.",
+    puntosImportantes: [
+      "Nuevos límites para banda 6 GHz (WiFi 6E)",
+      "Certificación SUTEL obligatoria",
+      "Período de transición de 180 días"
+    ],
+    tipoNorma: "reglamento_tecnico",
+    tipoEmisor: "regulador",
+    nivel: "institucional",
+    organoEmisor: "SUTEL - Superintendencia de Telecomunicaciones",
+    organoCompetente: "SUTEL",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Radio",
+    sector: "Telecomunicaciones",
+    obligacionesAfectadas: ["Homologación RF", "Certificación SUTEL", "Documentación técnica"],
+    nivelRiesgo: "alto",
+    puntajeRiesgo: 78,
+    resumenIA: {
+      cambiosPropuestos: "Nuevos requisitos RF para WiFi 6E. Homologación SUTEL obligatoria para electrodomésticos conectados.",
+      impactosPotenciales: "Hervidores y cafeteras con WiFi deben obtener nueva certificación.",
+      fechaClave: `Vigente desde hace 12 días. Cumplimiento en 180 días.`,
+      calificadorEstado: "Norma vigente con período de transición de 180 días para productos existentes."
+    },
+    numeroGaceta: "N.º 238",
+    acciones: [
+      { fecha: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Consulta pública", actor: "SUTEL" },
+      { fecha: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación en La Gaceta", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.sutel.go.cr/normativa/resolucion-001-2024"
+  },
+  // Items 15-30 days ago
+  {
+    id: "cr-exec-016",
+    identificador: "Decreto Ejecutivo N.º 44756-MINAE",
+    titulo: "Reglamento de Gestión de Baterías y Acumuladores",
+    resumen: "Establece el régimen de responsabilidad extendida del productor para baterías.",
+    puntosImportantes: [
+      "Sistema de recolección obligatorio",
+      "Metas de recuperación: 20% (2025), 35% (2027)",
+      "Etiquetado con instrucciones de disposición"
+    ],
+    tipoNorma: "decreto_ejecutivo",
+    tipoEmisor: "ejecutivo",
+    nivel: "nacional",
+    organoEmisor: "Poder Ejecutivo (MINAE)",
+    organoCompetente: "MINAE / SETENA",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Battery",
+    sector: "Medio Ambiente",
+    obligacionesAfectadas: ["Sistema de recolección", "Metas de recuperación", "Etiquetado"],
+    nivelRiesgo: "alto",
+    puntajeRiesgo: 80,
+    resumenIA: {
+      cambiosPropuestos: "REP obligatorio para baterías. Sistema de recolección y metas de recuperación progresivas.",
+      impactosPotenciales: "Importadores de electrodomésticos con baterías deben implementar logística inversa.",
+      fechaClave: `Vigente desde hace 18 días. Meta 20% para 2025.`,
+      calificadorEstado: "Norma vigente. Cumplimiento progresivo según metas establecidas."
+    },
+    numeroGaceta: "N.º 230",
+    acciones: [
+      { fecha: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Firma del Presidente", actor: "Presidencia" },
+      { fecha: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación en La Gaceta", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.pgrweb.go.cr/SCIJ/placeholder-44756-minae"
+  },
+  {
+    id: "cr-proy-017",
+    identificador: "Expediente N.º 24.089",
+    titulo: "Proyecto de Ley de Protección de Datos Personales en Dispositivos IoT",
+    resumen: "Establece requisitos de protección de datos para dispositivos conectados del consumidor.",
+    puntosImportantes: [
+      "Consentimiento explícito para recolección de datos",
+      "Derecho de eliminación de datos",
+      "Notificación de brechas de seguridad"
+    ],
+    tipoNorma: "proyecto_ley",
+    tipoEmisor: "legislativo",
+    nivel: "nacional",
+    organoEmisor: "Asamblea Legislativa",
+    organoCompetente: "PRODHAB",
+    comisionLegislativa: "Comisión de Ciencia y Tecnología",
+    estado: "presentado",
+    estadoGenerico: "en_tramite",
+    indiceEtapaActual: 1,
+    fechaPresentacion: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Cybersecurity",
+    sector: "Tecnología",
+    obligacionesAfectadas: ["Políticas de privacidad", "Consentimiento", "Seguridad de datos"],
+    nivelRiesgo: "medio",
+    puntajeRiesgo: 68,
+    resumenIA: {
+      cambiosPropuestos: "Requisitos de privacidad para dispositivos IoT. Consentimiento y derecho de eliminación.",
+      impactosPotenciales: "Electrodomésticos conectados deberán cumplir políticas de privacidad específicas.",
+      fechaClave: `Presentado hace 22 días. En fase de estudio en comisión.`,
+      calificadorEstado: "Proyecto en fase temprana. Bajo seguimiento."
+    },
+    acciones: [
+      { fecha: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Proyecto presentado", actor: "Diputados proponentes" },
+      { fecha: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Asignado a Comisión", actor: "Directorio Legislativo" }
+    ],
+    fuenteUrl: "https://www.asamblea.go.cr/expediente/24089"
+  },
+  {
+    id: "cr-mun-005",
+    identificador: "Ordenanza Municipal N.º 89-2024",
+    titulo: "Ordenanza de Eficiencia Hídrica para Comercios de San José",
+    resumen: "Regula el uso eficiente del agua en establecimientos comerciales del cantón central de San José.",
+    puntosImportantes: [
+      "Dispositivos ahorradores de agua obligatorios",
+      "Reportes de consumo trimestrales",
+      "Incentivos por reducción de consumo"
+    ],
+    tipoNorma: "ordenanza_municipal",
+    tipoEmisor: "municipal",
+    nivel: "municipal",
+    provincia: "San José",
+    canton: "San José (Central)",
+    organoEmisor: "Municipalidad de San José",
+    organoCompetente: "Municipalidad de San José - Gestión Ambiental",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Medio Ambiente",
+    obligacionesAfectadas: ["Dispositivos ahorradores", "Reportes de consumo"],
+    nivelRiesgo: "bajo",
+    puntajeRiesgo: 42,
+    resumenIA: {
+      cambiosPropuestos: "Eficiencia hídrica para comercios en San José central. Dispositivos ahorradores obligatorios.",
+      impactosPotenciales: "Bajo impacto directo para fabricantes. Aplica a comercios minoristas.",
+      fechaClave: `Vigente desde hace 25 días. Cumplimiento inmediato.`,
+      calificadorEstado: "Ordenanza municipal vigente en cantón central de San José."
+    },
+    acciones: [
+      { fecha: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Aprobación por Concejo Municipal", actor: "Concejo Municipal" },
+      { fecha: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación en La Gaceta", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.msj.go.cr/ordenanzas/89-2024"
+  },
+  // Items 31-60 days ago
+  {
+    id: "cr-exec-017",
+    identificador: "Decreto Ejecutivo N.º 44678-S",
+    titulo: "Actualización del Reglamento Sanitario de Materiales en Contacto con Alimentos",
+    resumen: "Actualiza requisitos sanitarios para materiales que entran en contacto con alimentos y bebidas.",
+    puntosImportantes: [
+      "Nuevos límites de migración para plásticos",
+      "Prohibición de BPA en superficies de contacto",
+      "Certificación del Ministerio de Salud"
+    ],
+    tipoNorma: "decreto_ejecutivo",
+    tipoEmisor: "ejecutivo",
+    nivel: "nacional",
+    organoEmisor: "Poder Ejecutivo (Ministerio de Salud)",
+    organoCompetente: "Ministerio de Salud",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Food Contact Material",
+    sector: "Salud",
+    obligacionesAfectadas: ["Certificación sanitaria", "Pruebas de migración", "Documentación técnica"],
+    nivelRiesgo: "alto",
+    puntajeRiesgo: 85,
+    resumenIA: {
+      cambiosPropuestos: "Nuevos límites de migración para hervidores y cafeteras. Prohibición de BPA.",
+      impactosPotenciales: "Productos con BPA no podrán comercializarse. Certificación MS obligatoria.",
+      fechaClave: `Vigente desde hace 35 días. Cumplimiento inmediato para nuevas importaciones.`,
+      calificadorEstado: "Norma vigente. Fiscalización activa del Ministerio de Salud."
+    },
+    numeroGaceta: "N.º 215",
+    acciones: [
+      { fecha: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Firma del Presidente", actor: "Presidencia" },
+      { fecha: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación en La Gaceta", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.pgrweb.go.cr/SCIJ/placeholder-44678-s"
+  },
+  {
+    id: "cr-proy-018",
+    identificador: "Expediente N.º 23.987",
+    titulo: "Proyecto de Ley de Comercio Electrónico y Protección al Consumidor Digital",
+    resumen: "Fortalece la protección al consumidor en compras electrónicas de electrodomésticos.",
+    puntosImportantes: [
+      "Derecho de retracto de 14 días",
+      "Información de garantía visible",
+      "Sanciones por publicidad engañosa"
+    ],
+    tipoNorma: "proyecto_ley",
+    tipoEmisor: "legislativo",
+    nivel: "nacional",
+    organoEmisor: "Asamblea Legislativa",
+    organoCompetente: "MEIC",
+    comisionLegislativa: "Comisión de Asuntos Económicos",
+    estado: "segundo_debate",
+    estadoGenerico: "en_tramite",
+    indiceEtapaActual: 4,
+    fechaPresentacion: "2024-05-01",
+    fechaDictamenComision: "2024-08-15",
+    fechaPrimerDebate: "2024-09-20",
+    fechaSegundoDebate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Cybersecurity",
+    sector: "Comercio",
+    obligacionesAfectadas: ["Políticas de devolución", "Información de garantía", "Publicidad"],
+    nivelRiesgo: "medio",
+    puntajeRiesgo: 72,
+    resumenIA: {
+      cambiosPropuestos: "Derecho de retracto 14 días para compras online. Información de garantía obligatoria.",
+      impactosPotenciales: "Comercializadores online deberán ajustar políticas de devolución.",
+      fechaClave: `Segundo Debate hace 40 días. Pendiente de envío al Ejecutivo.`,
+      calificadorEstado: "Proyecto muy avanzado. Alta probabilidad de promulgación próximamente."
+    },
+    acciones: [
+      { fecha: "2024-05-01", descripcion: "Proyecto presentado", actor: "Diputados" },
+      { fecha: "2024-08-15", descripcion: "Dictamen de comisión", actor: "Comisión Económica" },
+      { fecha: "2024-09-20", descripcion: "Primer Debate", actor: "Plenario" },
+      { fecha: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Segundo Debate", actor: "Plenario" }
+    ],
+    fuenteUrl: "https://www.asamblea.go.cr/expediente/23987"
+  },
+  {
+    id: "cr-reg-006",
+    identificador: "Resolución N.º ARESEP-045-2024",
+    titulo: "Tarifas de Servicios de Certificación de Eficiencia Energética",
+    resumen: "Establece las tarifas para servicios de certificación de eficiencia energética de electrodomésticos.",
+    puntosImportantes: [
+      "Tarifa de certificación por tipo de producto",
+      "Vigencia de certificados: 3 años",
+      "Proceso de renovación simplificado"
+    ],
+    tipoNorma: "reglamento_tecnico",
+    tipoEmisor: "regulador",
+    nivel: "institucional",
+    organoEmisor: "ARESEP",
+    organoCompetente: "ARESEP",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Energía",
+    obligacionesAfectadas: ["Pago de tarifas de certificación"],
+    nivelRiesgo: "bajo",
+    puntajeRiesgo: 38,
+    resumenIA: {
+      cambiosPropuestos: "Tarifas definidas para certificación energética. Vigencia de certificados 3 años.",
+      impactosPotenciales: "Costos de certificación conocidos. Planificación presupuestaria facilitada.",
+      fechaClave: `Vigente desde hace 48 días. Tarifas aplicables inmediatamente.`,
+      calificadorEstado: "Resolución administrativa vigente. Informativa para planificación."
+    },
+    numeroGaceta: "N.º 205",
+    acciones: [
+      { fecha: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Aprobación por Junta Directiva", actor: "ARESEP" },
+      { fecha: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación en La Gaceta", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.aresep.go.cr/normativa/resolucion-045-2024"
+  },
+  // Items 61-90 days ago
+  {
+    id: "cr-exec-018",
+    identificador: "Decreto Ejecutivo N.º 44589-MINAE-S",
+    titulo: "Reglamento de Sustancias Químicas Peligrosas en Productos de Consumo",
+    resumen: "Regula el uso de sustancias químicas peligrosas en productos de consumo incluyendo electrodomésticos.",
+    puntosImportantes: [
+      "Lista de sustancias restringidas (PFAS, ftalatos)",
+      "Límites de concentración máxima",
+      "Certificación de cumplimiento"
+    ],
+    tipoNorma: "decreto_ejecutivo",
+    tipoEmisor: "ejecutivo",
+    nivel: "nacional",
+    organoEmisor: "Poder Ejecutivo (MINAE/Salud)",
+    organoCompetente: "MINAE / Ministerio de Salud",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Químicos",
+    obligacionesAfectadas: ["Análisis de sustancias", "Certificación de cumplimiento", "Documentación"],
+    nivelRiesgo: "alto",
+    puntajeRiesgo: 78,
+    resumenIA: {
+      cambiosPropuestos: "Restricciones de PFAS y ftalatos en electrodomésticos. Límites de concentración.",
+      impactosPotenciales: "Productos con sustancias restringidas no podrán comercializarse.",
+      fechaClave: `Vigente desde hace 65 días. Cumplimiento obligatorio.`,
+      calificadorEstado: "Norma vigente. Fiscalización conjunta MINAE/Salud."
+    },
+    numeroGaceta: "N.º 195",
+    acciones: [
+      { fecha: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Firma del Presidente", actor: "Presidencia" },
+      { fecha: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación en La Gaceta", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.pgrweb.go.cr/SCIJ/placeholder-44589-minae-s"
+  },
+  {
+    id: "cr-proy-019",
+    identificador: "Expediente N.º 23.876",
+    titulo: "Proyecto de Ley de Garantías Extendidas para Productos Electrónicos",
+    resumen: "Establece garantías mínimas extendidas para productos electrónicos y electrodomésticos.",
+    puntosImportantes: [
+      "Garantía mínima de 2 años para electrodomésticos",
+      "Repuestos disponibles por 7 años",
+      "Derecho a reparación"
+    ],
+    tipoNorma: "proyecto_ley",
+    tipoEmisor: "legislativo",
+    nivel: "nacional",
+    organoEmisor: "Asamblea Legislativa",
+    organoCompetente: "MEIC",
+    comisionLegislativa: "Comisión de Asuntos Económicos",
+    estado: "presentado",
+    estadoGenerico: "en_tramite",
+    indiceEtapaActual: 1,
+    fechaPresentacion: new Date(Date.now() - 72 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Comercio",
+    obligacionesAfectadas: ["Garantías extendidas", "Disponibilidad de repuestos", "Servicio técnico"],
+    nivelRiesgo: "medio",
+    puntajeRiesgo: 65,
+    resumenIA: {
+      cambiosPropuestos: "Garantía mínima 2 años. Repuestos disponibles 7 años. Derecho a reparación.",
+      impactosPotenciales: "Fabricantes deberán mantener repuestos y servicio técnico extendido.",
+      fechaClave: `Presentado hace 72 días. En estudio en comisión.`,
+      calificadorEstado: "Proyecto en fase temprana. Seguimiento de mediano plazo."
+    },
+    acciones: [
+      { fecha: new Date(Date.now() - 72 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Proyecto presentado", actor: "Diputados" },
+      { fecha: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Asignado a Comisión", actor: "Directorio" }
+    ],
+    fuenteUrl: "https://www.asamblea.go.cr/expediente/23876"
+  },
+  {
+    id: "cr-mun-006",
+    identificador: "Ordenanza Municipal N.º 45-2024",
+    titulo: "Ordenanza de Comercio de Electrodomésticos en Liberia",
+    resumen: "Regula la venta de electrodomésticos en el cantón de Liberia, Guanacaste.",
+    puntosImportantes: [
+      "Registro municipal de comercios",
+      "Información de eficiencia energética visible",
+      "Garantía mínima de 1 año"
+    ],
+    tipoNorma: "ordenanza_municipal",
+    tipoEmisor: "municipal",
+    nivel: "municipal",
+    provincia: "Guanacaste",
+    canton: "Liberia",
+    organoEmisor: "Municipalidad de Liberia",
+    organoCompetente: "Municipalidad de Liberia",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 78 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 78 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Comercio",
+    obligacionesAfectadas: ["Registro municipal", "Información de eficiencia"],
+    nivelRiesgo: "bajo",
+    puntajeRiesgo: 35,
+    resumenIA: {
+      cambiosPropuestos: "Requisitos locales para comercios de electrodomésticos en Liberia.",
+      impactosPotenciales: "Bajo impacto directo para fabricantes. Aplica a comercios minoristas.",
+      fechaClave: `Vigente desde hace 78 días.`,
+      calificadorEstado: "Ordenanza municipal vigente en Liberia, Guanacaste."
+    },
+    acciones: [
+      { fecha: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Aprobación por Concejo", actor: "Concejo Municipal" },
+      { fecha: new Date(Date.now() - 78 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación", actor: "Imprenta Nacional" }
+    ],
+    fuenteUrl: "https://www.muniliberia.go.cr/ordenanzas/45-2024"
+  },
+  {
+    id: "cr-reg-007",
+    identificador: "Directriz N.º INTECO-12-2024",
+    titulo: "Directriz sobre Aplicación de Normas INTE para Electrodomésticos",
+    resumen: "Orienta sobre la aplicación de normas técnicas INTE para electrodomésticos importados.",
+    puntosImportantes: [
+      "Reconocimiento de normas internacionales equivalentes",
+      "Proceso de certificación simplificado",
+      "Equivalencias con UL, IEC, CE"
+    ],
+    tipoNorma: "reglamento_tecnico",
+    tipoEmisor: "regulador",
+    nivel: "institucional",
+    organoEmisor: "INTECO",
+    organoCompetente: "INTECO",
+    estado: "vigente",
+    estadoGenerico: "vigente",
+    indiceEtapaActual: 5,
+    fechaPublicacionGaceta: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    fechaEntradaVigencia: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    categoria: "Product Safety",
+    sector: "Normalización",
+    obligacionesAfectadas: ["Certificación INTE", "Equivalencias de normas"],
+    nivelRiesgo: "bajo",
+    puntajeRiesgo: 32,
+    resumenIA: {
+      cambiosPropuestos: "Simplificación de certificación con reconocimiento de normas internacionales.",
+      impactosPotenciales: "Positivo - reduce barreras para productos con certificaciones UL/IEC/CE.",
+      fechaClave: `Vigente desde hace 85 días. Aplicable inmediatamente.`,
+      calificadorEstado: "Directriz técnica favorable que facilita importaciones."
+    },
+    acciones: [
+      { fecha: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), descripcion: "Publicación de directriz", actor: "INTECO" }
+    ],
+    fuenteUrl: "https://www.inteco.org/directriz-12-2024"
   }
 ];
 
