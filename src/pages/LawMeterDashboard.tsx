@@ -472,6 +472,27 @@ export default function LawMeterDashboard() {
                 filters={analyticsFilters}
                 onFiltersChange={setAnalyticsFilters}
                 onNavigateToAlerts={handleNavigateToAlerts}
+                onItemClick={(item) => {
+                  // Determine config based on item's region
+                  const itemRegion = item.region;
+                  let config = usaConfig;
+                  if (itemRegion === "LATAM") {
+                    if (item.jurisdictionCode === "Peru") config = peruConfig;
+                    else config = costaRicaConfig;
+                  } else if (itemRegion === "APAC") {
+                    if (item.jurisdictionCode === "Japan") config = japanConfig;
+                    else if (item.jurisdictionCode === "Korea") config = koreaConfig;
+                    else config = taiwanConfig;
+                  } else if (itemRegion === "EU") {
+                    config = euConfig;
+                  } else if (itemRegion === "GCC") {
+                    config = gccConfig;
+                  } else if (item.jurisdictionCode === "Canada") {
+                    config = canadaConfig;
+                  }
+                  setSelectedUnifiedItem(item);
+                  setUnifiedDrawerConfig(config);
+                }}
               />
             )}
 

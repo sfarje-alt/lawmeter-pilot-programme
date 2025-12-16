@@ -68,6 +68,7 @@ interface MapInsightsPanelProps {
   filters: AnalyticsFilters;
   onFiltersChange: (filters: AnalyticsFilters) => void;
   onNavigateToAlerts: (jurisdiction?: string, subdivision?: string) => void;
+  onItemClick?: (item: UnifiedLegislationItem) => void;
 }
 
 export function MapInsightsPanel({
@@ -75,6 +76,7 @@ export function MapInsightsPanel({
   filters,
   onFiltersChange,
   onNavigateToAlerts,
+  onItemClick,
 }: MapInsightsPanelProps) {
   const [activeTab, setActiveTab] = useState<"map" | "matrix">("map");
   // selectedRegion is always a commercial region (NAM, LATAM, EU, GCC, APAC)
@@ -265,7 +267,7 @@ export function MapInsightsPanel({
       ) : (
         // Impact vs Urgency Matrix - Full page
         <div className="h-full min-h-[600px]">
-          <UnifiedImpactUrgencyMatrix data={data} />
+          <UnifiedImpactUrgencyMatrix data={data} onItemClick={onItemClick} />
         </div>
       )}
     </div>
