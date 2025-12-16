@@ -445,44 +445,49 @@ export default function LawMeterDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
-            {/* View Mode Toggle with watermark background */}
-            <div className="relative flex items-center justify-between">
-              {/* Subtle watermark background */}
-              <div className="absolute -inset-x-4 -inset-y-2 pointer-events-none overflow-hidden -z-10 rounded-lg">
-                <img 
-                  src="/legislation-header-watermark.png" 
-                  alt="" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-60"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
-              </div>
-              <LegislationViewToggle 
-                mode={legislationViewMode} 
-                onModeChange={setLegislationViewMode} 
+            {/* Header Banner with background image */}
+            <div className="relative rounded-xl overflow-hidden">
+              {/* Background image - visible header */}
+              <img 
+                src="/legislation-header-watermark.png" 
+                alt="" 
+                className="absolute inset-0 w-full h-full object-cover"
               />
-              {(mapJurisdictionFilter || mapSubdivisionFilter) && (
-                <div className="flex items-center gap-2">
-                  {mapJurisdictionFilter && (
-                    <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
-                      Country: {mapJurisdictionFilter}
-                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapJurisdictionFilter(null)}>
-                        <X className="w-3 h-3" />
+              {/* Semi-transparent overlay for readability */}
+              <div className="absolute inset-0 bg-background/60" />
+              
+              {/* Content overlapping the background */}
+              <div className="relative z-10 p-4">
+                <div className="flex items-center justify-between">
+                  <LegislationViewToggle 
+                    mode={legislationViewMode} 
+                    onModeChange={setLegislationViewMode} 
+                  />
+                  {(mapJurisdictionFilter || mapSubdivisionFilter) && (
+                    <div className="flex items-center gap-2">
+                      {mapJurisdictionFilter && (
+                        <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
+                          Country: {mapJurisdictionFilter}
+                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapJurisdictionFilter(null)}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </Badge>
+                      )}
+                      {mapSubdivisionFilter && (
+                        <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
+                          Subdivision: {mapSubdivisionFilter}
+                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapSubdivisionFilter(null)}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </Badge>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={handleClearMapFilters}>
+                        Clear filters
                       </Button>
-                    </Badge>
+                    </div>
                   )}
-                  {mapSubdivisionFilter && (
-                    <Badge variant="secondary" className="gap-2 pl-3 pr-1 py-1">
-                      Subdivision: {mapSubdivisionFilter}
-                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setMapSubdivisionFilter(null)}>
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </Badge>
-                  )}
-                  <Button variant="ghost" size="sm" onClick={handleClearMapFilters}>
-                    Clear filters
-                  </Button>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Map + Insights Mode */}
