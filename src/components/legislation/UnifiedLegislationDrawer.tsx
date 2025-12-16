@@ -92,7 +92,7 @@ export function UnifiedLegislationDrawer({
     if (isCostaRica && crData) {
       const parts = [];
       const nivelLabel = crData.nivel === "nacional" ? "Nacional" :
-                        crData.nivel === "municipal" ? "Municipal (Cantonal)" :
+                        crData.nivel === "municipal" ? "Municipal" :
                         "Institucional/Regulatorio";
       parts.push(nivelLabel);
       if (crData.nivel === "municipal" && crData.canton) {
@@ -494,7 +494,7 @@ export function UnifiedLegislationDrawer({
                         <span className="text-muted-foreground">Nivel:</span>
                         <span className="font-medium ml-2">
                           {crData.nivel === "nacional" ? "Nacional" :
-                           crData.nivel === "municipal" ? "Municipal (Cantonal)" : "Institucional/Regulatorio"}
+                           crData.nivel === "municipal" ? "Municipal" : "Institucional/Regulatorio"}
                         </span>
                       </div>
                       {crData.provincia && (

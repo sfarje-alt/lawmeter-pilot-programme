@@ -1604,7 +1604,7 @@ ${item.identificador}
 ÓRGANO EMISOR: ${item.organoEmisor}
 ${item.organoCompetente ? `ÓRGANO COMPETENTE/FISCALIZADOR: ${item.organoCompetente}` : ""}
 ${item.comisionLegislativa ? `COMISIÓN LEGISLATIVA: ${item.comisionLegislativa}` : ""}
-NIVEL: ${item.nivel === "nacional" ? "Nacional" : item.nivel === "municipal" ? "Municipal (Cantonal)" : "Institucional/Regulatorio"}
+NIVEL: ${item.nivel === "nacional" ? "Nacional" : item.nivel === "municipal" ? "Municipal" : "Institucional/Regulatorio"}
 ${item.provincia ? `PROVINCIA: ${item.provincia}` : ""}
 ${item.canton ? `CANTÓN: ${item.canton}` : ""}
 
