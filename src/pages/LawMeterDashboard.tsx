@@ -446,20 +446,25 @@ export default function LawMeterDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
           <TabsContent value="legislation" className="space-y-6 mt-6">
-            {/* Header Banner with background image */}
+            {/* Header Banner with gradient and subtle background image */}
             <div 
-              className="relative rounded-xl overflow-hidden min-h-[120px]"
-              style={{ 
-                backgroundImage: `url(${legislationHeaderBg})`, 
-                backgroundSize: 'cover', 
-                backgroundPosition: 'center top' 
-              }}
+              className="relative rounded-xl overflow-hidden min-h-[100px] bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900"
             >
-              {/* Semi-transparent overlay for readability */}
-              <div className="absolute inset-0 bg-background/30" />
+              {/* Subtle background image */}
+              <div 
+                className="absolute inset-0 opacity-15"
+                style={{ 
+                  backgroundImage: `url(${legislationHeaderBg})`, 
+                  backgroundSize: 'contain',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right center' 
+                }}
+              />
+              {/* Gradient fade on left for smooth transition */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-transparent to-transparent" />
               
-              {/* Content overlapping the background */}
-              <div className="relative z-10 p-4 flex items-center justify-between min-h-[120px]">
+              {/* Content */}
+              <div className="relative z-10 p-4 flex items-center justify-between min-h-[100px]">
                 <LegislationViewToggle 
                   mode={legislationViewMode} 
                   onModeChange={setLegislationViewMode} 
