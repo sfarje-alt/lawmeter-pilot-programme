@@ -2489,3 +2489,40 @@ export const IMPACT_AREAS_ES: Record<string, string> = {
   "Materials": "Materiales",
   "Documentation": "Documentación"
 };
+
+// Import and merge enriched analytics data
+import {
+  additionalUSStateBills,
+  additionalCanadaLegislation,
+  additionalEULegislation,
+  additionalGCCLegislation,
+  additionalAPACLegislation
+} from "./analyticsEnrichedInternational";
+
+// Merge enriched data with existing arrays
+usStateBills.push(...additionalUSStateBills);
+canadaLegislation.push(...additionalCanadaLegislation);
+euRegulations.push(...additionalEULegislation.filter(e => e.legislationType === "regulation"));
+euDirectives.push(...additionalEULegislation.filter(e => e.legislationType === "directive"));
+
+// Merge APAC data
+const japanEnriched = additionalAPACLegislation.filter(e => e.jurisdiction === "Japan");
+const koreaEnriched = additionalAPACLegislation.filter(e => e.jurisdiction === "Korea");
+const taiwanEnriched = additionalAPACLegislation.filter(e => e.jurisdiction === "Taiwan");
+japanLegislation.push(...japanEnriched);
+koreaLegislation.push(...koreaEnriched);
+taiwanLegislation.push(...taiwanEnriched);
+
+// Merge GCC data
+const uaeEnriched = additionalGCCLegislation.filter(e => e.jurisdiction === "UAE");
+const saudiEnriched = additionalGCCLegislation.filter(e => e.jurisdiction === "Saudi Arabia");
+const omanEnriched = additionalGCCLegislation.filter(e => e.jurisdiction === "Oman");
+const kuwaitEnriched = additionalGCCLegislation.filter(e => e.jurisdiction === "Kuwait");
+const bahrainEnriched = additionalGCCLegislation.filter(e => e.jurisdiction === "Bahrain");
+const qatarEnriched = additionalGCCLegislation.filter(e => e.jurisdiction === "Qatar");
+uaeLegislation.push(...uaeEnriched);
+saudiLegislation.push(...saudiEnriched);
+omanLegislation.push(...omanEnriched);
+kuwaitLegislation.push(...kuwaitEnriched);
+bahrainLegislation.push(...bahrainEnriched);
+qatarLegislation.push(...qatarEnriched);
