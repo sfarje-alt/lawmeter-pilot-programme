@@ -20,6 +20,16 @@ export function RegionHeader({
 }: RegionHeaderProps) {
   const theme = regionThemes[region];
   
+  // Fallback theme if region is invalid
+  if (!theme) {
+    return (
+      <div className={cn("rounded-lg border p-4 bg-card", className)}>
+        <h3 className="text-lg font-bold text-foreground">{title || region}</h3>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
+    );
+  }
+  
   return (
     <div 
       className={cn(
