@@ -385,7 +385,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
       .sort((a, b) => a.getTime() - b.getTime())[0];
     
     return (
-      <div className={`border-2 ${config.borderClass} rounded-xl p-3 ${config.bgClass} flex flex-col h-full min-h-[160px] transition-all hover:shadow-md`}>
+      <div className={`border-2 ${config.borderClass} rounded-xl p-4 ${config.bgClass} flex flex-col h-full min-h-[200px] transition-all hover:shadow-md`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
@@ -425,8 +425,8 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
         {/* Country Pills Grid */}
         <div className="flex-1 min-h-0 overflow-hidden">
           {countryGroups.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {countryGroups.slice(0, 6).map(({ country, items: countryItems }) => (
+            <div className="flex flex-wrap gap-1.5 content-start">
+              {countryGroups.slice(0, 9).map(({ country, items: countryItems }) => (
                 <CountryPill 
                   key={country} 
                   country={country} 
@@ -434,14 +434,14 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                   cellKey={cellKey}
                 />
               ))}
-              {countryGroups.length > 6 && (
+              {countryGroups.length > 9 && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="h-6 px-2 text-[10px] text-muted-foreground"
                   onClick={() => handleExpandCell(cellKey)}
                 >
-                  +{countryGroups.length - 6} more
+                  +{countryGroups.length - 9} more
                 </Button>
               )}
             </div>
@@ -667,7 +667,7 @@ export function UnifiedImpactUrgencyMatrix({ data, onItemClick }: UnifiedImpactU
                 </div>
                 
                 {/* 3x3 Grid */}
-                <div className="flex-1 grid grid-cols-3 gap-3" style={{ minHeight: "520px" }}>
+                <div className="flex-1 grid grid-cols-3 gap-3" style={{ minHeight: "640px" }}>
                   {gridOrder.map((cellKey) => (
                     <CellSection
                       key={cellKey}

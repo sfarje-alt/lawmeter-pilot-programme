@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -90,7 +90,7 @@ interface UnifiedLegislationCardProps {
   isGeneratingAI?: boolean;
 }
 
-export function UnifiedLegislationCard({
+export const UnifiedLegislationCard = memo(function UnifiedLegislationCard({
   item,
   config,
   isRead,
@@ -585,6 +585,6 @@ export function UnifiedLegislationCard({
       </CardContent>
     </Card>
   );
-}
+});
 
 export default UnifiedLegislationCard;
