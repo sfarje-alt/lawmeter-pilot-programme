@@ -312,7 +312,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                 alertId: alert.title_id,
                 description: alert.AI_triage?.summary?.substring(0, 150),
                 jurisdiction: "CRI",
-                jurisdictionFlag: "🇨🇷"
+                jurisdictionFlag: "Costa Rica"
               });
             }
           } catch {}
@@ -341,7 +341,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                 alertId: alert.title_id,
                 description: alert.AI_triage?.summary?.substring(0, 150),
                 jurisdiction: "CRI",
-                jurisdictionFlag: "🇨🇷"
+                jurisdictionFlag: "Costa Rica"
               });
             }
           } catch {}

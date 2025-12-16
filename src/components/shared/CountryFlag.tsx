@@ -57,10 +57,12 @@ export function CountryFlag({
       alt={`${info.name} flag`}
       loading="lazy"
       onError={() => setImageError(true)}
-      className="inline-block rounded-sm object-contain shadow-sm"
+      className="inline-block rounded-sm border border-border/20"
       style={{
         height: sizeConfig.height,
-        width: Math.round(sizeConfig.height * 1.5), // 3:2 aspect ratio
+        width: "auto",
+        maxWidth: Math.round(sizeConfig.height * 2), // Allow flexible width
+        minWidth: Math.round(sizeConfig.height * 1.3), // Minimum width for square-ish flags
       }}
     />
   );
