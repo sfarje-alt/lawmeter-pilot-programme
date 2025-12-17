@@ -25,21 +25,24 @@ export interface ParsedSession {
   agendaUrl: string | null;
 }
 
-// Extract all text items with raw coordinates (no transformation)
+// Extract all text items with positions
 async function extractTextWithPositions(pdf: any): Promise<TextItem[]> {
   const items: TextItem[] = [];
   
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
+    const viewport = page.getViewport({ scale: 1 });
     
     for (const item of textContent.items) {
       if ('str' in item && item.str.trim()) {
         const transform = item.transform as number[];
         items.push({
           text: item.str.trim(),
+          // X is horizontal position
           x: transform[4],
-          y: transform[5]
+          // Y inverted so 0 is at top
+          y: viewport.height - transform[5]
         });
       }
     }
@@ -48,20 +51,21 @@ async function extractTextWithPositions(pdf: any): Promise<TextItem[]> {
   return items;
 }
 
-// Extract links with raw coordinates
+// Extract links with positions
 async function extractLinksWithPositions(pdf: any): Promise<PDFLink[]> {
   const links: PDFLink[] = [];
   
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const annotations = await page.getAnnotations();
+    const viewport = page.getViewport({ scale: 1 });
     
     for (const annot of annotations) {
       if (annot.subtype === 'Link' && annot.url) {
         links.push({
           url: annot.url,
           x: annot.rect[0],
-          y: annot.rect[1]
+          y: viewport.height - annot.rect[3]
         });
       }
     }
@@ -70,16 +74,16 @@ async function extractLinksWithPositions(pdf: any): Promise<PDFLink[]> {
   return links;
 }
 
-// Group text items by X coordinate (each X = one session row in transposed PDF)
-function groupByX(items: TextItem[], threshold: number = 12): Map<number, TextItem[]> {
+// Group text items by Y coordinate (each Y = one row)
+function groupByY(items: TextItem[], threshold: number = 5): Map<number, TextItem[]> {
   const groups = new Map<number, TextItem[]>();
-  const sortedItems = [...items].sort((a, b) => a.x - b.x);
+  const sortedItems = [...items].sort((a, b) => a.y - b.y);
   
   for (const item of sortedItems) {
     let addedToGroup = false;
     
-    for (const [groupX, groupItems] of groups) {
-      if (Math.abs(item.x - groupX) <= threshold) {
+    for (const [groupY, groupItems] of groups) {
+      if (Math.abs(item.y - groupY) <= threshold) {
         groupItems.push(item);
         addedToGroup = true;
         break;
@@ -87,26 +91,26 @@ function groupByX(items: TextItem[], threshold: number = 12): Map<number, TextIt
     }
     
     if (!addedToGroup) {
-      groups.set(item.x, [item]);
+      groups.set(item.y, [item]);
     }
   }
   
   return groups;
 }
 
-// Get text within a Y coordinate range
-function getTextInYRange(items: TextItem[], minY: number, maxY: number): string {
+// Get text within an X coordinate range
+function getTextInXRange(items: TextItem[], minX: number, maxX: number): string {
   const matching = items
-    .filter(item => item.y >= minY && item.y <= maxY)
-    .sort((a, b) => b.y - a.y); // Sort descending (top to bottom in PDF view)
+    .filter(item => item.x >= minX && item.x < maxX)
+    .sort((a, b) => a.x - b.x);
   
   return matching.map(item => item.text).join(' ').trim();
 }
 
-// Find link closest to a given X position
-function findLinkForX(links: PDFLink[], targetX: number, threshold: number = 25): string | null {
+// Find link closest to a given Y position
+function findLinkForY(links: PDFLink[], targetY: number, threshold: number = 10): string | null {
   for (const link of links) {
-    if (Math.abs(link.x - targetX) <= threshold) {
+    if (Math.abs(link.y - targetY) <= threshold) {
       return link.url;
     }
   }
@@ -124,18 +128,51 @@ function parseDateTime(text: string): { date: string; time: string } {
   };
 }
 
-// Check if group represents header row
-function isHeaderGroup(items: TextItem[]): boolean {
-  const combinedText = items.map(i => i.text.toLowerCase()).join(' ');
-  return combinedText.includes('tipo') || 
-         combinedText.includes('comisión') && combinedText.includes('sesión') ||
-         combinedText.includes('agenda') ||
-         combinedText.includes('características');
+// Detect column boundaries from header items
+function detectColumnBoundaries(items: TextItem[]): { [key: string]: { min: number; max: number } } | null {
+  // Find header row - look for "TIPO" or "COMISIÓN" at low Y (top of page)
+  const headerItems = items.filter(item => item.y < 50);
+  
+  console.log('Header items found:', headerItems.map(i => `"${i.text}" x=${i.x.toFixed(0)}`));
+  
+  // Find specific headers
+  const tipoHeader = headerItems.find(i => i.text.includes('TIPO'));
+  const comisionHeader = headerItems.find(i => i.text === 'COMISIÓN');
+  const sesionHeader = headerItems.find(i => i.text === 'SESIÓN');
+  const caracteristicasHeader = headerItems.find(i => i.text.includes('CARACTER'));
+  const fechaHeader = headerItems.find(i => i.text.includes('FECHA'));
+  const agendaHeader = headerItems.find(i => i.text === 'AGENDA');
+  
+  if (!tipoHeader && !comisionHeader) {
+    console.log('No header row detected');
+    return null;
+  }
+  
+  // Build column boundaries
+  const pageWidth = 850;
+  const cols: { [key: string]: { min: number; max: number } } = {
+    tipo: { min: 0, max: (comisionHeader?.x || 100) - 5 },
+    comision: { min: (comisionHeader?.x || 100) - 5, max: (sesionHeader?.x || 200) - 5 },
+    sesion: { min: (sesionHeader?.x || 200) - 5, max: (caracteristicasHeader?.x || 500) - 5 },
+    caracteristicas: { min: (caracteristicasHeader?.x || 500) - 5, max: (fechaHeader?.x || 600) - 5 },
+    fecha: { min: (fechaHeader?.x || 600) - 5, max: (agendaHeader?.x || 700) - 5 },
+    agenda: { min: (agendaHeader?.x || 700) - 5, max: pageWidth }
+  };
+  
+  console.log('Detected columns:', cols);
+  return cols;
 }
 
-// Main parser - handles transposed coordinate system
+// Check if row is a header row
+function isHeaderRow(items: TextItem[]): boolean {
+  const text = items.map(i => i.text).join(' ').toLowerCase();
+  return text.includes('tipo comisi') || 
+         (text.includes('comisión') && text.includes('sesión') && text.includes('agenda'));
+}
+
+// Main parser
 export async function parsePeruSessionsPdf(file: File): Promise<ParsedSession[]> {
-  console.log('=== PDF Parser (Transposed Coordinate System) ===');
+  console.log('=== PDF Parser (Standard Coordinates) ===');
   console.log('File:', file.name);
   
   const arrayBuffer = await file.arrayBuffer();
@@ -151,77 +188,61 @@ export async function parsePeruSessionsPdf(file: File): Promise<ParsedSession[]>
   console.log('Text items:', textItems.length);
   console.log('Links:', links.length);
   
-  // Analyze Y distribution to find column boundaries
-  const yValues = textItems.map(i => i.y).sort((a, b) => b - a);
-  const minY = Math.min(...yValues);
-  const maxY = Math.max(...yValues);
-  console.log(`Y range: ${minY.toFixed(1)} to ${maxY.toFixed(1)}`);
-  
   // Log sample items for debugging
-  console.log('\nSample items (sorted by Y desc):');
-  const sampleByY = [...textItems].sort((a, b) => b.y - a.y).slice(0, 25);
+  console.log('\nSample items (sorted by Y, first 30):');
+  const sampleByY = [...textItems].sort((a, b) => a.y - b.y).slice(0, 30);
   sampleByY.forEach(item => {
     console.log(`  Y=${item.y.toFixed(0).padStart(4)} X=${item.x.toFixed(0).padStart(4)} "${item.text}"`);
   });
   
-  // Define Y ranges for columns based on typical Peru Congress PDF
-  // These are dynamically adjusted based on actual Y distribution
-  const yRange = maxY - minY;
-  const COLUMN_RANGES = {
-    tipoSesion: { min: maxY - yRange * 0.1, max: maxY + 50 },        // Top ~10%: "Ordinaria"
-    comision: { min: maxY - yRange * 0.25, max: maxY - yRange * 0.08 }, // ~8-25%: Commission name
-    sesion: { min: maxY - yRange * 0.55, max: maxY - yRange * 0.22 },   // ~22-55%: Session title
-    caracteristicas: { min: maxY - yRange * 0.75, max: maxY - yRange * 0.52 }, // ~52-75%
-    fechaHora: { min: minY - 50, max: maxY - yRange * 0.72 }           // Bottom: Date/time
-  };
+  // Detect column structure from first page headers
+  const columns = detectColumnBoundaries(textItems);
+  if (!columns) {
+    throw new Error('No se pudo detectar la estructura del PDF');
+  }
   
-  console.log('\nColumn Y ranges:');
-  Object.entries(COLUMN_RANGES).forEach(([col, range]) => {
-    console.log(`  ${col}: ${range.min.toFixed(0)} to ${range.max.toFixed(0)}`);
-  });
-  
-  // Group items by X (each X group = one session)
-  const xGroups = groupByX(textItems, 12);
-  console.log('\nX groups:', xGroups.size);
+  // Group items by Y (each Y = one row)
+  const yGroups = groupByY(textItems, 5);
+  console.log('\nY groups (rows):', yGroups.size);
   
   const sessions: ParsedSession[] = [];
   
-  // Process each X group (sorted by X ascending)
-  const sortedGroups = Array.from(xGroups.entries()).sort((a, b) => a[0] - b[0]);
+  // Process each row (sorted by Y ascending = top to bottom)
+  const sortedGroups = Array.from(yGroups.entries()).sort((a, b) => a[0] - b[0]);
   
-  for (const [groupX, items] of sortedGroups) {
-    console.log(`\n--- X=${groupX.toFixed(0)} (${items.length} items) ---`);
-    
-    // Skip header groups
-    if (isHeaderGroup(items)) {
-      console.log('  [SKIP: Header row]');
+  for (const [groupY, items] of sortedGroups) {
+    // Skip header rows
+    if (isHeaderRow(items)) {
+      console.log(`Y=${groupY.toFixed(0)}: [SKIP: Header]`);
       continue;
     }
     
-    // Skip groups with too few items
-    if (items.length < 3) {
-      console.log('  [SKIP: Too few items]');
+    // Skip rows with too few items
+    if (items.length < 2) {
       continue;
     }
     
-    // Extract column data using Y ranges
-    const tipoSesion = getTextInYRange(items, COLUMN_RANGES.tipoSesion.min, COLUMN_RANGES.tipoSesion.max);
-    const comision = getTextInYRange(items, COLUMN_RANGES.comision.min, COLUMN_RANGES.comision.max);
-    const sesion = getTextInYRange(items, COLUMN_RANGES.sesion.min, COLUMN_RANGES.sesion.max);
-    const caracteristicas = getTextInYRange(items, COLUMN_RANGES.caracteristicas.min, COLUMN_RANGES.caracteristicas.max);
-    const fechaHoraText = getTextInYRange(items, COLUMN_RANGES.fechaHora.min, COLUMN_RANGES.fechaHora.max);
+    // Extract column data using X ranges
+    const tipo = getTextInXRange(items, columns.tipo.min, columns.tipo.max);
+    const comision = getTextInXRange(items, columns.comision.min, columns.comision.max);
+    const sesion = getTextInXRange(items, columns.sesion.min, columns.sesion.max);
+    const caracteristicas = getTextInXRange(items, columns.caracteristicas.min, columns.caracteristicas.max);
+    const fechaText = getTextInXRange(items, columns.fecha.min, columns.fecha.max);
     
-    const { date, time } = parseDateTime(fechaHoraText);
-    const agendaUrl = findLinkForX(links, groupX, 25);
+    // Skip if no meaningful data
+    if (!sesion && !comision && !tipo) {
+      continue;
+    }
     
-    console.log(`  tipo: "${tipoSesion}"`);
-    console.log(`  comision: "${comision}"`);
-    console.log(`  sesion: "${sesion.substring(0, 50)}..."`);
-    console.log(`  caracteristicas: "${caracteristicas}"`);
-    console.log(`  fechaHora: "${fechaHoraText}" -> date="${date}" time="${time}"`);
-    console.log(`  agendaUrl: ${agendaUrl ? 'found' : 'none'}`);
+    // Skip "PROGRAMADA" only rows
+    if (tipo === 'PROGRAMADA' && !comision && !sesion) {
+      continue;
+    }
     
-    // Build full commission name
+    const { date, time } = parseDateTime(fechaText);
+    const agendaUrl = findLinkForY(links, groupY, 10);
+    
+    // Build commission name
     let fullCommission = comision;
     if (!fullCommission && sesion) {
       const match = sesion.match(/COMISI[ÓO]N DE ([^,]+)/i);
@@ -230,10 +251,11 @@ export async function parsePeruSessionsPdf(file: File): Promise<ParsedSession[]>
       }
     }
     
-    // Only add if we have meaningful data
+    console.log(`Y=${groupY.toFixed(0)}: tipo="${tipo}" comision="${comision?.substring(0, 20)}..." sesion="${sesion?.substring(0, 30)}..." fecha="${date}" hora="${time}"`);
+    
     if (fullCommission || sesion) {
       sessions.push({
-        tipoSesion: tipoSesion || 'Ordinaria',
+        tipoSesion: tipo || 'Ordinaria',
         commissionName: fullCommission || 'Comisión no identificada',
         sessionTitle: sesion || 'Sesión',
         caracteristicas: caracteristicas || null,
@@ -241,14 +263,11 @@ export async function parsePeruSessionsPdf(file: File): Promise<ParsedSession[]>
         scheduledTime: time,
         agendaUrl
       });
-      console.log('  [ADDED]');
-    } else {
-      console.log('  [SKIP: No meaningful data]');
     }
   }
   
   console.log(`\n=== Result: ${sessions.length} sessions ===`);
-  sessions.forEach((s, i) => {
+  sessions.slice(0, 5).forEach((s, i) => {
     console.log(`${i + 1}. ${s.commissionName} | ${s.scheduledDate} ${s.scheduledTime}`);
   });
   
