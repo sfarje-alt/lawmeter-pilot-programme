@@ -275,69 +275,117 @@ export function SocialListeningDemo() {
     }
   ];
 
-  // Custom Organizations Data (renamed from NGOs)
+  // Custom Organizations Data - Industry-relevant organizations for smart appliance company
   const customOrganizations = [
     {
-      organization: "Asociación Bancaria Costarricense",
-      type: "Banking Association",
+      organization: "IEC - International Electrotechnical Commission",
+      country: "switzerland",
+      type: "Standards Body",
       sourceType: "Website Extraction",
-      position: "Opposition with Reservations",
-      sentiment: "negative" as const,
-      score: -0.58,
-      date: "2025-01-15",
-      statement: "La ABC reconoce la importancia de la innovación financiera. Sin embargo, exigimos que las fintech cumplan los mismos estándares de solvencia, liquidez y gestión de riesgos que la banca tradicional. No puede existir arbitraje regulatorio.",
+      position: "New Standard Published",
+      sentiment: "neutral" as const,
+      score: 0.15,
+      date: "2025-01-16",
+      statement: "IEC 60335-2-15 Ed. 7.0 published: Safety of household appliances - Particular requirements for appliances for heating liquids. Key updates include enhanced requirements for smart connectivity features and updated thermal cutoff specifications for IoT-enabled kettles.",
       influence: "High",
-      followers: "125K"
+      followers: "85K"
     },
     {
-      organization: "ASOBANCA",
-      type: "Private Banks Association",
+      organization: "CENELEC - European Committee for Electrotechnical Standardization",
+      country: "eu",
+      type: "Standards Body",
+      sourceType: "Newsletter Extraction",
+      position: "Regulatory Update",
+      sentiment: "neutral" as const,
+      score: 0.22,
+      date: "2025-01-15",
+      statement: "EN 55014-1:2025 draft under review: EMC requirements for household appliances. Proposed stricter limits on radiated emissions for WiFi/Bluetooth-enabled kitchen appliances. Comment period ends March 2025. Manufacturers advised to prepare compliance testing.",
+      influence: "High",
+      followers: "62K",
+      isNewsletter: true,
+      newsletterName: "CENELEC Technical Update - January 2025"
+    },
+    {
+      organization: "Consumer Product Safety Commission (CPSC)",
+      country: "usa",
+      type: "Government Agency",
       sourceType: "Website Extraction",
-      position: "Strong Opposition",
+      position: "Safety Alert",
       sentiment: "negative" as const,
-      score: -0.84,
+      score: -0.45,
       date: "2025-01-14",
-      statement: "Estamos profundamente preocupados por las asimetrías regulatorias propuestas. El BAC y los bancos privados enfrentamos requisitos estrictos de capital (Basilea III) mientras las fintech operarían con reglas más laxas. Esto pone en riesgo la estabilidad del sistema.",
+      statement: "CPSC issues safety notice regarding thermal sensors in smart kettles following 3 reported incidents. Recommends manufacturers review UL 1082 compliance for automatic shutoff mechanisms. No recalls initiated but enhanced surveillance ongoing.",
+      influence: "High",
+      followers: "320K"
+    },
+    {
+      organization: "BEUC - European Consumer Organisation",
+      country: "eu",
+      type: "Consumer Advocacy",
+      sourceType: "Newsletter Extraction",
+      position: "Policy Recommendation",
+      sentiment: "neutral" as const,
+      score: -0.18,
+      date: "2025-01-13",
+      statement: "BEUC calls for mandatory repairability scores on small kitchen appliances under Ecodesign Regulation. Position paper argues espresso machines should have minimum 10-year spare parts availability. Urges Commission to include smart features in durability assessment.",
+      influence: "Medium",
+      followers: "145K",
+      isNewsletter: true,
+      newsletterName: "BEUC Consumer Voice - January 2025"
+    },
+    {
+      organization: "UL Solutions",
+      country: "usa",
+      type: "Certification Body",
+      sourceType: "Website Extraction",
+      position: "Technical Bulletin",
+      sentiment: "positive" as const,
+      score: 0.55,
+      date: "2025-01-12",
+      statement: "UL announces streamlined certification pathway for IoT kitchen appliances meeting both UL 1082 and UL 2900 cybersecurity requirements. New combined testing protocol reduces certification timeline by 30% for qualifying smart kettles and coffee makers.",
       influence: "High",
       followers: "210K"
     },
     {
-      organization: "Defensoría de los Habitantes",
-      type: "Consumer Protection",
+      organization: "European Coffee Federation",
+      country: "eu",
+      type: "Industry Association",
       sourceType: "Website Extraction",
-      position: "Conditional Support",
-      sentiment: "neutral" as const,
-      score: 0.25,
-      date: "2025-01-13",
-      statement: "Apoyamos la innovación que beneficie a los consumidores. No obstante, exigimos garantías robustas de protección de datos personales y financieros, especialmente en transacciones con nuevos actores digitales.",
-      influence: "High",
-      followers: "180K"
-    },
-    {
-      organization: "Cámara de Comercio de Costa Rica",
-      type: "Business Sector",
-      sourceType: "Website Extraction",
-      position: "Strong Support",
+      position: "Industry Position",
       sentiment: "positive" as const,
-      score: 0.79,
-      date: "2025-01-16",
-      statement: "La regulación fintech es fundamental para la competitividad nacional. Las PYMES necesitan acceso a financiamiento ágil y las fintech pueden llenar vacíos que la banca tradicional no atiende eficientemente.",
+      score: 0.68,
+      date: "2025-01-11",
+      statement: "ECF welcomes proposed EU energy labeling framework for espresso machines. Position supports tiered efficiency ratings but urges consideration of brewing quality metrics. Calls for industry-led voluntary standards on sustainable coffee machine design.",
       influence: "Medium",
-      followers: "95K"
+      followers: "38K"
     },
     {
-      organization: "Fundación ACCESO - Consumer Rights NGO",
-      type: "NGO Newsletter",
+      organization: "AHAM - Association of Home Appliance Manufacturers",
+      country: "usa",
+      type: "Industry Association",
       sourceType: "Newsletter Extraction",
-      position: "Critical Analysis",
+      position: "Regulatory Commentary",
       sentiment: "neutral" as const,
-      score: -0.15,
-      date: "2025-01-12",
-      statement: "En nuestro boletín mensual analizamos los impactos de la Ley Fintech en los consumidores vulnerables. Si bien la innovación es bienvenida, alertamos sobre la necesidad de mecanismos de protección más robustos para usuarios de bajos ingresos que podrían ser excluidos del sistema digital.",
-      influence: "Medium",
-      followers: "45K",
+      score: 0.12,
+      date: "2025-01-10",
+      statement: "AHAM submits comments on DOE's proposed energy conservation standards for consumer water heating products. Requests extended compliance timeline for smart kettle manufacturers and clarification on standby power measurement protocols for connected devices.",
+      influence: "High",
+      followers: "175K",
       isNewsletter: true,
-      newsletterName: "Boletín Derechos del Consumidor - Enero 2025"
+      newsletterName: "AHAM Regulatory Digest - Q1 2025"
+    },
+    {
+      organization: "German Federal Institute for Risk Assessment (BfR)",
+      country: "germany",
+      type: "Government Agency",
+      sourceType: "Website Extraction",
+      position: "Scientific Opinion",
+      sentiment: "neutral" as const,
+      score: -0.08,
+      date: "2025-01-09",
+      statement: "BfR publishes updated guidance on food contact materials for heated beverage appliances. Recommends additional migration testing for silicone gaskets exposed to repeated high-temperature cycles. Applies to espresso machine brewing components.",
+      influence: "High",
+      followers: "95K"
     }
   ];
 
@@ -865,7 +913,7 @@ export function SocialListeningDemo() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        <CountryFlag countryKey={org.country} size="sm" />
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">{org.organization}</span>
                           <span className="text-xs text-muted-foreground">{org.type} - {org.date}</span>
