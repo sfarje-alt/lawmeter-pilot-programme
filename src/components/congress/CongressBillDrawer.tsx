@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   ExternalLink, 
@@ -858,8 +859,18 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
               {/* Summaries Tab */}
               <TabsContent value="summaries" className="space-y-6 mt-6">
                 <div className="space-y-3">
-                  <h3 className="font-semibold">
+                  <h3 className="font-semibold flex items-center gap-1.5">
                     CRS Summaries ({summaries.length})
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Congressional Research Service</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </h3>
                   {summaries.length > 0 ? (
                     <ScrollArea className="h-[500px]">
