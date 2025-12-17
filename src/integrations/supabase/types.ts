@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      bill_session_links: {
+        Row: {
+          bill_id: string
+          created_at: string | null
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          bill_id: string
+          created_at?: string | null
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          bill_id?: string
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_session_links_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "peru_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           certificate_file_key: string | null
@@ -175,6 +207,145 @@ export type Database = {
         }
         Relationships: []
       }
+      peru_sessions: {
+        Row: {
+          agenda_url: string | null
+          commission_name: string
+          created_at: string | null
+          documents_url: string | null
+          external_session_id: string | null
+          id: string
+          jurisdiction: string | null
+          scheduled_at: string | null
+          scheduled_date_text: string | null
+          session_title: string | null
+          source: string | null
+          source_file_name: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agenda_url?: string | null
+          commission_name: string
+          created_at?: string | null
+          documents_url?: string | null
+          external_session_id?: string | null
+          id?: string
+          jurisdiction?: string | null
+          scheduled_at?: string | null
+          scheduled_date_text?: string | null
+          session_title?: string | null
+          source?: string | null
+          source_file_name?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agenda_url?: string | null
+          commission_name?: string
+          created_at?: string | null
+          documents_url?: string | null
+          external_session_id?: string | null
+          id?: string
+          jurisdiction?: string | null
+          scheduled_at?: string | null
+          scheduled_date_text?: string | null
+          session_title?: string | null
+          source?: string | null
+          source_file_name?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      session_recordings: {
+        Row: {
+          channel_id: string | null
+          channel_name: string | null
+          created_at: string | null
+          expected_title: string | null
+          id: string
+          last_error: string | null
+          provider: string | null
+          resolution_confidence: string | null
+          resolution_method: string | null
+          resolved_at: string | null
+          session_id: string
+          video_id: string | null
+          video_url: string | null
+        }
+        Insert: {
+          channel_id?: string | null
+          channel_name?: string | null
+          created_at?: string | null
+          expected_title?: string | null
+          id?: string
+          last_error?: string | null
+          provider?: string | null
+          resolution_confidence?: string | null
+          resolution_method?: string | null
+          resolved_at?: string | null
+          session_id: string
+          video_id?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          channel_id?: string | null
+          channel_name?: string | null
+          created_at?: string | null
+          expected_title?: string | null
+          id?: string
+          last_error?: string | null
+          provider?: string | null
+          resolution_confidence?: string | null
+          resolution_method?: string | null
+          resolved_at?: string | null
+          session_id?: string
+          video_id?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "peru_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_watch: {
+        Row: {
+          created_at: string | null
+          id: string
+          session_id: string
+          user_id: string
+          watch_status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          session_id: string
+          user_id: string
+          watch_status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          user_id?: string
+          watch_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_watch_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "peru_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -192,6 +363,30 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watched_commissions: {
+        Row: {
+          commission_name: string
+          created_at: string | null
+          id: string
+          jurisdiction: string | null
+          user_id: string
+        }
+        Insert: {
+          commission_name: string
+          created_at?: string | null
+          id?: string
+          jurisdiction?: string | null
+          user_id: string
+        }
+        Update: {
+          commission_name?: string
+          created_at?: string | null
+          id?: string
+          jurisdiction?: string | null
           user_id?: string
         }
         Relationships: []
