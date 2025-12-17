@@ -696,15 +696,26 @@ export function SocialListeningDemo() {
               {/* Report Repository List */}
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground px-1">Previous Reports</div>
-                {reportRepository.slice(0, 4).map((report) => (
+                {reportRepository.slice(0, 4).map((report, index) => (
                   <div 
                     key={report.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+                      index === 0 
+                        ? "bg-primary/5 border-primary/30 hover:bg-primary/10" 
+                        : "bg-card hover:bg-muted/30"
+                    }`}
                   >
                     <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
+                      <FileText className={`w-4 h-4 ${index === 0 ? "text-primary" : "text-muted-foreground"}`} />
                       <div>
-                        <div className="font-medium text-sm truncate max-w-[300px]">{report.name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm truncate max-w-[280px]">{report.name}</span>
+                          {index === 0 && (
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs px-1.5 py-0">
+                              Latest
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground">
                           {report.date} • {report.size}
                         </div>
