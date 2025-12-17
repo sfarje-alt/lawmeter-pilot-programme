@@ -5,6 +5,18 @@ import { PeruSession, WatchedCommission } from '@/types/peruSessions';
 import { PERU_MOCK_SESSIONS, PERU_MOCK_RECORDINGS, DEFAULT_WATCHED_COMMISSIONS } from '@/data/peruSessionsMockData';
 import { useToast } from '@/hooks/use-toast';
 
+// Type for parsed sessions from PDF importer
+export interface ImportedSession {
+  tipo_comision: string;
+  commission_name: string;
+  session_title: string;
+  caracteristicas: string | null;
+  scheduled_date: string;
+  scheduled_time: string;
+  agenda_url: string | null;
+  external_session_id: string | null;
+}
+
 interface UsePeruSessionsOptions {
   commissionFilter?: string;
   dateRange?: { start: Date; end: Date };
@@ -226,19 +238,53 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     });
   };
 
-  // Import sessions from file (mock)
-  const importSessions = async (file: File) => {
-    toast({
-      title: "Importando sesiones...",
-      description: `Procesando archivo: ${file.name}`,
+  // Import sessions from parsed PDF data
+  const importSessions = async (importedSessions: ImportedSession[]) => {
+    // Convert imported sessions to PeruSession format
+    const newSessions: PeruSession[] = importedSessions.map((imported, index) => {
+      // Combine date and time into scheduled_at
+      let scheduledAt: string | null = null;
+      if (imported.scheduled_date) {
+        scheduledAt = imported.scheduled_time 
+          ? `${imported.scheduled_date}T${imported.scheduled_time}:00`
+          : `${imported.scheduled_date}T00:00:00`;
+      }
+
+      const sessionId = imported.external_session_id || `imported-${Date.now()}-${index}`;
+      
+      return {
+        id: sessionId,
+        commission_name: imported.commission_name,
+        session_title: imported.session_title || `Sesión de ${imported.commission_name}`,
+        scheduled_at: scheduledAt,
+        scheduled_date_text: `${imported.scheduled_date} ${imported.scheduled_time || ''}`.trim(),
+        status: 'scheduled' as const,
+        agenda_url: imported.agenda_url,
+        documents_url: null,
+        external_session_id: imported.external_session_id,
+        jurisdiction: 'Peru',
+        source: 'IMPORTED',
+        source_file_name: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_recommended: watchedCommissions.includes(imported.commission_name),
+        is_selected: false,
+        video_status: 'NOT_CHECKED' as const,
+      };
     });
 
-    // Simulate processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Add to existing sessions (avoid duplicates by external_session_id)
+    setSessions(prev => {
+      const existingIds = new Set(prev.map(s => s.external_session_id).filter(Boolean));
+      const uniqueNew = newSessions.filter(s => 
+        !s.external_session_id || !existingIds.has(s.external_session_id)
+      );
+      return [...uniqueNew, ...prev];
+    });
 
     toast({
       title: "Importación completada",
-      description: `Se importaron ${Math.floor(Math.random() * 20) + 10} sesiones del archivo`,
+      description: `Se importaron ${newSessions.length} sesiones`,
     });
   };
 
