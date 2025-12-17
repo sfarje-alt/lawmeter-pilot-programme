@@ -33,6 +33,7 @@ import { CongressBillsSection } from "@/components/congress/CongressBillsSection
 import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
 import { CongressBill } from "@/types/congress";
 import { UnifiedLegislationSection, UnifiedLegislationDrawer, UnifiedCongressSection, AllLegislationSection } from "@/components/legislation";
+import { SessionsPage } from "@/components/sessions";
 import { LegislationViewToggle, LegislationViewMode } from "@/components/legislation/LegislationViewToggle";
 import { GCCRegionMap, WorldMap } from "@/components/maps";
 import { MapInsightsPanel } from "@/components/analytics/MapInsightsPanel";
@@ -978,6 +979,10 @@ export default function LawMeterDashboard() {
           </TabsContent>
 
           {/* Analytics tab removed - now integrated into Legislation */}
+
+          <TabsContent value="sessions" className="mt-6">
+            <SessionsPage />
+          </TabsContent>
 
           <TabsContent value="media" className="mt-6">
             <MediaSection />
