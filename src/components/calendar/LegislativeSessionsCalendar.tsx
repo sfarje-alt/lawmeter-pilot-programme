@@ -1141,7 +1141,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full pr-4">
+          <ScrollArea className="max-h-[580px] pr-4">
             {selectedSessions.length === 0 && selectedEffectiveDates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
