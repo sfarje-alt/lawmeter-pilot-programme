@@ -1126,7 +1126,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
         </CardContent>
       </Card>
 
-      <Card className="flex flex-col h-[720px]">
+      <Card className="flex flex-col h-[800px]">
         <CardHeader className="flex-shrink-0">
           <CardTitle className="text-lg text-foreground">
             {calendarView === "daily" && format(selectedDate, "MMMM d, yyyy")}
