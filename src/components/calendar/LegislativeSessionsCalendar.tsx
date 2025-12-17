@@ -1126,8 +1126,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
         </CardContent>
       </Card>
 
-      <Card className="h-full flex flex-col">
-        <CardHeader>
+      <Card className="flex flex-col min-h-[600px]">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="text-lg text-foreground">
             {calendarView === "daily" && format(selectedDate, "MMMM d, yyyy")}
             {calendarView === "weekly" && `Week of ${format(startOfWeek(selectedDate), "MMM d")} - ${format(endOfWeek(selectedDate), "MMM d, yyyy")}`}
@@ -1140,8 +1140,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="h-[520px] overflow-y-auto pr-2">
+        <CardContent className="flex-1 p-4 overflow-hidden">
+          <div className="h-full overflow-y-auto pr-2">
             {selectedSessions.length === 0 && selectedEffectiveDates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
