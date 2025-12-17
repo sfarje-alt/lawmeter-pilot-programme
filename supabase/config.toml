@@ -1,1 +1,4 @@
 project_id = "znufqelcglmvkggypybw"
+
+[functions.parse-peru-sessions-pdf]
+verify_jwt = false

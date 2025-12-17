@@ -11,8 +11,8 @@ export interface PeruSession {
   documents_url?: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'unknown';
   source_file_name?: string;
-  source: 'PERU_CONGRESS_COMMISSION_SESSIONS';
-  jurisdiction: 'PERU';
+  source: 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED';
+  jurisdiction: 'PERU' | 'Peru';
   created_at: string;
   updated_at?: string;
   
@@ -41,6 +41,7 @@ export interface SessionRecording {
 
 export type VideoResolutionStatus = 
   | 'NOT_ATTEMPTED'
+  | 'NOT_CHECKED'
   | 'RESOLVING'
   | 'FOUND_HIGH'
   | 'FOUND_MEDIUM'
