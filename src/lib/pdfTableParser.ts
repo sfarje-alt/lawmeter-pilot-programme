@@ -3,18 +3,6 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Configure worker for v3
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-interface TextItem {
-  text: string;
-  x: number;
-  y: number;
-}
-
-interface PDFLink {
-  url: string;
-  x: number;
-  y: number;
-}
-
 export interface ParsedSession {
   tipoSesion: string;
   commissionName: string;
@@ -25,308 +13,260 @@ export interface ParsedSession {
   agendaUrl: string | null;
 }
 
-// Extract all text items with positions
-async function extractTextWithPositions(pdf: any): Promise<TextItem[]> {
-  const items: TextItem[] = [];
-  
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const viewport = page.getViewport({ scale: 1 });
-    
-    for (const item of textContent.items) {
-      if ('str' in item && item.str.trim()) {
-        const transform = item.transform as number[];
-        items.push({
-          text: item.str.trim(),
-          // X is horizontal position
-          x: transform[4],
-          // Y inverted so 0 is at top
-          y: viewport.height - transform[5]
-        });
-      }
-    }
-  }
-  
-  return items;
+interface PDFLink {
+  url: string;
+  y: number;
+  page: number;
 }
 
-// Extract links with positions
-async function extractLinksWithPositions(pdf: any): Promise<PDFLink[]> {
-  const links: PDFLink[] = [];
+/**
+ * Extract all URLs from PDF ordered by page and Y position (like Python script)
+ */
+async function extractLinksOrdered(pdf: any): Promise<string[]> {
+  const allLinks: PDFLink[] = [];
   
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const annotations = await page.getAnnotations();
-    const viewport = page.getViewport({ scale: 1 });
     
     for (const annot of annotations) {
       if (annot.subtype === 'Link' && annot.url) {
-        links.push({
+        const y = annot.rect ? (annot.rect[1] + annot.rect[3]) / 2 : 0;
+        allLinks.push({
           url: annot.url,
-          x: annot.rect[0],
-          y: viewport.height - annot.rect[3]
+          y: y,
+          page: pageNum
         });
       }
     }
   }
   
-  return links;
+  // Sort by page, then by Y descending (higher Y = higher on page in PDF coords)
+  allLinks.sort((a, b) => {
+    if (a.page !== b.page) return a.page - b.page;
+    return b.y - a.y;
+  });
+  
+  console.log(`[PDF Parser] Extracted ${allLinks.length} URLs`);
+  return allLinks.map(l => l.url);
 }
 
-// Group text items by Y coordinate (each Y = one row)
-function groupByY(items: TextItem[], threshold: number = 5): Map<number, TextItem[]> {
-  const groups = new Map<number, TextItem[]>();
-  const sortedItems = [...items].sort((a, b) => a.y - b.y);
+/**
+ * Extract full text from all pages
+ */
+async function extractFullText(pdf: any): Promise<string> {
+  let fullText = '';
   
-  for (const item of sortedItems) {
-    let addedToGroup = false;
-    
-    for (const [groupY, groupItems] of groups) {
-      if (Math.abs(item.y - groupY) <= threshold) {
-        groupItems.push(item);
-        addedToGroup = true;
-        break;
-      }
-    }
-    
-    if (!addedToGroup) {
-      groups.set(item.y, [item]);
-    }
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => item.str)
+      .join(' ');
+    fullText += pageText + '\n';
   }
   
-  return groups;
+  return fullText;
 }
 
-// Get text within an X coordinate range
-function getTextInXRange(items: TextItem[], minX: number, maxX: number): string {
-  const matching = items
-    .filter(item => item.x >= minX && item.x < maxX)
-    .sort((a, b) => a.x - b.x);
-  
-  return matching.map(item => item.text).join(' ').trim();
-}
-
-// Find link closest to a given Y position
-function findLinkForY(links: PDFLink[], targetY: number, threshold: number = 10): string | null {
-  for (const link of links) {
-    if (Math.abs(link.y - targetY) <= threshold) {
-      return link.url;
-    }
-  }
-  return null;
-}
-
-// Parse date and time from combined text
-function parseDateTime(text: string): { date: string; time: string } {
-  const dateMatch = text.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
-  const timeMatch = text.match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
-  
-  return {
-    date: dateMatch ? dateMatch[1] : '',
-    time: timeMatch ? timeMatch[1].toUpperCase() : ''
-  };
-}
-
-// Detect column boundaries from header items
-function detectColumnBoundaries(items: TextItem[]): { [key: string]: { min: number; max: number } } | null {
-  // Find header row - look for "TIPO" or "COMISIÓN" at low Y (top of page)
-  const headerItems = items.filter(item => item.y < 50);
-  
-  console.log('Header items found:', headerItems.map(i => `"${i.text}" x=${i.x.toFixed(0)}`));
-  
-  // Find specific headers
-  const tipoHeader = headerItems.find(i => i.text.includes('TIPO'));
-  const comisionHeader = headerItems.find(i => i.text === 'COMISIÓN');
-  const sesionHeader = headerItems.find(i => i.text === 'SESIÓN');
-  const caracteristicasHeader = headerItems.find(i => i.text.includes('CARACTER'));
-  const fechaHeader = headerItems.find(i => i.text.includes('FECHA'));
-  const agendaHeader = headerItems.find(i => i.text === 'AGENDA');
-  
-  if (!tipoHeader && !comisionHeader) {
-    console.log('No header row detected');
-    return null;
-  }
-  
-  // Build column boundaries
-  const pageWidth = 850;
-  const cols: { [key: string]: { min: number; max: number } } = {
-    tipo: { min: 0, max: (comisionHeader?.x || 100) - 5 },
-    comision: { min: (comisionHeader?.x || 100) - 5, max: (sesionHeader?.x || 200) - 5 },
-    sesion: { min: (sesionHeader?.x || 200) - 5, max: (caracteristicasHeader?.x || 500) - 5 },
-    caracteristicas: { min: (caracteristicasHeader?.x || 500) - 5, max: (fechaHeader?.x || 600) - 5 },
-    fecha: { min: (fechaHeader?.x || 600) - 5, max: (agendaHeader?.x || 700) - 5 },
-    agenda: { min: (agendaHeader?.x || 700) - 5, max: pageWidth }
-  };
-  
-  console.log('Detected columns:', cols);
-  return cols;
-}
-
-// Check if row is a header row
-function isHeaderRow(items: TextItem[]): boolean {
-  const text = items.map(i => i.text).join(' ').toLowerCase();
-  return text.includes('tipo comisi') || 
-         (text.includes('comisión') && text.includes('sesión') && text.includes('agenda'));
-}
-
-// Main parser
+/**
+ * Parse the Peru Congress sessions PDF following the Python script approach:
+ * - Split text by "Ver agenda"
+ * - Extract hours in order and assign them sequentially
+ * - Assign URLs in order
+ */
 export async function parsePeruSessionsPdf(file: File): Promise<ParsedSession[]> {
-  console.log('=== PDF Parser (Standard Coordinates) ===');
-  console.log('File:', file.name);
+  console.log('[PDF Parser] Starting PDF parsing with Ver agenda split approach...');
   
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   
-  console.log('Pages:', pdf.numPages);
+  console.log(`[PDF Parser] PDF loaded: ${pdf.numPages} pages`);
   
-  const [textItems, links] = await Promise.all([
-    extractTextWithPositions(pdf),
-    extractLinksWithPositions(pdf)
-  ]);
+  // 1. Extract all URLs in order
+  const urls = await extractLinksOrdered(pdf);
+  console.log(`[PDF Parser] Found ${urls.length} URLs`);
   
-  console.log('Text items:', textItems.length);
-  console.log('Links:', links.length);
+  // 2. Extract full text
+  const fullText = await extractFullText(pdf);
+  console.log(`[PDF Parser] Full text length: ${fullText.length} characters`);
   
-  // Log sample items for debugging
-  console.log('\nSample items (sorted by Y, first 30):');
-  const sampleByY = [...textItems].sort((a, b) => a.y - b.y).slice(0, 30);
-  sampleByY.forEach(item => {
-    console.log(`  Y=${item.y.toFixed(0).padStart(4)} X=${item.x.toFixed(0).padStart(4)} "${item.text}"`);
-  });
+  // 3. Extract ALL hours in order
+  const horaPattern = /(\d{1,2}:\d{2}\s*[AP]M)/gi;
+  const allHoras = fullText.match(horaPattern) || [];
+  console.log(`[PDF Parser] Found ${allHoras.length} hours in text`);
   
-  // Detect column structure from first page headers
-  const columns = detectColumnBoundaries(textItems);
-  if (!columns) {
-    throw new Error('No se pudo detectar la estructura del PDF');
-  }
-  
-  // Group items by Y (each Y = one row)
-  const yGroups = groupByY(textItems, 5);
-  console.log('\nY groups (rows):', yGroups.size);
+  // 4. Split by "Ver agenda"
+  const blocks = fullText.split(/Ver\s+agend(?:a)?/i);
+  console.log(`[PDF Parser] Split into ${blocks.length} blocks by "Ver agenda"`);
   
   const sessions: ParsedSession[] = [];
+  let horaIdx = 0;
   
-  // Process each row (sorted by Y ascending = top to bottom)
-  const sortedGroups = Array.from(yGroups.entries()).sort((a, b) => a[0] - b[0]);
-  
-  for (const [groupY, items] of sortedGroups) {
-    // Skip header rows
-    if (isHeaderRow(items)) {
-      console.log(`Y=${groupY.toFixed(0)}: [SKIP: Header]`);
-      continue;
-    }
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    // Normalize whitespace
+    const text = block.replace(/\s+/g, ' ').trim();
     
-    // Skip rows with too few items
-    if (items.length < 2) {
-      continue;
-    }
+    // Extract FECHA
+    const fechaMatch = text.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+    const fecha = fechaMatch ? fechaMatch[1] : '';
     
-    // Extract column data using X ranges
-    const tipo = getTextInXRange(items, columns.tipo.min, columns.tipo.max);
-    const comision = getTextInXRange(items, columns.comision.min, columns.comision.max);
-    const sesion = getTextInXRange(items, columns.sesion.min, columns.sesion.max);
-    const caracteristicas = getTextInXRange(items, columns.caracteristicas.min, columns.caracteristicas.max);
-    const fechaText = getTextInXRange(items, columns.fecha.min, columns.fecha.max);
+    // Extract CARACTERÍSTICAS
+    const caracteristicas: string[] = [];
+    if (/Descentralizada/i.test(text)) caracteristicas.push('Descentralizada');
+    if (/Continuada/i.test(text)) caracteristicas.push('Continuada');
+    if (/Virtual/i.test(text)) caracteristicas.push('Virtual');
     
-    // Skip if no meaningful data
-    if (!sesion && !comision && !tipo) {
-      continue;
-    }
+    // Extract SESIÓN - complex pattern from Python script
+    const sesionPattern = /((?:PRIMERA|SEGUNDA|TERCERA|CUARTA|QUINTA|SEXTA|SÉPTIMA|SEPTIMA|OCTAVA|NOVENA|DÉCIMA|DECIMA|UNDÉCIMA|DUODÉCIMA|DÉCIM[OA]\s*PRIMER[OA]|DÉCIM[OA]\s*SEGUND[OA]|DÉCIM[OA]\s*TERCER[OA]|DÉCIM[OA]\s*CUART[OA]|DÉCIM[OA]\s*QUINT[OA]|DÉCIM[OA]\s*SEXT[OA]|DÉCIM[OA]\s*SÉPTIM[OA]|DÉCIM[OA]\s*OCTAV[OA]|DÉCIM[OA]\s*NOVEN[OA]|VIGÉSIM[OA]|VIGESIM[OA]|ELECCIÓN)\s+(?:SESIÓN\s+)?(?:DE\s+LA\s+MESA\s+DIRECTIVA\s+E\s+INSTALACIÓN\s+DE\s+LA\s+)?(?:ORDINARIA|EXTRAORDINARIA)?\s*DE\s+LA\s+(?:COMISIÓN|SUBCOMISIÓN)(?:\s+DE)?\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ,\s\-]+)/i;
     
-    // Skip "PROGRAMADA" only rows
-    if (tipo === 'PROGRAMADA' && !comision && !sesion) {
-      continue;
-    }
+    let sesionMatch = text.match(sesionPattern);
+    let sesion = '';
+    let comision = '';
     
-    const { date, time } = parseDateTime(fechaText);
-    const agendaUrl = findLinkForY(links, groupY, 10);
-    
-    // Build commission name
-    let fullCommission = comision;
-    if (!fullCommission && sesion) {
-      const match = sesion.match(/COMISI[ÓO]N DE ([^,]+)/i);
-      if (match) {
-        fullCommission = `Comisión de ${match[1].trim()}`;
+    if (sesionMatch) {
+      sesion = sesionMatch[1].trim();
+      // Clean up sesion
+      sesion = sesion.replace(/\s+/g, ' ');
+      sesion = sesion.replace(/\s*\d{1,2}\/\d{1,2}\/\d{4}.*$/, '');
+      sesion = sesion.replace(/\s*\d{1,2}:\d{2}\s*[AP]M.*$/i, '');
+      sesion = sesion.replace(/\s*(Descentralizada|Continuada|Virtual).*$/i, '');
+      
+      // Extract comision from sesion
+      const comisionMatch = sesion.match(/(?:COMISIÓN|SUBCOMISIÓN)\s+(?:DE\s+)?(.+?)$/i);
+      if (comisionMatch) {
+        comision = comisionMatch[1].trim();
+      }
+    } else {
+      // Alternative pattern for ELECCIÓN DE MESA DIRECTIVA
+      const altPattern = /(ELECCIÓN\s+DE\s+LA\s+MESA\s+DIRECTIVA\s+E\s+INSTALACIÓN\s+DE\s+LA\s+(?:COMISIÓN|SUBCOMISIÓN)\s+(?:DE\s+)?[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ,\s\-]+)/i;
+      const altMatch = text.match(altPattern);
+      if (altMatch) {
+        sesion = altMatch[1].trim();
+        const comisionMatch = sesion.match(/(?:COMISIÓN|SUBCOMISIÓN)\s+(?:DE\s+)?(.+?)$/i);
+        if (comisionMatch) {
+          comision = comisionMatch[1].trim();
+        }
       }
     }
     
-    console.log(`Y=${groupY.toFixed(0)}: tipo="${tipo}" comision="${comision?.substring(0, 20)}..." sesion="${sesion?.substring(0, 30)}..." fecha="${date}" hora="${time}"`);
-    
-    if (fullCommission || sesion) {
+    // Only add if we found a valid session
+    if (sesion) {
+      // Assign hora in order
+      const hora = horaIdx < allHoras.length ? allHoras[horaIdx].toUpperCase() : '';
+      horaIdx++;
+      
+      // Determine tipo (Ordinaria/Extraordinaria)
+      let tipo = 'Ordinaria';
+      if (/extraordinaria/i.test(sesion)) {
+        tipo = 'Extraordinaria';
+      }
+      
       sessions.push({
-        tipoSesion: tipo || 'Ordinaria',
-        commissionName: fullCommission || 'Comisión no identificada',
-        sessionTitle: sesion || 'Sesión',
-        caracteristicas: caracteristicas || null,
-        scheduledDate: date,
-        scheduledTime: time,
-        agendaUrl
+        tipoSesion: tipo,
+        commissionName: comision || 'Comisión no identificada',
+        sessionTitle: sesion,
+        caracteristicas: caracteristicas.length > 0 ? caracteristicas.join(', ') : null,
+        scheduledDate: fecha,
+        scheduledTime: hora,
+        agendaUrl: null // Will be assigned below
       });
     }
   }
   
-  console.log(`\n=== Result: ${sessions.length} sessions ===`);
-  sessions.slice(0, 5).forEach((s, i) => {
-    console.log(`${i + 1}. ${s.commissionName} | ${s.scheduledDate} ${s.scheduledTime}`);
-  });
+  console.log(`[PDF Parser] Parsed ${sessions.length} sessions`);
+  
+  // 5. Assign URLs in order
+  for (let i = 0; i < sessions.length; i++) {
+    if (i < urls.length) {
+      sessions[i].agendaUrl = urls[i];
+    }
+  }
+  
+  // Log sample for debugging
+  if (sessions.length > 0) {
+    console.log('[PDF Parser] Sample sessions:');
+    [0, 1, 2, Math.min(10, sessions.length - 1)].forEach(idx => {
+      if (idx < sessions.length) {
+        const s = sessions[idx];
+        console.log(`[${idx}] Comisión: ${s.commissionName?.substring(0, 50)}`);
+        console.log(`     Sesión: ${s.sessionTitle?.substring(0, 70)}`);
+        console.log(`     Fecha: ${s.scheduledDate} | Hora: ${s.scheduledTime}`);
+        console.log(`     URL: ${s.agendaUrl?.substring(0, 50) || 'none'}`);
+      }
+    });
+  }
   
   return sessions;
 }
 
-// Fallback: Parse from pasted text
+/**
+ * Fallback: Parse from pasted text using same approach
+ */
 export function parseFromPastedText(text: string): ParsedSession[] {
-  const lines = text.split('\n').filter(line => line.trim());
-  const sessions: ParsedSession[] = [];
+  console.log('[Text Parser] Parsing pasted text with Ver agenda split...');
   
-  for (const line of lines) {
-    if (line.includes('TIPO COMISIÓN') || line.includes('AGENDA')) continue;
+  // Extract all hours in order
+  const horaPattern = /(\d{1,2}:\d{2}\s*[AP]M)/gi;
+  const allHoras = text.match(horaPattern) || [];
+  
+  // Split by "Ver agenda"
+  const blocks = text.split(/Ver\s+agend(?:a)?/i);
+  
+  const sessions: ParsedSession[] = [];
+  let horaIdx = 0;
+  
+  for (const block of blocks) {
+    const normalizedText = block.replace(/\s+/g, ' ').trim();
     
-    const session: Partial<ParsedSession> = {};
+    const fechaMatch = normalizedText.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+    const fecha = fechaMatch ? fechaMatch[1] : '';
     
-    const dateMatch = line.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
-    session.scheduledDate = dateMatch ? dateMatch[1] : '';
+    const caracteristicas: string[] = [];
+    if (/Descentralizada/i.test(normalizedText)) caracteristicas.push('Descentralizada');
+    if (/Continuada/i.test(normalizedText)) caracteristicas.push('Continuada');
+    if (/Virtual/i.test(normalizedText)) caracteristicas.push('Virtual');
     
-    const timeMatch = line.match(/(\d{1,2}:\d{2}\s*[APap][Mm])/i);
-    session.scheduledTime = timeMatch ? timeMatch[1].toUpperCase() : '';
+    const sesionPattern = /((?:PRIMERA|SEGUNDA|TERCERA|CUARTA|QUINTA|SEXTA|SÉPTIMA|SEPTIMA|OCTAVA|NOVENA|DÉCIMA|DECIMA|UNDÉCIMA|DUODÉCIMA|DÉCIM[OA]\s*PRIMER[OA]|DÉCIM[OA]\s*SEGUND[OA]|DÉCIM[OA]\s*TERCER[OA]|DÉCIM[OA]\s*CUART[OA]|DÉCIM[OA]\s*QUINT[OA]|DÉCIM[OA]\s*SEXT[OA]|DÉCIM[OA]\s*SÉPTIM[OA]|DÉCIM[OA]\s*OCTAV[OA]|DÉCIM[OA]\s*NOVEN[OA]|VIGÉSIM[OA]|VIGESIM[OA]|ELECCIÓN)\s+(?:SESIÓN\s+)?(?:DE\s+LA\s+MESA\s+DIRECTIVA\s+E\s+INSTALACIÓN\s+DE\s+LA\s+)?(?:ORDINARIA|EXTRAORDINARIA)?\s*DE\s+LA\s+(?:COMISIÓN|SUBCOMISIÓN)(?:\s+DE)?\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ,\s\-]+)/i;
     
-    if (line.toLowerCase().includes('extraordinaria')) {
-      session.tipoSesion = 'Extraordinaria';
-    } else if (line.toLowerCase().includes('ordinaria')) {
-      session.tipoSesion = 'Ordinaria';
-    }
+    const sesionMatch = normalizedText.match(sesionPattern);
+    let sesion = '';
+    let comision = '';
     
-    if (line.toLowerCase().includes('descentralizada')) {
-      session.caracteristicas = 'Descentralizada';
-    } else if (line.toLowerCase().includes('virtual')) {
-      session.caracteristicas = 'Virtual';
-    }
-    
-    const comisionMatch = line.match(/COMISI[ÓO]N DE ([^,\d]+)/i);
-    if (comisionMatch) {
-      session.commissionName = `Comisión de ${comisionMatch[1].trim()}`;
-    }
-    
-    const sesionMatch = line.match(/((?:PRIMERA|SEGUNDA|TERCERA|CUARTA|QUINTA|SEXTA|SÉPTIMA|OCTAVA|NOVENA|DÉCIMA|UNDÉCIMA|DUODÉCIMA|VIGÉSIMA)[A-Z\s]*SESI[ÓO]N[^,]+)/i);
     if (sesionMatch) {
-      session.sessionTitle = sesionMatch[1].trim();
+      sesion = sesionMatch[1].trim().replace(/\s+/g, ' ');
+      sesion = sesion.replace(/\s*\d{1,2}\/\d{1,2}\/\d{4}.*$/, '');
+      sesion = sesion.replace(/\s*\d{1,2}:\d{2}\s*[AP]M.*$/i, '');
+      sesion = sesion.replace(/\s*(Descentralizada|Continuada|Virtual).*$/i, '');
+      
+      const comisionMatch = sesion.match(/(?:COMISIÓN|SUBCOMISIÓN)\s+(?:DE\s+)?(.+?)$/i);
+      if (comisionMatch) {
+        comision = comisionMatch[1].trim();
+      }
     }
     
-    const urlMatch = line.match(/https?:\/\/[^\s]+/);
-    session.agendaUrl = urlMatch ? urlMatch[0] : null;
-    
-    if (session.scheduledDate || session.commissionName || session.sessionTitle) {
+    if (sesion) {
+      const hora = horaIdx < allHoras.length ? allHoras[horaIdx].toUpperCase() : '';
+      horaIdx++;
+      
+      let tipo = 'Ordinaria';
+      if (/extraordinaria/i.test(sesion)) {
+        tipo = 'Extraordinaria';
+      }
+      
       sessions.push({
-        tipoSesion: session.tipoSesion || 'Ordinaria',
-        commissionName: session.commissionName || 'Comisión no identificada',
-        sessionTitle: session.sessionTitle || 'Sesión',
-        caracteristicas: session.caracteristicas || null,
-        scheduledDate: session.scheduledDate || '',
-        scheduledTime: session.scheduledTime || '',
-        agendaUrl: session.agendaUrl || null
+        tipoSesion: tipo,
+        commissionName: comision || 'Comisión no identificada',
+        sessionTitle: sesion,
+        caracteristicas: caracteristicas.length > 0 ? caracteristicas.join(', ') : null,
+        scheduledDate: fecha,
+        scheduledTime: hora,
+        agendaUrl: null
       });
     }
   }
   
+  console.log(`[Text Parser] Parsed ${sessions.length} sessions`);
   return sessions;
 }
