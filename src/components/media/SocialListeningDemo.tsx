@@ -642,76 +642,60 @@ export function SocialListeningDemo() {
             </CardContent>
           </Card>
 
-          {/* Report Configuration & Repository */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Scheduled Reports */}
-            <Card className="border-primary/20">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Calendar className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Social Activity Reports</CardTitle>
-                      <CardDescription>
-                        Automated narrative reports on social media activity
-                      </CardDescription>
-                    </div>
+          {/* Social Activity Reports - Unified Configuration & Repository */}
+          <Card className="border-primary/20">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Calendar className="w-5 h-5 text-primary" />
                   </div>
+                  <div>
+                    <CardTitle className="text-lg">Social Activity Reports</CardTitle>
+                    <CardDescription>
+                      Automated narrative reports on social media activity
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="gap-2">
                     <Settings className="w-4 h-4" />
                     Configure
                   </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="p-4 rounded-lg border bg-card">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Clock className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{scheduledReport.name}</div>
-                        <div className="text-xs text-muted-foreground mb-1">
-                          {scheduledReport.frequency} - Next: {scheduledReport.nextRun}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {scheduledReport.description}
-                        </div>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                      Active
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Report Repository */}
-            <Card className="border-primary/20">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <FileText className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Report Repository</CardTitle>
-                      <CardDescription>
-                        Social activity narrative reports
-                      </CardDescription>
-                    </div>
-                  </div>
                   <Button variant="outline" size="sm" className="gap-2">
                     <Eye className="w-4 h-4" />
                     View All
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Active Report Schedule */}
+              <div className="p-4 rounded-lg border bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Clock className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">{scheduledReport.name}</div>
+                      <div className="text-xs text-muted-foreground mb-1">
+                        {scheduledReport.frequency} - Next: {scheduledReport.nextRun}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {scheduledReport.description}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                    Active
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Report Repository List */}
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground px-1">Previous Reports</div>
                 {reportRepository.slice(0, 4).map((report) => (
                   <div 
                     key={report.id}
@@ -720,7 +704,7 @@ export function SocialListeningDemo() {
                     <div className="flex items-center gap-3">
                       <FileText className="w-4 h-4 text-muted-foreground" />
                       <div>
-                        <div className="font-medium text-sm truncate max-w-[200px]">{report.name}</div>
+                        <div className="font-medium text-sm truncate max-w-[300px]">{report.name}</div>
                         <div className="text-xs text-muted-foreground">
                           {report.date} • {report.size}
                         </div>
@@ -731,9 +715,9 @@ export function SocialListeningDemo() {
                     </Button>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Sentiment Score Explanation */}
           <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
