@@ -1140,8 +1140,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 p-4 min-h-0">
-          <div className="h-full max-h-[500px] overflow-y-auto pr-2">
+        <CardContent className="flex-1 p-4 overflow-hidden">
+          <div className="h-full overflow-y-auto pr-2">
             {selectedSessions.length === 0 && selectedEffectiveDates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
