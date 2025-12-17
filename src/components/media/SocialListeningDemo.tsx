@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CountryFlag } from "@/components/shared/CountryFlag";
 import { 
   TrendingUp, TrendingDown, Minus, Newspaper, Users, Building2, Info, 
   Facebook, Settings, Download, Calendar, BarChart3, MessageCircle,
@@ -234,6 +235,7 @@ export function SocialListeningDemo() {
   const pressCoverage = [
     {
       source: "La Nación",
+      country: "costa-rica",
       headline: "Ley Fintech Promete Modernización Bancaria, BAC Alerta Sobre Riesgos",
       sentiment: "neutral" as const,
       score: 0.08,
@@ -243,6 +245,7 @@ export function SocialListeningDemo() {
     },
     {
       source: "El Financiero",
+      country: "costa-rica",
       headline: "BAC y Banca Privada Exigen Igualdad Regulatoria ante Avance Fintech",
       sentiment: "negative" as const,
       score: -0.62,
@@ -252,6 +255,7 @@ export function SocialListeningDemo() {
     },
     {
       source: "CRHoy",
+      country: "costa-rica",
       headline: "SUGEF Respalda Marco Regulatorio que Equilibra Innovación y Estabilidad",
       sentiment: "positive" as const,
       score: 0.71,
@@ -261,6 +265,7 @@ export function SocialListeningDemo() {
     },
     {
       source: "Semanario Universidad",
+      country: "costa-rica",
       headline: "Proyecto Fintech Ignora Inclusión Financiera en Zonas Rurales",
       sentiment: "negative" as const,
       score: -0.78,
@@ -780,12 +785,7 @@ export function SocialListeningDemo() {
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <Newspaper className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">Press Coverage</CardTitle>
-                    <CardDescription>
-                      Sentiment analysis of main Costa Rican media outlets
-                    </CardDescription>
-                  </div>
+                  <CardTitle className="text-lg">Press Coverage</CardTitle>
                 </div>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="w-4 h-4" />
@@ -802,7 +802,7 @@ export function SocialListeningDemo() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Newspaper className="w-4 h-4 text-muted-foreground" />
+                        <CountryFlag countryKey={article.country} size="sm" />
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">{article.source}</span>
                           <span className="text-xs text-muted-foreground">{article.reach} - {article.date}</span>
