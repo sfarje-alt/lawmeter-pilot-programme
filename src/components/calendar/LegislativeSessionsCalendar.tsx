@@ -912,7 +912,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
       <Card className="lg:col-span-2">
         <CardHeader>
           <div className="flex flex-col gap-4">
@@ -1126,7 +1126,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
         </CardContent>
       </Card>
 
-      <Card className="flex flex-col min-h-[600px]">
+      <Card className="flex flex-col self-stretch">
         <CardHeader className="flex-shrink-0">
           <CardTitle className="text-lg text-foreground">
             {calendarView === "daily" && format(selectedDate, "MMMM d, yyyy")}
@@ -1140,8 +1140,8 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 p-4 overflow-hidden">
-          <div className="h-full overflow-y-auto pr-2">
+        <CardContent className="flex-1 p-4 min-h-0">
+          <div className="h-full max-h-[500px] overflow-y-auto pr-2">
             {selectedSessions.length === 0 && selectedEffectiveDates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
