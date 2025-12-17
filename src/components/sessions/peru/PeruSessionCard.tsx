@@ -118,9 +118,17 @@ export function PeruSessionCard({
     }
   };
 
-  const formattedDate = session.scheduled_at 
-    ? format(new Date(session.scheduled_at), "EEEE, d 'de' MMMM yyyy, HH:mm", { locale: es })
-    : session.scheduled_date_text || 'Fecha no disponible';
+  const getFormattedDate = () => {
+    if (session.scheduled_at) {
+      const date = new Date(session.scheduled_at);
+      if (!isNaN(date.getTime())) {
+        return format(date, "EEEE, d 'de' MMMM yyyy, HH:mm", { locale: es });
+      }
+    }
+    return session.scheduled_date_text || 'Fecha no disponible';
+  };
+  
+  const formattedDate = getFormattedDate();
 
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
