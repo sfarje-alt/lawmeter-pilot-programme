@@ -15,23 +15,31 @@ interface PDFLink {
   url: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
 }
 
 export interface ParsedSession {
   tipoSesion: string;           // "Ordinaria" / "Extraordinaria"
   commissionName: string;       // "Comisión de Educación..."
-  sessionTitle: string;         // "Séptima sesión ordinaria"
+  sessionTitle: string;         // "SÉPTIMA SESIÓN EXTRAORDINARIA..."
   caracteristicas: string | null; // "Descentralizada" / "Virtual"
   scheduledDate: string;        // "18/12/2025"
   scheduledTime: string;        // "9:00AM"
   agendaUrl: string | null;     // Link vinculado por posición
 }
 
-// Extract text items with positions from PDF
-async function extractTextWithPositions(pdf: any): Promise<TextItem[]> {
-  const textItems: TextItem[] = [];
+// Column boundaries based on typical Peru Congress PDF structure
+interface ColumnBounds {
+  tipoComision: { min: number; max: number };
+  comision: { min: number; max: number };
+  sesion: { min: number; max: number };
+  caracteristicas: { min: number; max: number };
+  fechaHora: { min: number; max: number };
+  agenda: { min: number; max: number };
+}
+
+// Extract all text items from PDF
+async function extractAllText(pdf: any): Promise<TextItem[]> {
+  const allItems: TextItem[] = [];
   
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
@@ -40,15 +48,11 @@ async function extractTextWithPositions(pdf: any): Promise<TextItem[]> {
     
     for (const item of textContent.items) {
       if ('str' in item && item.str.trim()) {
-        // Get position from transform matrix [a, b, c, d, e, f] where e=x, f=y
         const transform = item.transform as number[];
-        const x = transform[4];
-        const y = viewport.height - transform[5]; // Invert Y for top-to-bottom
-        
-        textItems.push({
+        allItems.push({
           text: item.str.trim(),
-          x,
-          y,
+          x: transform[4],
+          y: viewport.height - transform[5],
           width: item.width || 0,
           height: item.height || 10
         });
@@ -56,12 +60,11 @@ async function extractTextWithPositions(pdf: any): Promise<TextItem[]> {
     }
   }
   
-  console.log('Sample text items:', textItems.slice(0, 10).map(t => t.text));
-  return textItems;
+  return allItems;
 }
 
-// Extract links with positions from PDF
-async function extractLinksWithPositions(pdf: any): Promise<PDFLink[]> {
+// Extract links from PDF
+async function extractLinks(pdf: any): Promise<PDFLink[]> {
   const links: PDFLink[] = [];
   
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -71,212 +74,184 @@ async function extractLinksWithPositions(pdf: any): Promise<PDFLink[]> {
     
     for (const annot of annotations) {
       if (annot.subtype === 'Link' && annot.url) {
-        const rect = annot.rect;
         links.push({
           url: annot.url,
-          x: rect[0],
-          y: viewport.height - rect[3], // Invert Y
-          width: rect[2] - rect[0],
-          height: rect[3] - rect[1]
+          x: annot.rect[0],
+          y: viewport.height - annot.rect[3]
         });
       }
     }
   }
   
-  console.log('Found links:', links.map(l => l.url));
   return links;
 }
 
-// Group text items into rows based on Y position
-function groupIntoRows(textItems: TextItem[], threshold: number = 5): TextItem[][] {
-  if (textItems.length === 0) return [];
+// Detect column boundaries from header row
+function detectColumns(items: TextItem[]): ColumnBounds | null {
+  // Find header row by looking for "TIPO COMISIÓN" text
+  const tipoHeader = items.find(i => i.text.includes('TIPO COMISI'));
+  const comisionHeader = items.find(i => i.text === 'COMISIÓN');
+  const sesionHeader = items.find(i => i.text === 'SESIÓN');
+  const caracteristicasHeader = items.find(i => i.text.includes('CARACTER'));
+  const fechaHeader = items.find(i => i.text.includes('FECHA'));
+  const agendaHeader = items.find(i => i.text === 'AGENDA');
   
-  // Sort by Y position (top to bottom)
-  const sorted = [...textItems].sort((a, b) => a.y - b.y);
-  
-  const rows: TextItem[][] = [];
-  let currentRow: TextItem[] = [sorted[0]];
-  let currentY = sorted[0].y;
-  
-  for (let i = 1; i < sorted.length; i++) {
-    const item = sorted[i];
-    if (Math.abs(item.y - currentY) <= threshold) {
-      currentRow.push(item);
-    } else {
-      // Sort row items by X position (left to right)
-      currentRow.sort((a, b) => a.x - b.x);
-      rows.push(currentRow);
-      currentRow = [item];
-      currentY = item.y;
-    }
+  if (!tipoHeader) {
+    console.log('Could not find header row');
+    return null;
   }
   
-  // Don't forget the last row
-  if (currentRow.length > 0) {
-    currentRow.sort((a, b) => a.x - b.x);
-    rows.push(currentRow);
+  // Define column boundaries with some buffer
+  const pageWidth = 1200; // Approximate
+  return {
+    tipoComision: { min: 0, max: (comisionHeader?.x || 150) - 10 },
+    comision: { min: (comisionHeader?.x || 150) - 10, max: (sesionHeader?.x || 300) - 10 },
+    sesion: { min: (sesionHeader?.x || 300) - 10, max: (caracteristicasHeader?.x || 750) - 10 },
+    caracteristicas: { min: (caracteristicasHeader?.x || 750) - 10, max: (fechaHeader?.x || 900) - 10 },
+    fechaHora: { min: (fechaHeader?.x || 900) - 10, max: (agendaHeader?.x || 1050) - 10 },
+    agenda: { min: (agendaHeader?.x || 1050) - 10, max: pageWidth }
+  };
+}
+
+// Group text items into rows by Y position
+function groupByRow(items: TextItem[], yThreshold: number = 8): Map<number, TextItem[]> {
+  const rows = new Map<number, TextItem[]>();
+  
+  // Sort by Y first
+  const sorted = [...items].sort((a, b) => a.y - b.y);
+  
+  for (const item of sorted) {
+    // Find existing row within threshold
+    let foundRow = false;
+    for (const [rowY, rowItems] of rows) {
+      if (Math.abs(item.y - rowY) <= yThreshold) {
+        rowItems.push(item);
+        foundRow = true;
+        break;
+      }
+    }
+    
+    if (!foundRow) {
+      rows.set(item.y, [item]);
+    }
   }
   
   return rows;
 }
 
-// Find link closest to a Y position
-function findClosestLink(y: number, links: PDFLink[], threshold: number = 30): string | null {
-  let closest: PDFLink | null = null;
-  let minDistance = Infinity;
-  
+// Get column content for a row
+function getColumnText(rowItems: TextItem[], bounds: { min: number; max: number }): string {
+  const inColumn = rowItems
+    .filter(item => item.x >= bounds.min && item.x < bounds.max)
+    .sort((a, b) => a.x - b.x);
+  return inColumn.map(i => i.text).join(' ').trim();
+}
+
+// Find closest link by Y position
+function findLinkForRow(rowY: number, links: PDFLink[], threshold: number = 15): string | null {
   for (const link of links) {
-    const distance = Math.abs(link.y - y);
-    if (distance < minDistance && distance <= threshold) {
-      minDistance = distance;
-      closest = link;
+    if (Math.abs(link.y - rowY) <= threshold) {
+      return link.url;
     }
   }
-  
-  return closest?.url || null;
-}
-
-// Parse date from various formats
-function parseDate(text: string): { date: string; time: string } | null {
-  // Pattern: DD/MM/YYYY or DD-MM-YYYY
-  const dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-  if (!dateMatch) return null;
-  
-  const date = `${dateMatch[1].padStart(2, '0')}/${dateMatch[2].padStart(2, '0')}/${dateMatch[3]}`;
-  
-  // Look for time pattern
-  const timeMatch = text.match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/i);
-  const time = timeMatch 
-    ? `${timeMatch[1]}:${timeMatch[2]}${timeMatch[3]?.toUpperCase() || ''}` 
-    : '';
-  
-  return { date, time };
-}
-
-// Detect session type from text
-function detectSessionType(text: string): string | null {
-  const lower = text.toLowerCase();
-  if (lower.includes('ordinaria')) return 'Ordinaria';
-  if (lower.includes('extraordinaria')) return 'Extraordinaria';
-  if (lower.includes('permanente')) return 'Permanente';
   return null;
 }
 
-// Detect characteristics from text
-function detectCharacteristics(text: string): string | null {
-  const lower = text.toLowerCase();
-  if (lower.includes('descentralizada')) return 'Descentralizada';
-  if (lower.includes('virtual')) return 'Virtual';
-  if (lower.includes('presencial')) return 'Presencial';
-  if (lower.includes('semipresencial')) return 'Semipresencial';
-  return null;
+// Parse date and time from text
+function parseDateTimeFromText(text: string): { date: string; time: string } {
+  const dateMatch = text.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+  const timeMatch = text.match(/(\d{1,2}:\d{2}\s*[APap][Mm]?)/);
+  
+  return {
+    date: dateMatch ? dateMatch[1] : '',
+    time: timeMatch ? timeMatch[1].toUpperCase() : ''
+  };
 }
 
-// Check if text looks like a commission name
-function isCommissionName(text: string): boolean {
-  const lower = text.toLowerCase();
-  return lower.includes('comisión') || 
-         lower.includes('comision') ||
-         lower.includes('subcomisión') ||
-         lower.includes('grupo de trabajo');
-}
-
-// Parse a row of text into session data
-function parseRow(rowTexts: string[], rowY: number, links: PDFLink[]): Partial<ParsedSession> | null {
-  const fullText = rowTexts.join(' ');
-  
-  // Skip header rows or empty content
-  if (fullText.toLowerCase().includes('tipo de comisión') || 
-      fullText.toLowerCase().includes('fecha y hora') ||
-      fullText.toLowerCase().includes('características')) {
-    return null;
-  }
-  
-  const session: Partial<ParsedSession> = {};
-  
-  // Extract date and time
-  const dateInfo = parseDate(fullText);
-  if (dateInfo) {
-    session.scheduledDate = dateInfo.date;
-    session.scheduledTime = dateInfo.time;
-  }
-  
-  // Extract session type
-  session.tipoSesion = detectSessionType(fullText) || 'Ordinaria';
-  
-  // Extract characteristics
-  session.caracteristicas = detectCharacteristics(fullText);
-  
-  // Find commission name
-  for (const text of rowTexts) {
-    if (isCommissionName(text)) {
-      session.commissionName = text;
-      break;
-    }
-  }
-  
-  // If no explicit commission name, look for longer text segments
-  if (!session.commissionName) {
-    const longestText = rowTexts.reduce((a, b) => a.length > b.length ? a : b, '');
-    if (longestText.length > 20) {
-      session.commissionName = longestText;
-    }
-  }
-  
-  // Find closest link
-  session.agendaUrl = findClosestLink(rowY, links);
-  
-  // Generate session title
-  if (session.tipoSesion) {
-    session.sessionTitle = `Sesión ${session.tipoSesion.toLowerCase()}`;
-  }
-  
-  return session;
-}
-
-// Main function to parse Peru sessions PDF
+// Main parsing function
 export async function parsePeruSessionsPdf(file: File): Promise<ParsedSession[]> {
+  console.log('Starting PDF parse for:', file.name);
+  
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   
   console.log(`PDF loaded: ${pdf.numPages} pages`);
   
   // Extract text and links
-  const [textItems, links] = await Promise.all([
-    extractTextWithPositions(pdf),
-    extractLinksWithPositions(pdf)
+  const [allText, links] = await Promise.all([
+    extractAllText(pdf),
+    extractLinks(pdf)
   ]);
   
-  console.log(`Extracted ${textItems.length} text items and ${links.length} links`);
+  console.log(`Extracted ${allText.length} text items, ${links.length} links`);
+  console.log('Sample texts:', allText.slice(0, 20).map(t => `"${t.text}" x:${t.x.toFixed(0)} y:${t.y.toFixed(0)}`));
   
-  // Group text into rows
-  const rows = groupIntoRows(textItems);
-  console.log(`Grouped into ${rows.length} rows`);
-  
-  // Parse each row
-  const sessions: ParsedSession[] = [];
-  
-  for (const row of rows) {
-    const rowTexts = row.map(item => item.text);
-    const avgY = row.reduce((sum, item) => sum + item.y, 0) / row.length;
-    
-    const parsed = parseRow(rowTexts, avgY, links);
-    
-    // Only include rows that have meaningful data
-    if (parsed && (parsed.commissionName || parsed.scheduledDate)) {
-      sessions.push({
-        tipoSesion: parsed.tipoSesion || 'Ordinaria',
-        commissionName: parsed.commissionName || 'Comisión no identificada',
-        sessionTitle: parsed.sessionTitle || 'Sesión',
-        caracteristicas: parsed.caracteristicas || null,
-        scheduledDate: parsed.scheduledDate || '',
-        scheduledTime: parsed.scheduledTime || '',
-        agendaUrl: parsed.agendaUrl || null
-      });
-    }
+  // Detect column structure
+  const columns = detectColumns(allText);
+  if (!columns) {
+    console.error('Failed to detect column structure');
+    throw new Error('No se pudo detectar la estructura del PDF. Asegúrate de que sea un reporte de sesiones del Congreso.');
   }
   
-  console.log(`Parsed ${sessions.length} sessions`);
+  console.log('Detected columns:', columns);
+  
+  // Find header Y position to skip header row
+  const headerItem = allText.find(i => i.text.includes('TIPO COMISI'));
+  const headerY = headerItem?.y || 0;
+  
+  // Group text into rows
+  const rows = groupByRow(allText);
+  console.log(`Grouped into ${rows.size} rows`);
+  
+  const sessions: ParsedSession[] = [];
+  
+  // Process each row
+  for (const [rowY, rowItems] of rows) {
+    // Skip header row and rows above it
+    if (rowY <= headerY + 10) continue;
+    
+    // Extract content from each column
+    const tipoText = getColumnText(rowItems, columns.tipoComision);
+    const comisionText = getColumnText(rowItems, columns.comision);
+    const sesionText = getColumnText(rowItems, columns.sesion);
+    const caracteristicasText = getColumnText(rowItems, columns.caracteristicas);
+    const fechaText = getColumnText(rowItems, columns.fechaHora);
+    const agendaText = getColumnText(rowItems, columns.agenda);
+    
+    // Skip empty rows or rows without session info
+    if (!sesionText && !comisionText) continue;
+    
+    // Skip if this looks like a continuation or header
+    if (tipoText.includes('TIPO') || tipoText.includes('COMISIÓN')) continue;
+    
+    const { date, time } = parseDateTimeFromText(fechaText);
+    const agendaUrl = findLinkForRow(rowY, links);
+    
+    // Determine full commission name - prefer session text as it's more complete
+    let fullCommissionName = '';
+    if (sesionText.includes('COMISIÓN DE')) {
+      // Extract from session text: "SÉPTIMA SESIÓN... DE LA COMISIÓN DE X" -> "Comisión de X"
+      const match = sesionText.match(/COMISI[ÓO]N DE ([^,]+)/i);
+      if (match) {
+        fullCommissionName = `Comisión de ${match[1].trim()}`;
+      }
+    }
+    if (!fullCommissionName && comisionText) {
+      fullCommissionName = comisionText;
+    }
+    
+    sessions.push({
+      tipoSesion: tipoText || 'Ordinaria',
+      commissionName: fullCommissionName || comisionText || 'Comisión no identificada',
+      sessionTitle: sesionText || 'Sesión',
+      caracteristicas: caracteristicasText || null,
+      scheduledDate: date,
+      scheduledTime: time,
+      agendaUrl: agendaUrl
+    });
+  }
+  
+  console.log(`Parsed ${sessions.length} sessions:`, sessions.slice(0, 3));
   
   return sessions;
 }
@@ -287,34 +262,54 @@ export function parseFromPastedText(text: string): ParsedSession[] {
   const sessions: ParsedSession[] = [];
   
   for (const line of lines) {
+    // Skip headers
+    if (line.includes('TIPO COMISIÓN') || line.includes('AGENDA')) continue;
+    
     const session: Partial<ParsedSession> = {};
     
     // Extract date
-    const dateInfo = parseDate(line);
-    if (dateInfo) {
-      session.scheduledDate = dateInfo.date;
-      session.scheduledTime = dateInfo.time;
+    const dateMatch = line.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+    session.scheduledDate = dateMatch ? dateMatch[1] : '';
+    
+    // Extract time
+    const timeMatch = line.match(/(\d{1,2}:\d{2}\s*[APap][Mm])/i);
+    session.scheduledTime = timeMatch ? timeMatch[1].toUpperCase() : '';
+    
+    // Detect tipo
+    if (line.toLowerCase().includes('extraordinaria')) {
+      session.tipoSesion = 'Extraordinaria';
+    } else if (line.toLowerCase().includes('ordinaria')) {
+      session.tipoSesion = 'Ordinaria';
     }
     
-    // Extract session type
-    session.tipoSesion = detectSessionType(line) || 'Ordinaria';
+    // Detect characteristics
+    if (line.toLowerCase().includes('descentralizada')) {
+      session.caracteristicas = 'Descentralizada';
+    } else if (line.toLowerCase().includes('virtual')) {
+      session.caracteristicas = 'Virtual';
+    }
     
-    // Extract characteristics
-    session.caracteristicas = detectCharacteristics(line);
+    // Extract commission name
+    const comisionMatch = line.match(/COMISI[ÓO]N DE ([^,\d]+)/i);
+    if (comisionMatch) {
+      session.commissionName = `Comisión de ${comisionMatch[1].trim()}`;
+    }
+    
+    // Extract session title (look for ordinal + SESIÓN pattern)
+    const sesionMatch = line.match(/((?:PRIMERA|SEGUNDA|TERCERA|CUARTA|QUINTA|SEXTA|SÉPTIMA|OCTAVA|NOVENA|DÉCIMA|UNDÉCIMA|DUODÉCIMA|VIGÉSIMA)[A-Z\s]*SESI[ÓO]N[^,]+)/i);
+    if (sesionMatch) {
+      session.sessionTitle = sesionMatch[1].trim();
+    }
     
     // Extract URL
     const urlMatch = line.match(/https?:\/\/[^\s]+/);
     session.agendaUrl = urlMatch ? urlMatch[0] : null;
     
-    // Look for commission name pattern
-    const comisionMatch = line.match(/Comisi[oó]n\s+[^,\d]+/i);
-    session.commissionName = comisionMatch ? comisionMatch[0].trim() : undefined;
-    
-    if (session.scheduledDate || session.commissionName) {
+    if (session.scheduledDate || session.commissionName || session.sessionTitle) {
       sessions.push({
         tipoSesion: session.tipoSesion || 'Ordinaria',
         commissionName: session.commissionName || 'Comisión no identificada',
-        sessionTitle: `Sesión ${(session.tipoSesion || 'ordinaria').toLowerCase()}`,
+        sessionTitle: session.sessionTitle || 'Sesión',
         caracteristicas: session.caracteristicas || null,
         scheduledDate: session.scheduledDate || '',
         scheduledTime: session.scheduledTime || '',
