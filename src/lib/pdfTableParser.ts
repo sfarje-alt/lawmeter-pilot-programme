@@ -1,7 +1,8 @@
-import * as pdfjsLib from 'pdfjs-dist';
+// Use legacy build to avoid top-level await issues
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-// Configure worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js`;
+// Configure worker - use legacy worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs`;
 
 interface TextItem {
   text: string;
