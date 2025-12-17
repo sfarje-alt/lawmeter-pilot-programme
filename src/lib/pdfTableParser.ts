@@ -30,7 +30,7 @@ export interface ParsedSession {
 }
 
 // Extract text items with positions from PDF
-async function extractTextWithPositions(pdf: pdfjsLib.PDFDocumentProxy): Promise<TextItem[]> {
+async function extractTextWithPositions(pdf: any): Promise<TextItem[]> {
   const textItems: TextItem[] = [];
   
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -40,24 +40,28 @@ async function extractTextWithPositions(pdf: pdfjsLib.PDFDocumentProxy): Promise
     
     for (const item of textContent.items) {
       if ('str' in item && item.str.trim()) {
-        // Transform coordinates to page space
-        const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+        // Get position from transform matrix [a, b, c, d, e, f] where e=x, f=y
+        const transform = item.transform as number[];
+        const x = transform[4];
+        const y = viewport.height - transform[5]; // Invert Y for top-to-bottom
+        
         textItems.push({
           text: item.str.trim(),
-          x: tx[4],
-          y: viewport.height - tx[5], // Invert Y for top-to-bottom
-          width: item.width,
-          height: item.height
+          x,
+          y,
+          width: item.width || 0,
+          height: item.height || 10
         });
       }
     }
   }
   
+  console.log('Sample text items:', textItems.slice(0, 10).map(t => t.text));
   return textItems;
 }
 
 // Extract links with positions from PDF
-async function extractLinksWithPositions(pdf: pdfjsLib.PDFDocumentProxy): Promise<PDFLink[]> {
+async function extractLinksWithPositions(pdf: any): Promise<PDFLink[]> {
   const links: PDFLink[] = [];
   
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -79,6 +83,7 @@ async function extractLinksWithPositions(pdf: pdfjsLib.PDFDocumentProxy): Promis
     }
   }
   
+  console.log('Found links:', links.map(l => l.url));
   return links;
 }
 
