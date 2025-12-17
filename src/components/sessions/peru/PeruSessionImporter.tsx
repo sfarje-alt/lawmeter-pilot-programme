@@ -19,7 +19,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { 
   Upload, 
-  FileSpreadsheet, 
   FileText, 
   ClipboardPaste,
   AlertCircle,
@@ -32,7 +31,13 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface ParsedSession {
+interface ExtractedLink {
+  url: string;
+  index: number;
+}
+
+// Exported for use in parent component
+export interface ParsedSession {
   tipo_comision: string;
   commission_name: string;
   session_title: string;
@@ -43,16 +48,16 @@ interface ParsedSession {
   external_session_id: string | null;
 }
 
-interface ParseResult {
-  sessions: ParsedSession[];
-  linksExtracted: number;
-  totalRows: number;
-}
-
 interface PeruSessionImporterProps {
   open: boolean;
   onClose: () => void;
   onImport: (sessions: ParsedSession[]) => Promise<void>;
+}
+
+// Extract session ID from agenda URL
+function extractSessionId(url: string): string | null {
+  const match = url.match(/[\/=]([A-Z0-9]{20,})/i);
+  return match ? match[1] : null;
 }
 
 export function PeruSessionImporter({
@@ -66,7 +71,7 @@ export function PeruSessionImporter({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  const [extractedLinks, setExtractedLinks] = useState<ExtractedLink[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -88,7 +93,7 @@ export function PeruSessionImporter({
       const file = files[0];
       if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
         setSelectedFile(file);
-        setParseResult(null);
+        setExtractedLinks([]);
         setParseError(null);
       }
     }
@@ -98,7 +103,7 @@ export function PeruSessionImporter({
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setParseResult(null);
+      setExtractedLinks([]);
       setParseError(null);
     }
   };
@@ -108,7 +113,7 @@ export function PeruSessionImporter({
     
     setIsProcessing(true);
     setParseError(null);
-    setParseResult(null);
+    setExtractedLinks([]);
     
     try {
       const formData = new FormData();
@@ -119,41 +124,54 @@ export function PeruSessionImporter({
       });
       
       if (error) {
-        throw new Error(error.message || 'Failed to parse PDF');
+        throw new Error(error.message || 'Failed to process PDF');
       }
       
       if (data.error) {
         throw new Error(data.error);
       }
       
-      setParseResult(data as ParseResult);
+      const links = data.links || [];
+      setExtractedLinks(links);
       
-      if (data.sessions.length === 0) {
-        setParseError('No sessions found in the PDF. Make sure the file contains the sessions table.');
+      if (links.length === 0) {
+        setParseError('No se encontraron links de agenda en el PDF.');
       } else {
-        toast.success(`Found ${data.sessions.length} sessions with ${data.linksExtracted} agenda links`);
+        toast.success(`Se encontraron ${links.length} links de agenda`);
       }
       
     } catch (error) {
       console.error('Error processing PDF:', error);
       setParseError(error instanceof Error ? error.message : 'Failed to process PDF');
-      toast.error('Failed to process PDF');
+      toast.error('Error al procesar el PDF');
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleImport = async () => {
-    if (!parseResult || parseResult.sessions.length === 0) return;
+    if (extractedLinks.length === 0) return;
+    
+    // Convert links to sessions (minimal data - user can enrich later)
+    const sessions: ParsedSession[] = extractedLinks.map((link, index) => ({
+      tipo_comision: 'Ordinaria',
+      commission_name: `Sesión ${index + 1}`,
+      session_title: `Sesión importada desde PDF`,
+      caracteristicas: null,
+      scheduled_date: new Date().toISOString().split('T')[0],
+      scheduled_time: '',
+      agenda_url: link.url,
+      external_session_id: extractSessionId(link.url),
+    }));
     
     setIsImporting(true);
     try {
-      await onImport(parseResult.sessions);
-      toast.success(`Imported ${parseResult.sessions.length} sessions`);
+      await onImport(sessions);
+      toast.success(`Se importaron ${sessions.length} sesiones con links de agenda`);
       onClose();
     } catch (error) {
       console.error('Error importing sessions:', error);
-      toast.error('Failed to import sessions');
+      toast.error('Error al importar sesiones');
     } finally {
       setIsImporting(false);
     }
@@ -161,7 +179,7 @@ export function PeruSessionImporter({
 
   const handleClose = () => {
     setSelectedFile(null);
-    setParseResult(null);
+    setExtractedLinks([]);
     setParseError(null);
     setPastedContent('');
     onClose();
@@ -176,8 +194,8 @@ export function PeruSessionImporter({
             Importar Sesiones del Congreso de Perú
           </DialogTitle>
           <DialogDescription>
-            Sube el PDF exportado desde el visor de sesiones del Congreso. 
-            El sistema extraerá automáticamente las sesiones y los links de agenda.
+            Sube el PDF exportado desde el visor de sesiones. 
+            El sistema extraerá los links de agenda embebidos.
           </DialogDescription>
         </DialogHeader>
 
@@ -221,13 +239,13 @@ export function PeruSessionImporter({
                         size="sm"
                         onClick={() => {
                           setSelectedFile(null);
-                          setParseResult(null);
+                          setExtractedLinks([]);
                           setParseError(null);
                         }}
                       >
                         Cambiar Archivo
                       </Button>
-                      {!parseResult && (
+                      {extractedLinks.length === 0 && (
                         <Button 
                           size="sm"
                           onClick={handleProcessPdf}
@@ -241,8 +259,8 @@ export function PeruSessionImporter({
                             </>
                           ) : (
                             <>
-                              <FileText className="h-4 w-4" />
-                              Procesar PDF
+                              <LinkIcon className="h-4 w-4" />
+                              Extraer Links
                             </>
                           )}
                         </Button>
@@ -267,7 +285,7 @@ export function PeruSessionImporter({
                       className="max-w-xs mx-auto"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Solo archivos PDF del visor de sesiones
+                      Solo archivos PDF (máximo 5MB)
                     </p>
                   </div>
                 )}
@@ -285,64 +303,53 @@ export function PeruSessionImporter({
                 </Card>
               )}
 
-              {/* Parse Results Preview */}
-              {parseResult && parseResult.sessions.length > 0 && (
+              {/* Extracted Links Preview */}
+              {extractedLinks.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-foreground">Sesiones Encontradas</h4>
-                    <div className="flex gap-2">
-                      <Badge variant="secondary" className="gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {parseResult.sessions.length} sesiones
-                      </Badge>
-                      <Badge variant="outline" className="gap-1">
-                        <LinkIcon className="h-3 w-3" />
-                        {parseResult.linksExtracted} links
-                      </Badge>
-                    </div>
+                    <h4 className="font-medium text-foreground">Links de Agenda Extraídos</h4>
+                    <Badge variant="secondary" className="gap-1">
+                      <LinkIcon className="h-3 w-3" />
+                      {extractedLinks.length} links
+                    </Badge>
                   </div>
                   
                   <ScrollArea className="h-[200px] border rounded-lg">
                     <div className="p-3 space-y-2">
-                      {parseResult.sessions.map((session, index) => (
+                      {extractedLinks.map((link, index) => (
                         <Card key={index} className="p-3">
-                          <div className="space-y-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="font-medium text-sm text-foreground line-clamp-1">
-                                {session.commission_name}
-                              </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <Badge variant="outline" className="text-xs flex-shrink-0">
-                                {session.tipo_comision}
+                                #{index + 1}
                               </Badge>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {session.scheduled_date} {session.scheduled_time}
-                              </span>
-                              {session.caracteristicas && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {session.caracteristicas}
-                                </Badge>
-                              )}
-                            </div>
-                            {session.agenda_url && (
                               <a 
-                                href={session.agenda_url}
+                                href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                className="text-xs text-primary hover:underline truncate"
                               >
-                                <LinkIcon className="h-3 w-3" />
-                                Ver Agenda
-                                <ExternalLink className="h-3 w-3" />
+                                {link.url}
                               </a>
-                            )}
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                           </div>
                         </Card>
                       ))}
                     </div>
                   </ScrollArea>
+                  
+                  <Card className="bg-amber-500/10 border-amber-500/20">
+                    <CardContent className="pt-4">
+                      <div className="flex gap-2 text-sm text-amber-700 dark:text-amber-400">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                        <p>
+                          Se extrajeron los links de agenda. Los datos de comisión y fecha 
+                          deberán ser agregados manualmente o desde la página web.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </TabsContent>
@@ -355,10 +362,7 @@ export function PeruSessionImporter({
                     id="pastedContent"
                     placeholder="Pega el contenido de la tabla desde la página web del Congreso...
 
-Formato esperado:
-Comisión, Fecha, Hora, URL Agenda
-Ciencia Innovación y Tecnología, 24/11/2025, 10:00, https://...
-Defensa del Consumidor, 25/11/2025, 15:00, https://..."
+Los links de agenda se preservan mejor si copias directamente desde la web."
                     value={pastedContent}
                     onChange={(e) => setPastedContent(e.target.value)}
                     className="mt-2 h-[200px] font-mono text-sm"
@@ -369,11 +373,8 @@ Defensa del Consumidor, 25/11/2025, 15:00, https://..."
                     <div className="flex gap-2 text-sm text-muted-foreground">
                       <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                       <p>
-                        Puedes copiar y pegar la tabla de sesiones directamente desde la 
-                        página web del Congreso. El sistema intentará parsear los datos automáticamente.
-                        <br /><br />
-                        <strong>Nota:</strong> Los links de agenda se preservan mejor si copias 
-                        directamente desde la web en lugar del PDF.
+                        <strong>Recomendado:</strong> Copia la tabla directamente desde la 
+                        página web del Congreso para preservar todos los datos y links.
                       </p>
                     </div>
                   </CardContent>
@@ -397,9 +398,6 @@ Defensa del Consumidor, 25/11/2025, 15:00, https://..."
                 <ExternalLink className="h-4 w-4" />
                 Abrir Visor de Sesiones del Congreso
               </Button>
-              <p className="text-xs text-muted-foreground">
-                Navega al "Visor de Sesiones de Comisiones", filtra las sesiones y exporta a PDF.
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -410,11 +408,7 @@ Defensa del Consumidor, 25/11/2025, 15:00, https://..."
           </Button>
           <Button
             onClick={handleImport}
-            disabled={
-              isImporting || 
-              !parseResult || 
-              parseResult.sessions.length === 0
-            }
+            disabled={isImporting || extractedLinks.length === 0}
             className="gap-2"
           >
             {isImporting ? (
@@ -425,7 +419,7 @@ Defensa del Consumidor, 25/11/2025, 15:00, https://..."
             ) : (
               <>
                 <Upload className="h-4 w-4" />
-                Importar {parseResult?.sessions.length || 0} Sesiones
+                Importar {extractedLinks.length} Sesiones
               </>
             )}
           </Button>
