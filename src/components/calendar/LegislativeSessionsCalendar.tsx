@@ -913,7 +913,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-2">
+      <Card className="lg:col-span-2 max-h-[700px] overflow-y-auto">
         <CardHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1075,19 +1075,19 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex justify-center p-8">
-          <div className="w-full max-w-2xl">
+        <CardContent className="flex justify-center p-4">
+          <div className="w-full max-w-xl">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               className={cn("rounded-md border pointer-events-auto w-full")}
               classNames={{
-                caption_label: "text-2xl font-semibold",
-                head_cell: "text-muted-foreground rounded-md w-16 font-medium text-lg",
-                row: "flex w-full mt-3",
-                cell: "h-16 w-16 p-0 text-center align-middle",
-                day: cn(buttonVariants({ variant: "ghost" }), "h-16 w-16 p-0 font-semibold text-2xl flex flex-col items-center justify-center aria-selected:opacity-100 relative"),
+                caption_label: "text-lg font-semibold",
+                head_cell: "text-muted-foreground rounded-md w-10 font-medium text-sm",
+                row: "flex w-full mt-2",
+                cell: "h-10 w-10 p-0 text-center align-middle",
+                day: cn(buttonVariants({ variant: "ghost" }), "h-10 w-10 p-0 font-medium text-sm flex flex-col items-center justify-center aria-selected:opacity-100 relative"),
                 day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary rounded-md",
               }}
               modifiers={{
