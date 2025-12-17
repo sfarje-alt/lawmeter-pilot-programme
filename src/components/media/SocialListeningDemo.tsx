@@ -772,123 +772,149 @@ export function SocialListeningDemo() {
         </TabsContent>
 
         {/* Press Tab */}
-        <TabsContent value="press" className="space-y-4 mt-6">
-          <div className="rounded-xl bg-gradient-to-br from-background to-muted/30 p-6 border shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Newspaper className="w-5 h-5 text-primary" />
+        <TabsContent value="press" className="space-y-6 mt-6">
+          <Card className="border-primary/20">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Newspaper className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Press Coverage</CardTitle>
+                    <CardDescription>
+                      Sentiment analysis of main Costa Rican media outlets
+                    </CardDescription>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Export
+                </Button>
               </div>
-              <div>
-                <h3 className="text-xl font-bold">Press Coverage</h3>
-                <p className="text-sm text-muted-foreground">Sentiment analysis of main Costa Rican media outlets</p>
-              </div>
-            </div>
-            <div className="space-y-4">
+            </CardHeader>
+            <CardContent className="space-y-4">
               {pressCoverage.map((article, index) => (
                 <div
                   key={index}
-                  className={`group relative p-5 rounded-xl border-l-4 ${getSentimentColor(article.sentiment)} backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                  className="p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
-                  <div className="relative">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <Badge variant="outline" className="font-semibold">{article.source}</Badge>
-                          <Badge variant="secondary" className="text-xs">{article.reach}</Badge>
-                          <span className="text-xs text-muted-foreground">{article.date}</span>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Newspaper className="w-4 h-4 text-muted-foreground" />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{article.source}</span>
+                          <span className="text-xs text-muted-foreground">{article.reach} - {article.date}</span>
                         </div>
-                        <h4 className="font-bold text-lg mb-2 leading-tight">{article.headline}</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{article.excerpt}</p>
                       </div>
-                      <div className="ml-4 flex flex-col items-center gap-1 bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
-                        {getSentimentIcon(article.sentiment)}
-                        <span className="text-sm font-bold">
-                          {article.score > 0 ? '+' : ''}{article.score.toFixed(2)}
-                        </span>
-                      </div>
+                      <h4 className="font-semibold text-sm mb-2 leading-tight">{article.headline}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{article.excerpt}</p>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 p-3 rounded-lg border bg-background">
+                      {article.score >= 0.3 ? (
+                        <TrendingUp className="w-4 h-4 text-success" />
+                      ) : article.score <= -0.3 ? (
+                        <TrendingDown className="w-4 h-4 text-destructive" />
+                      ) : (
+                        <Minus className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className={`text-sm font-bold ${
+                        article.score >= 0.3 ? "text-success" : 
+                        article.score <= -0.3 ? "text-destructive" : 
+                        "text-muted-foreground"
+                      }`}>
+                        {article.score > 0 ? '+' : ''}{article.score.toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Custom Organizations Tab */}
-        <TabsContent value="custom-orgs" className="space-y-4 mt-6">
-          <div className="rounded-xl bg-gradient-to-br from-background to-muted/30 p-6 border shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Building2 className="w-5 h-5 text-primary" />
+        <TabsContent value="custom-orgs" className="space-y-6 mt-6">
+          <Card className="border-primary/20">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Building2 className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Custom Organizations</CardTitle>
+                    <CardDescription>
+                      Website and newsletter extraction upon request
+                    </CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold">Custom Organizations</h3>
-                  <p className="text-sm text-muted-foreground">Website and newsletter extraction upon request</p>
-                </div>
+                <Button size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Request Extraction
+                </Button>
               </div>
-              <Button size="sm" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Request Extraction
-              </Button>
-            </div>
-            <div className="space-y-4">
+            </CardHeader>
+            <CardContent className="space-y-4">
               {customOrganizations.map((org, index) => (
                 <div
                   key={index}
-                  className={`group relative p-5 rounded-xl border-l-4 ${getSentimentColor(org.sentiment)} backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                  className="p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
-                  <div className="relative">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg mb-2">{org.organization}</h4>
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          <Badge variant="outline" className="text-xs">{org.type}</Badge>
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs ${org.sourceType === "Newsletter Extraction" ? "bg-amber-500/20 text-amber-700 border-amber-500/30" : ""}`}
-                          >
-                            {org.sourceType === "Newsletter Extraction" ? (
-                              <><Mail className="w-3 h-3 mr-1" />{org.sourceType}</>
-                            ) : (
-                              org.sourceType
-                            )}
-                          </Badge>
-                          <Badge className={`text-xs ${getInfluenceBadge(org.influence)}`}>
-                            {org.influence} Influence
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">{org.followers} followers</Badge>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{org.organization}</span>
+                          <span className="text-xs text-muted-foreground">{org.type} - {org.date}</span>
                         </div>
+                        <Badge variant="secondary" className="text-xs ml-2">{org.followers} followers</Badge>
                       </div>
-                      <div className="ml-4 flex flex-col items-center gap-1 bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
-                        {getSentimentIcon(org.sentiment)}
-                        <span className="text-sm font-bold">
-                          {org.score > 0 ? '+' : ''}{org.score.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mb-3 flex items-center gap-2 flex-wrap">
-                      <Badge variant={org.position.includes("Support") ? "default" : org.position.includes("Opposition") ? "destructive" : "secondary"} className="font-medium">
-                        {org.position}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{org.date}</span>
-                      {'isNewsletter' in org && org.isNewsletter && (
-                        <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-700">
-                          <Mail className="w-3 h-3 mr-1" />
-                          {org.newsletterName}
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs ${org.sourceType === "Newsletter Extraction" ? "bg-amber-500/20 text-amber-700 border-amber-500/30" : ""}`}
+                        >
+                          {org.sourceType === "Newsletter Extraction" ? (
+                            <><Mail className="w-3 h-3 mr-1" />{org.sourceType}</>
+                          ) : (
+                            org.sourceType
+                          )}
                         </Badge>
-                      )}
+                        <Badge className={`text-xs ${getInfluenceBadge(org.influence)}`}>
+                          {org.influence} Influence
+                        </Badge>
+                        <Badge variant={org.position.includes("Support") ? "default" : org.position.includes("Opposition") ? "destructive" : "secondary"} className="text-xs">
+                          {org.position}
+                        </Badge>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-3 mt-2">
+                        <p className="text-sm text-muted-foreground leading-relaxed italic">"{org.statement}"</p>
+                      </div>
                     </div>
-                    <div className="bg-muted/30 rounded-lg p-4 border-l-2 border-primary/20">
-                      <p className="text-sm leading-relaxed italic">"{org.statement}"</p>
+                    <div className="flex flex-col items-center gap-1 p-3 rounded-lg border bg-background">
+                      {org.score >= 0.3 ? (
+                        <TrendingUp className="w-4 h-4 text-success" />
+                      ) : org.score <= -0.3 ? (
+                        <TrendingDown className="w-4 h-4 text-destructive" />
+                      ) : (
+                        <Minus className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className={`text-sm font-bold ${
+                        org.score >= 0.3 ? "text-success" : 
+                        org.score <= -0.3 ? "text-destructive" : 
+                        "text-muted-foreground"
+                      }`}>
+                        {org.score > 0 ? '+' : ''}{org.score.toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
