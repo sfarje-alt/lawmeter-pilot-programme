@@ -15,43 +15,6 @@ const MESES = [
   "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
 ];
 
-// Commission name mappings (truncated → full name)
-const COMISIONES_COMPLETAS: Record<string, string> = {
-  "Agraria": "Agraria",
-  "Ciencia, Innovación y Tecnología": "Ciencia, Innovación y Tecnología",
-  "Comercio Exterior y Turismo": "Comercio Exterior y Turismo",
-  "Constitución y Reglamento": "Constitución y Reglamento",
-  "Cultura y Patrimonio Cultural": "Cultura y Patrimonio Cultural",
-  "Defensa del Consumidor": "Defensa del Consumidor y Organismos Reguladores de los Servicios Públicos",
-  "Defensa Nacional": "Defensa Nacional, Orden Interno, Desarrollo Alternativo y Lucha contra las Drogas",
-  "Descentralización": "Descentralización, Regionalización, Gobiernos Locales y Modernización de la Gestión del Estado",
-  "Economía": "Economía, Banca, Finanzas e Inteligencia Financiera",
-  "Educación": "Educación, Juventud y Deporte",
-  "Energía y Minas": "Energía y Minas",
-  "Fiscalización y Contraloría": "Fiscalización y Contraloría",
-  "Inclusión Social": "Inclusión Social y Personas con Discapacidad",
-  "Inteligencia": "Inteligencia",
-  "Justicia": "Justicia y Derechos Humanos",
-  "Mujer y Familia": "Mujer y Familia",
-  "Presupuesto": "Presupuesto y Cuenta General de la República",
-  "Producción": "Producción, Micro y Pequeña Empresa y Cooperativas",
-  "Pueblos Andinos": "Pueblos Andinos, Amazónicos y Afroperuanos, Ambiente y Ecología",
-  "Relaciones Exteriores": "Relaciones Exteriores",
-  "Salud": "Salud y Población",
-  "Trabajo": "Trabajo y Seguridad Social",
-  "Transportes": "Transportes y Comunicaciones",
-  "Vivienda": "Vivienda y Construcción",
-};
-
-// Commissions that don't use "de" prefix
-const COMISIONES_SIN_DE = ["Agraria", "Inteligencia"];
-
-// Subcommissions with their parent commission
-const SUBCOMISIONES: Record<string, string> = {
-  "Acusaciones Constitucionales": "Constitución y Reglamento",
-  "de Acusaciones Constitucionales": "Constitución y Reglamento",
-};
-
 // Parse date from various formats (DD/MM/YYYY, DD/MM/YYYYTHH:MMAM, ISO)
 function parseDate(dateStr: string): Date | null {
   if (!dateStr) return null;
@@ -61,7 +24,6 @@ function parseDate(dateStr: string): Date | null {
   if (!isNaN(date.getTime())) return date;
   
   // Handle DD/MM/YYYY formats with optional time
-  // Examples: "17/12/2025", "17/12/2025 2:15AM", "17/12/2025T2:15AM:00"
   const ddmmyyyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (ddmmyyyyMatch) {
     const day = parseInt(ddmmyyyyMatch[1]);
@@ -95,15 +57,65 @@ function stripEmojis(text: string): string {
     .trim();
 }
 
-// Normalize text for comparison
+// Normalize text for comparison (uppercase, no accents, no special chars)
 function normalize(text: string): string {
   return stripEmojis(text)
-    .toUpperCase() // Use uppercase for better Spanish matching
+    .toUpperCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // Remove accents
     .replace(/[^\w\s]/g, " ") // Replace special chars with space
     .replace(/\s+/g, " ") // Collapse multiple spaces
     .trim();
+}
+
+// Convert text to Spanish Title Case (preserving lowercase prepositions)
+function toTitleCaseSpanish(text: string): string {
+  const lowercaseWords = ['de', 'del', 'y', 'e', 'la', 'las', 'los', 'el', 'con', 'en', 'a'];
+  
+  return text
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      // First word always capitalized, or if not a preposition
+      if (index === 0 || !lowercaseWords.includes(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(' ');
+}
+
+// Extract commission name from session title (PDF format)
+// Examples:
+// "SEXTA SESIÓN EXTRAORDINARIA DE LA COMISIÓN AGRARIA" → "Comisión Agraria"
+// "OCTAVA SESIÓN DE LA COMISIÓN DE PRODUCCIÓN, MICRO Y PEQUEÑA EMPRESA" → "Comisión de Producción, Micro y Pequeña Empresa"
+function extractCommissionFromTitle(sessionTitle: string): string | null {
+  if (!sessionTitle) return null;
+  
+  // Look for "COMISIÓN" or "COMISION" and capture everything after
+  const regex = /COMISI[OÓ]N\s+(DE\s+)?(.+)/i;
+  const match = sessionTitle.match(regex);
+  
+  if (!match) {
+    console.log(`Could not extract commission from title: "${sessionTitle}"`);
+    return null;
+  }
+  
+  // match[1] = "DE " or undefined
+  // match[2] = rest of the commission name
+  const hasDePrefix = !!match[1];
+  const commissionPart = match[2].trim();
+  
+  // Convert to Title Case
+  const titleCaseName = toTitleCaseSpanish(commissionPart);
+  
+  // Build the full commission name with proper prefix
+  const result = hasDePrefix 
+    ? `Comisión de ${titleCaseName}` 
+    : `Comisión ${titleCaseName}`;
+  
+  console.log(`Extracted from "${sessionTitle}" → "${result}"`);
+  return result;
 }
 
 // Build date pattern for filtering (e.g., "24 DE NOVIEMBRE DEL 2025")
@@ -114,49 +126,14 @@ function buildDatePattern(date: Date): string {
   return `${day} DE ${month} DEL ${year}`;
 }
 
-// Calculate Jaccard similarity between two strings
-function jaccardSimilarity(str1: string, str2: string): number {
-  const set1 = new Set(normalize(str1).split(" "));
-  const set2 = new Set(normalize(str2).split(" "));
-  
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
-  
-  return intersection.size / union.size;
-}
-
-// Format commission name for title
-function formatCommissionName(name: string): string {
-  // Check if it's a subcommission
-  for (const [subName, parent] of Object.entries(SUBCOMISIONES)) {
-    if (name.includes(subName)) {
-      return `Sub${subName}`;
-    }
-  }
-  
-  // Try to match truncated names
-  for (const [truncated, full] of Object.entries(COMISIONES_COMPLETAS)) {
-    if (name.includes(truncated) || truncated.includes(name.substring(0, 15))) {
-      return full;
-    }
-  }
-  
-  return name;
-}
-
-// Build expected YouTube title
-function buildExpectedTitle(commissionName: string, date: Date): string {
-  const formattedName = formatCommissionName(commissionName);
+// Build expected YouTube title using extracted commission name
+function buildExpectedTitle(commissionFullName: string, date: Date): string {
   const day = date.getDate();
   const month = MESES[date.getMonth()];
   const year = date.getFullYear();
   
-  // Determine if we use "de" prefix
-  const prefix = COMISIONES_SIN_DE.some(c => formattedName.includes(c)) 
-    ? "" 
-    : "de ";
-  
-  return `EN VIVO: Comisión ${prefix}${formattedName} | ${day} DE ${month} DEL ${year}`;
+  // Commission name already includes "Comisión" and proper prefix
+  return `EN VIVO: ${commissionFullName} | ${day} DE ${month} DEL ${year}`;
 }
 
 // Check if error is a quota exceeded error
@@ -202,81 +179,69 @@ async function fetchChannelVideosWithFallback(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       
-      // Check if it's a quota error (403)
       if (isQuotaError(error)) {
         console.log(`API key ${i + 1} quota exceeded, trying next key...`);
         continue;
       }
       
-      // For other errors, throw immediately
       throw error;
     }
   }
   
-  // All keys exhausted
   throw lastError || new Error("All API keys exhausted - quota exceeded on all keys");
 }
 
-// Filter videos by date pattern first, then find best match
-function findBestMatch(
-  expectedTitle: string, 
+// STRICT 3-STEP FILTERING: No fallbacks, no false positives
+function findVideoStrictMatch(
   videos: any[], 
-  date: Date,
-  threshold: number = 0.4
-): { video: any; similarity: number; method: string } | null {
-  const normalizedExpected = normalize(expectedTitle);
+  commissionFullName: string, 
+  date: Date
+): { video: any; confidence: 'HIGH' | 'MEDIUM' } | null {
   const datePattern = buildDatePattern(date);
+  const normalizedCommission = normalize(commissionFullName);
   
-  console.log(`Looking for date pattern: ${datePattern}`);
+  console.log(`\n=== STRICT FILTERING PIPELINE ===`);
+  console.log(`Looking for: "${commissionFullName}"`);
+  console.log(`Date pattern: "${datePattern}"`);
+  console.log(`FILTRO 1: ${videos.length} videos del canal`);
   
-  // STEP 1: Filter videos that contain the correct date
-  const videosWithCorrectDate = videos.filter(video => {
-    const title = video.snippet?.title || "";
-    const normalizedTitle = normalize(title);
-    return normalizedTitle.includes(datePattern);
+  // === FILTRO 2: Solo videos con la fecha exacta (OBLIGATORIO) ===
+  const videosWithDate = videos.filter(video => {
+    const title = normalize(video.snippet?.title || "");
+    return title.includes(normalize(datePattern));
   });
   
-  console.log(`Found ${videosWithCorrectDate.length} videos matching date: ${datePattern}`);
+  console.log(`FILTRO 2: ${videosWithDate.length} videos con fecha "${datePattern}"`);
   
-  // If we have videos with the correct date, search only those
-  const searchPool = videosWithCorrectDate.length > 0 ? videosWithCorrectDate : videos;
-  
-  let bestMatch: { video: any; similarity: number; method: string } | null = null;
-  
-  for (const video of searchPool) {
-    const videoTitle = video.snippet?.title || "";
-    const normalizedTitle = normalize(videoTitle);
-    
-    // Exact match (after normalization)
-    if (normalizedTitle === normalizedExpected) {
-      return { video, similarity: 1.0, method: "EXACT_NORMALIZED" };
-    }
-    
-    // Contains check (after stripping emojis)
-    const strippedExpected = normalize(expectedTitle);
-    if (normalizedTitle.includes(strippedExpected) || strippedExpected.includes(normalizedTitle)) {
-      const similarity = Math.max(normalizedTitle.length, strippedExpected.length) > 0
-        ? Math.min(normalizedTitle.length, strippedExpected.length) / Math.max(normalizedTitle.length, strippedExpected.length)
-        : 0;
-      if (!bestMatch || similarity > bestMatch.similarity) {
-        bestMatch = { video, similarity, method: "CONTAINS" };
-      }
-      continue;
-    }
-    
-    // Jaccard similarity
-    const similarity = jaccardSimilarity(videoTitle, expectedTitle);
-    
-    // If video has correct date, boost the threshold acceptance
-    const hasCorrectDate = videosWithCorrectDate.includes(video);
-    const effectiveThreshold = hasCorrectDate ? 0.3 : threshold;
-    
-    if (similarity >= effectiveThreshold && (!bestMatch || similarity > bestMatch.similarity)) {
-      bestMatch = { video, similarity, method: hasCorrectDate ? "DATE_MATCH_JACCARD" : "JACCARD" };
-    }
+  if (videosWithDate.length === 0) {
+    console.log("❌ No hay videos para esta fecha - NO FALLBACK, retornando null");
+    return null;
   }
   
-  return bestMatch;
+  // === FILTRO 3: El título contiene el nombre de la comisión (OBLIGATORIO) ===
+  const videosWithCommission = videosWithDate.filter(video => {
+    const title = normalize(video.snippet?.title || "");
+    return title.includes(normalizedCommission);
+  });
+  
+  console.log(`FILTRO 3: ${videosWithCommission.length} videos con comisión "${commissionFullName}"`);
+  
+  if (videosWithCommission.length === 0) {
+    console.log(`❌ No hay videos de "${commissionFullName}" en fecha ${datePattern} - retornando null`);
+    // Log what videos were found for this date (for debugging)
+    videosWithDate.forEach(v => {
+      console.log(`  - Video en esta fecha: "${v.snippet?.title}"`);
+    });
+    return null;
+  }
+  
+  // Éxito: retornar el primer match
+  const video = videosWithCommission[0];
+  const confidence = videosWithCommission.length === 1 ? 'HIGH' : 'MEDIUM';
+  
+  console.log(`✅ Match encontrado: "${video.snippet?.title}" (confidence: ${confidence})`);
+  
+  return { video, confidence };
 }
 
 serve(async (req) => {
@@ -290,7 +255,6 @@ serve(async (req) => {
     const YOUTUBE_API_KEY = Deno.env.get("YOUTUBE_API_KEY");
     const YOUTUBE_API_KEY_2 = Deno.env.get("YOUTUBE_API_KEY_2");
     
-    // Build array of available API keys
     const apiKeys: string[] = [];
     if (YOUTUBE_API_KEY) apiKeys.push(YOUTUBE_API_KEY);
     if (YOUTUBE_API_KEY_2) apiKeys.push(YOUTUBE_API_KEY_2);
@@ -305,18 +269,21 @@ serve(async (req) => {
     
     console.log(`Available API keys: ${apiKeys.length}`);
 
-    const { commissionName, scheduledDate } = await req.json();
+    const { commissionName, sessionTitle, scheduledDate } = await req.json();
     
-    if (!commissionName || !scheduledDate) {
+    if (!scheduledDate) {
       return new Response(
-        JSON.stringify({ error: "Missing commissionName or scheduledDate", found: false }),
+        JSON.stringify({ error: "Missing scheduledDate", found: false }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Resolving video for: ${commissionName} on ${scheduledDate}`);
+    console.log(`\n=== RESOLVING VIDEO ===`);
+    console.log(`Commission name: ${commissionName}`);
+    console.log(`Session title: ${sessionTitle}`);
+    console.log(`Scheduled date: ${scheduledDate}`);
 
-    // Parse date using our custom parser
+    // Parse date
     const date = parseDate(scheduledDate);
     if (!date) {
       console.error(`Failed to parse date: ${scheduledDate}`);
@@ -325,35 +292,50 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    console.log(`Parsed date: ${date.toISOString()}, day=${date.getDate()}, month=${date.getMonth()}, year=${date.getFullYear()}`);
+    console.log(`Parsed date: ${date.toISOString()}`);
 
-    // Build expected title
-    const expectedTitle = buildExpectedTitle(commissionName, date);
-    console.log(`Expected title: ${expectedTitle}`);
+    // === EXTRACT COMMISSION NAME FROM SESSION TITLE ===
+    let commissionFullName: string;
+    
+    if (sessionTitle) {
+      const extracted = extractCommissionFromTitle(sessionTitle);
+      if (extracted) {
+        commissionFullName = extracted;
+        console.log(`✅ Extracted from session title: "${commissionFullName}"`);
+      } else {
+        // Fallback: use commission_name with Title Case
+        commissionFullName = `Comisión ${toTitleCaseSpanish(commissionName || '')}`;
+        console.log(`⚠️ Fallback to commission_name: "${commissionFullName}"`);
+      }
+    } else if (commissionName) {
+      commissionFullName = `Comisión ${toTitleCaseSpanish(commissionName)}`;
+      console.log(`Using commission_name (no sessionTitle): "${commissionFullName}"`);
+    } else {
+      return new Response(
+        JSON.stringify({ error: "Missing commissionName or sessionTitle", found: false }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Fetch videos from channel with fallback
+    // Build expected title for logging
+    const expectedTitle = buildExpectedTitle(commissionFullName, date);
+    console.log(`Expected YouTube title: "${expectedTitle}"`);
+
+    // Fetch videos from channel
     const { videos, keyUsed } = await fetchChannelVideosWithFallback(apiKeys, 100);
     console.log(`Videos fetched using API key ${keyUsed}`);
 
-    // Find best match (now with date filtering)
-    const match = findBestMatch(expectedTitle, videos, date, 0.4);
+    // Find match using strict 3-step filtering
+    const match = findVideoStrictMatch(videos, commissionFullName, date);
 
     if (match) {
       const videoId = match.video.snippet?.resourceId?.videoId || match.video.id?.videoId;
       const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
       const actualTitle = match.video.snippet?.title || "";
-      
-      // Determine confidence based on similarity
-      let confidence: "HIGH" | "MEDIUM" | "LOW";
-      if (match.similarity >= 0.8 || match.method === "EXACT_NORMALIZED") {
-        confidence = "HIGH";
-      } else if (match.similarity >= 0.6) {
-        confidence = "MEDIUM";
-      } else {
-        confidence = "LOW";
-      }
 
-      console.log(`Match found: ${actualTitle} (similarity: ${match.similarity}, method: ${match.method})`);
+      console.log(`\n=== VIDEO FOUND ===`);
+      console.log(`Video ID: ${videoId}`);
+      console.log(`Actual title: ${actualTitle}`);
 
       return new Response(
         JSON.stringify({
@@ -362,9 +344,8 @@ serve(async (req) => {
           videoUrl,
           expectedTitle,
           actualTitle,
-          similarity: match.similarity,
-          method: match.method,
-          confidence,
+          confidence: match.confidence,
+          method: "STRICT_FILTER",
           channelId: CHANNEL_ID,
           channelName: "Congreso de la República del Perú",
           apiKeyUsed: keyUsed,
@@ -373,13 +354,13 @@ serve(async (req) => {
       );
     }
 
-    console.log("No matching video found");
+    console.log("\n=== VIDEO NOT FOUND ===");
     return new Response(
       JSON.stringify({
         found: false,
         expectedTitle,
         searchedVideos: videos.length,
-        message: "No matching video found in channel uploads",
+        message: `No se encontró video de "${commissionFullName}" para la fecha indicada`,
         apiKeyUsed: keyUsed,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -388,7 +369,6 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in resolve-peru-session-video:", error);
     
-    // Check if it's a quota error on all keys
     const isAllQuotaExhausted = error instanceof Error && 
       error.message.includes("All API keys exhausted");
     

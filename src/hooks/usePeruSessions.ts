@@ -171,9 +171,11 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
       console.log(`Resolving video for: ${session.commission_name} on ${scheduledDate}`);
 
       // Call Edge Function to resolve video
+      // Pass sessionTitle for intelligent commission name extraction
       const { data, error } = await supabase.functions.invoke('resolve-peru-session-video', {
         body: {
           commissionName: session.commission_name,
+          sessionTitle: session.session_title,  // NEW: Full PDF title for extraction
           scheduledDate: scheduledDate,
         },
       });
