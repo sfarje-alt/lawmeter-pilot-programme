@@ -229,6 +229,44 @@ export function PeruSessionImporter({
             </TabsList>
 
             <TabsContent value="file" className="mt-4 space-y-4">
+              {/* Instructions Card */}
+              <Card className="bg-muted/30 border-muted">
+                <CardContent className="pt-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">¿Dónde obtener el PDF?</h4>
+                    <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Visita el portal del Congreso de Perú</li>
+                      <li>Navega a: Agenda Parlamentaria → Sesiones de Comisiones</li>
+                      <li>Haz clic en "Exportar PDF" o usa el enlace directo abajo</li>
+                    </ol>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="gap-2 w-full"
+                      onClick={() => {
+                        const params = {
+                          periodoParlamentario: 2021,
+                          periodoLegislativo: "2025",
+                          tipoComision: null,
+                          comision: null,
+                          fecha: null,
+                          sesion: null,
+                          descentralizada: null,
+                          conjunta: null,
+                          continuada: null
+                        };
+                        const base64Params = btoa(JSON.stringify(params));
+                        const url = `https://wb2server.congreso.gob.pe/service-portal-publico-ext/x-pdf/sesiones/archivo/pdf/${base64Params}/reporte-sesiones.pdf`;
+                        window.open(url, '_blank');
+                      }}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Descargar PDF del Congreso
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* File Upload Zone */}
               <div
                 className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
