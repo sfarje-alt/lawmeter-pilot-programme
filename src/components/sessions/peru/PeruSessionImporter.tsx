@@ -1,4 +1,4 @@
-// Peru Session Importer Component - Client-side PDF parsing
+// Peru Session Importer Component - Client-side PDF parsing with auto-sync
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -28,9 +28,13 @@ import {
   Calendar,
   Loader2,
   Clock,
-  MapPin
+  MapPin,
+  RefreshCw,
+  CloudDownload,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { parsePeruSessionsPdf, parseFromPastedText, ParsedSession as PDFParsedSession } from '@/lib/pdfTableParser';
 
 // Exported for use in parent component
@@ -45,10 +49,23 @@ export interface ParsedSession {
   external_session_id: string | null;
 }
 
+interface SyncResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  stats?: {
+    parsed: number;
+    inserted: number;
+    updated: number;
+    unchanged: number;
+  };
+}
+
 interface PeruSessionImporterProps {
   open: boolean;
   onClose: () => void;
   onImport: (sessions: ParsedSession[]) => Promise<void>;
+  onSyncComplete?: () => void;
 }
 
 // Extract session ID from agenda URL
@@ -75,12 +92,16 @@ export function PeruSessionImporter({
   open,
   onClose,
   onImport,
+  onSyncComplete,
 }: PeruSessionImporterProps) {
-  const [importMethod, setImportMethod] = useState<'file' | 'paste'>('file');
+  const [importMethod, setImportMethod] = useState<'sync' | 'file' | 'paste'>('sync');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pastedContent, setPastedContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [parsedSessions, setParsedSessions] = useState<PDFParsedSession[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -193,11 +214,60 @@ export function PeruSessionImporter({
     }
   };
 
+  const handleAutoSync = async () => {
+    setIsSyncing(true);
+    setSyncError(null);
+    setSyncResult(null);
+    
+    try {
+      console.log('[Sync] Calling sync-peru-sessions edge function...');
+      
+      const { data, error } = await supabase.functions.invoke('sync-peru-sessions', {
+        body: {}
+      });
+      
+      if (error) {
+        console.error('[Sync] Edge function error:', error);
+        setSyncError(`Error de conexión: ${error.message}`);
+        return;
+      }
+      
+      const result = data as SyncResult;
+      
+      if (!result.success) {
+        console.error('[Sync] Sync failed:', result.error);
+        // Check if it's a 403 error (blocked by Congress server)
+        if (result.error?.includes('403')) {
+          setSyncError('El servidor del Congreso está bloqueando la descarga automática. Por favor, usa la opción "Subir PDF" para importar manualmente.');
+        } else {
+          setSyncError(result.error || 'Error desconocido durante la sincronización');
+        }
+        return;
+      }
+      
+      setSyncResult(result);
+      toast.success(result.message || 'Sincronización completada');
+      
+      // Notify parent to refresh data
+      if (onSyncComplete) {
+        onSyncComplete();
+      }
+      
+    } catch (error) {
+      console.error('[Sync] Unexpected error:', error);
+      setSyncError(error instanceof Error ? error.message : 'Error inesperado');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleClose = () => {
     setSelectedFile(null);
     setParsedSessions([]);
     setParseError(null);
     setPastedContent('');
+    setSyncError(null);
+    setSyncResult(null);
     onClose();
   };
 
@@ -216,8 +286,12 @@ export function PeruSessionImporter({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
-          <Tabs value={importMethod} onValueChange={(v) => setImportMethod(v as 'file' | 'paste')}>
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs value={importMethod} onValueChange={(v) => setImportMethod(v as 'sync' | 'file' | 'paste')}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="sync" className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Sincronizar
+              </TabsTrigger>
               <TabsTrigger value="file" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Subir PDF
@@ -227,6 +301,109 @@ export function PeruSessionImporter({
                 Pegar Datos
               </TabsTrigger>
             </TabsList>
+
+            {/* Auto Sync Tab */}
+            <TabsContent value="sync" className="mt-4 space-y-4">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <CloudDownload className="h-12 w-12 mx-auto text-primary" />
+                    <div>
+                      <h3 className="font-semibold text-lg">Sincronización Automática</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Descarga y actualiza las sesiones directamente desde el Congreso de Perú.
+                        Las sesiones existentes se actualizarán si hay cambios, preservando tus selecciones y videos.
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleAutoSync}
+                      disabled={isSyncing}
+                      size="lg"
+                      className="gap-2"
+                    >
+                      {isSyncing ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Sincronizando...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-5 w-5" />
+                          Sincronizar Ahora
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sync Error */}
+              {syncError && (
+                <Card className="border-amber-500/50 bg-amber-500/5">
+                  <CardContent className="pt-4">
+                    <div className="flex gap-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                          No se pudo sincronizar automáticamente
+                        </p>
+                        <p className="text-sm text-muted-foreground">{syncError}</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setImportMethod('file')}
+                          className="gap-2 mt-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Usar importación manual
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Sync Success */}
+              {syncResult && syncResult.success && (
+                <Card className="border-green-500/50 bg-green-500/5">
+                  <CardContent className="pt-4">
+                    <div className="flex gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                          Sincronización completada
+                        </p>
+                        {syncResult.stats && (
+                          <div className="flex gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Badge variant="secondary">{syncResult.stats.parsed}</Badge> encontradas
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Badge variant="default">{syncResult.stats.inserted}</Badge> nuevas
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Badge variant="outline">{syncResult.stats.updated}</Badge> actualizadas
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Info Card */}
+              <Card className="bg-muted/30">
+                <CardContent className="pt-4">
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>• La sincronización automática se ejecuta diariamente a las 6:00 AM (hora de Lima)</p>
+                    <p>• Las sesiones ya seleccionadas y los videos resueltos se preservan</p>
+                    <p>• Si la fecha u hora de una sesión cambia, se actualizará automáticamente</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="file" className="mt-4 space-y-4">
               {/* File Upload Zone */}

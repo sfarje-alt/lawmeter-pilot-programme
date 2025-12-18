@@ -237,6 +237,10 @@ export function PeruSessionsSection() {
           open={showImporter}
           onClose={() => setShowImporter(false)}
           onImport={importSessions}
+          onSyncComplete={() => {
+            // Reload page to fetch fresh data from database
+            window.location.reload();
+          }}
         />
       )}
     </div>
