@@ -356,7 +356,8 @@ serve(async (req) => {
     console.log(`Expected YouTube title: "${expectedTitle}"`);
 
     // Fetch videos from channel
-    const { videos, keyUsed } = await fetchChannelVideosWithFallback(apiKeys, 100);
+    // Fetch more videos to find sessions from past dates (channel publishes many daily)
+    const { videos, keyUsed } = await fetchChannelVideosWithFallback(apiKeys, 200);
     console.log(`Videos fetched using API key ${keyUsed}`);
 
     // Find match using strict 3-step filtering
