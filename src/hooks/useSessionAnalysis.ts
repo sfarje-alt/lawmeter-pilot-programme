@@ -2,7 +2,9 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SessionAnalysis } from '@/types/peruSessions';
-import { extractYouTubeAudioClientSide, downloadAudioAsBase64 } from '@/lib/clientYouTubeDownloader';
+
+// Python microservice for YouTube transcription (yt-dlp + AssemblyAI)
+const TRANSCRIBER_API = 'https://youtube-transcriber-api-3697.onrender.com';
 
 interface UseSessionAnalysisResult {
   isAnalyzing: boolean;
@@ -65,66 +67,49 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
         console.log(`Got transcription from YouTube captions: ${transcription.length} chars`);
         toast.success('Subtítulos de YouTube obtenidos', { duration: 2000 });
       } else {
-        // Step 3: Client-side audio extraction + AssemblyAI
-        toast.info('Extrayendo audio del video...', { 
-          description: 'Usando tu navegador (evita bloqueos de servidor)',
-          duration: 10000 
+        // Step 3: Use Python microservice (yt-dlp + AssemblyAI)
+        toast.info('Transcribiendo con servicio dedicado...', { 
+          description: 'Primera vez puede tomar ~30s extra (servicio despertando)',
+          duration: 120000 
         });
 
         try {
-          // Get audio URL from browser (bypasses server blocks)
-          console.log('[Client] Starting client-side audio extraction...');
-          const audioInfo = await extractYouTubeAudioClientSide(videoId);
-          console.log(`[Client] Got audio URL, duration: ${audioInfo.durationSeconds}s`);
+          console.log('[Python Service] Calling transcription microservice...');
           
-          toast.info('Descargando audio...', { 
-            description: `${Math.round(audioInfo.durationSeconds / 60)} minutos de audio`,
-            duration: 30000 
+          const response = await fetch(`${TRANSCRIBER_API}/transcribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              videoId, 
+              language: 'es' 
+            })
           });
 
-          // Download and convert to base64
-          const { base64, mimeType } = await downloadAudioAsBase64(audioInfo.audioUrl);
-          console.log(`[Client] Audio downloaded: ${(base64.length * 0.75 / 1024 / 1024).toFixed(2)} MB`);
-          
-          toast.info('Enviando a AssemblyAI para transcripción...', { 
-            description: 'Esto puede tomar 2-5 minutos',
-            duration: 60000 
-          });
-
-          // Send to AssemblyAI edge function
-          const { data: assemblyData, error: assemblyError } = await supabase.functions.invoke(
-            'transcribe-with-assemblyai',
-            { 
-              body: { 
-                audioBase64: base64,
-                mimeType,
-                languageCode: 'es'
-              } 
-            }
-          );
-
-          if (assemblyError || !assemblyData?.transcription) {
-            throw new Error(assemblyError?.message || assemblyData?.error || 'AssemblyAI transcription failed');
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Service error: ${response.status}`);
           }
 
-          transcription = assemblyData.transcription;
-          tier = 'assemblyai';
-          console.log(`[Client] AssemblyAI transcription complete: ${transcription.length} chars`);
-          toast.success('Transcripción AssemblyAI completada', { duration: 3000 });
+          const data = await response.json();
+          transcription = data.text;
+          tier = 'python-service';
+          
+          console.log(`[Python Service] Transcription complete: ${transcription.length} chars`);
+          toast.success('Transcripción completada', { duration: 3000 });
 
-        } catch (clientError) {
-          console.error('[Client] Client-side extraction failed:', clientError);
+        } catch (serviceError) {
+          console.error('[Python Service] Transcription failed:', serviceError);
           
           await supabase
             .from('session_recordings')
             .update({ 
               transcription_status: 'FAILED',
-              last_error: `Client extraction failed: ${clientError instanceof Error ? clientError.message : 'Unknown error'}`
+              last_error: `Transcription service failed: ${serviceError instanceof Error ? serviceError.message : 'Unknown error'}`
             })
             .eq('session_id', sessionId);
           
-          toast.error('Error al extraer audio', {
-            description: clientError instanceof Error ? clientError.message : 'Intenta de nuevo más tarde',
+          toast.error('Error en transcripción', {
+            description: serviceError instanceof Error ? serviceError.message : 'Intenta de nuevo más tarde',
             duration: 6000
           });
           
