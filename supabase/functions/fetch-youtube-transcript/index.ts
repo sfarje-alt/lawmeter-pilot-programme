@@ -316,19 +316,153 @@ async function updateGoogleUsage(supabase: any, minutesUsed: number): Promise<vo
   console.log(`[Quota] Updated Google usage: +${minutesUsed} minutes for ${currentMonth}`);
 }
 
-// ==================== Audio Download: Invidious API ====================
+// ==================== Audio Download: Direct YouTube + Invidious Fallback ====================
 
-// Invidious instances for audio download
+interface AudioFormat {
+  url: string;
+  mimeType: string;
+  bitrate: number;
+  contentLength?: string;
+  approxDurationMs?: string;
+}
+
+async function downloadAudioFromYouTubeDirect(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
+  console.log(`[YouTube Direct] Attempting audio extraction for: ${videoId}`);
+  
+  try {
+    // Fetch the YouTube watch page
+    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const response = await fetch(watchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+        'Cache-Control': 'no-cache',
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`[YouTube Direct] Failed to fetch page: ${response.status}`);
+      return null;
+    }
+
+    const html = await response.text();
+    
+    // Extract ytInitialPlayerResponse
+    const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/s);
+    if (!playerResponseMatch) {
+      console.log('[YouTube Direct] No ytInitialPlayerResponse found');
+      return null;
+    }
+
+    const playerResponse = JSON.parse(playerResponseMatch[1]);
+    
+    // Check for playability
+    const playability = playerResponse?.playabilityStatus;
+    if (playability?.status !== 'OK') {
+      console.log(`[YouTube Direct] Video not playable: ${playability?.status} - ${playability?.reason}`);
+      return null;
+    }
+
+    // Get video duration
+    const durationSeconds = parseInt(playerResponse?.videoDetails?.lengthSeconds || '0');
+    const durationMinutes = durationSeconds / 60;
+    console.log(`[YouTube Direct] Video duration: ${durationMinutes.toFixed(1)} minutes`);
+
+    // Get streaming data
+    const streamingData = playerResponse?.streamingData;
+    if (!streamingData) {
+      console.log('[YouTube Direct] No streaming data found');
+      return null;
+    }
+
+    // Find audio formats from adaptiveFormats
+    const adaptiveFormats = streamingData.adaptiveFormats || [];
+    const audioFormats: AudioFormat[] = adaptiveFormats
+      .filter((f: any) => f.mimeType?.startsWith('audio/'))
+      .map((f: any) => ({
+        url: f.url,
+        mimeType: f.mimeType,
+        bitrate: f.bitrate || 0,
+        contentLength: f.contentLength,
+        approxDurationMs: f.approxDurationMs
+      }));
+
+    console.log(`[YouTube Direct] Found ${audioFormats.length} audio formats`);
+
+    if (audioFormats.length === 0) {
+      console.log('[YouTube Direct] No audio formats available');
+      return null;
+    }
+
+    // Sort by bitrate and prefer lower quality for faster download (still good for STT)
+    audioFormats.sort((a, b) => a.bitrate - b.bitrate);
+    
+    // Try each format until one works
+    for (const format of audioFormats) {
+      if (!format.url) {
+        console.log(`[YouTube Direct] Format ${format.mimeType} has no URL (may need signature decoding)`);
+        continue;
+      }
+
+      console.log(`[YouTube Direct] Trying format: ${format.mimeType}, ${format.bitrate}bps`);
+
+      try {
+        const audioResponse = await fetch(format.url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Encoding': 'identity',
+            'Range': 'bytes=0-', // Request full file
+            'Referer': 'https://www.youtube.com/',
+            'Origin': 'https://www.youtube.com',
+          },
+          signal: AbortSignal.timeout(180000) // 3 minute timeout
+        });
+
+        if (!audioResponse.ok) {
+          console.log(`[YouTube Direct] Audio fetch failed: ${audioResponse.status}`);
+          continue;
+        }
+
+        const audioBuffer = await audioResponse.arrayBuffer();
+        
+        if (audioBuffer.byteLength < 10000) {
+          console.log(`[YouTube Direct] Audio too small (${audioBuffer.byteLength} bytes)`);
+          continue;
+        }
+
+        const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+        
+        console.log(`[YouTube Direct] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+        return { audioBase64, durationMinutes };
+
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'Unknown';
+        console.log(`[YouTube Direct] Format download failed: ${msg}`);
+        continue;
+      }
+    }
+
+    console.log('[YouTube Direct] All formats failed');
+    return null;
+
+  } catch (error) {
+    console.error('[YouTube Direct] Error:', error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
+// Invidious instances for fallback audio download
 const INVIDIOUS_INSTANCES = [
-  'https://invidious.snopyta.org',
-  'https://yewtu.be',
-  'https://vid.puffyan.us',
-  'https://invidious.kavin.rocks',
   'https://inv.nadeko.net',
   'https://invidious.nerdvpn.de',
   'https://invidious.protokolla.fi',
   'https://inv.tux.pizza',
   'https://invidious.privacyredirect.com',
+  'https://yewtu.be',
+  'https://vid.puffyan.us',
+  'https://invidious.kavin.rocks',
 ];
 
 async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
@@ -338,13 +472,12 @@ async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBase6
     try {
       console.log(`[Invidious] Trying instance: ${instance}`);
       
-      // Fetch video info from Invidious API
       const infoResponse = await fetch(`${instance}/api/v1/videos/${videoId}`, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json'
         },
-        signal: AbortSignal.timeout(15000) // 15 second timeout
+        signal: AbortSignal.timeout(10000)
       });
       
       if (!infoResponse.ok) {
@@ -355,54 +488,32 @@ async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBase6
       const data = await infoResponse.json();
       const durationMinutes = (data.lengthSeconds || 0) / 60;
       
-      console.log(`[Invidious] Video title: ${data.title}, duration: ${durationMinutes.toFixed(1)} min`);
-      
-      // Find audio-only format (prefer higher quality)
       const audioFormats = data.adaptiveFormats?.filter((f: any) => 
         f.type?.startsWith('audio/') && f.url
       ) || [];
       
-      if (audioFormats.length === 0) {
-        console.log(`[Invidious] ${instance} has no audio formats`);
-        continue;
-      }
+      if (audioFormats.length === 0) continue;
       
-      // Sort by bitrate (descending) and pick best
-      audioFormats.sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
+      audioFormats.sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0));
       const audioFormat = audioFormats[0];
       
-      console.log(`[Invidious] Downloading audio: ${audioFormat.type}, ${audioFormat.bitrate || 'unknown'}bps`);
-      
-      // Download the audio
       const audioResponse = await fetch(audioFormat.url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': '*/*',
-          'Referer': instance
-        },
-        signal: AbortSignal.timeout(180000) // 3 minute timeout for download
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(120000)
       });
       
-      if (!audioResponse.ok) {
-        console.log(`[Invidious] Audio download failed: ${audioResponse.status}`);
-        continue;
-      }
+      if (!audioResponse.ok) continue;
       
       const audioBuffer = await audioResponse.arrayBuffer();
-      
-      if (audioBuffer.byteLength < 10000) {
-        console.log(`[Invidious] Audio too small (${audioBuffer.byteLength} bytes), skipping`);
-        continue;
-      }
+      if (audioBuffer.byteLength < 10000) continue;
       
       const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
-      
-      console.log(`[Invidious] Success from ${instance}: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB, ${durationMinutes.toFixed(1)} minutes`);
+      console.log(`[Invidious] Success from ${instance}: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
       
       return { audioBase64, durationMinutes };
       
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unknown';
       console.log(`[Invidious] ${instance} failed: ${message}`);
       continue;
     }
@@ -415,11 +526,19 @@ async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBase6
 async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
   console.log(`[Audio Download] Starting for video: ${videoId}`);
   
-  // Use Invidious API for audio download
-  const result = await downloadAudioWithInvidious(videoId);
-  if (result) {
+  // Method 1: Direct YouTube extraction (preferred)
+  const directResult = await downloadAudioFromYouTubeDirect(videoId);
+  if (directResult) {
+    console.log('[Audio Download] Success with YouTube Direct');
+    return directResult;
+  }
+  
+  // Method 2: Invidious fallback
+  console.log('[Audio Download] YouTube Direct failed, trying Invidious...');
+  const invResult = await downloadAudioWithInvidious(videoId);
+  if (invResult) {
     console.log('[Audio Download] Success with Invidious');
-    return result;
+    return invResult;
   }
   
   console.log('[Audio Download] All download methods failed');
