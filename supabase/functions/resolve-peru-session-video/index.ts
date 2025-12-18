@@ -159,6 +159,14 @@ function buildExpectedTitle(commissionName: string, date: Date): string {
   return `EN VIVO: Comisión ${prefix}${formattedName} | ${day} DE ${month} DEL ${year}`;
 }
 
+// Check if error is a quota exceeded error
+function isQuotaError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes('403') || error.message.includes('quota');
+  }
+  return false;
+}
+
 // Fetch videos from channel using uploads playlist
 async function fetchChannelVideos(apiKey: string, maxResults: number = 50): Promise<any[]> {
   const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${UPLOADS_PLAYLIST_ID}&maxResults=${maxResults}&key=${apiKey}`;
@@ -176,6 +184,37 @@ async function fetchChannelVideos(apiKey: string, maxResults: number = 50): Prom
   console.log(`Fetched ${data.items?.length || 0} videos from channel`);
   
   return data.items || [];
+}
+
+// Fetch videos with API key fallback
+async function fetchChannelVideosWithFallback(
+  apiKeys: string[], 
+  maxResults: number = 50
+): Promise<{ videos: any[]; keyUsed: number }> {
+  let lastError: Error | null = null;
+  
+  for (let i = 0; i < apiKeys.length; i++) {
+    try {
+      console.log(`Trying API key ${i + 1} of ${apiKeys.length}`);
+      const videos = await fetchChannelVideos(apiKeys[i], maxResults);
+      console.log(`Successfully fetched videos using API key ${i + 1}`);
+      return { videos, keyUsed: i + 1 };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // Check if it's a quota error (403)
+      if (isQuotaError(error)) {
+        console.log(`API key ${i + 1} quota exceeded, trying next key...`);
+        continue;
+      }
+      
+      // For other errors, throw immediately
+      throw error;
+    }
+  }
+  
+  // All keys exhausted
+  throw lastError || new Error("All API keys exhausted - quota exceeded on all keys");
 }
 
 // Filter videos by date pattern first, then find best match
@@ -247,14 +286,24 @@ serve(async (req) => {
   }
 
   try {
+    // Get both API keys
     const YOUTUBE_API_KEY = Deno.env.get("YOUTUBE_API_KEY");
-    if (!YOUTUBE_API_KEY) {
-      console.error("YOUTUBE_API_KEY not configured");
+    const YOUTUBE_API_KEY_2 = Deno.env.get("YOUTUBE_API_KEY_2");
+    
+    // Build array of available API keys
+    const apiKeys: string[] = [];
+    if (YOUTUBE_API_KEY) apiKeys.push(YOUTUBE_API_KEY);
+    if (YOUTUBE_API_KEY_2) apiKeys.push(YOUTUBE_API_KEY_2);
+    
+    if (apiKeys.length === 0) {
+      console.error("No YouTube API keys configured");
       return new Response(
         JSON.stringify({ error: "YouTube API key not configured", found: false }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    console.log(`Available API keys: ${apiKeys.length}`);
 
     const { commissionName, scheduledDate } = await req.json();
     
@@ -282,8 +331,9 @@ serve(async (req) => {
     const expectedTitle = buildExpectedTitle(commissionName, date);
     console.log(`Expected title: ${expectedTitle}`);
 
-    // Fetch videos from channel
-    const videos = await fetchChannelVideos(YOUTUBE_API_KEY, 100);
+    // Fetch videos from channel with fallback
+    const { videos, keyUsed } = await fetchChannelVideosWithFallback(apiKeys, 100);
+    console.log(`Videos fetched using API key ${keyUsed}`);
 
     // Find best match (now with date filtering)
     const match = findBestMatch(expectedTitle, videos, date, 0.4);
@@ -317,6 +367,7 @@ serve(async (req) => {
           confidence,
           channelId: CHANNEL_ID,
           channelName: "Congreso de la República del Perú",
+          apiKeyUsed: keyUsed,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -329,16 +380,23 @@ serve(async (req) => {
         expectedTitle,
         searchedVideos: videos.length,
         message: "No matching video found in channel uploads",
+        apiKeyUsed: keyUsed,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
     console.error("Error in resolve-peru-session-video:", error);
+    
+    // Check if it's a quota error on all keys
+    const isAllQuotaExhausted = error instanceof Error && 
+      error.message.includes("All API keys exhausted");
+    
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : "Unknown error", 
-        found: false 
+        found: false,
+        quotaExhausted: isAllQuotaExhausted,
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
