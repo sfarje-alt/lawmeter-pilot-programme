@@ -248,6 +248,15 @@ async function tryTimedtextApi(videoId: string): Promise<TranscriptResult> {
 
 // ==================== Audio Download ====================
 
+// Cobalt API - most reliable for YouTube audio extraction
+const COBALT_INSTANCES = [
+  'https://api.cobalt.tools',
+  'https://cobalt-api.hyper.lol',
+  'https://cobalt.api.timelessnesses.me',
+  'https://api-dl.cgm.rs',
+  'https://capi.oak.li',
+];
+
 const PIPED_INSTANCES = [
   'https://pipedapi.kavin.rocks',
   'https://pipedapi.adminforge.de',
@@ -273,6 +282,96 @@ const INVIDIOUS_INSTANCES = [
   'https://invidious.lunar.icu',
   'https://invidious.drgns.space',
 ];
+
+async function downloadAudioWithCobalt(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
+  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  console.log(`[Cobalt] Attempting audio download for: ${videoId}`);
+  
+  for (const instance of COBALT_INSTANCES) {
+    try {
+      console.log(`[Cobalt] Trying instance: ${instance}`);
+      
+      const response = await fetch(`${instance}/`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: youtubeUrl,
+          downloadMode: 'audio',
+          audioFormat: 'mp3',
+          audioBitrate: '128'
+        }),
+        signal: AbortSignal.timeout(30000)
+      });
+      
+      if (!response.ok) {
+        console.log(`[Cobalt] ${instance} returned ${response.status}`);
+        continue;
+      }
+      
+      const data = await response.json();
+      console.log(`[Cobalt] Response status: ${data.status}`);
+      
+      if (data.status === 'error') {
+        console.log(`[Cobalt] ${instance} error: ${data.error?.code || 'unknown'}`);
+        continue;
+      }
+      
+      // Get the tunnel/redirect URL
+      let audioUrl: string | null = null;
+      
+      if (data.status === 'tunnel' || data.status === 'redirect') {
+        audioUrl = data.url;
+      } else if (data.status === 'local-processing' && data.tunnel && data.tunnel.length > 0) {
+        audioUrl = data.tunnel[0];
+      }
+      
+      if (!audioUrl) {
+        console.log(`[Cobalt] ${instance} no audio URL in response`);
+        continue;
+      }
+      
+      console.log(`[Cobalt] Downloading audio from: ${audioUrl.substring(0, 80)}...`);
+      
+      // Download the audio
+      const audioResponse = await fetch(audioUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': '*/*',
+        },
+        signal: AbortSignal.timeout(180000)
+      });
+      
+      if (!audioResponse.ok) {
+        console.log(`[Cobalt] Audio download failed: ${audioResponse.status}`);
+        continue;
+      }
+      
+      const audioBuffer = await audioResponse.arrayBuffer();
+      
+      if (audioBuffer.byteLength < 10000) {
+        console.log(`[Cobalt] Audio too small: ${audioBuffer.byteLength} bytes`);
+        continue;
+      }
+      
+      // Estimate duration from file size (rough: ~1MB per minute at 128kbps)
+      const estimatedDurationMinutes = (audioBuffer.byteLength / 1024 / 1024) * 1;
+      
+      console.log(`[Cobalt] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB, ~${estimatedDurationMinutes.toFixed(1)} min`);
+      return { audioBuffer, durationMinutes: estimatedDurationMinutes };
+      
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown';
+      console.log(`[Cobalt] ${instance} failed: ${msg}`);
+      continue;
+    }
+  }
+  
+  console.log('[Cobalt] All instances failed');
+  return null;
+}
 
 async function downloadAudioWithPiped(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
   console.log(`[Piped] Attempting audio download for: ${videoId}`);
@@ -531,14 +630,22 @@ async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBuffe
 async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
   console.log(`[Audio Download] Starting for video: ${videoId}`);
   
-  // Method 1: Piped API
+  // Method 1: Cobalt API (most reliable, designed for YouTube)
+  const cobaltResult = await downloadAudioWithCobalt(videoId);
+  if (cobaltResult) {
+    console.log('[Audio Download] Success with Cobalt');
+    return cobaltResult;
+  }
+  
+  // Method 2: Piped API
+  console.log('[Audio Download] Cobalt failed, trying Piped...');
   const pipedResult = await downloadAudioWithPiped(videoId);
   if (pipedResult) {
     console.log('[Audio Download] Success with Piped');
     return pipedResult;
   }
   
-  // Method 2: Invidious API
+  // Method 3: Invidious API
   console.log('[Audio Download] Piped failed, trying Invidious...');
   const invResult = await downloadAudioWithInvidious(videoId);
   if (invResult) {
@@ -546,7 +653,7 @@ async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBuffer:
     return invResult;
   }
   
-  // Method 3: Direct YouTube extraction (often rate-limited)
+  // Method 4: Direct YouTube extraction (often rate-limited)
   console.log('[Audio Download] Invidious failed, trying YouTube Direct...');
   const directResult = await downloadAudioFromYouTubeDirect(videoId);
   if (directResult) {
