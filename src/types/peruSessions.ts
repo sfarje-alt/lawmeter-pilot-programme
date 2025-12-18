@@ -11,7 +11,7 @@ export interface PeruSession {
   documents_url?: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'unknown';
   source_file_name?: string;
-  source: 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED';
+  source: 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED' | 'DATABASE';
   jurisdiction: 'PERU' | 'Peru';
   created_at: string;
   updated_at?: string;
