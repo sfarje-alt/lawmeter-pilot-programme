@@ -369,17 +369,31 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
       return `${hours.toString().padStart(2, '0')}:${minutes}:00`;
     };
 
+    // Helper to generate consistent external_session_id from session data
+    const generateSessionId = (session: ImportedSession): string => {
+      // Use agenda URL ID if available
+      if (session.external_session_id) {
+        return session.external_session_id;
+      }
+      // Create deterministic ID from commission name + date + time
+      const key = `${session.commission_name}-${session.scheduled_date}-${session.scheduled_time}`;
+      let hash = 0;
+      for (let i = 0; i < key.length; i++) {
+        const char = key.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return `peru-${Math.abs(hash).toString(36)}`;
+    };
+
     // Convert imported sessions to database format
     const sessionsToSave = importedSessions.map((imported) => {
-      // Convert date to ISO format
       const isoDate = convertDate(imported.scheduled_date);
       const isoTime = convertTime(imported.scheduled_time);
-      
-      // Combine into ISO timestamp
       const scheduledAt = isoDate ? `${isoDate}T${isoTime}` : null;
 
       return {
-        external_session_id: imported.external_session_id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        external_session_id: generateSessionId(imported),
         commission_name: imported.commission_name,
         session_title: imported.session_title || `Sesión de ${imported.commission_name}`,
         scheduled_at: scheduledAt,
@@ -393,7 +407,6 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
 
     console.log(`Saving ${sessionsToSave.length} sessions to database...`);
 
-    // Upsert to Supabase (insert or update on conflict)
     const { data, error } = await supabase
       .from('peru_sessions')
       .upsert(sessionsToSave, { 
@@ -421,6 +434,30 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     });
 
     return { inserted: savedCount, updated: 0 };
+  };
+
+  // Clear all sessions from database
+  const clearAllSessions = async (): Promise<void> => {
+    const { error } = await supabase
+      .from('peru_sessions')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (error) {
+      console.error('Error clearing sessions:', error);
+      toast({
+        title: "Error al limpiar",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+
+    setSessions([]);
+    toast({
+      title: "Sesiones eliminadas",
+      description: "Se eliminaron todas las sesiones de la base de datos",
+    });
   };
 
   // Stats
