@@ -94,7 +94,7 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
       }
 
       toast.info('Fetching video transcription...', { 
-        description: 'Trying YouTube captions first, then client-side audio extraction.',
+        description: 'Trying YouTube captions, then Piped API for audio extraction.',
         duration: 5000 
       });
 
