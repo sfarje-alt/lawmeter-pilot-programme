@@ -316,158 +316,113 @@ async function updateGoogleUsage(supabase: any, minutesUsed: number): Promise<vo
   console.log(`[Quota] Updated Google usage: +${minutesUsed} minutes for ${currentMonth}`);
 }
 
-// ==================== Cobalt Instance Discovery ====================
+// ==================== Audio Download: Invidious API ====================
 
-interface CobaltInstance {
-  protocol: string;
-  api: string;
-  online: boolean;
-  services?: {
-    youtube?: boolean;
-  };
-  info?: {
-    auth?: boolean;
-  };
-}
+// Invidious instances for audio download
+const INVIDIOUS_INSTANCES = [
+  'https://invidious.snopyta.org',
+  'https://yewtu.be',
+  'https://vid.puffyan.us',
+  'https://invidious.kavin.rocks',
+  'https://inv.nadeko.net',
+  'https://invidious.nerdvpn.de',
+  'https://invidious.protokolla.fi',
+  'https://inv.tux.pizza',
+  'https://invidious.privacyredirect.com',
+];
 
-async function getValidCobaltInstances(): Promise<string[]> {
-  console.log('[Cobalt] Fetching available instances...');
+async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
+  console.log(`[Invidious] Attempting audio download for: ${videoId}`);
   
-  try {
-    const response = await fetch('https://instances.cobalt.best/api/instances.json', {
-      headers: {
-        'User-Agent': 'LawMeter/1.0 (+https://lawmeter.app)',
-        'Accept': 'application/json'
+  for (const instance of INVIDIOUS_INSTANCES) {
+    try {
+      console.log(`[Invidious] Trying instance: ${instance}`);
+      
+      // Fetch video info from Invidious API
+      const infoResponse = await fetch(`${instance}/api/v1/videos/${videoId}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(15000) // 15 second timeout
+      });
+      
+      if (!infoResponse.ok) {
+        console.log(`[Invidious] ${instance} returned ${infoResponse.status}`);
+        continue;
       }
-    });
-    
-    if (!response.ok) {
-      console.log('[Cobalt] Failed to fetch instances list:', response.status);
-      return [];
+      
+      const data = await infoResponse.json();
+      const durationMinutes = (data.lengthSeconds || 0) / 60;
+      
+      console.log(`[Invidious] Video title: ${data.title}, duration: ${durationMinutes.toFixed(1)} min`);
+      
+      // Find audio-only format (prefer higher quality)
+      const audioFormats = data.adaptiveFormats?.filter((f: any) => 
+        f.type?.startsWith('audio/') && f.url
+      ) || [];
+      
+      if (audioFormats.length === 0) {
+        console.log(`[Invidious] ${instance} has no audio formats`);
+        continue;
+      }
+      
+      // Sort by bitrate (descending) and pick best
+      audioFormats.sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
+      const audioFormat = audioFormats[0];
+      
+      console.log(`[Invidious] Downloading audio: ${audioFormat.type}, ${audioFormat.bitrate || 'unknown'}bps`);
+      
+      // Download the audio
+      const audioResponse = await fetch(audioFormat.url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+          'Referer': instance
+        },
+        signal: AbortSignal.timeout(180000) // 3 minute timeout for download
+      });
+      
+      if (!audioResponse.ok) {
+        console.log(`[Invidious] Audio download failed: ${audioResponse.status}`);
+        continue;
+      }
+      
+      const audioBuffer = await audioResponse.arrayBuffer();
+      
+      if (audioBuffer.byteLength < 10000) {
+        console.log(`[Invidious] Audio too small (${audioBuffer.byteLength} bytes), skipping`);
+        continue;
+      }
+      
+      const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+      
+      console.log(`[Invidious] Success from ${instance}: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB, ${durationMinutes.toFixed(1)} minutes`);
+      
+      return { audioBase64, durationMinutes };
+      
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`[Invidious] ${instance} failed: ${message}`);
+      continue;
     }
-    
-    const instances: CobaltInstance[] = await response.json();
-    
-    // Filter for valid instances: online, supports YouTube, no auth required
-    const validInstances = instances
-      .filter(i => 
-        i.online && 
-        i.services?.youtube === true && 
-        i.info?.auth !== true // No Turnstile/auth required
-      )
-      .map(i => `${i.protocol}://${i.api}`);
-    
-    console.log(`[Cobalt] Found ${validInstances.length} valid instances`);
-    return validInstances;
-  } catch (error) {
-    console.error('[Cobalt] Error fetching instances:', error);
-    return [];
   }
-}
-
-async function tryDownloadFromCobaltInstance(instanceUrl: string, videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
-  console.log(`[Cobalt] Trying instance: ${instanceUrl}`);
   
-  try {
-    // Use new Cobalt API v10+ schema
-    const cobaltResponse = await fetch(`${instanceUrl}/`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'LawMeter/1.0 (+https://lawmeter.app)'
-      },
-      body: JSON.stringify({
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        downloadMode: 'audio',
-        audioFormat: 'mp3',
-        audioBitrate: '128'
-      })
-    });
-    
-    if (!cobaltResponse.ok) {
-      console.log(`[Cobalt] Instance ${instanceUrl} returned error: ${cobaltResponse.status}`);
-      return null;
-    }
-    
-    const data = await cobaltResponse.json();
-    console.log(`[Cobalt] Response status: ${data.status}`);
-    
-    let audioUrl: string | null = null;
-    
-    // Handle different response statuses
-    if (data.status === 'tunnel' || data.status === 'redirect') {
-      audioUrl = data.url;
-    } else if (data.status === 'local-processing' && data.tunnel) {
-      // Use first tunnel URL
-      audioUrl = Array.isArray(data.tunnel) ? data.tunnel[0] : data.tunnel;
-    } else if (data.status === 'stream') {
-      // Legacy status (some instances still use this)
-      audioUrl = data.url;
-    } else if (data.status === 'error') {
-      console.log(`[Cobalt] Error from instance: ${data.error?.code || 'unknown'}`);
-      return null;
-    } else {
-      console.log(`[Cobalt] Unexpected status: ${data.status}`, data);
-      return null;
-    }
-    
-    if (!audioUrl) {
-      console.log('[Cobalt] No audio URL in response');
-      return null;
-    }
-    
-    console.log(`[Cobalt] Got audio URL, downloading...`);
-    
-    // Download the audio file
-    const audioResponse = await fetch(audioUrl, {
-      headers: {
-        'User-Agent': 'LawMeter/1.0 (+https://lawmeter.app)'
-      }
-    });
-    
-    if (!audioResponse.ok) {
-      console.log(`[Cobalt] Failed to download audio: ${audioResponse.status}`);
-      return null;
-    }
-    
-    const audioBuffer = await audioResponse.arrayBuffer();
-    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
-    
-    // Estimate duration from file size (rough: 128kbps MP3 ≈ 1MB per minute)
-    const fileSizeMB = audioBuffer.byteLength / (1024 * 1024);
-    const durationMinutes = fileSizeMB;
-    
-    console.log(`[Cobalt] Downloaded ${fileSizeMB.toFixed(2)}MB, estimated ${durationMinutes.toFixed(1)} minutes`);
-    
-    return { audioBase64, durationMinutes };
-  } catch (error) {
-    console.error(`[Cobalt] Error with instance ${instanceUrl}:`, error);
-    return null;
-  }
+  console.log('[Invidious] All instances failed');
+  return null;
 }
 
 async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
-  console.log(`[Audio] Downloading audio for video: ${videoId}`);
+  console.log(`[Audio Download] Starting for video: ${videoId}`);
   
-  // Get list of valid Cobalt instances
-  const instances = await getValidCobaltInstances();
-  
-  if (instances.length === 0) {
-    console.log('[Audio] No valid Cobalt instances available');
-    return null;
+  // Use Invidious API for audio download
+  const result = await downloadAudioWithInvidious(videoId);
+  if (result) {
+    console.log('[Audio Download] Success with Invidious');
+    return result;
   }
   
-  // Try up to 3 instances
-  for (const instance of instances.slice(0, 3)) {
-    const result = await tryDownloadFromCobaltInstance(instance, videoId);
-    if (result) {
-      return result;
-    }
-    console.log(`[Audio] Instance ${instance} failed, trying next...`);
-  }
-  
-  console.log('[Audio] All Cobalt instances failed');
+  console.log('[Audio Download] All download methods failed');
   return null;
 }
 
