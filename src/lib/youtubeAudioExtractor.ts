@@ -1,11 +1,11 @@
-// Client-side YouTube audio extraction
-// This runs in the user's browser, bypassing bot detection
+// Client-side YouTube audio extraction using Piped API
+// Piped is a privacy-focused YouTube frontend that provides audio streams
 
-interface AudioFormat {
+interface AudioStream {
   url: string;
   mimeType: string;
   bitrate: number;
-  contentLength?: string;
+  contentLength?: number;
 }
 
 interface ExtractionResult {
@@ -14,168 +14,107 @@ interface ExtractionResult {
   mimeType: string;
 }
 
+// List of Piped instances to try
+const PIPED_INSTANCES = [
+  'https://pipedapi.kavin.rocks',
+  'https://pipedapi.adminforge.de',
+  'https://api.piped.yt',
+  'https://pipedapi.r4fo.com',
+  'https://pipedapi.darkness.services',
+];
+
 /**
- * Extract audio from YouTube video using client-side fetch
- * This works because the user's browser is not detected as a bot
+ * Extract audio from YouTube video using Piped API
+ * Piped provides audio stream URLs that can be downloaded
  */
 export async function extractYouTubeAudio(videoId: string): Promise<ExtractionResult | null> {
   console.log(`[Client YouTube] Starting audio extraction for: ${videoId}`);
   
-  try {
-    // Step 1: Fetch the YouTube watch page
-    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    
-    // Use a CORS proxy to fetch YouTube page from browser
-    // YouTube blocks cross-origin requests, so we need a proxy
-    const proxyUrls = [
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(watchUrl)}`,
-      `https://corsproxy.io/?${encodeURIComponent(watchUrl)}`,
-    ];
-    
-    let html: string | null = null;
-    
-    for (const proxyUrl of proxyUrls) {
-      try {
-        console.log(`[Client YouTube] Trying proxy: ${proxyUrl.substring(0, 50)}...`);
-        const response = await fetch(proxyUrl, {
-          headers: {
-            'Accept': 'text/html',
-          }
-        });
-        
-        if (response.ok) {
-          html = await response.text();
-          if (html && html.includes('ytInitialPlayerResponse')) {
-            console.log(`[Client YouTube] Got page via proxy`);
-            break;
-          }
-        }
-      } catch (e) {
-        console.log(`[Client YouTube] Proxy failed:`, e);
-      }
-    }
-    
-    if (!html) {
-      console.log('[Client YouTube] Could not fetch YouTube page');
-      return null;
-    }
-    
-    // Step 2: Extract ytInitialPlayerResponse
-    const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/s);
-    if (!playerResponseMatch) {
-      console.log('[Client YouTube] No ytInitialPlayerResponse found');
-      return null;
-    }
-
-    const playerResponse = JSON.parse(playerResponseMatch[1]);
-    
-    // Check playability
-    const playability = playerResponse?.playabilityStatus;
-    if (playability?.status !== 'OK') {
-      console.log(`[Client YouTube] Video not playable: ${playability?.status} - ${playability?.reason}`);
-      return null;
-    }
-
-    // Get duration
-    const durationSeconds = parseInt(playerResponse?.videoDetails?.lengthSeconds || '0');
-    const durationMinutes = durationSeconds / 60;
-    console.log(`[Client YouTube] Video duration: ${durationMinutes.toFixed(1)} minutes`);
-
-    // Step 3: Get streaming data
-    const streamingData = playerResponse?.streamingData;
-    if (!streamingData) {
-      console.log('[Client YouTube] No streaming data');
-      return null;
-    }
-
-    // Find audio formats
-    const adaptiveFormats = streamingData.adaptiveFormats || [];
-    const audioFormats: AudioFormat[] = adaptiveFormats
-      .filter((f: any) => f.mimeType?.startsWith('audio/') && f.url)
-      .map((f: any) => ({
-        url: f.url,
-        mimeType: f.mimeType,
-        bitrate: f.bitrate || 0,
-        contentLength: f.contentLength
-      }));
-
-    console.log(`[Client YouTube] Found ${audioFormats.length} audio formats with URLs`);
-
-    if (audioFormats.length === 0) {
-      // Check if there are formats that need signature decoding
-      const signedFormats = adaptiveFormats.filter((f: any) => 
-        f.mimeType?.startsWith('audio/') && f.signatureCipher
-      );
-      if (signedFormats.length > 0) {
-        console.log(`[Client YouTube] Found ${signedFormats.length} formats requiring signature decode (not supported)`);
-      }
-      return null;
-    }
-
-    // Sort by bitrate (lowest first for faster download, still good for STT)
-    audioFormats.sort((a, b) => a.bitrate - b.bitrate);
-
-    // Step 4: Download audio
-    for (const format of audioFormats) {
-      console.log(`[Client YouTube] Trying: ${format.mimeType}, ${format.bitrate}bps`);
+  for (const instance of PIPED_INSTANCES) {
+    try {
+      console.log(`[Client YouTube] Trying Piped instance: ${instance}`);
       
-      try {
-        // Try direct fetch (may work for some videos)
-        const audioResponse = await fetch(format.url, {
-          headers: {
-            'Range': 'bytes=0-',
-          }
-        });
-
-        if (!audioResponse.ok) {
-          console.log(`[Client YouTube] Direct fetch failed: ${audioResponse.status}`);
+      // Fetch video info from Piped API
+      const response = await fetch(`${instance}/streams/${videoId}`, {
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        console.log(`[Client YouTube] Piped ${instance} returned ${response.status}`);
+        continue;
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        console.log(`[Client YouTube] Piped error: ${data.error}`);
+        continue;
+      }
+      
+      // Get duration
+      const durationMinutes = (data.duration || 0) / 60;
+      console.log(`[Client YouTube] Video duration: ${durationMinutes.toFixed(1)} minutes`);
+      
+      // Find audio streams
+      const audioStreams: AudioStream[] = (data.audioStreams || [])
+        .filter((s: any) => s.url && s.mimeType?.includes('audio'))
+        .map((s: any) => ({
+          url: s.url,
+          mimeType: s.mimeType,
+          bitrate: s.bitrate || 0,
+          contentLength: s.contentLength
+        }));
+      
+      console.log(`[Client YouTube] Found ${audioStreams.length} audio streams`);
+      
+      if (audioStreams.length === 0) {
+        console.log(`[Client YouTube] No audio streams from ${instance}`);
+        continue;
+      }
+      
+      // Sort by bitrate (lowest first for faster download)
+      audioStreams.sort((a, b) => a.bitrate - b.bitrate);
+      
+      // Try to download each audio stream
+      for (const stream of audioStreams) {
+        console.log(`[Client YouTube] Trying stream: ${stream.mimeType}, ${stream.bitrate}bps`);
+        
+        try {
+          const audioResponse = await fetch(stream.url);
           
-          // Try via CORS proxy
-          const proxyAudioUrl = `https://corsproxy.io/?${encodeURIComponent(format.url)}`;
-          const proxyResponse = await fetch(proxyAudioUrl);
-          
-          if (!proxyResponse.ok) {
-            console.log(`[Client YouTube] Proxy fetch also failed`);
+          if (!audioResponse.ok) {
+            console.log(`[Client YouTube] Stream download failed: ${audioResponse.status}`);
             continue;
           }
           
-          const audioBuffer = await proxyResponse.arrayBuffer();
+          const audioBuffer = await audioResponse.arrayBuffer();
+          
           if (audioBuffer.byteLength < 10000) {
-            console.log(`[Client YouTube] Audio too small via proxy`);
+            console.log(`[Client YouTube] Audio too small: ${audioBuffer.byteLength} bytes`);
             continue;
           }
           
           const audioBase64 = arrayBufferToBase64(audioBuffer);
-          console.log(`[Client YouTube] Success via proxy: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+          console.log(`[Client YouTube] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
           
-          return { audioBase64, durationMinutes, mimeType: format.mimeType };
-        }
-
-        const audioBuffer = await audioResponse.arrayBuffer();
-        
-        if (audioBuffer.byteLength < 10000) {
-          console.log(`[Client YouTube] Audio too small: ${audioBuffer.byteLength} bytes`);
+          return { audioBase64, durationMinutes, mimeType: stream.mimeType };
+          
+        } catch (error) {
+          console.log(`[Client YouTube] Stream download error:`, error);
           continue;
         }
-
-        const audioBase64 = arrayBufferToBase64(audioBuffer);
-        console.log(`[Client YouTube] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
-        
-        return { audioBase64, durationMinutes, mimeType: format.mimeType };
-        
-      } catch (error) {
-        console.log(`[Client YouTube] Format download error:`, error);
-        continue;
       }
+      
+    } catch (error) {
+      console.log(`[Client YouTube] Piped instance ${instance} failed:`, error);
+      continue;
     }
-
-    console.log('[Client YouTube] All audio formats failed');
-    return null;
-
-  } catch (error) {
-    console.error('[Client YouTube] Error:', error);
-    return null;
   }
+  
+  console.log('[Client YouTube] All Piped instances failed');
+  return null;
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
