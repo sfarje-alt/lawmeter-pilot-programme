@@ -170,6 +170,19 @@ export function PeruSessionCard({
     return session.scheduled_date_text || 'Fecha no disponible';
   };
 
+  // Helper to extract video ID from YouTube URL
+  const extractVideoIdFromUrl = (url: string): string => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /^([a-zA-Z0-9_-]{11})$/
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return url; // Return as-is if no match
+  };
+
   const handleAnalyze = async () => {
     if (!session.recording?.video_url) return;
     
@@ -522,6 +535,21 @@ export function PeruSessionCard({
                     </Button>
                   )}
                 </div>
+
+                {/* Embedded Video Player */}
+                {session.recording?.video_url && (
+                  <div className="rounded-lg overflow-hidden border border-border/50">
+                    <div className="aspect-video">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${extractVideoIdFromUrl(session.recording.video_url)}`}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={`Video: ${session.commission_name}`}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Video Resolution Info */}
                 {session.recording && (
