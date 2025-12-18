@@ -272,8 +272,14 @@ Deno.serve(async (req) => {
     
     const pdfResponse = await fetch(pdfUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/pdf',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/pdf,application/octet-stream,*/*',
+        'Accept-Language': 'es-PE,es;q=0.9,en;q=0.8',
+        'Referer': 'https://www2.congreso.gob.pe/',
+        'Origin': 'https://www2.congreso.gob.pe',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'same-site',
       }
     });
     
