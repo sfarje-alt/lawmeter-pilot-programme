@@ -37,6 +37,41 @@ export interface SessionRecording {
   resolved_at?: string;
   last_error?: string;
   created_at: string;
+  // Transcription and analysis fields
+  transcription_text?: string;
+  transcription_status?: 'NOT_STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  analysis_result?: SessionAnalysis;
+  analysis_status?: 'NOT_STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  analyzed_at?: string;
+}
+
+export interface SessionAnalysis {
+  relevanceScore: number;
+  relevanceCategory: 'High' | 'Medium' | 'Low' | 'None';
+  executiveSummary: string;
+  keyTopics: Array<{
+    topic: string;
+    relevance: 'Direct' | 'Indirect' | 'None';
+    details: string;
+  }>;
+  regulatoryMentions: Array<{
+    type: string;
+    quote: string;
+    implication: string;
+  }>;
+  actionItems: string[];
+  speakerSentiments: Array<{
+    speaker: string;
+    position: 'Supportive' | 'Opposed' | 'Neutral';
+    keyStatement: string;
+  }>;
+  clientImpact: {
+    productSafety: string;
+    radioRegulations: string;
+    cybersecurity: string;
+    energyEfficiency: string;
+    overallAssessment: string;
+  };
 }
 
 export type VideoResolutionStatus = 

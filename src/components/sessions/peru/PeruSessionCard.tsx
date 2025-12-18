@@ -16,6 +16,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { 
   Video, 
   ExternalLink, 
@@ -27,17 +33,29 @@ import {
   FileText,
   Link2,
   Calendar,
-  Building
+  Building,
+  Brain,
+  Sparkles,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Minus,
+  Target,
+  Users,
+  MessageSquare,
+  Zap
 } from 'lucide-react';
-import { PeruSession } from '@/types/peruSessions';
+import { PeruSession, SessionAnalysis } from '@/types/peruSessions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useSessionAnalysis } from '@/hooks/useSessionAnalysis';
 
 interface PeruSessionCardProps {
   session: PeruSession;
   onToggleSelection: (sessionId: string) => void;
   onResolveVideo: (sessionId: string) => void;
   onSetManualUrl: (sessionId: string, url: string) => void;
+  onAnalysisComplete?: () => void;
 }
 
 export function PeruSessionCard({
@@ -45,9 +63,15 @@ export function PeruSessionCard({
   onToggleSelection,
   onResolveVideo,
   onSetManualUrl,
+  onAnalysisComplete,
 }: PeruSessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
+  const { isAnalyzing, analyzeSession } = useSessionAnalysis();
+
+  // Get analysis from recording if available
+  const analysis = session.recording?.analysis_result as SessionAnalysis | undefined;
+  const analysisStatus = session.recording?.analysis_status;
 
   const getVideoStatusBadge = () => {
     switch (session.video_status) {
@@ -118,6 +142,24 @@ export function PeruSessionCard({
     }
   };
 
+  const getRelevanceBadge = (score: number, category: string) => {
+    const config = {
+      High: { bg: 'bg-green-500/10', text: 'text-green-600', border: 'border-green-500/20', icon: CheckCircle },
+      Medium: { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-500/20', icon: AlertTriangle },
+      Low: { bg: 'bg-slate-500/10', text: 'text-slate-600', border: 'border-slate-500/20', icon: Minus },
+      None: { bg: 'bg-red-500/10', text: 'text-red-600', border: 'border-red-500/20', icon: XCircle },
+    }[category] || { bg: 'bg-slate-500/10', text: 'text-slate-600', border: 'border-slate-500/20', icon: Minus };
+    
+    const Icon = config.icon;
+    
+    return (
+      <Badge className={`${config.bg} ${config.text} ${config.border}`}>
+        <Icon className="h-3 w-3 mr-1" />
+        {category} Relevance ({score}/100)
+      </Badge>
+    );
+  };
+
   const getFormattedDate = () => {
     if (session.scheduled_at) {
       const date = new Date(session.scheduled_at);
@@ -126,6 +168,22 @@ export function PeruSessionCard({
       }
     }
     return session.scheduled_date_text || 'Fecha no disponible';
+  };
+
+  const handleAnalyze = async () => {
+    if (!session.recording?.video_url) return;
+    
+    const result = await analyzeSession(
+      session.id,
+      session.recording.video_url,
+      session.commission_name,
+      session.session_title,
+      session.scheduled_at
+    );
+    
+    if (result && onAnalysisComplete) {
+      onAnalysisComplete();
+    }
   };
   
   const formattedDate = getFormattedDate();
@@ -159,6 +217,7 @@ export function PeruSessionCard({
                   )}
                   {getStatusBadge()}
                   {getVideoStatusBadge()}
+                  {analysis && getRelevanceBadge(analysis.relevanceScore, analysis.relevanceCategory)}
                 </div>
 
                 <div className="flex items-center gap-2 mb-1">
@@ -194,15 +253,59 @@ export function PeruSessionCard({
                 </TooltipProvider>
 
                 {session.recording?.video_url ? (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="gap-2 bg-green-600 hover:bg-green-700"
-                    onClick={() => window.open(session.recording!.video_url, '_blank')}
-                  >
-                    <Video className="h-4 w-4" />
-                    Open Video
-                  </Button>
+                  <>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="gap-2 bg-green-600 hover:bg-green-700"
+                      onClick={() => window.open(session.recording!.video_url, '_blank')}
+                    >
+                      <Video className="h-4 w-4" />
+                      Open Video
+                    </Button>
+                    
+                    {/* AI Analysis Button */}
+                    {analysisStatus === 'COMPLETED' ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2 border-purple-500/50 text-purple-600"
+                              onClick={() => setIsExpanded(true)}
+                            >
+                              <Sparkles className="h-4 w-4" />
+                              View Analysis
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>View AI analysis results</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={handleAnalyze}
+                        disabled={isAnalyzing || analysisStatus === 'PROCESSING'}
+                      >
+                        {isAnalyzing || analysisStatus === 'PROCESSING' ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <Brain className="h-4 w-4" />
+                            AI Analysis
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </>
                 ) : session.video_status === 'RESOLVING' ? (
                   <Button variant="outline" size="sm" disabled>
                     <RefreshCw className="h-4 w-4 animate-spin mr-2" />
@@ -231,6 +334,159 @@ export function PeruSessionCard({
             {/* Expanded Content */}
             <CollapsibleContent>
               <div className="pt-4 border-t border-border/50 space-y-4">
+                {/* AI Analysis Results */}
+                {analysis && (
+                  <div className="bg-gradient-to-br from-purple-500/5 to-indigo-500/5 rounded-lg p-4 border border-purple-500/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="h-5 w-5 text-purple-500" />
+                      <h4 className="font-semibold text-foreground">AI Analysis</h4>
+                      {session.recording?.analyzed_at && (
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          Analyzed: {format(new Date(session.recording.analyzed_at), 'MMM d, yyyy HH:mm')}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Executive Summary */}
+                    <div className="bg-background/50 rounded-md p-3 mb-4">
+                      <p className="text-sm text-foreground">{analysis.executiveSummary}</p>
+                    </div>
+
+                    <Accordion type="single" collapsible className="space-y-2">
+                      {/* Key Topics */}
+                      {analysis.keyTopics.length > 0 && (
+                        <AccordionItem value="topics" className="border border-border/50 rounded-lg px-3">
+                          <AccordionTrigger className="py-2 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <Target className="h-4 w-4 text-blue-500" />
+                              Key Topics ({analysis.keyTopics.length})
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-3">
+                            <div className="space-y-2">
+                              {analysis.keyTopics.map((topic, idx) => (
+                                <div key={idx} className="bg-background/50 rounded-md p-2">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Badge variant="outline" className={
+                                      topic.relevance === 'Direct' ? 'border-green-500/50 text-green-600' :
+                                      topic.relevance === 'Indirect' ? 'border-amber-500/50 text-amber-600' :
+                                      'border-slate-500/50 text-slate-600'
+                                    }>
+                                      {topic.relevance}
+                                    </Badge>
+                                    <span className="font-medium text-sm">{topic.topic}</span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{topic.details}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+
+                      {/* Regulatory Mentions */}
+                      {analysis.regulatoryMentions.length > 0 && (
+                        <AccordionItem value="regulatory" className="border border-border/50 rounded-lg px-3">
+                          <AccordionTrigger className="py-2 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4 text-amber-500" />
+                              Regulatory Mentions ({analysis.regulatoryMentions.length})
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-3">
+                            <div className="space-y-2">
+                              {analysis.regulatoryMentions.map((mention, idx) => (
+                                <div key={idx} className="bg-background/50 rounded-md p-2">
+                                  <Badge variant="outline" className="mb-1">{mention.type}</Badge>
+                                  <p className="text-xs text-muted-foreground italic mb-1">"{mention.quote}"</p>
+                                  <p className="text-xs font-medium text-foreground">{mention.implication}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+
+                      {/* Client Impact */}
+                      {analysis.clientImpact && (
+                        <AccordionItem value="impact" className="border border-border/50 rounded-lg px-3">
+                          <AccordionTrigger className="py-2 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <Zap className="h-4 w-4 text-orange-500" />
+                              Client Impact Assessment
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-3">
+                            <div className="grid gap-2">
+                              {Object.entries(analysis.clientImpact).map(([key, value]) => (
+                                <div key={key} className="bg-background/50 rounded-md p-2">
+                                  <span className="text-xs font-medium text-muted-foreground capitalize">
+                                    {key.replace(/([A-Z])/g, ' $1').trim()}:
+                                  </span>
+                                  <p className="text-sm text-foreground">{value}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+
+                      {/* Speaker Sentiments */}
+                      {analysis.speakerSentiments.length > 0 && (
+                        <AccordionItem value="speakers" className="border border-border/50 rounded-lg px-3">
+                          <AccordionTrigger className="py-2 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-indigo-500" />
+                              Speaker Sentiments ({analysis.speakerSentiments.length})
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-3">
+                            <div className="space-y-2">
+                              {analysis.speakerSentiments.map((speaker, idx) => (
+                                <div key={idx} className="bg-background/50 rounded-md p-2">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium text-sm">{speaker.speaker}</span>
+                                    <Badge variant="outline" className={
+                                      speaker.position === 'Supportive' ? 'border-green-500/50 text-green-600' :
+                                      speaker.position === 'Opposed' ? 'border-red-500/50 text-red-600' :
+                                      'border-slate-500/50 text-slate-600'
+                                    }>
+                                      {speaker.position}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground italic">"{speaker.keyStatement}"</p>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+
+                      {/* Action Items */}
+                      {analysis.actionItems.length > 0 && (
+                        <AccordionItem value="actions" className="border border-border/50 rounded-lg px-3">
+                          <AccordionTrigger className="py-2 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              Recommended Actions ({analysis.actionItems.length})
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-3">
+                            <ul className="space-y-1">
+                              {analysis.actionItems.map((item, idx) => (
+                                <li key={idx} className="text-sm text-foreground flex items-start gap-2">
+                                  <span className="text-green-500 mt-0.5">•</span>
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+                    </Accordion>
+                  </div>
+                )}
+
                 {/* Session Title */}
                 {session.session_title && (
                   <div>

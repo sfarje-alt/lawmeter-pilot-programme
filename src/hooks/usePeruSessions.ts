@@ -55,6 +55,16 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
           .select('*')
           .order('scheduled_at', { ascending: false });
 
+        // Also load recordings with analysis data
+        const { data: dbRecordings } = await supabase
+          .from('session_recordings')
+          .select('*');
+
+        // Create a map of recordings by session_id
+        const recordingsMap = new Map(
+          (dbRecordings || []).map(r => [r.session_id, r])
+        );
+
         if (error) {
           console.error('Error loading sessions from database:', error);
           // Fallback to mock data if database fails
@@ -66,26 +76,65 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
           }));
           setSessions(enrichedSessions);
         } else if (dbSessions && dbSessions.length > 0) {
-          // Use database sessions
-          const enrichedSessions: PeruSession[] = dbSessions.map(session => ({
-            id: session.id,
-            commission_name: session.commission_name,
-            session_title: session.session_title || `Sesión de ${session.commission_name}`,
-            scheduled_at: session.scheduled_at,
-            scheduled_date_text: session.scheduled_date_text,
-            status: (session.status as 'scheduled' | 'completed' | 'cancelled') || 'scheduled',
-            agenda_url: session.agenda_url,
-            documents_url: session.documents_url,
-            external_session_id: session.external_session_id,
-            jurisdiction: (session.jurisdiction as 'PERU' | 'Peru') || 'PERU',
-            source: (session.source as 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED' | 'DATABASE') || 'DATABASE',
-            source_file_name: session.source_file_name,
-            created_at: session.created_at,
-            updated_at: session.updated_at,
-            is_recommended: watched.includes(session.commission_name),
-            is_selected: selected.has(session.id),
-            video_status: 'NOT_CHECKED' as const,
-          }));
+          // Use database sessions with recordings attached
+          const enrichedSessions: PeruSession[] = dbSessions.map(session => {
+            const dbRecording = recordingsMap.get(session.id);
+            let videoStatus: PeruSession['video_status'] = 'NOT_CHECKED';
+            
+            if (dbRecording) {
+              if (dbRecording.resolution_method === 'MANUAL') {
+                videoStatus = 'MANUAL';
+              } else if (dbRecording.resolution_confidence === 'HIGH') {
+                videoStatus = 'FOUND_HIGH';
+              } else if (dbRecording.resolution_confidence === 'MEDIUM') {
+                videoStatus = 'FOUND_MEDIUM';
+              } else if (dbRecording.resolution_confidence === 'LOW') {
+                videoStatus = 'FOUND_LOW';
+              } else if (dbRecording.last_error) {
+                videoStatus = 'NOT_FOUND';
+              }
+            }
+
+            return {
+              id: session.id,
+              commission_name: session.commission_name,
+              session_title: session.session_title || `Sesión de ${session.commission_name}`,
+              scheduled_at: session.scheduled_at,
+              scheduled_date_text: session.scheduled_date_text,
+              status: (session.status as 'scheduled' | 'completed' | 'cancelled') || 'scheduled',
+              agenda_url: session.agenda_url,
+              documents_url: session.documents_url,
+              external_session_id: session.external_session_id,
+              jurisdiction: (session.jurisdiction as 'PERU' | 'Peru') || 'PERU',
+              source: (session.source as 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED' | 'DATABASE') || 'DATABASE',
+              source_file_name: session.source_file_name,
+              created_at: session.created_at,
+              updated_at: session.updated_at,
+              is_recommended: watched.includes(session.commission_name),
+              is_selected: selected.has(session.id),
+              video_status: videoStatus,
+              recording: dbRecording ? {
+                id: dbRecording.id,
+                session_id: dbRecording.session_id,
+                provider: 'YOUTUBE' as const,
+                channel_name: dbRecording.channel_name || undefined,
+                channel_id: dbRecording.channel_id || undefined,
+                expected_title: dbRecording.expected_title || undefined,
+                video_id: dbRecording.video_id || undefined,
+                video_url: dbRecording.video_url || undefined,
+                resolution_confidence: dbRecording.resolution_confidence as 'HIGH' | 'MEDIUM' | 'LOW' | undefined,
+                resolution_method: dbRecording.resolution_method as 'EXACT_STRIP_EMOJI' | 'CONTAINS' | 'MANUAL' | undefined,
+                resolved_at: dbRecording.resolved_at || undefined,
+                last_error: dbRecording.last_error || undefined,
+                created_at: dbRecording.created_at || new Date().toISOString(),
+                transcription_text: dbRecording.transcription_text || undefined,
+                transcription_status: dbRecording.transcription_status as 'NOT_STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | undefined,
+                analysis_result: dbRecording.analysis_result as any,
+                analysis_status: dbRecording.analysis_status as 'NOT_STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | undefined,
+                analyzed_at: dbRecording.analyzed_at || undefined,
+              } : undefined,
+            };
+          });
           setSessions(enrichedSessions);
         } else {
           // No sessions in database, use mock data
