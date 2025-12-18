@@ -224,48 +224,118 @@ async function updateGoogleUsage(supabase: any, minutesUsed: number): Promise<vo
   console.log(`[Quota] Updated Google usage: +${minutesUsed} minutes for ${currentMonth}`);
 }
 
-async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
-  console.log(`[Audio] Downloading audio for video: ${videoId}`);
+// ==================== Cobalt Instance Discovery ====================
+
+interface CobaltInstance {
+  protocol: string;
+  api: string;
+  online: boolean;
+  services?: {
+    youtube?: boolean;
+  };
+  info?: {
+    auth?: boolean;
+  };
+}
+
+async function getValidCobaltInstances(): Promise<string[]> {
+  console.log('[Cobalt] Fetching available instances...');
   
   try {
-    // Use cobalt.tools API to get audio URL
-    const cobaltResponse = await fetch('https://api.cobalt.tools/api/json', {
+    const response = await fetch('https://instances.cobalt.best/api/instances.json', {
+      headers: {
+        'User-Agent': 'LawMeter/1.0 (+https://lawmeter.app)',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.log('[Cobalt] Failed to fetch instances list:', response.status);
+      return [];
+    }
+    
+    const instances: CobaltInstance[] = await response.json();
+    
+    // Filter for valid instances: online, supports YouTube, no auth required
+    const validInstances = instances
+      .filter(i => 
+        i.online && 
+        i.services?.youtube === true && 
+        i.info?.auth !== true // No Turnstile/auth required
+      )
+      .map(i => `${i.protocol}://${i.api}`);
+    
+    console.log(`[Cobalt] Found ${validInstances.length} valid instances`);
+    return validInstances;
+  } catch (error) {
+    console.error('[Cobalt] Error fetching instances:', error);
+    return [];
+  }
+}
+
+async function tryDownloadFromCobaltInstance(instanceUrl: string, videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
+  console.log(`[Cobalt] Trying instance: ${instanceUrl}`);
+  
+  try {
+    // Use new Cobalt API v10+ schema
+    const cobaltResponse = await fetch(`${instanceUrl}/`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
+        'User-Agent': 'LawMeter/1.0 (+https://lawmeter.app)'
       },
       body: JSON.stringify({
         url: `https://www.youtube.com/watch?v=${videoId}`,
-        vCodec: 'h264',
-        vQuality: '720',
-        aFormat: 'mp3',
-        isAudioOnly: true,
-        isNoTTWatermark: true,
-        isTTFullAudio: true,
-        disableMetadata: false
+        downloadMode: 'audio',
+        audioFormat: 'mp3',
+        audioBitrate: '128'
       })
     });
     
     if (!cobaltResponse.ok) {
-      console.log('[Audio] Cobalt API error:', cobaltResponse.status);
+      console.log(`[Cobalt] Instance ${instanceUrl} returned error: ${cobaltResponse.status}`);
       return null;
     }
     
-    const cobaltData = await cobaltResponse.json();
+    const data = await cobaltResponse.json();
+    console.log(`[Cobalt] Response status: ${data.status}`);
     
-    if (cobaltData.status !== 'stream' && cobaltData.status !== 'redirect') {
-      console.log('[Audio] Cobalt response:', cobaltData);
+    let audioUrl: string | null = null;
+    
+    // Handle different response statuses
+    if (data.status === 'tunnel' || data.status === 'redirect') {
+      audioUrl = data.url;
+    } else if (data.status === 'local-processing' && data.tunnel) {
+      // Use first tunnel URL
+      audioUrl = Array.isArray(data.tunnel) ? data.tunnel[0] : data.tunnel;
+    } else if (data.status === 'stream') {
+      // Legacy status (some instances still use this)
+      audioUrl = data.url;
+    } else if (data.status === 'error') {
+      console.log(`[Cobalt] Error from instance: ${data.error?.code || 'unknown'}`);
+      return null;
+    } else {
+      console.log(`[Cobalt] Unexpected status: ${data.status}`, data);
       return null;
     }
     
-    const audioUrl = cobaltData.url;
-    console.log(`[Audio] Got audio URL, downloading...`);
+    if (!audioUrl) {
+      console.log('[Cobalt] No audio URL in response');
+      return null;
+    }
+    
+    console.log(`[Cobalt] Got audio URL, downloading...`);
     
     // Download the audio file
-    const audioResponse = await fetch(audioUrl);
+    const audioResponse = await fetch(audioUrl, {
+      headers: {
+        'User-Agent': 'LawMeter/1.0 (+https://lawmeter.app)'
+      }
+    });
+    
     if (!audioResponse.ok) {
-      console.log('[Audio] Failed to download audio');
+      console.log(`[Cobalt] Failed to download audio: ${audioResponse.status}`);
       return null;
     }
     
@@ -274,15 +344,39 @@ async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64:
     
     // Estimate duration from file size (rough: 128kbps MP3 ≈ 1MB per minute)
     const fileSizeMB = audioBuffer.byteLength / (1024 * 1024);
-    const durationMinutes = fileSizeMB; // Rough estimate
+    const durationMinutes = fileSizeMB;
     
-    console.log(`[Audio] Downloaded ${fileSizeMB.toFixed(2)}MB, estimated ${durationMinutes.toFixed(1)} minutes`);
+    console.log(`[Cobalt] Downloaded ${fileSizeMB.toFixed(2)}MB, estimated ${durationMinutes.toFixed(1)} minutes`);
     
     return { audioBase64, durationMinutes };
   } catch (error) {
-    console.error('[Audio] Download error:', error);
+    console.error(`[Cobalt] Error with instance ${instanceUrl}:`, error);
     return null;
   }
+}
+
+async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
+  console.log(`[Audio] Downloading audio for video: ${videoId}`);
+  
+  // Get list of valid Cobalt instances
+  const instances = await getValidCobaltInstances();
+  
+  if (instances.length === 0) {
+    console.log('[Audio] No valid Cobalt instances available');
+    return null;
+  }
+  
+  // Try up to 3 instances
+  for (const instance of instances.slice(0, 3)) {
+    const result = await tryDownloadFromCobaltInstance(instance, videoId);
+    if (result) {
+      return result;
+    }
+    console.log(`[Audio] Instance ${instance} failed, trying next...`);
+  }
+  
+  console.log('[Audio] All Cobalt instances failed');
+  return null;
 }
 
 async function tryGoogleCloudSTT(videoId: string, supabase: any): Promise<TranscriptResult> {
