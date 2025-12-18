@@ -207,11 +207,11 @@ export function PeruSessionImporter({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Importar Sesiones del Congreso de Perú
+            Import Peru Congress Sessions
           </DialogTitle>
           <DialogDescription>
-            Sube el PDF o pega los datos desde el visor de sesiones. 
-            El sistema extraerá comisiones, fechas y links de agenda.
+            Upload the PDF or paste data from the sessions viewer. 
+            The system will extract commissions, dates, and agenda links.
           </DialogDescription>
         </DialogHeader>
 
@@ -220,11 +220,11 @@ export function PeruSessionImporter({
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="file" className="gap-2">
                 <FileText className="h-4 w-4" />
-                Subir PDF
+                Upload PDF
               </TabsTrigger>
               <TabsTrigger value="paste" className="gap-2">
                 <ClipboardPaste className="h-4 w-4" />
-                Pegar Datos
+                Paste Data
               </TabsTrigger>
             </TabsList>
 
@@ -233,11 +233,11 @@ export function PeruSessionImporter({
               <Card className="bg-muted/30 border-muted">
                 <CardContent className="pt-4">
                   <div className="space-y-3">
-                    <h4 className="font-medium text-sm">¿Dónde obtener el PDF?</h4>
+                    <h4 className="font-medium text-sm">Where to get the PDF?</h4>
                     <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                      <li>Visita el portal del Congreso de Perú</li>
-                      <li>Navega a: Agenda Parlamentaria → Sesiones de Comisiones</li>
-                      <li>Haz clic en "Exportar PDF" o usa el enlace directo abajo</li>
+                      <li>Visit the Peru Congress portal</li>
+                      <li>Navigate to: Parliamentary Agenda → Commission Sessions</li>
+                      <li>Click "Export PDF" or use the direct link below</li>
                     </ol>
                     <Button 
                       variant="outline" 
@@ -261,7 +261,7 @@ export function PeruSessionImporter({
                       }}
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Descargar PDF del Congreso
+                      Download Congress PDF
                     </Button>
                   </div>
                 </CardContent>
@@ -297,7 +297,7 @@ export function PeruSessionImporter({
                           setParseError(null);
                         }}
                       >
-                        Cambiar Archivo
+                        Change File
                       </Button>
                       {parsedSessions.length === 0 && (
                         <Button 
@@ -309,12 +309,12 @@ export function PeruSessionImporter({
                           {isProcessing ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
-                              Analizando PDF...
+                              Analyzing PDF...
                             </>
                           ) : (
                             <>
                               <FileText className="h-4 w-4" />
-                              Extraer Sesiones
+                              Extract Sessions
                             </>
                           )}
                         </Button>
@@ -326,10 +326,10 @@ export function PeruSessionImporter({
                     <FileText className="h-10 w-10 mx-auto text-muted-foreground" />
                     <div>
                       <p className="font-medium text-foreground">
-                        Arrastra el PDF aquí
+                        Drag PDF here
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        o haz clic para seleccionar
+                        or click to select
                       </p>
                     </div>
                     <Input
@@ -339,7 +339,7 @@ export function PeruSessionImporter({
                       className="max-w-xs mx-auto"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Solo archivos PDF (máximo 10MB)
+                      PDF files only (max 10MB)
                     </p>
                   </div>
                 )}
@@ -361,12 +361,12 @@ export function PeruSessionImporter({
             <TabsContent value="paste" className="mt-4">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="pastedContent">Pegar Datos de Sesiones</Label>
+                  <Label htmlFor="pastedContent">Paste Session Data</Label>
                   <Textarea
                     id="pastedContent"
-                    placeholder="Pega el contenido de la tabla desde la página web del Congreso...
+                    placeholder="Paste the table content from the Congress website...
 
-Ejemplo:
+Example:
 Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
                     value={pastedContent}
                     onChange={(e) => setPastedContent(e.target.value)}
@@ -382,12 +382,12 @@ Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
                     {isProcessing ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Procesando...
+                        Processing...
                       </>
                     ) : (
                       <>
                         <FileText className="h-4 w-4" />
-                        Extraer Sesiones
+                        Extract Sessions
                       </>
                     )}
                   </Button>
@@ -400,10 +400,10 @@ Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
           {parsedSessions.length > 0 && (
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Sesiones Extraídas</h4>
+                <h4 className="font-medium text-foreground">Extracted Sessions</h4>
                 <Badge variant="secondary" className="gap-1">
                   <Calendar className="h-3 w-3" />
-                  {parsedSessions.length} sesiones
+                  {parsedSessions.length} sessions
                 </Badge>
               </div>
               
@@ -454,7 +454,7 @@ Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
                             className="flex items-center gap-1 text-primary hover:underline"
                           >
                             <LinkIcon className="h-3 w-3" />
-                            Ver Agenda
+                            View Agenda
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
@@ -471,7 +471,7 @@ Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
         <Card className="bg-muted/30 border-muted">
           <CardContent className="pt-4">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">¿Dónde obtener los datos?</p>
+              <p className="text-sm font-medium text-foreground">Where to get the data?</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -479,7 +479,7 @@ Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
                 onClick={() => window.open('https://www2.congreso.gob.pe/sicr/comisiones/sesiones.nsf', '_blank')}
               >
                 <ExternalLink className="h-4 w-4" />
-                Abrir Visor de Sesiones del Congreso
+                Open Congress Sessions Viewer
               </Button>
             </div>
           </CardContent>
@@ -487,7 +487,7 @@ Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={handleClose}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             onClick={handleImport}
@@ -497,12 +497,12 @@ Ordinaria  Comisión de Educación  18/12/2025  9:00AM  Descentralizada"
             {isImporting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Importando...
+                Importing...
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4" />
-                Importar {parsedSessions.length} Sesiones
+                Import {parsedSessions.length} Sessions
               </>
             )}
           </Button>
