@@ -318,6 +318,24 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
           };
         }));
 
+        // Save recording to database
+        await supabase
+          .from('session_recordings')
+          .upsert({
+            session_id: sessionId,
+            provider: 'YOUTUBE',
+            channel_name: data.channelName || 'Congreso de la República del Perú',
+            channel_id: data.channelId,
+            expected_title: data.expectedTitle,
+            video_id: data.videoId,
+            video_url: data.videoUrl,
+            resolution_confidence: data.confidence,
+            resolution_method: data.method,
+            resolved_at: new Date().toISOString(),
+            transcription_status: 'NOT_STARTED',
+            analysis_status: 'NOT_STARTED'
+          }, { onConflict: 'session_id' });
+
         toast({
           title: "Video encontrado",
           description: `Se encontró el video con ${Math.round(data.similarity * 100)}% de similitud`,
@@ -365,10 +383,26 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
   };
 
   // Set manual video URL
-  const setManualVideoUrl = (sessionId: string, videoUrl: string) => {
+  const setManualVideoUrl = async (sessionId: string, videoUrl: string) => {
     // Extract video ID from URL
     const videoIdMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
     const videoId = videoIdMatch ? videoIdMatch[1] : null;
+
+    // Save recording to database
+    await supabase
+      .from('session_recordings')
+      .upsert({
+        session_id: sessionId,
+        provider: 'YOUTUBE',
+        channel_name: 'Manual',
+        video_id: videoId || '',
+        video_url: videoUrl,
+        resolution_confidence: 'LOW',
+        resolution_method: 'MANUAL',
+        resolved_at: new Date().toISOString(),
+        transcription_status: 'NOT_STARTED',
+        analysis_status: 'NOT_STARTED'
+      }, { onConflict: 'session_id' });
 
     setSessions(prev => prev.map(s => {
       if (s.id !== sessionId) return s;

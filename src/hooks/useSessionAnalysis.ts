@@ -40,15 +40,15 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
       const videoId = extractVideoId(videoIdOrUrl) || videoIdOrUrl;
       console.log(`Starting analysis for session ${sessionId}, video ${videoId}`);
 
-      // Step 1: Update status to processing
+      // Step 1: Upsert to create/update record with processing status
       await supabase
         .from('session_recordings')
-        .update({ 
+        .upsert({ 
+          session_id: sessionId,
           transcription_status: 'PROCESSING',
           analysis_status: 'NOT_STARTED',
           last_error: null
-        })
-        .eq('session_id', sessionId);
+        }, { onConflict: 'session_id' });
 
       // Step 2: Try YouTube captions first (free)
       toast.info('Buscando subtítulos de YouTube...', { duration: 3000 });
@@ -102,11 +102,11 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
           
           await supabase
             .from('session_recordings')
-            .update({ 
+            .upsert({ 
+              session_id: sessionId,
               transcription_status: 'FAILED',
               last_error: `Transcription service failed: ${serviceError instanceof Error ? serviceError.message : 'Unknown error'}`
-            })
-            .eq('session_id', sessionId);
+            }, { onConflict: 'session_id' });
           
           toast.error('Error en transcripción', {
             description: serviceError instanceof Error ? serviceError.message : 'Intenta de nuevo más tarde',
@@ -120,11 +120,11 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
       if (!transcription) {
         await supabase
           .from('session_recordings')
-          .update({ 
+          .upsert({ 
+            session_id: sessionId,
             transcription_status: 'FAILED',
             last_error: 'No transcription obtained from any source'
-          })
-          .eq('session_id', sessionId);
+          }, { onConflict: 'session_id' });
         
         toast.error('No se pudo obtener transcripción');
         return null;
@@ -133,12 +133,12 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
       // Step 4: Save transcription
       await supabase
         .from('session_recordings')
-        .update({ 
+        .upsert({ 
+          session_id: sessionId,
           transcription_text: transcription,
           transcription_status: 'COMPLETED',
           analysis_status: 'PROCESSING'
-        })
-        .eq('session_id', sessionId);
+        }, { onConflict: 'session_id' });
 
       toast.info('Analizando transcripción con IA...', { duration: 5000 });
 
@@ -161,11 +161,11 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
         
         await supabase
           .from('session_recordings')
-          .update({ 
+          .upsert({ 
+            session_id: sessionId,
             analysis_status: 'FAILED',
             last_error: errorMsg
-          })
-          .eq('session_id', sessionId);
+          }, { onConflict: 'session_id' });
         
         toast.error('Error en análisis IA', {
           description: 'La transcripción se guardó pero el análisis falló.',
@@ -177,12 +177,12 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
       // Step 6: Save analysis result
       const { error: saveError } = await supabase
         .from('session_recordings')
-        .update({ 
+        .upsert({ 
+          session_id: sessionId,
           analysis_result: analysisData.analysis,
           analysis_status: 'COMPLETED',
           analyzed_at: new Date().toISOString()
-        })
-        .eq('session_id', sessionId);
+        }, { onConflict: 'session_id' });
 
       if (saveError) {
         console.error('Error saving analysis:', saveError);
