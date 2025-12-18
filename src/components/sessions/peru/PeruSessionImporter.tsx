@@ -64,7 +64,7 @@ interface SyncResult {
 interface PeruSessionImporterProps {
   open: boolean;
   onClose: () => void;
-  onImport: (sessions: ParsedSession[]) => Promise<void>;
+  onImport: (sessions: ParsedSession[]) => Promise<{ inserted: number; updated: number } | void>;
   onSyncComplete?: () => void;
 }
 

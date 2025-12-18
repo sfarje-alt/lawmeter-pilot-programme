@@ -31,31 +31,76 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
   const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load initial data
+  // Load initial data from Supabase
   useEffect(() => {
-    // Simulate loading from database
-    setTimeout(() => {
-      // Load watched commissions from localStorage or use defaults
-      const storedWatched = localStorage.getItem('peru_watched_commissions');
-      const watched = storedWatched ? JSON.parse(storedWatched) : DEFAULT_WATCHED_COMMISSIONS;
-      setWatchedCommissions(watched);
+    const loadData = async () => {
+      try {
+        // Load watched commissions from localStorage or use defaults
+        const storedWatched = localStorage.getItem('peru_watched_commissions');
+        const watched = storedWatched ? JSON.parse(storedWatched) : DEFAULT_WATCHED_COMMISSIONS;
+        setWatchedCommissions(watched);
 
-      // Load selected sessions from localStorage
-      const storedSelected = localStorage.getItem('peru_selected_sessions');
-      const selected = storedSelected ? new Set<string>(JSON.parse(storedSelected)) : new Set<string>();
-      setSelectedSessionIds(selected);
+        // Load selected sessions from localStorage
+        const storedSelected = localStorage.getItem('peru_selected_sessions');
+        const selected = storedSelected ? new Set<string>(JSON.parse(storedSelected)) : new Set<string>();
+        setSelectedSessionIds(selected);
 
-      // Mark sessions as recommended/selected based on watched commissions
-      const enrichedSessions = PERU_MOCK_SESSIONS.map(session => ({
-        ...session,
-        is_recommended: watched.includes(session.commission_name),
-        is_selected: selected.has(session.id),
-        recording: PERU_MOCK_RECORDINGS.find(r => r.session_id === session.id),
-      }));
+        // Load sessions from Supabase database
+        const { data: dbSessions, error } = await supabase
+          .from('peru_sessions')
+          .select('*')
+          .order('scheduled_at', { ascending: false });
 
-      setSessions(enrichedSessions);
-      setIsLoading(false);
-    }, 500);
+        if (error) {
+          console.error('Error loading sessions from database:', error);
+          // Fallback to mock data if database fails
+          const enrichedSessions = PERU_MOCK_SESSIONS.map(session => ({
+            ...session,
+            is_recommended: watched.includes(session.commission_name),
+            is_selected: selected.has(session.id),
+            recording: PERU_MOCK_RECORDINGS.find(r => r.session_id === session.id),
+          }));
+          setSessions(enrichedSessions);
+        } else if (dbSessions && dbSessions.length > 0) {
+          // Use database sessions
+          const enrichedSessions: PeruSession[] = dbSessions.map(session => ({
+            id: session.id,
+            commission_name: session.commission_name,
+            session_title: session.session_title || `Sesión de ${session.commission_name}`,
+            scheduled_at: session.scheduled_at,
+            scheduled_date_text: session.scheduled_date_text,
+            status: (session.status as 'scheduled' | 'completed' | 'cancelled') || 'scheduled',
+            agenda_url: session.agenda_url,
+            documents_url: session.documents_url,
+            external_session_id: session.external_session_id,
+            jurisdiction: (session.jurisdiction as 'PERU' | 'Peru') || 'PERU',
+            source: (session.source as 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED' | 'DATABASE') || 'DATABASE',
+            source_file_name: session.source_file_name,
+            created_at: session.created_at,
+            updated_at: session.updated_at,
+            is_recommended: watched.includes(session.commission_name),
+            is_selected: selected.has(session.id),
+            video_status: 'NOT_CHECKED' as const,
+          }));
+          setSessions(enrichedSessions);
+        } else {
+          // No sessions in database, use mock data
+          const enrichedSessions = PERU_MOCK_SESSIONS.map(session => ({
+            ...session,
+            is_recommended: watched.includes(session.commission_name),
+            is_selected: selected.has(session.id),
+            recording: PERU_MOCK_RECORDINGS.find(r => r.session_id === session.id),
+          }));
+          setSessions(enrichedSessions);
+        }
+      } catch (err) {
+        console.error('Error in loadData:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
   // Filter sessions based on options
@@ -300,10 +345,10 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     });
   };
 
-  // Import sessions from parsed PDF data
-  const importSessions = async (importedSessions: ImportedSession[]) => {
-    // Convert imported sessions to PeruSession format
-    const newSessions: PeruSession[] = importedSessions.map((imported, index) => {
+  // Import sessions from parsed PDF data - saves to Supabase
+  const importSessions = async (importedSessions: ImportedSession[]): Promise<{ inserted: number; updated: number }> => {
+    // Convert imported sessions to database format
+    const sessionsToSave = importedSessions.map((imported) => {
       // Combine date and time into scheduled_at
       let scheduledAt: string | null = null;
       if (imported.scheduled_date) {
@@ -312,42 +357,49 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
           : `${imported.scheduled_date}T00:00:00`;
       }
 
-      const sessionId = imported.external_session_id || `imported-${Date.now()}-${index}`;
-      
       return {
-        id: sessionId,
+        external_session_id: imported.external_session_id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         commission_name: imported.commission_name,
         session_title: imported.session_title || `Sesión de ${imported.commission_name}`,
         scheduled_at: scheduledAt,
         scheduled_date_text: `${imported.scheduled_date} ${imported.scheduled_time || ''}`.trim(),
-        status: 'scheduled' as const,
+        status: 'scheduled',
         agenda_url: imported.agenda_url,
-        documents_url: null,
-        external_session_id: imported.external_session_id,
-        jurisdiction: 'Peru',
-        source: 'IMPORTED',
-        source_file_name: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_recommended: watchedCommissions.includes(imported.commission_name),
-        is_selected: false,
-        video_status: 'NOT_CHECKED' as const,
+        jurisdiction: 'PERU',
+        source: 'PERU_CONGRESS_COMMISSION_SESSIONS',
       };
     });
 
-    // Add to existing sessions (avoid duplicates by external_session_id)
-    setSessions(prev => {
-      const existingIds = new Set(prev.map(s => s.external_session_id).filter(Boolean));
-      const uniqueNew = newSessions.filter(s => 
-        !s.external_session_id || !existingIds.has(s.external_session_id)
-      );
-      return [...uniqueNew, ...prev];
-    });
+    console.log(`Saving ${sessionsToSave.length} sessions to database...`);
+
+    // Upsert to Supabase (insert or update on conflict)
+    const { data, error } = await supabase
+      .from('peru_sessions')
+      .upsert(sessionsToSave, { 
+        onConflict: 'external_session_id',
+        ignoreDuplicates: false 
+      })
+      .select();
+
+    if (error) {
+      console.error('Error saving sessions to database:', error);
+      toast({
+        title: "Error al guardar",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+
+    const savedCount = data?.length || 0;
+    console.log(`Successfully saved ${savedCount} sessions to database`);
 
     toast({
-      title: "Importación completada",
-      description: `Se importaron ${newSessions.length} sesiones`,
+      title: "Sesiones guardadas",
+      description: `Se guardaron ${savedCount} sesiones en la base de datos`,
     });
+
+    return { inserted: savedCount, updated: 0 };
   };
 
   // Stats
