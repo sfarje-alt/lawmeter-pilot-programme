@@ -361,6 +361,30 @@ export type Database = {
           },
         ]
       }
+      stt_usage: {
+        Row: {
+          google_minutes_used: number | null
+          id: string
+          last_updated: string | null
+          month: string
+          whisper_minutes_used: number | null
+        }
+        Insert: {
+          google_minutes_used?: number | null
+          id?: string
+          last_updated?: string | null
+          month: string
+          whisper_minutes_used?: number | null
+        }
+        Update: {
+          google_minutes_used?: number | null
+          id?: string
+          last_updated?: string | null
+          month?: string
+          whisper_minutes_used?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
