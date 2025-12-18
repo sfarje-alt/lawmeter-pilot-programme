@@ -144,11 +144,28 @@ function isQuotaError(error: unknown): boolean {
   return false;
 }
 
-// Fetch videos from channel using uploads playlist
-async function fetchChannelVideos(apiKey: string, maxResults: number = 50): Promise<any[]> {
-  const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${UPLOADS_PLAYLIST_ID}&maxResults=${maxResults}&key=${apiKey}`;
+// Fetch videos from channel using Search API with date filter
+async function fetchChannelVideosByDate(
+  apiKey: string, 
+  targetDate: Date,
+  maxResults: number = 50
+): Promise<any[]> {
+  // Search for videos published within ±1 day of target date
+  const publishedAfter = new Date(targetDate);
+  publishedAfter.setDate(publishedAfter.getDate() - 1);
+  publishedAfter.setHours(0, 0, 0, 0);
   
-  console.log(`Fetching videos from playlist: ${UPLOADS_PLAYLIST_ID}`);
+  const publishedBefore = new Date(targetDate);
+  publishedBefore.setDate(publishedBefore.getDate() + 2);
+  publishedBefore.setHours(0, 0, 0, 0);
+  
+  const url = `https://www.googleapis.com/youtube/v3/search?` +
+    `part=snippet&channelId=${CHANNEL_ID}&type=video&maxResults=${maxResults}` +
+    `&publishedAfter=${publishedAfter.toISOString()}` +
+    `&publishedBefore=${publishedBefore.toISOString()}` +
+    `&key=${apiKey}`;
+  
+  console.log(`Searching videos from ${publishedAfter.toISOString().substring(0, 10)} to ${publishedBefore.toISOString().substring(0, 10)}`);
   
   const response = await fetch(url);
   if (!response.ok) {
@@ -158,14 +175,15 @@ async function fetchChannelVideos(apiKey: string, maxResults: number = 50): Prom
   }
   
   const data = await response.json();
-  console.log(`Fetched ${data.items?.length || 0} videos from channel`);
+  console.log(`Found ${data.items?.length || 0} videos in date range`);
   
   return data.items || [];
 }
 
 // Fetch videos with API key fallback
-async function fetchChannelVideosWithFallback(
+async function fetchVideosWithFallback(
   apiKeys: string[], 
+  targetDate: Date,
   maxResults: number = 50
 ): Promise<{ videos: any[]; keyUsed: number }> {
   let lastError: Error | null = null;
@@ -173,7 +191,7 @@ async function fetchChannelVideosWithFallback(
   for (let i = 0; i < apiKeys.length; i++) {
     try {
       console.log(`Trying API key ${i + 1} of ${apiKeys.length}`);
-      const videos = await fetchChannelVideos(apiKeys[i], maxResults);
+      const videos = await fetchChannelVideosByDate(apiKeys[i], targetDate, maxResults);
       console.log(`Successfully fetched videos using API key ${i + 1}`);
       return { videos, keyUsed: i + 1 };
     } catch (error) {
@@ -191,89 +209,42 @@ async function fetchChannelVideosWithFallback(
   throw lastError || new Error("All API keys exhausted - quota exceeded on all keys");
 }
 
-// STRICT 3-STEP FILTERING with diagnostic logging and publishedAt fallback
-function findVideoStrictMatch(
+// Find video by commission name (date already filtered by API)
+function findVideoByCommission(
   videos: any[], 
-  commissionFullName: string, 
-  date: Date
+  commissionFullName: string
 ): { video: any; confidence: 'HIGH' | 'MEDIUM' } | null {
-  const datePattern = buildDatePattern(date);
   const normalizedCommission = normalize(commissionFullName);
-  const targetDateStr = date.toISOString().substring(0, 10); // "2025-12-12"
   
-  console.log(`\n=== STRICT FILTERING PIPELINE ===`);
+  console.log(`\n=== FILTERING BY COMMISSION ===`);
   console.log(`Looking for: "${commissionFullName}"`);
-  console.log(`Date pattern in title: "${datePattern}"`);
-  console.log(`Target publishedAt: ${targetDateStr}`);
+  console.log(`Normalized: "${normalizedCommission}"`);
+  console.log(`Videos in date range: ${videos.length}`);
   
-  // === DIAGNOSTIC: Show sample videos from channel ===
-  console.log(`\n=== SAMPLE VIDEOS FROM CHANNEL (first 10) ===`);
-  videos.slice(0, 10).forEach((v, i) => {
+  // Show all videos found in date range
+  console.log(`\nVideos found in date range:`);
+  videos.forEach((v, i) => {
     const title = v.snippet?.title || "";
-    const publishedAt = v.snippet?.publishedAt || "";
-    console.log(`[${i}] Published: ${publishedAt.substring(0, 10)} | "${title.substring(0, 70)}..."`);
+    console.log(`[${i}] "${title}"`);
   });
   
-  console.log(`\nFILTRO 1: ${videos.length} videos del canal`);
-  
-  // === FILTRO 2A: Videos con la fecha en el título ===
-  let videosWithDate = videos.filter(video => {
-    const title = normalize(video.snippet?.title || "");
-    return title.includes(normalize(datePattern));
-  });
-  
-  console.log(`FILTRO 2A: ${videosWithDate.length} videos con fecha "${datePattern}" en título`);
-  
-  // === FILTRO 2B: Si no hay match por título, intentar con publishedAt ===
-  if (videosWithDate.length === 0) {
-    console.log(`⚠️ No videos con fecha en título, intentando con publishedAt...`);
-    
-    videosWithDate = videos.filter(video => {
-      const publishedAt = video.snippet?.publishedAt || "";
-      return publishedAt.startsWith(targetDateStr);
-    });
-    
-    console.log(`FILTRO 2B: ${videosWithDate.length} videos publicados el ${targetDateStr}`);
-    
-    if (videosWithDate.length > 0) {
-      console.log(`Videos publicados ese día:`);
-      videosWithDate.forEach(v => {
-        console.log(`  - "${v.snippet?.title}"`);
-      });
-    }
-  }
-  
-  if (videosWithDate.length === 0) {
-    console.log("❌ No hay videos para esta fecha (ni en título ni por publishedAt)");
-    return null;
-  }
-  
-  // === FILTRO 3: El título contiene el nombre de la comisión (OBLIGATORIO) ===
-  const videosWithCommission = videosWithDate.filter(video => {
+  // Filter by commission name in title
+  const matchingVideos = videos.filter(video => {
     const title = normalize(video.snippet?.title || "");
     return title.includes(normalizedCommission);
   });
   
-  console.log(`FILTRO 3: ${videosWithCommission.length} videos con comisión "${commissionFullName}"`);
+  console.log(`\nMatching videos: ${matchingVideos.length}`);
   
-  if (videosWithCommission.length === 0) {
-    console.log(`❌ No hay videos de "${commissionFullName}" en fecha indicada`);
-    console.log(`Normalized commission: "${normalizedCommission}"`);
-    // Log what videos were found for this date (for debugging)
-    console.log(`Videos encontrados en esta fecha:`);
-    videosWithDate.forEach(v => {
-      const normalizedTitle = normalize(v.snippet?.title || "");
-      console.log(`  - Title: "${v.snippet?.title}"`);
-      console.log(`    Normalized: "${normalizedTitle}"`);
-    });
+  if (matchingVideos.length === 0) {
+    console.log(`❌ No videos de "${commissionFullName}" encontrados`);
     return null;
   }
   
-  // Éxito: retornar el primer match
-  const video = videosWithCommission[0];
-  const confidence = videosWithCommission.length === 1 ? 'HIGH' : 'MEDIUM';
+  const video = matchingVideos[0];
+  const confidence = matchingVideos.length === 1 ? 'HIGH' : 'MEDIUM';
   
-  console.log(`✅ Match encontrado: "${video.snippet?.title}" (confidence: ${confidence})`);
+  console.log(`✅ Match: "${video.snippet?.title}" (confidence: ${confidence})`);
   
   return { video, confidence };
 }
@@ -355,16 +326,16 @@ serve(async (req) => {
     const expectedTitle = buildExpectedTitle(commissionFullName, date);
     console.log(`Expected YouTube title: "${expectedTitle}"`);
 
-    // Fetch videos from channel
-    // Fetch more videos to find sessions from past dates (channel publishes many daily)
-    const { videos, keyUsed } = await fetchChannelVideosWithFallback(apiKeys, 200);
+    // Fetch videos from channel filtered by date (using Search API)
+    const { videos, keyUsed } = await fetchVideosWithFallback(apiKeys, date, 50);
     console.log(`Videos fetched using API key ${keyUsed}`);
 
     // Find match using strict 3-step filtering
-    const match = findVideoStrictMatch(videos, commissionFullName, date);
+    const match = findVideoByCommission(videos, commissionFullName);
 
     if (match) {
-      const videoId = match.video.snippet?.resourceId?.videoId || match.video.id?.videoId;
+      // Search API uses id.videoId, playlistItems uses snippet.resourceId.videoId
+      const videoId = match.video.id?.videoId || match.video.snippet?.resourceId?.videoId;
       const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
       const actualTitle = match.video.snippet?.title || "";
 
