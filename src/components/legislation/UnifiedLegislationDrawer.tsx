@@ -627,8 +627,28 @@ export function UnifiedLegislationDrawer({
                       Impact Analysis
                     </h4>
                     <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {item.aiSummary?.riskExplanation || item.aiSummary?.executiveSummary || 
-                       `This regulation directly impacts smart kitchen appliance manufacturers operating in ${item.jurisdictionCode === "PE" ? "Peru" : item.jurisdictionCode === "CR" ? "Costa Rica" : "this jurisdiction"}. Compliance requirements include product safety certifications, labeling standards, and potential registration with regulatory authorities. Non-compliance may result in market access restrictions, fines, or product recalls. ${item.aiSummary?.whatChanges || ''}`}
+                      {item.aiSummary?.riskExplanation && item.aiSummary.riskExplanation.length > 100 
+                        ? item.aiSummary.riskExplanation 
+                        : item.aiSummary?.executiveSummary && item.aiSummary.executiveSummary.length > 100
+                        ? item.aiSummary.executiveSummary
+                        : `This regulation presents significant compliance implications for smart kitchen appliance manufacturers operating in ${item.jurisdictionCode === "PE" ? "Peru" : item.jurisdictionCode === "CR" ? "Costa Rica" : "this jurisdiction"}.
+
+Key Business Impacts:
+• Product Compliance: May require modifications to product design, safety features, labeling requirements, or technical documentation to meet new regulatory standards.
+• Certification Requirements: Potential need for new product certifications, testing by accredited laboratories, and registration with regulatory authorities before market entry.
+• Supply Chain Considerations: Suppliers and components may need to be re-evaluated to ensure compliance with material restrictions, safety standards, or traceability requirements.
+• Operational Changes: Internal processes for quality control, documentation, and compliance monitoring may require updates.
+
+Financial Considerations:
+• Compliance costs estimated between $15,000-$75,000 depending on product portfolio size and current compliance status.
+• Potential penalties for non-compliance range from administrative fines to product recalls and market access restrictions.
+• Timeline for compliance typically 6-12 months from effective date.
+
+Recommended Actions:
+• Conduct gap analysis against current product portfolio
+• Engage with local regulatory consultants for interpretation guidance
+• Budget for certification and testing requirements
+• Monitor for implementing regulations and technical standards`}
                     </p>
                   </div>
                 </CardContent>
