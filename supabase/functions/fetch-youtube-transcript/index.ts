@@ -256,6 +256,22 @@ const PIPED_INSTANCES = [
   'https://pipedapi.darkness.services',
   'https://pipedapi.in.projectsegfau.lt',
   'https://pipedapi.leptons.xyz',
+  'https://pipedapi.moomoo.me',
+  'https://pipedapi.syncpundit.io',
+  'https://pipedapi.privacydev.net',
+  'https://pipedapi.smnz.de',
+];
+
+const INVIDIOUS_INSTANCES = [
+  'https://inv.nadeko.net',
+  'https://invidious.nerdvpn.de',
+  'https://invidious.protokolla.fi',
+  'https://inv.tux.pizza',
+  'https://invidious.privacyredirect.com',
+  'https://yewtu.be',
+  'https://vid.puffyan.us',
+  'https://invidious.lunar.icu',
+  'https://invidious.drgns.space',
 ];
 
 async function downloadAudioWithPiped(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
@@ -445,6 +461,73 @@ async function downloadAudioFromYouTubeDirect(videoId: string): Promise<{ audioB
   }
 }
 
+async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
+  console.log(`[Invidious] Attempting audio download for: ${videoId}`);
+  
+  for (const instance of INVIDIOUS_INSTANCES) {
+    try {
+      console.log(`[Invidious] Trying instance: ${instance}`);
+      
+      const infoResponse = await fetch(`${instance}/api/v1/videos/${videoId}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(15000)
+      });
+      
+      if (!infoResponse.ok) {
+        console.log(`[Invidious] ${instance} returned ${infoResponse.status}`);
+        continue;
+      }
+      
+      const data = await infoResponse.json();
+      const durationMinutes = (data.lengthSeconds || 0) / 60;
+      
+      const audioFormats = data.adaptiveFormats?.filter((f: any) => 
+        f.type?.startsWith('audio/') && f.url
+      ) || [];
+      
+      if (audioFormats.length === 0) {
+        console.log(`[Invidious] No audio formats from ${instance}`);
+        continue;
+      }
+      
+      audioFormats.sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0));
+      const audioFormat = audioFormats[0];
+      
+      console.log(`[Invidious] Trying format: ${audioFormat.type}, ${audioFormat.bitrate}bps`);
+      
+      const audioResponse = await fetch(audioFormat.url, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(180000)
+      });
+      
+      if (!audioResponse.ok) {
+        console.log(`[Invidious] Audio fetch failed: ${audioResponse.status}`);
+        continue;
+      }
+      
+      const audioBuffer = await audioResponse.arrayBuffer();
+      if (audioBuffer.byteLength < 10000) {
+        console.log(`[Invidious] Audio too small: ${audioBuffer.byteLength} bytes`);
+        continue;
+      }
+      
+      console.log(`[Invidious] Success from ${instance}: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+      return { audioBuffer, durationMinutes };
+      
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown';
+      console.log(`[Invidious] ${instance} failed: ${message}`);
+      continue;
+    }
+  }
+  
+  console.log('[Invidious] All instances failed');
+  return null;
+}
+
 async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
   console.log(`[Audio Download] Starting for video: ${videoId}`);
   
@@ -455,8 +538,16 @@ async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBuffer:
     return pipedResult;
   }
   
-  // Method 2: Direct YouTube extraction
-  console.log('[Audio Download] Piped failed, trying YouTube Direct...');
+  // Method 2: Invidious API
+  console.log('[Audio Download] Piped failed, trying Invidious...');
+  const invResult = await downloadAudioWithInvidious(videoId);
+  if (invResult) {
+    console.log('[Audio Download] Success with Invidious');
+    return invResult;
+  }
+  
+  // Method 3: Direct YouTube extraction (often rate-limited)
+  console.log('[Audio Download] Invidious failed, trying YouTube Direct...');
   const directResult = await downloadAudioFromYouTubeDirect(videoId);
   if (directResult) {
     console.log('[Audio Download] Success with YouTube Direct');
