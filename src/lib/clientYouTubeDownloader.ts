@@ -1,24 +1,16 @@
 /**
- * Client-side YouTube audio extraction
- * Uses Piped/Invidious APIs from browser (bypasses server IP blocks)
+ * Client-side YouTube audio extraction using Cobalt API
+ * Cobalt has proper CORS support for browser requests
  */
 
-// Piped instances - these work from browsers but get blocked from servers
-const PIPED_INSTANCES = [
-  'https://pipedapi.kavin.rocks',
-  'https://pipedapi.adminforge.de',
-  'https://api.piped.yt',
-  'https://pipedapi.r4fo.com',
-  'https://pipedapi.leptons.xyz',
-  'https://pipedapi.syncpundit.io',
-];
-
-// Invidious instances
-const INVIDIOUS_INSTANCES = [
-  'https://inv.nadeko.net',
-  'https://invidious.fdn.fr',
-  'https://invidious.nerdvpn.de',
-  'https://vid.puffyan.us',
+// Cobalt instances with CORS support
+const COBALT_INSTANCES = [
+  'https://api.cobalt.tools',
+  'https://co.wuk.sh',
+  'https://cobalt-api.hyper.lol',
+  'https://api-dl.cgm.rs',
+  'https://cobalt.synzr.space',
+  'https://capi.oak.li',
 ];
 
 export interface AudioExtractionResult {
@@ -28,52 +20,69 @@ export interface AudioExtractionResult {
 }
 
 /**
- * Try to get audio URL from Piped API (client-side request)
+ * Try to get audio URL from Cobalt API (supports CORS)
  */
-async function tryPipedClient(videoId: string): Promise<AudioExtractionResult | null> {
-  for (const instance of PIPED_INSTANCES) {
+async function tryCobaltClient(videoId: string): Promise<AudioExtractionResult | null> {
+  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  
+  for (const instance of COBALT_INSTANCES) {
     try {
-      console.log(`[Client Piped] Trying ${instance}...`);
+      console.log(`[Client Cobalt] Trying ${instance}...`);
       
-      const response = await fetch(`${instance}/streams/${videoId}`, {
-        signal: AbortSignal.timeout(15000),
+      // Cobalt API v10 format
+      const response = await fetch(instance, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: videoUrl,
+          downloadMode: 'audio',
+          audioFormat: 'mp3',
+        }),
+        signal: AbortSignal.timeout(30000),
       });
       
       if (!response.ok) {
-        console.log(`[Client Piped] ${instance} returned ${response.status}`);
+        const errorText = await response.text();
+        console.log(`[Client Cobalt] ${instance} returned ${response.status}: ${errorText.substring(0, 100)}`);
         continue;
       }
       
       const data = await response.json();
+      console.log(`[Client Cobalt] Response from ${instance}:`, data.status);
       
-      // Get audio streams
-      const audioStreams = data.audioStreams || [];
-      if (audioStreams.length === 0) {
-        console.log(`[Client Piped] No audio streams from ${instance}`);
+      // Handle different response types
+      let audioUrl: string | null = null;
+      
+      if (data.status === 'tunnel' || data.status === 'redirect') {
+        audioUrl = data.url;
+      } else if (data.status === 'stream') {
+        audioUrl = data.url;
+      } else if (data.status === 'picker' && data.picker?.length > 0) {
+        // Multiple options - pick first audio
+        const audioOption = data.picker.find((p: any) => p.type === 'audio') || data.picker[0];
+        audioUrl = audioOption?.url;
+      } else if (data.url) {
+        audioUrl = data.url;
+      }
+      
+      if (!audioUrl) {
+        console.log(`[Client Cobalt] No audio URL in response from ${instance}`);
         continue;
       }
       
-      // Sort by quality and prefer mp4/m4a
-      const sortedStreams = audioStreams
-        .filter((s: any) => s.url)
-        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
-      
-      const preferredStream = sortedStreams.find((s: any) => 
-        s.mimeType?.includes('mp4') || s.mimeType?.includes('m4a')
-      ) || sortedStreams[0];
-      
-      if (!preferredStream?.url) continue;
-      
-      console.log(`[Client Piped] Success from ${instance}: ${preferredStream.mimeType}, ${preferredStream.bitrate}bps`);
+      console.log(`[Client Cobalt] Success from ${instance}`);
       
       return {
-        audioUrl: preferredStream.url,
-        durationSeconds: data.duration || 0,
-        title: data.title || videoId,
+        audioUrl,
+        durationSeconds: 0, // Cobalt doesn't provide duration
+        title: videoId,
       };
       
     } catch (err) {
-      console.log(`[Client Piped] ${instance} failed:`, err instanceof Error ? err.message : 'Unknown');
+      console.log(`[Client Cobalt] ${instance} failed:`, err instanceof Error ? err.message : 'Unknown');
     }
   }
   
@@ -81,78 +90,89 @@ async function tryPipedClient(videoId: string): Promise<AudioExtractionResult | 
 }
 
 /**
- * Try to get audio URL from Invidious API (client-side request)
+ * Fetch list of online Cobalt instances dynamically
  */
-async function tryInvidiousClient(videoId: string): Promise<AudioExtractionResult | null> {
-  for (const instance of INVIDIOUS_INSTANCES) {
-    try {
-      console.log(`[Client Invidious] Trying ${instance}...`);
-      
-      const response = await fetch(`${instance}/api/v1/videos/${videoId}`, {
-        signal: AbortSignal.timeout(15000),
-      });
-      
-      if (!response.ok) {
-        console.log(`[Client Invidious] ${instance} returned ${response.status}`);
-        continue;
-      }
-      
-      const data = await response.json();
-      
-      // Get adaptive formats (audio only)
-      const audioFormats = (data.adaptiveFormats || [])
-        .filter((f: any) => f.type?.startsWith('audio/') && f.url);
-      
-      if (audioFormats.length === 0) {
-        console.log(`[Client Invidious] No audio formats from ${instance}`);
-        continue;
-      }
-      
-      // Sort by bitrate
-      const sortedFormats = audioFormats.sort((a: any, b: any) => 
-        (b.bitrate || 0) - (a.bitrate || 0)
-      );
-      
-      const preferredFormat = sortedFormats.find((f: any) => 
-        f.type?.includes('mp4') || f.type?.includes('m4a')
-      ) || sortedFormats[0];
-      
-      console.log(`[Client Invidious] Success from ${instance}: ${preferredFormat.type}`);
-      
-      return {
-        audioUrl: preferredFormat.url,
-        durationSeconds: data.lengthSeconds || 0,
-        title: data.title || videoId,
-      };
-      
-    } catch (err) {
-      console.log(`[Client Invidious] ${instance} failed:`, err instanceof Error ? err.message : 'Unknown');
-    }
+async function fetchCobaltInstances(): Promise<string[]> {
+  try {
+    console.log('[Client Cobalt] Fetching online instances...');
+    const response = await fetch('https://instances.cobalt.best/api/instances.json', {
+      signal: AbortSignal.timeout(10000),
+    });
+    
+    if (!response.ok) return COBALT_INSTANCES;
+    
+    const instances = await response.json();
+    
+    // Filter for online instances that support YouTube and don't have Turnstile
+    const validInstances = instances
+      .filter((inst: any) => 
+        inst.online === true && 
+        inst.turnstile === false &&
+        inst.services?.includes('youtube')
+      )
+      .map((inst: any) => inst.api_url || inst.url)
+      .filter((url: string) => url);
+    
+    console.log(`[Client Cobalt] Found ${validInstances.length} valid instances`);
+    return validInstances.length > 0 ? validInstances : COBALT_INSTANCES;
+    
+  } catch (err) {
+    console.log('[Client Cobalt] Could not fetch instances, using defaults');
+    return COBALT_INSTANCES;
   }
-  
-  return null;
 }
 
 /**
- * Extract audio URL from YouTube video (client-side)
- * Returns URL that can be used to download audio
+ * Extract audio URL from YouTube video (client-side with Cobalt)
  */
 export async function extractYouTubeAudioClientSide(videoId: string): Promise<AudioExtractionResult> {
   console.log(`[Client YouTube] Starting extraction for video: ${videoId}`);
   
-  // Try Piped first (better success rate from browsers)
-  const pipedResult = await tryPipedClient(videoId);
-  if (pipedResult) {
-    return pipedResult;
+  // Get dynamic instances first
+  const instances = await fetchCobaltInstances();
+  
+  // Try each instance
+  for (const instance of instances.slice(0, 8)) { // Try up to 8 instances
+    try {
+      console.log(`[Client Cobalt] Trying ${instance}...`);
+      
+      const response = await fetch(instance, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: `https://www.youtube.com/watch?v=${videoId}`,
+          downloadMode: 'audio',
+          audioFormat: 'mp3',
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+      
+      if (!response.ok) {
+        console.log(`[Client Cobalt] ${instance} returned ${response.status}`);
+        continue;
+      }
+      
+      const data = await response.json();
+      
+      let audioUrl = data.url;
+      if (data.status === 'picker' && data.picker?.length > 0) {
+        audioUrl = data.picker[0]?.url;
+      }
+      
+      if (audioUrl) {
+        console.log(`[Client Cobalt] Success from ${instance}`);
+        return { audioUrl, durationSeconds: 0, title: videoId };
+      }
+      
+    } catch (err) {
+      console.log(`[Client Cobalt] ${instance} failed:`, err instanceof Error ? err.message : 'Unknown');
+    }
   }
   
-  // Try Invidious
-  const invidiousResult = await tryInvidiousClient(videoId);
-  if (invidiousResult) {
-    return invidiousResult;
-  }
-  
-  throw new Error('No se pudo extraer audio. Todos los servicios fallaron.');
+  throw new Error('No se pudo extraer audio. Ningún servidor Cobalt disponible.');
 }
 
 /**
@@ -167,11 +187,10 @@ export async function downloadAudioAsBase64(audioUrl: string): Promise<{ base64:
   }
   
   const blob = await response.blob();
-  const mimeType = blob.type || 'audio/mp4';
+  const mimeType = blob.type || 'audio/mpeg';
   
   console.log(`[Client] Downloaded ${(blob.size / 1024 / 1024).toFixed(2)} MB, type: ${mimeType}`);
   
-  // Convert to base64
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
