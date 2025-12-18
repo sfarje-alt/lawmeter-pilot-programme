@@ -1,10 +1,12 @@
 // Hook for managing Peru Congress sessions
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PeruSession, WatchedCommission } from '@/types/peruSessions';
 import { PERU_MOCK_SESSIONS, PERU_MOCK_RECORDINGS, DEFAULT_WATCHED_COMMISSIONS } from '@/data/peruSessionsMockData';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { parsePeruSessionsPdf } from '@/lib/pdfTableParser';
+
 // Type for parsed sessions from PDF importer
 export interface ImportedSession {
   tipo_comision: string;
@@ -30,6 +32,8 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
   const [watchedCommissions, setWatchedCommissions] = useState<string[]>([]);
   const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   // Load initial data from Supabase
   useEffect(() => {
@@ -460,6 +464,105 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     });
   };
 
+  // Sync sessions directly from Congress website
+  const syncFromCongress = useCallback(async (): Promise<{ success: boolean; count?: number; error?: string }> => {
+    setIsSyncing(true);
+    setSyncError(null);
+    
+    try {
+      console.log('[Sync] Attempting client-side PDF fetch from Congress...');
+      
+      // Generate Congress PDF URL
+      const params = {
+        periodoParlamentario: 2021,
+        periodoLegislativo: "2025",
+        tipoComision: null,
+        comision: null,
+        fecha: null,
+        sesion: null,
+        descentralizada: null,
+        conjunta: null,
+        continuada: null
+      };
+      const base64Params = btoa(JSON.stringify(params));
+      const pdfUrl = `https://wb2server.congreso.gob.pe/service-portal-publico-ext/x-pdf/sesiones/archivo/pdf/${base64Params}/reporte-sesiones.pdf`;
+      
+      // Try to fetch from user's browser (not blocked like server IPs)
+      const response = await fetch(pdfUrl, {
+        method: 'GET',
+        mode: 'cors',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      console.log('[Sync] PDF downloaded successfully, parsing...');
+      const pdfBlob = await response.blob();
+      const pdfFile = new File([pdfBlob], 'sesiones-congreso.pdf', { type: 'application/pdf' });
+      
+      // Parse with existing client-side parser
+      const parsedSessions = await parsePeruSessionsPdf(pdfFile);
+      
+      if (parsedSessions.length === 0) {
+        throw new Error('No se encontraron sesiones en el PDF');
+      }
+      
+      console.log(`[Sync] Parsed ${parsedSessions.length} sessions, saving to database...`);
+      
+      // Convert parsed sessions to import format
+      const sessionsToImport: ImportedSession[] = parsedSessions.map(session => ({
+        tipo_comision: session.tipoSesion,
+        commission_name: session.commissionName,
+        session_title: session.sessionTitle,
+        caracteristicas: session.caracteristicas,
+        scheduled_date: session.scheduledDate,
+        scheduled_time: session.scheduledTime,
+        agenda_url: session.agendaUrl,
+        external_session_id: session.agendaUrl ? extractSessionIdFromUrl(session.agendaUrl) : null,
+      }));
+      
+      await importSessions(sessionsToImport);
+      
+      toast({
+        title: "Sincronización completada",
+        description: `Se sincronizaron ${parsedSessions.length} sesiones`,
+      });
+      
+      // Reload sessions from database
+      window.location.reload();
+      
+      return { success: true, count: parsedSessions.length };
+      
+    } catch (error) {
+      console.error('[Sync] Error:', error);
+      
+      let errorMessage: string;
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        errorMessage = 'El servidor del Congreso bloquea las solicitudes desde el navegador (CORS). Por favor, usa "Upload Manual" para subir el PDF.';
+      } else {
+        errorMessage = error instanceof Error ? error.message : 'Error inesperado';
+      }
+      
+      setSyncError(errorMessage);
+      toast({
+        title: "Error al sincronizar",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [importSessions, toast]);
+
+  // Helper to extract session ID from URL
+  const extractSessionIdFromUrl = (url: string): string | null => {
+    const match = url.match(/[\/=]([A-Z0-9]{20,})/i);
+    return match ? match[1] : null;
+  };
+
   // Stats
   const stats = useMemo(() => ({
     total: sessions.length,
@@ -476,6 +579,8 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     watchedCommissions,
     selectedSessionIds,
     isLoading,
+    isSyncing,
+    syncError,
     stats,
     toggleSessionSelection,
     addWatchedCommission,
@@ -484,5 +589,6 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     setManualVideoUrl,
     importSessions,
     clearAllSessions,
+    syncFromCongress,
   };
 }

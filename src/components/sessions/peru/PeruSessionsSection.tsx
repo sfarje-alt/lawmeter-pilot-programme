@@ -37,6 +37,7 @@ export function PeruSessionsSection() {
     sessions,
     watchedCommissions,
     isLoading,
+    isSyncing,
     stats,
     toggleSessionSelection,
     addWatchedCommission,
@@ -45,6 +46,7 @@ export function PeruSessionsSection() {
     setManualVideoUrl,
     importSessions,
     clearAllSessions,
+    syncFromCongress,
   } = usePeruSessions({
     commissionFilter: searchQuery,
     showOnlyRecommended,
@@ -55,6 +57,10 @@ export function PeruSessionsSection() {
     if (window.confirm('¿Estás seguro de que deseas eliminar todas las sesiones? Esta acción no se puede deshacer.')) {
       await clearAllSessions();
     }
+  };
+
+  const handleSync = async () => {
+    await syncFromCongress();
   };
 
   return (
@@ -138,12 +144,21 @@ export function PeruSessionsSection() {
 
           <div className="flex gap-2">
             <Button 
+              variant="default" 
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
+            </Button>
+            <Button 
               variant="outline" 
               onClick={() => setShowImporter(true)}
               className="gap-2"
             >
               <Upload className="h-4 w-4" />
-              Upload Sessions
+              Upload Manual
             </Button>
             {stats.total > 0 && (
               <Button 
@@ -249,16 +264,12 @@ export function PeruSessionsSection() {
         </TabsContent>
       </Tabs>
 
-      {/* Importer Dialog */}
+      {/* Importer Dialog - Manual upload only */}
       {showImporter && (
         <PeruSessionImporter
           open={showImporter}
           onClose={() => setShowImporter(false)}
           onImport={importSessions}
-          onSyncComplete={() => {
-            // Reload page to fetch fresh data from database
-            window.location.reload();
-          }}
         />
       )}
     </div>
