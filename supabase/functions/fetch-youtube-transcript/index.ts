@@ -1,18 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// YouTube API keys for fallback quota check
-const YOUTUBE_API_KEYS = [
-  'AIzaSyCDsT_d2qoAGah_eLgh0cW40CE0TRbGUJ0',
-  'AIzaSyBfYt-z-o-TpYBAX-WBO6TSH1-xzRmy6gk'
-];
-
-const GOOGLE_FREE_MINUTES_PER_MONTH = 60;
 
 interface CaptionTrack {
   baseUrl: string;
@@ -28,8 +19,7 @@ interface TranscriptResult {
   error?: string;
   errorCode?: string;
   availableLanguages?: string[];
-  tier?: 'youtube' | 'google_stt' | 'whisper';
-  costWarning?: string;
+  tier?: 'youtube' | 'assemblyai';
 }
 
 // ==================== TIER 1: YouTube Captions (Free) ====================
@@ -43,7 +33,7 @@ async function tryInnertubeExtraction(videoId: string): Promise<TranscriptResult
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Cookie': '', // Empty cookie to avoid bot detection
+        'Cookie': '',
       }
     });
 
@@ -52,8 +42,6 @@ async function tryInnertubeExtraction(videoId: string): Promise<TranscriptResult
     }
 
     const html = await response.text();
-    
-    // Try to find captions directly in the page
     const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/s);
     
     if (!playerResponseMatch) {
@@ -69,11 +57,9 @@ async function tryInnertubeExtraction(videoId: string): Promise<TranscriptResult
       return { transcription: null, error: 'No captions available for this video', errorCode: 'NO_CAPTIONS' };
     }
 
-    // Log available tracks for debugging
     const availableLanguages = captionTracks.map(t => t.languageCode);
     console.log(`[Tier 1] Found ${captionTracks.length} tracks:`, JSON.stringify(availableLanguages));
 
-    // Try to fetch captions using the full baseUrl with session tokens
     return await fetchCaptionsFromTracks(captionTracks);
   } catch (error) {
     console.error('[Tier 1] Error:', error);
@@ -116,10 +102,8 @@ async function fetchCaptionsFromTracks(captionTracks: CaptionTrack[]): Promise<T
     };
   }
 
-  // Decode the URL properly - YouTube uses unicode escapes
+  // Decode the URL properly
   let captionsUrl = captionTrack.baseUrl;
-  
-  // Handle all possible unicode escape formats
   const unicodeEscapes: Record<string, string> = {
     '\\u0026': '&', '\\u003d': '=', '\\u003c': '<', '\\u003e': '>',
     '\\u0027': "'", '\\u0022': '"', '\\u002f': '/'
@@ -129,11 +113,10 @@ async function fetchCaptionsFromTracks(captionTracks: CaptionTrack[]): Promise<T
     captionsUrl = captionsUrl.split(escape).join(char);
   }
   
-  // Also handle JSON-encoded unicode
   try {
     captionsUrl = JSON.parse(`"${captionsUrl.replace(/"/g, '\\"')}"`);
   } catch {
-    // URL wasn't JSON-encoded, that's fine
+    // URL wasn't JSON-encoded
   }
   
   console.log(`[Tier 1] Fetching: ${captionsUrl.substring(0, 150)}...`);
@@ -165,7 +148,7 @@ async function fetchCaptionsFromTracks(captionTracks: CaptionTrack[]): Promise<T
     // Try XML parsing first
     let transcription = parseXmlCaptions(captionsText);
     
-    // If XML parsing fails, try JSON format (srv3)
+    // If XML parsing fails, try JSON format
     if (!transcription || transcription.length < 20) {
       console.log('[Tier 1] XML parsing yielded no results, trying JSON...');
       try {
@@ -209,7 +192,6 @@ async function tryTimedtextApi(videoId: string): Promise<TranscriptResult> {
   
   for (const lang of languages) {
     try {
-      // Try both XML (fmt=srv1) and JSON (fmt=srv3) formats
       for (const fmt of ['srv1', 'srv3']) {
         const url = `https://www.youtube.com/api/timedtext?v=${videoId}&lang=${lang}&fmt=${fmt}`;
         const response = await fetch(url, {
@@ -226,7 +208,6 @@ async function tryTimedtextApi(videoId: string): Promise<TranscriptResult> {
             let transcription: string | null = null;
             
             if (fmt === 'srv3') {
-              // JSON format
               try {
                 const data = JSON.parse(text);
                 if (data.events) {
@@ -238,7 +219,6 @@ async function tryTimedtextApi(videoId: string): Promise<TranscriptResult> {
                     .trim();
                 }
               } catch {
-                // Try XML
                 transcription = parseXmlCaptions(text);
               }
             } else {
@@ -266,194 +246,7 @@ async function tryTimedtextApi(videoId: string): Promise<TranscriptResult> {
   return { transcription: null, error: 'Timedtext API returned no results', errorCode: 'TIMEDTEXT_FAILED' };
 }
 
-// ==================== TIER 2: Google Cloud STT (Free 60 min/month) ====================
-
-async function getGoogleQuotaRemaining(supabase: any): Promise<number> {
-  const currentMonth = new Date().toISOString().slice(0, 7); // '2025-01'
-  
-  const { data, error } = await supabase
-    .from('stt_usage')
-    .select('google_minutes_used')
-    .eq('month', currentMonth)
-    .maybeSingle();
-  
-  if (error) {
-    console.error('[Quota] Error fetching usage:', error);
-    return GOOGLE_FREE_MINUTES_PER_MONTH; // Assume full quota on error
-  }
-  
-  const used = data?.google_minutes_used || 0;
-  return Math.max(0, GOOGLE_FREE_MINUTES_PER_MONTH - used);
-}
-
-async function updateGoogleUsage(supabase: any, minutesUsed: number): Promise<void> {
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  
-  // Upsert: insert or update
-  const { data: existing } = await supabase
-    .from('stt_usage')
-    .select('id, google_minutes_used')
-    .eq('month', currentMonth)
-    .maybeSingle();
-  
-  if (existing) {
-    await supabase
-      .from('stt_usage')
-      .update({ 
-        google_minutes_used: (existing.google_minutes_used || 0) + minutesUsed,
-        last_updated: new Date().toISOString()
-      })
-      .eq('id', existing.id);
-  } else {
-    await supabase
-      .from('stt_usage')
-      .insert({ 
-        month: currentMonth, 
-        google_minutes_used: minutesUsed 
-      });
-  }
-  
-  console.log(`[Quota] Updated Google usage: +${minutesUsed} minutes for ${currentMonth}`);
-}
-
-// ==================== Audio Download: Direct YouTube + Invidious Fallback ====================
-
-interface AudioFormat {
-  url: string;
-  mimeType: string;
-  bitrate: number;
-  contentLength?: string;
-  approxDurationMs?: string;
-}
-
-async function downloadAudioFromYouTubeDirect(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
-  console.log(`[YouTube Direct] Attempting audio extraction for: ${videoId}`);
-  
-  try {
-    // Fetch the YouTube watch page
-    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const response = await fetch(watchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
-        'Cache-Control': 'no-cache',
-      }
-    });
-
-    if (!response.ok) {
-      console.log(`[YouTube Direct] Failed to fetch page: ${response.status}`);
-      return null;
-    }
-
-    const html = await response.text();
-    
-    // Extract ytInitialPlayerResponse
-    const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/s);
-    if (!playerResponseMatch) {
-      console.log('[YouTube Direct] No ytInitialPlayerResponse found');
-      return null;
-    }
-
-    const playerResponse = JSON.parse(playerResponseMatch[1]);
-    
-    // Check for playability
-    const playability = playerResponse?.playabilityStatus;
-    if (playability?.status !== 'OK') {
-      console.log(`[YouTube Direct] Video not playable: ${playability?.status} - ${playability?.reason}`);
-      return null;
-    }
-
-    // Get video duration
-    const durationSeconds = parseInt(playerResponse?.videoDetails?.lengthSeconds || '0');
-    const durationMinutes = durationSeconds / 60;
-    console.log(`[YouTube Direct] Video duration: ${durationMinutes.toFixed(1)} minutes`);
-
-    // Get streaming data
-    const streamingData = playerResponse?.streamingData;
-    if (!streamingData) {
-      console.log('[YouTube Direct] No streaming data found');
-      return null;
-    }
-
-    // Find audio formats from adaptiveFormats
-    const adaptiveFormats = streamingData.adaptiveFormats || [];
-    const audioFormats: AudioFormat[] = adaptiveFormats
-      .filter((f: any) => f.mimeType?.startsWith('audio/'))
-      .map((f: any) => ({
-        url: f.url,
-        mimeType: f.mimeType,
-        bitrate: f.bitrate || 0,
-        contentLength: f.contentLength,
-        approxDurationMs: f.approxDurationMs
-      }));
-
-    console.log(`[YouTube Direct] Found ${audioFormats.length} audio formats`);
-
-    if (audioFormats.length === 0) {
-      console.log('[YouTube Direct] No audio formats available');
-      return null;
-    }
-
-    // Sort by bitrate and prefer lower quality for faster download (still good for STT)
-    audioFormats.sort((a, b) => a.bitrate - b.bitrate);
-    
-    // Try each format until one works
-    for (const format of audioFormats) {
-      if (!format.url) {
-        console.log(`[YouTube Direct] Format ${format.mimeType} has no URL (may need signature decoding)`);
-        continue;
-      }
-
-      console.log(`[YouTube Direct] Trying format: ${format.mimeType}, ${format.bitrate}bps`);
-
-      try {
-        const audioResponse = await fetch(format.url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-            'Accept-Encoding': 'identity',
-            'Range': 'bytes=0-', // Request full file
-            'Referer': 'https://www.youtube.com/',
-            'Origin': 'https://www.youtube.com',
-          },
-          signal: AbortSignal.timeout(180000) // 3 minute timeout
-        });
-
-        if (!audioResponse.ok) {
-          console.log(`[YouTube Direct] Audio fetch failed: ${audioResponse.status}`);
-          continue;
-        }
-
-        const audioBuffer = await audioResponse.arrayBuffer();
-        
-        if (audioBuffer.byteLength < 10000) {
-          console.log(`[YouTube Direct] Audio too small (${audioBuffer.byteLength} bytes)`);
-          continue;
-        }
-
-        const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
-        
-        console.log(`[YouTube Direct] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
-        return { audioBase64, durationMinutes };
-
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : 'Unknown';
-        console.log(`[YouTube Direct] Format download failed: ${msg}`);
-        continue;
-      }
-    }
-
-    console.log('[YouTube Direct] All formats failed');
-    return null;
-
-  } catch (error) {
-    console.error('[YouTube Direct] Error:', error instanceof Error ? error.message : error);
-    return null;
-  }
-}
-
-// ==================== Piped API for Audio Download ====================
+// ==================== Audio Download ====================
 
 const PIPED_INSTANCES = [
   'https://pipedapi.kavin.rocks',
@@ -465,7 +258,7 @@ const PIPED_INSTANCES = [
   'https://pipedapi.leptons.xyz',
 ];
 
-async function downloadAudioWithPiped(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
+async function downloadAudioWithPiped(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
   console.log(`[Piped] Attempting audio download for: ${videoId}`);
   
   for (const instance of PIPED_INSTANCES) {
@@ -498,7 +291,7 @@ async function downloadAudioWithPiped(videoId: string): Promise<{ audioBase64: s
       // Find audio streams
       const audioStreams = (data.audioStreams || [])
         .filter((s: any) => s.url && s.mimeType?.includes('audio'))
-        .sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0)); // Lowest bitrate first
+        .sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0));
       
       if (audioStreams.length === 0) {
         console.log(`[Piped] No audio streams from ${instance}`);
@@ -507,7 +300,6 @@ async function downloadAudioWithPiped(videoId: string): Promise<{ audioBase64: s
       
       console.log(`[Piped] Found ${audioStreams.length} audio streams`);
       
-      // Try downloading audio streams
       for (const stream of audioStreams) {
         console.log(`[Piped] Trying stream: ${stream.mimeType}, ${stream.bitrate}bps`);
         
@@ -517,7 +309,7 @@ async function downloadAudioWithPiped(videoId: string): Promise<{ audioBase64: s
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
               'Accept': '*/*',
             },
-            signal: AbortSignal.timeout(180000) // 3 minute timeout for large files
+            signal: AbortSignal.timeout(180000)
           });
           
           if (!audioResponse.ok) {
@@ -532,10 +324,8 @@ async function downloadAudioWithPiped(videoId: string): Promise<{ audioBase64: s
             continue;
           }
           
-          const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
           console.log(`[Piped] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
-          
-          return { audioBase64, durationMinutes };
+          return { audioBuffer, durationMinutes };
           
         } catch (streamError) {
           const msg = streamError instanceof Error ? streamError.message : 'Unknown';
@@ -555,80 +345,110 @@ async function downloadAudioWithPiped(videoId: string): Promise<{ audioBase64: s
   return null;
 }
 
-// Invidious instances for fallback audio download
-const INVIDIOUS_INSTANCES = [
-  'https://inv.nadeko.net',
-  'https://invidious.nerdvpn.de',
-  'https://invidious.protokolla.fi',
-  'https://inv.tux.pizza',
-  'https://invidious.privacyredirect.com',
-  'https://yewtu.be',
-  'https://vid.puffyan.us',
-  'https://invidious.kavin.rocks',
-];
-
-async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
-  console.log(`[Invidious] Attempting audio download for: ${videoId}`);
+async function downloadAudioFromYouTubeDirect(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
+  console.log(`[YouTube Direct] Attempting audio extraction for: ${videoId}`);
   
-  for (const instance of INVIDIOUS_INSTANCES) {
-    try {
-      console.log(`[Invidious] Trying instance: ${instance}`);
-      
-      const infoResponse = await fetch(`${instance}/api/v1/videos/${videoId}`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json'
-        },
-        signal: AbortSignal.timeout(10000)
-      });
-      
-      if (!infoResponse.ok) {
-        console.log(`[Invidious] ${instance} returned ${infoResponse.status}`);
+  try {
+    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const response = await fetch(watchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+        'Cache-Control': 'no-cache',
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`[YouTube Direct] Failed to fetch page: ${response.status}`);
+      return null;
+    }
+
+    const html = await response.text();
+    const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/s);
+    if (!playerResponseMatch) {
+      console.log('[YouTube Direct] No ytInitialPlayerResponse found');
+      return null;
+    }
+
+    const playerResponse = JSON.parse(playerResponseMatch[1]);
+    const playability = playerResponse?.playabilityStatus;
+    if (playability?.status !== 'OK') {
+      console.log(`[YouTube Direct] Video not playable: ${playability?.status}`);
+      return null;
+    }
+
+    const durationSeconds = parseInt(playerResponse?.videoDetails?.lengthSeconds || '0');
+    const durationMinutes = durationSeconds / 60;
+    console.log(`[YouTube Direct] Video duration: ${durationMinutes.toFixed(1)} minutes`);
+
+    const streamingData = playerResponse?.streamingData;
+    if (!streamingData) {
+      console.log('[YouTube Direct] No streaming data found');
+      return null;
+    }
+
+    const adaptiveFormats = streamingData.adaptiveFormats || [];
+    const audioFormats = adaptiveFormats
+      .filter((f: any) => f.mimeType?.startsWith('audio/') && f.url)
+      .sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0));
+
+    if (audioFormats.length === 0) {
+      console.log('[YouTube Direct] No audio formats available');
+      return null;
+    }
+
+    for (const format of audioFormats) {
+      console.log(`[YouTube Direct] Trying format: ${format.mimeType}, ${format.bitrate}bps`);
+
+      try {
+        const audioResponse = await fetch(format.url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': '*/*',
+            'Accept-Encoding': 'identity',
+            'Range': 'bytes=0-',
+            'Referer': 'https://www.youtube.com/',
+            'Origin': 'https://www.youtube.com',
+          },
+          signal: AbortSignal.timeout(180000)
+        });
+
+        if (!audioResponse.ok) {
+          console.log(`[YouTube Direct] Audio fetch failed: ${audioResponse.status}`);
+          continue;
+        }
+
+        const audioBuffer = await audioResponse.arrayBuffer();
+        
+        if (audioBuffer.byteLength < 10000) {
+          console.log(`[YouTube Direct] Audio too small (${audioBuffer.byteLength} bytes)`);
+          continue;
+        }
+
+        console.log(`[YouTube Direct] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+        return { audioBuffer, durationMinutes };
+
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'Unknown';
+        console.log(`[YouTube Direct] Format download failed: ${msg}`);
         continue;
       }
-      
-      const data = await infoResponse.json();
-      const durationMinutes = (data.lengthSeconds || 0) / 60;
-      
-      const audioFormats = data.adaptiveFormats?.filter((f: any) => 
-        f.type?.startsWith('audio/') && f.url
-      ) || [];
-      
-      if (audioFormats.length === 0) continue;
-      
-      audioFormats.sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0));
-      const audioFormat = audioFormats[0];
-      
-      const audioResponse = await fetch(audioFormat.url, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(120000)
-      });
-      
-      if (!audioResponse.ok) continue;
-      
-      const audioBuffer = await audioResponse.arrayBuffer();
-      if (audioBuffer.byteLength < 10000) continue;
-      
-      const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
-      console.log(`[Invidious] Success from ${instance}: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
-      
-      return { audioBase64, durationMinutes };
-      
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown';
-      console.log(`[Invidious] ${instance} failed: ${message}`);
-      continue;
     }
+
+    console.log('[YouTube Direct] All formats failed');
+    return null;
+
+  } catch (error) {
+    console.error('[YouTube Direct] Error:', error instanceof Error ? error.message : error);
+    return null;
   }
-  
-  console.log('[Invidious] All instances failed');
-  return null;
 }
 
-async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
+async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBuffer: ArrayBuffer; durationMinutes: number } | null> {
   console.log(`[Audio Download] Starting for video: ${videoId}`);
   
-  // Method 1: Piped API (most reliable, designed for this purpose)
+  // Method 1: Piped API
   const pipedResult = await downloadAudioWithPiped(videoId);
   if (pipedResult) {
     console.log('[Audio Download] Success with Piped');
@@ -643,237 +463,130 @@ async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64:
     return directResult;
   }
   
-  // Method 3: Invidious fallback
-  console.log('[Audio Download] YouTube Direct failed, trying Invidious...');
-  const invResult = await downloadAudioWithInvidious(videoId);
-  if (invResult) {
-    console.log('[Audio Download] Success with Invidious');
-    return invResult;
-  }
-  
   console.log('[Audio Download] All download methods failed');
   return null;
 }
 
-async function tryGoogleCloudSTT(videoId: string, supabase: any): Promise<TranscriptResult> {
-  const googleApiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
+// ==================== TIER 2: AssemblyAI ====================
+
+async function tryAssemblyAI(videoId: string): Promise<TranscriptResult> {
+  const assemblyApiKey = Deno.env.get('ASSEMBLYAI_API_KEY');
   
-  if (!googleApiKey) {
-    console.log('[Tier 2] Google Cloud API key not configured');
-    return { transcription: null, error: 'Google Cloud STT not configured', errorCode: 'GOOGLE_NOT_CONFIGURED' };
+  if (!assemblyApiKey) {
+    console.log('[Tier 2] AssemblyAI API key not configured');
+    return { transcription: null, error: 'AssemblyAI not configured', errorCode: 'ASSEMBLYAI_NOT_CONFIGURED' };
   }
-  
-  // Check quota
-  const remainingMinutes = await getGoogleQuotaRemaining(supabase);
-  console.log(`[Tier 2] Google Cloud STT - Remaining quota: ${remainingMinutes.toFixed(1)} minutes`);
-  
-  if (remainingMinutes <= 0) {
-    console.log('[Tier 2] Google free quota exhausted for this month');
-    return { transcription: null, error: 'Google Cloud free quota exhausted', errorCode: 'GOOGLE_QUOTA_EXHAUSTED' };
-  }
-  
-  // Download audio
+
+  console.log('[Tier 2] AssemblyAI - Starting transcription process...');
+
+  // Step 1: Download audio
   const audioData = await downloadAudioFromYouTube(videoId);
   if (!audioData) {
-    return { transcription: null, error: 'Failed to download audio for STT', errorCode: 'AUDIO_DOWNLOAD_FAILED' };
+    return { transcription: null, error: 'Failed to download audio', errorCode: 'AUDIO_DOWNLOAD_FAILED' };
   }
-  
-  // Check if audio fits in remaining quota
-  if (audioData.durationMinutes > remainingMinutes) {
-    console.log(`[Tier 2] Audio too long (${audioData.durationMinutes.toFixed(1)} min) for remaining quota (${remainingMinutes.toFixed(1)} min)`);
-    return { 
-      transcription: null, 
-      error: `Audio duration (${audioData.durationMinutes.toFixed(0)} min) exceeds remaining quota (${remainingMinutes.toFixed(0)} min)`, 
-      errorCode: 'GOOGLE_QUOTA_INSUFFICIENT' 
-    };
-  }
-  
-  console.log(`[Tier 2] Sending audio to Google Cloud STT...`);
+
+  console.log(`[Tier 2] Audio downloaded: ${(audioData.audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB, ${audioData.durationMinutes.toFixed(1)} min`);
+
+  // Step 2: Upload audio to AssemblyAI
+  console.log('[Tier 2] Uploading audio to AssemblyAI...');
   
   try {
-    const response = await fetch(`https://speech.googleapis.com/v1/speech:recognize?key=${googleApiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        config: {
-          encoding: 'MP3',
-          sampleRateHertz: 16000,
-          languageCode: 'es-PE', // Peru Spanish
-          alternativeLanguageCodes: ['es-ES', 'es-419'],
-          enableAutomaticPunctuation: true,
-          model: 'latest_long'
-        },
-        audio: {
-          content: audioData.audioBase64
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('[Tier 2] Google STT error:', errorData);
-      return { transcription: null, error: `Google STT error: ${errorData.error?.message || 'Unknown'}`, errorCode: 'GOOGLE_STT_ERROR' };
-    }
-    
-    const result = await response.json();
-    
-    // Update usage
-    await updateGoogleUsage(supabase, audioData.durationMinutes);
-    
-    // Extract transcription
-    const transcription = result.results
-      ?.map((r: any) => r.alternatives?.[0]?.transcript || '')
-      .join(' ')
-      .trim();
-    
-    if (!transcription) {
-      return { transcription: null, error: 'Google STT returned empty result', errorCode: 'GOOGLE_EMPTY_RESULT' };
-    }
-    
-    console.log(`[Tier 2] Success: ${transcription.length} characters`);
-    return { 
-      transcription, 
-      language: 'es',
-      isAutoGenerated: false,
-      tier: 'google_stt'
-    };
-  } catch (error) {
-    console.error('[Tier 2] Google STT error:', error);
-    return { transcription: null, error: `Google STT failed: ${error instanceof Error ? error.message : 'Unknown'}`, errorCode: 'GOOGLE_STT_ERROR' };
-  }
-}
-
-// ==================== TIER 3: OpenAI Whisper (Paid) ====================
-
-async function tryOpenAIWhisper(videoId: string, supabase: any, skipCostWarning: boolean): Promise<TranscriptResult> {
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-  
-  if (!openaiApiKey) {
-    console.log('[Tier 3] OpenAI API key not configured');
-    return { transcription: null, error: 'OpenAI Whisper not configured', errorCode: 'WHISPER_NOT_CONFIGURED' };
-  }
-  
-  // Download audio
-  const audioData = await downloadAudioFromYouTube(videoId);
-  if (!audioData) {
-    return { transcription: null, error: 'Failed to download audio for Whisper', errorCode: 'AUDIO_DOWNLOAD_FAILED' };
-  }
-  
-  // Calculate estimated cost (~$0.006/minute)
-  const estimatedCost = audioData.durationMinutes * 0.006;
-  
-  // If cost warning not acknowledged, return with warning
-  if (!skipCostWarning && audioData.durationMinutes > 5) {
-    console.log(`[Tier 3] Whisper cost warning: ~$${estimatedCost.toFixed(3)} for ${audioData.durationMinutes.toFixed(1)} minutes`);
-    return { 
-      transcription: null, 
-      error: `Whisper transcription will cost approximately $${estimatedCost.toFixed(3)}`,
-      errorCode: 'WHISPER_COST_WARNING',
-      costWarning: `This video is approximately ${audioData.durationMinutes.toFixed(0)} minutes. Whisper transcription costs ~$0.006/minute. Estimated cost: $${estimatedCost.toFixed(3)}. Set skipCostWarning=true to proceed.`
-    };
-  }
-  
-  console.log(`[Tier 3] Sending audio to OpenAI Whisper (estimated cost: $${estimatedCost.toFixed(3)})...`);
-  
-  try {
-    // Convert base64 to blob for form data
-    const audioBytes = Uint8Array.from(atob(audioData.audioBase64), c => c.charCodeAt(0));
-    const blob = new Blob([audioBytes], { type: 'audio/mp3' });
-    
-    const formData = new FormData();
-    formData.append('file', blob, 'audio.mp3');
-    formData.append('model', 'whisper-1');
-    formData.append('language', 'es');
-    formData.append('response_format', 'text');
-    
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`
+        'Authorization': assemblyApiKey,
+        'Content-Type': 'application/octet-stream'
       },
-      body: formData
+      body: audioData.audioBuffer
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('[Tier 3] Whisper error:', errorData);
-      return { transcription: null, error: `Whisper error: ${errorData.error?.message || 'Unknown'}`, errorCode: 'WHISPER_ERROR' };
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error('[Tier 2] AssemblyAI upload failed:', uploadResponse.status, errorText);
+      return { transcription: null, error: `AssemblyAI upload failed: ${uploadResponse.status}`, errorCode: 'ASSEMBLYAI_UPLOAD_FAILED' };
     }
+
+    const uploadResult = await uploadResponse.json();
+    const uploadUrl = uploadResult.upload_url;
+    console.log('[Tier 2] Audio uploaded successfully');
+
+    // Step 3: Create transcription job
+    console.log('[Tier 2] Creating transcription job...');
     
-    const transcription = await response.text();
-    
-    // Track usage
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const { data: existing } = await supabase
-      .from('stt_usage')
-      .select('id, whisper_minutes_used')
-      .eq('month', currentMonth)
-      .maybeSingle();
-    
-    if (existing) {
-      await supabase
-        .from('stt_usage')
-        .update({ 
-          whisper_minutes_used: (existing.whisper_minutes_used || 0) + audioData.durationMinutes,
-          last_updated: new Date().toISOString()
-        })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('stt_usage')
-        .insert({ 
-          month: currentMonth, 
-          whisper_minutes_used: audioData.durationMinutes 
-        });
+    const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+      method: 'POST',
+      headers: {
+        'Authorization': assemblyApiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        audio_url: uploadUrl,
+        language_code: 'es' // Spanish
+      })
+    });
+
+    if (!transcriptResponse.ok) {
+      const errorText = await transcriptResponse.text();
+      console.error('[Tier 2] AssemblyAI transcript creation failed:', errorText);
+      return { transcription: null, error: `AssemblyAI transcript creation failed`, errorCode: 'ASSEMBLYAI_CREATE_FAILED' };
     }
+
+    const transcriptJob = await transcriptResponse.json();
+    const transcriptId = transcriptJob.id;
+    console.log(`[Tier 2] Transcription job created: ${transcriptId}`);
+
+    // Step 4: Poll for completion
+    console.log('[Tier 2] Polling for completion...');
     
-    console.log(`[Tier 3] Success: ${transcription.length} characters`);
-    return { 
-      transcription, 
-      language: 'es',
-      isAutoGenerated: false,
-      tier: 'whisper'
-    };
+    const maxAttempts = 120; // 10 minutes max (5s intervals)
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      
+      const statusResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
+        headers: {
+          'Authorization': assemblyApiKey
+        }
+      });
+
+      if (!statusResponse.ok) {
+        console.log(`[Tier 2] Status check failed: ${statusResponse.status}`);
+        continue;
+      }
+
+      const statusResult = await statusResponse.json();
+      console.log(`[Tier 2] Status: ${statusResult.status} (attempt ${attempt + 1})`);
+
+      if (statusResult.status === 'completed') {
+        const transcription = statusResult.text;
+        
+        if (!transcription || transcription.length < 20) {
+          return { transcription: null, error: 'AssemblyAI returned empty result', errorCode: 'ASSEMBLYAI_EMPTY_RESULT' };
+        }
+
+        console.log(`[Tier 2] Success: ${transcription.length} characters`);
+        return { 
+          transcription,
+          language: 'es',
+          isAutoGenerated: false,
+          tier: 'assemblyai'
+        };
+      }
+
+      if (statusResult.status === 'error') {
+        console.error('[Tier 2] AssemblyAI transcription error:', statusResult.error);
+        return { transcription: null, error: `AssemblyAI error: ${statusResult.error}`, errorCode: 'ASSEMBLYAI_ERROR' };
+      }
+    }
+
+    return { transcription: null, error: 'AssemblyAI transcription timed out', errorCode: 'ASSEMBLYAI_TIMEOUT' };
+
   } catch (error) {
-    console.error('[Tier 3] Whisper error:', error);
-    return { transcription: null, error: `Whisper failed: ${error instanceof Error ? error.message : 'Unknown'}`, errorCode: 'WHISPER_ERROR' };
+    console.error('[Tier 2] AssemblyAI error:', error);
+    return { transcription: null, error: `AssemblyAI failed: ${error instanceof Error ? error.message : 'Unknown'}`, errorCode: 'ASSEMBLYAI_ERROR' };
   }
 }
 
 // ==================== Utilities ====================
-
-async function checkCaptionsWithYouTubeApi(videoId: string): Promise<{ hasCaptions: boolean; languages: string[]; error?: string }> {
-  console.log(`[Check] Checking captions via YouTube Data API for video: ${videoId}`);
-  
-  for (const apiKey of YOUTUBE_API_KEYS) {
-    try {
-      const url = `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${apiKey}`;
-      const response = await fetch(url);
-      
-      if (response.status === 403) {
-        console.log('[Check] API quota exceeded, trying next key');
-        continue;
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.log('[Check] API error:', errorData);
-        continue;
-      }
-      
-      const data = await response.json();
-      const items = data.items || [];
-      const languages = items.map((item: any) => item.snippet?.language).filter(Boolean);
-      
-      return { hasCaptions: items.length > 0, languages };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.log('[Check] Error with API key:', message);
-    }
-  }
-  
-  return { hasCaptions: false, languages: [], error: 'Could not verify caption availability' };
-}
 
 function parseXmlCaptions(xml: string): string {
   const textMatches = xml.matchAll(/<text[^>]*>(.*?)<\/text>/gs);
@@ -905,7 +618,7 @@ serve(async (req) => {
   }
 
   try {
-    const { videoId, skipCostWarning = false, forceTier } = await req.json();
+    const { videoId } = await req.json();
 
     if (!videoId) {
       return new Response(JSON.stringify({ 
@@ -917,25 +630,9 @@ serve(async (req) => {
       });
     }
 
-    console.log(`\n========== Fetching transcript for video: ${videoId} ==========`);
-    console.log(`Options: skipCostWarning=${skipCostWarning}, forceTier=${forceTier || 'auto'}\n`);
-
-    // Initialize Supabase client for quota tracking
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log(`\n========== Fetching transcript for video: ${videoId} ==========\n`);
 
     let result: TranscriptResult;
-
-    // Force specific tier if requested
-    if (forceTier === 'whisper') {
-      result = await tryOpenAIWhisper(videoId, supabase, skipCostWarning);
-      if (result.transcription) {
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
 
     // TIER 1: YouTube Captions (Free, unlimited)
     result = await tryInnertubeExtraction(videoId);
@@ -957,69 +654,31 @@ serve(async (req) => {
     }
     console.log(`[Tier 1b failed] ${result.error}`);
 
-    // TIER 2: Google Cloud STT (Free 60 min/month)
-    result = await tryGoogleCloudSTT(videoId, supabase);
+    // TIER 2: AssemblyAI (Paid, reliable)
+    result = await tryAssemblyAI(videoId);
     if (result.transcription) {
-      console.log(`[Success] Tier 2 - Google Cloud STT: ${result.transcription.length} characters`);
+      console.log(`[Success] Tier 2 - AssemblyAI: ${result.transcription.length} characters`);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     console.log(`[Tier 2 failed] ${result.error}`);
-    
-    // Check if Google quota exhausted (will fall through to Whisper)
-    const googleQuotaExhausted = result.errorCode === 'GOOGLE_QUOTA_EXHAUSTED' || result.errorCode === 'GOOGLE_QUOTA_INSUFFICIENT';
 
-    // TIER 3: OpenAI Whisper (Paid, ~$0.006/min)
-    result = await tryOpenAIWhisper(videoId, supabase, skipCostWarning);
-    if (result.transcription) {
-      console.log(`[Success] Tier 3 - Whisper: ${result.transcription.length} characters`);
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    // If Whisper returned a cost warning, return that
-    if (result.errorCode === 'WHISPER_COST_WARNING') {
-      console.log(`[Tier 3] Cost warning returned`);
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    console.log(`[Tier 3 failed] ${result.error}`);
-
-    // All tiers failed - check YouTube API for better error message
-    const apiCheck = await checkCaptionsWithYouTubeApi(videoId);
-    
-    let errorMessage: string;
-    let errorCode: string;
-    
-    if (apiCheck.hasCaptions && apiCheck.languages.length > 0) {
-      errorMessage = `This video has captions in ${apiCheck.languages.join(', ')} but they couldn't be fetched. All transcription methods failed.`;
-      errorCode = 'ALL_METHODS_FAILED';
-    } else {
-      errorMessage = 'This video does not have captions and audio transcription failed. The video may be restricted.';
-      errorCode = 'TRANSCRIPTION_UNAVAILABLE';
-    }
-
-    console.log(`[Final result] No transcription available: ${errorCode}`);
-    
-    return new Response(JSON.stringify({ 
+    // All methods failed
+    console.log(`[All methods failed]`);
+    return new Response(JSON.stringify({
       transcription: null,
-      error: errorMessage,
-      errorCode,
-      availableLanguages: apiCheck.languages
+      error: 'All transcription methods failed. The video may not have captions and audio download was unsuccessful.',
+      errorCode: 'ALL_METHODS_FAILED'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error fetching transcript:', error);
+    console.error('Handler error:', error);
     return new Response(JSON.stringify({ 
-      transcription: null,
       error: error instanceof Error ? error.message : 'Unknown error',
-      errorCode: 'UNKNOWN_ERROR'
+      errorCode: 'HANDLER_ERROR'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
