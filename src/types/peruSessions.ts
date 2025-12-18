@@ -106,8 +106,31 @@ export type PeruCommission = typeof PERU_COMMISSIONS[number];
 // YouTube channel info for Peru Congress
 export const PERU_CONGRESS_YOUTUBE = {
   channelName: "Congreso de la República del Perú",
-  channelId: "UCqGWuVvk-3XhRJi7VgeVVKg", // Official channel ID
+  channelId: "UC9HLcODpEZuBRLSKXZx5igw", // Correct official channel ID
+  uploadsPlaylistId: "UU9HLcODpEZuBRLSKXZx5igw", // UC→UU for uploads playlist
   titleTemplate: "🔴 EN VIVO: Comisión de {commission} | {day} DE {month} DEL {year}",
+};
+
+// Commissions that don't use "de" prefix in YouTube titles
+export const COMISIONES_SIN_DE = ["Agraria", "Inteligencia"];
+
+// Commission name mappings (truncated → full name)
+export const COMISIONES_COMPLETAS: Record<string, string> = {
+  "Agraria": "Agraria",
+  "Defensa del Consumidor": "Defensa del Consumidor y Organismos Reguladores de los Servicios Públicos",
+  "Defensa Nacional": "Defensa Nacional, Orden Interno, Desarrollo Alternativo y Lucha contra las Drogas",
+  "Descentralización": "Descentralización, Regionalización, Gobiernos Locales y Modernización de la Gestión del Estado",
+  "Economía": "Economía, Banca, Finanzas e Inteligencia Financiera",
+  "Educación": "Educación, Juventud y Deporte",
+  "Inclusión Social": "Inclusión Social y Personas con Discapacidad",
+  "Justicia": "Justicia y Derechos Humanos",
+  "Presupuesto": "Presupuesto y Cuenta General de la República",
+  "Producción": "Producción, Micro y Pequeña Empresa y Cooperativas",
+  "Pueblos Andinos": "Pueblos Andinos, Amazónicos y Afroperuanos, Ambiente y Ecología",
+  "Salud": "Salud y Población",
+  "Trabajo": "Trabajo y Seguridad Social",
+  "Transportes": "Transportes y Comunicaciones",
+  "Vivienda": "Vivienda y Construcción",
 };
 
 // Month names in Spanish for title matching

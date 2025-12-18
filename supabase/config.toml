@@ -2,3 +2,6 @@ project_id = "znufqelcglmvkggypybw"
 
 [functions.parse-peru-sessions-pdf]
 verify_jwt = false
+
+[functions.resolve-peru-session-video]
+verify_jwt = false
