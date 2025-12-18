@@ -2,28 +2,12 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SessionAnalysis } from '@/types/peruSessions';
+import { extractYouTubeAudioClientSide, downloadAudioAsBase64 } from '@/lib/clientYouTubeDownloader';
 
 interface UseSessionAnalysisResult {
   isAnalyzing: boolean;
   analyzeSession: (sessionId: string, videoId: string, commissionName: string, sessionTitle?: string, sessionDate?: string) => Promise<SessionAnalysis | null>;
 }
-
-// Error messages based on error codes
-const ERROR_MESSAGES: Record<string, string> = {
-  NO_CAPTIONS: 'This video doesn\'t have captions available yet. Trying AssemblyAI transcription...',
-  AUDIO_DOWNLOAD_FAILED: 'Could not download audio from video.',
-  ASSEMBLYAI_NOT_CONFIGURED: 'AssemblyAI not configured.',
-  ASSEMBLYAI_UPLOAD_FAILED: 'Failed to upload audio to AssemblyAI.',
-  ASSEMBLYAI_ERROR: 'AssemblyAI transcription failed.',
-  ASSEMBLYAI_TIMEOUT: 'Transcription timed out.',
-  ALL_METHODS_FAILED: 'All transcription methods failed.',
-  UNKNOWN_ERROR: 'An unexpected error occurred.',
-};
-
-const TIER_MESSAGES: Record<string, string> = {
-  youtube: 'YouTube captions (free)',
-  assemblyai: 'AssemblyAI transcription'
-};
 
 export function useSessionAnalysis(): UseSessionAnalysisResult {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -55,7 +39,7 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
       console.log(`Starting analysis for session ${sessionId}, video ${videoId}`);
 
       // Step 1: Update status to processing
-      const { error: updateError1 } = await supabase
+      await supabase
         .from('session_recordings')
         .update({ 
           transcription_status: 'PROCESSING',
@@ -64,68 +48,121 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
         })
         .eq('session_id', sessionId);
 
-      if (updateError1) {
-        console.error('Error updating transcription status:', updateError1);
-      }
-
-      toast.info('Fetching video transcription...', { 
-        description: 'Trying YouTube captions first, then AssemblyAI if needed.',
-        duration: 5000 
-      });
-
-      // Fetch transcription from edge function
-      const { data: transcriptData, error: serverError } = await supabase.functions.invoke(
+      // Step 2: Try YouTube captions first (free)
+      toast.info('Buscando subtítulos de YouTube...', { duration: 3000 });
+      
+      const { data: captionsData } = await supabase.functions.invoke(
         'fetch-youtube-transcript',
         { body: { videoId } }
       );
 
-      // If no transcription from any method
-      if (!transcriptData?.transcription) {
-        const errorCode = transcriptData?.errorCode || 'ALL_METHODS_FAILED';
-        const errorMsg = ERROR_MESSAGES[errorCode] || transcriptData?.error || 'Failed to fetch transcription';
-        
-        console.error('All transcription methods failed:', errorCode);
-        
+      let transcription: string | null = null;
+      let tier = 'unknown';
+
+      if (captionsData?.transcription) {
+        transcription = captionsData.transcription;
+        tier = captionsData.tier || 'youtube';
+        console.log(`Got transcription from YouTube captions: ${transcription.length} chars`);
+        toast.success('Subtítulos de YouTube obtenidos', { duration: 2000 });
+      } else {
+        // Step 3: Client-side audio extraction + AssemblyAI
+        toast.info('Extrayendo audio del video...', { 
+          description: 'Usando tu navegador (evita bloqueos de servidor)',
+          duration: 10000 
+        });
+
+        try {
+          // Get audio URL from browser (bypasses server blocks)
+          console.log('[Client] Starting client-side audio extraction...');
+          const audioInfo = await extractYouTubeAudioClientSide(videoId);
+          console.log(`[Client] Got audio URL, duration: ${audioInfo.durationSeconds}s`);
+          
+          toast.info('Descargando audio...', { 
+            description: `${Math.round(audioInfo.durationSeconds / 60)} minutos de audio`,
+            duration: 30000 
+          });
+
+          // Download and convert to base64
+          const { base64, mimeType } = await downloadAudioAsBase64(audioInfo.audioUrl);
+          console.log(`[Client] Audio downloaded: ${(base64.length * 0.75 / 1024 / 1024).toFixed(2)} MB`);
+          
+          toast.info('Enviando a AssemblyAI para transcripción...', { 
+            description: 'Esto puede tomar 2-5 minutos',
+            duration: 60000 
+          });
+
+          // Send to AssemblyAI edge function
+          const { data: assemblyData, error: assemblyError } = await supabase.functions.invoke(
+            'transcribe-with-assemblyai',
+            { 
+              body: { 
+                audioBase64: base64,
+                mimeType,
+                languageCode: 'es'
+              } 
+            }
+          );
+
+          if (assemblyError || !assemblyData?.transcription) {
+            throw new Error(assemblyError?.message || assemblyData?.error || 'AssemblyAI transcription failed');
+          }
+
+          transcription = assemblyData.transcription;
+          tier = 'assemblyai';
+          console.log(`[Client] AssemblyAI transcription complete: ${transcription.length} chars`);
+          toast.success('Transcripción AssemblyAI completada', { duration: 3000 });
+
+        } catch (clientError) {
+          console.error('[Client] Client-side extraction failed:', clientError);
+          
+          await supabase
+            .from('session_recordings')
+            .update({ 
+              transcription_status: 'FAILED',
+              last_error: `Client extraction failed: ${clientError instanceof Error ? clientError.message : 'Unknown error'}`
+            })
+            .eq('session_id', sessionId);
+          
+          toast.error('Error al extraer audio', {
+            description: clientError instanceof Error ? clientError.message : 'Intenta de nuevo más tarde',
+            duration: 6000
+          });
+          
+          return null;
+        }
+      }
+
+      if (!transcription) {
         await supabase
           .from('session_recordings')
           .update({ 
             transcription_status: 'FAILED',
-            last_error: `${errorCode}: ${errorMsg}`
+            last_error: 'No transcription obtained from any source'
           })
           .eq('session_id', sessionId);
         
-        toast.error('Transcription failed', {
-          description: errorMsg,
-          duration: 6000
-        });
-        
+        toast.error('No se pudo obtener transcripción');
         return null;
       }
 
-      // Log transcription source tier
-      const tierMessage = transcriptData.tier ? TIER_MESSAGES[transcriptData.tier] : 'Unknown source';
-      console.log(`Transcription fetched via ${tierMessage}: ${transcriptData.transcription.length} chars, lang: ${transcriptData.language}`);
-      
-      toast.success(`Transcription obtained via ${tierMessage}`, { duration: 3000 });
-
-      // Step 2: Save transcription and update status
+      // Step 4: Save transcription
       await supabase
         .from('session_recordings')
         .update({ 
-          transcription_text: transcriptData.transcription,
+          transcription_text: transcription,
           transcription_status: 'COMPLETED',
           analysis_status: 'PROCESSING'
         })
         .eq('session_id', sessionId);
 
-      toast.info('Analyzing transcription with AI...', { duration: 5000 });
+      toast.info('Analizando transcripción con IA...', { duration: 5000 });
 
-      // Step 3: Analyze with AI
+      // Step 5: Analyze with AI
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         'analyze-session-transcript',
         { 
           body: { 
-            transcriptionText: transcriptData.transcription,
+            transcriptionText: transcription,
             commissionName,
             sessionTitle,
             sessionDate
@@ -145,14 +182,14 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
           })
           .eq('session_id', sessionId);
         
-        toast.error('Analysis failed', {
-          description: 'The AI could not analyze this transcript. Please try again.',
+        toast.error('Error en análisis IA', {
+          description: 'La transcripción se guardó pero el análisis falló.',
           duration: 6000
         });
         return null;
       }
 
-      // Step 4: Save analysis result
+      // Step 6: Save analysis result
       const { error: saveError } = await supabase
         .from('session_recordings')
         .update({ 
@@ -164,19 +201,19 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
 
       if (saveError) {
         console.error('Error saving analysis:', saveError);
-        toast.error('Analysis complete but failed to save');
+        toast.error('Análisis completado pero no se pudo guardar');
         return analysisData.analysis;
       }
 
-      toast.success('Session analysis complete!', {
-        description: `Relevance: ${analysisData.analysis.relevanceCategory} (${analysisData.analysis.relevanceScore}/100)`
+      toast.success('¡Análisis de sesión completado!', {
+        description: `Relevancia: ${analysisData.analysis.relevanceCategory} (${analysisData.analysis.relevanceScore}/100) - via ${tier}`
       });
       return analysisData.analysis;
 
     } catch (error) {
       console.error('Error in session analysis:', error);
-      toast.error('An error occurred', {
-        description: 'Please check your connection and try again.'
+      toast.error('Error inesperado', {
+        description: 'Por favor verifica tu conexión e intenta de nuevo.'
       });
       return null;
     } finally {
