@@ -272,6 +272,9 @@ export function PeruSessionCard({
                   <div className="bg-muted/30 rounded-lg p-3">
                     <p className="text-sm font-medium text-muted-foreground mb-2">Video Information</p>
                     <div className="space-y-1 text-sm">
+                      {session.recording.expected_title && (
+                        <p><span className="text-muted-foreground">Expected Title:</span> <span className="font-mono text-xs">{session.recording.expected_title}</span></p>
+                      )}
                       <p><span className="text-muted-foreground">Channel:</span> {session.recording.channel_name}</p>
                       <p><span className="text-muted-foreground">Confidence:</span> {session.recording.resolution_confidence}</p>
                       <p><span className="text-muted-foreground">Method:</span> {session.recording.resolution_method}</p>

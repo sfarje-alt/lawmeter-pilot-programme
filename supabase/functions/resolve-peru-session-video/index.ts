@@ -88,15 +88,30 @@ function parseDate(dateStr: string): Date | null {
   return null;
 }
 
+// Strip emojis from text
+function stripEmojis(text: string): string {
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|🔴/gu, '')
+    .trim();
+}
+
 // Normalize text for comparison
 function normalize(text: string): string {
-  return text
-    .toLowerCase()
+  return stripEmojis(text)
+    .toUpperCase() // Use uppercase for better Spanish matching
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // Remove accents
     .replace(/[^\w\s]/g, " ") // Replace special chars with space
     .replace(/\s+/g, " ") // Collapse multiple spaces
     .trim();
+}
+
+// Build date pattern for filtering (e.g., "24 DE NOVIEMBRE DEL 2025")
+function buildDatePattern(date: Date): string {
+  const day = date.getDate();
+  const month = MESES[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} DE ${month} DEL ${year}`;
 }
 
 // Calculate Jaccard similarity between two strings
@@ -163,17 +178,33 @@ async function fetchChannelVideos(apiKey: string, maxResults: number = 50): Prom
   return data.items || [];
 }
 
-// Find best matching video
+// Filter videos by date pattern first, then find best match
 function findBestMatch(
   expectedTitle: string, 
   videos: any[], 
-  threshold: number = 0.5
+  date: Date,
+  threshold: number = 0.4
 ): { video: any; similarity: number; method: string } | null {
   const normalizedExpected = normalize(expectedTitle);
+  const datePattern = buildDatePattern(date);
+  
+  console.log(`Looking for date pattern: ${datePattern}`);
+  
+  // STEP 1: Filter videos that contain the correct date
+  const videosWithCorrectDate = videos.filter(video => {
+    const title = video.snippet?.title || "";
+    const normalizedTitle = normalize(title);
+    return normalizedTitle.includes(datePattern);
+  });
+  
+  console.log(`Found ${videosWithCorrectDate.length} videos matching date: ${datePattern}`);
+  
+  // If we have videos with the correct date, search only those
+  const searchPool = videosWithCorrectDate.length > 0 ? videosWithCorrectDate : videos;
   
   let bestMatch: { video: any; similarity: number; method: string } | null = null;
   
-  for (const video of videos) {
+  for (const video of searchPool) {
     const videoTitle = video.snippet?.title || "";
     const normalizedTitle = normalize(videoTitle);
     
@@ -182,10 +213,11 @@ function findBestMatch(
       return { video, similarity: 1.0, method: "EXACT_NORMALIZED" };
     }
     
-    // Contains check
-    if (normalizedTitle.includes(normalizedExpected) || normalizedExpected.includes(normalizedTitle)) {
-      const similarity = Math.max(normalizedTitle.length, normalizedExpected.length) > 0
-        ? Math.min(normalizedTitle.length, normalizedExpected.length) / Math.max(normalizedTitle.length, normalizedExpected.length)
+    // Contains check (after stripping emojis)
+    const strippedExpected = normalize(expectedTitle);
+    if (normalizedTitle.includes(strippedExpected) || strippedExpected.includes(normalizedTitle)) {
+      const similarity = Math.max(normalizedTitle.length, strippedExpected.length) > 0
+        ? Math.min(normalizedTitle.length, strippedExpected.length) / Math.max(normalizedTitle.length, strippedExpected.length)
         : 0;
       if (!bestMatch || similarity > bestMatch.similarity) {
         bestMatch = { video, similarity, method: "CONTAINS" };
@@ -195,8 +227,13 @@ function findBestMatch(
     
     // Jaccard similarity
     const similarity = jaccardSimilarity(videoTitle, expectedTitle);
-    if (similarity >= threshold && (!bestMatch || similarity > bestMatch.similarity)) {
-      bestMatch = { video, similarity, method: "JACCARD" };
+    
+    // If video has correct date, boost the threshold acceptance
+    const hasCorrectDate = videosWithCorrectDate.includes(video);
+    const effectiveThreshold = hasCorrectDate ? 0.3 : threshold;
+    
+    if (similarity >= effectiveThreshold && (!bestMatch || similarity > bestMatch.similarity)) {
+      bestMatch = { video, similarity, method: hasCorrectDate ? "DATE_MATCH_JACCARD" : "JACCARD" };
     }
   }
   
@@ -248,8 +285,8 @@ serve(async (req) => {
     // Fetch videos from channel
     const videos = await fetchChannelVideos(YOUTUBE_API_KEY, 100);
 
-    // Find best match
-    const match = findBestMatch(expectedTitle, videos, 0.4);
+    // Find best match (now with date filtering)
+    const match = findBestMatch(expectedTitle, videos, date, 0.4);
 
     if (match) {
       const videoId = match.video.snippet?.resourceId?.videoId || match.video.id?.videoId;
