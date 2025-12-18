@@ -483,5 +483,6 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     resolveSessionVideo,
     setManualVideoUrl,
     importSessions,
+    clearAllSessions,
   };
 }
