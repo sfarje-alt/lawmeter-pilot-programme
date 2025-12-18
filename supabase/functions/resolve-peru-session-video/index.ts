@@ -52,6 +52,42 @@ const SUBCOMISIONES: Record<string, string> = {
   "de Acusaciones Constitucionales": "Constitución y Reglamento",
 };
 
+// Parse date from various formats (DD/MM/YYYY, DD/MM/YYYYTHH:MMAM, ISO)
+function parseDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  
+  // Try ISO format first
+  let date = new Date(dateStr);
+  if (!isNaN(date.getTime())) return date;
+  
+  // Handle DD/MM/YYYY formats with optional time
+  // Examples: "17/12/2025", "17/12/2025 2:15AM", "17/12/2025T2:15AM:00"
+  const ddmmyyyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (ddmmyyyyMatch) {
+    const day = parseInt(ddmmyyyyMatch[1]);
+    const month = parseInt(ddmmyyyyMatch[2]) - 1; // 0-indexed
+    const year = parseInt(ddmmyyyyMatch[3]);
+    
+    // Create date at noon to avoid timezone issues
+    date = new Date(year, month, day, 12, 0, 0);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  // Handle YYYY-MM-DD format
+  const yyyymmddMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (yyyymmddMatch) {
+    const year = parseInt(yyyymmddMatch[1]);
+    const month = parseInt(yyyymmddMatch[2]) - 1;
+    const day = parseInt(yyyymmddMatch[3]);
+    
+    date = new Date(year, month, day, 12, 0, 0);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  console.error(`Could not parse date: ${dateStr}`);
+  return null;
+}
+
 // Normalize text for comparison
 function normalize(text: string): string {
   return text
@@ -194,14 +230,16 @@ serve(async (req) => {
 
     console.log(`Resolving video for: ${commissionName} on ${scheduledDate}`);
 
-    // Parse date
-    const date = new Date(scheduledDate);
-    if (isNaN(date.getTime())) {
+    // Parse date using our custom parser
+    const date = parseDate(scheduledDate);
+    if (!date) {
+      console.error(`Failed to parse date: ${scheduledDate}`);
       return new Response(
-        JSON.stringify({ error: "Invalid date format", found: false }),
+        JSON.stringify({ error: `Invalid date format: ${scheduledDate}`, found: false }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    console.log(`Parsed date: ${date.toISOString()}, day=${date.getDate()}, month=${date.getMonth()}, year=${date.getFullYear()}`);
 
     // Build expected title
     const expectedTitle = buildExpectedTitle(commissionName, date);
