@@ -347,15 +347,36 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
 
   // Import sessions from parsed PDF data - saves to Supabase
   const importSessions = async (importedSessions: ImportedSession[]): Promise<{ inserted: number; updated: number }> => {
+    // Helper to convert DD/MM/YYYY to YYYY-MM-DD
+    const convertDate = (dateStr: string): string | null => {
+      if (!dateStr) return null;
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return null;
+      const [day, month, year] = parts;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    };
+
+    // Helper to convert "9:00AM" or "10:30PM" to "09:00:00" or "22:30:00"
+    const convertTime = (timeStr: string): string => {
+      if (!timeStr) return '00:00:00';
+      const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (!match) return '00:00:00';
+      let hours = parseInt(match[1], 10);
+      const minutes = match[2];
+      const period = match[3].toUpperCase();
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      return `${hours.toString().padStart(2, '0')}:${minutes}:00`;
+    };
+
     // Convert imported sessions to database format
     const sessionsToSave = importedSessions.map((imported) => {
-      // Combine date and time into scheduled_at
-      let scheduledAt: string | null = null;
-      if (imported.scheduled_date) {
-        scheduledAt = imported.scheduled_time 
-          ? `${imported.scheduled_date}T${imported.scheduled_time}:00`
-          : `${imported.scheduled_date}T00:00:00`;
-      }
+      // Convert date to ISO format
+      const isoDate = convertDate(imported.scheduled_date);
+      const isoTime = convertTime(imported.scheduled_time);
+      
+      // Combine into ISO timestamp
+      const scheduledAt = isoDate ? `${isoDate}T${isoTime}` : null;
 
       return {
         external_session_id: imported.external_session_id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
