@@ -191,7 +191,7 @@ async function fetchChannelVideosWithFallback(
   throw lastError || new Error("All API keys exhausted - quota exceeded on all keys");
 }
 
-// STRICT 3-STEP FILTERING: No fallbacks, no false positives
+// STRICT 3-STEP FILTERING with diagnostic logging and publishedAt fallback
 function findVideoStrictMatch(
   videos: any[], 
   commissionFullName: string, 
@@ -199,22 +199,52 @@ function findVideoStrictMatch(
 ): { video: any; confidence: 'HIGH' | 'MEDIUM' } | null {
   const datePattern = buildDatePattern(date);
   const normalizedCommission = normalize(commissionFullName);
+  const targetDateStr = date.toISOString().substring(0, 10); // "2025-12-12"
   
   console.log(`\n=== STRICT FILTERING PIPELINE ===`);
   console.log(`Looking for: "${commissionFullName}"`);
-  console.log(`Date pattern: "${datePattern}"`);
-  console.log(`FILTRO 1: ${videos.length} videos del canal`);
+  console.log(`Date pattern in title: "${datePattern}"`);
+  console.log(`Target publishedAt: ${targetDateStr}`);
   
-  // === FILTRO 2: Solo videos con la fecha exacta (OBLIGATORIO) ===
-  const videosWithDate = videos.filter(video => {
+  // === DIAGNOSTIC: Show sample videos from channel ===
+  console.log(`\n=== SAMPLE VIDEOS FROM CHANNEL (first 10) ===`);
+  videos.slice(0, 10).forEach((v, i) => {
+    const title = v.snippet?.title || "";
+    const publishedAt = v.snippet?.publishedAt || "";
+    console.log(`[${i}] Published: ${publishedAt.substring(0, 10)} | "${title.substring(0, 70)}..."`);
+  });
+  
+  console.log(`\nFILTRO 1: ${videos.length} videos del canal`);
+  
+  // === FILTRO 2A: Videos con la fecha en el título ===
+  let videosWithDate = videos.filter(video => {
     const title = normalize(video.snippet?.title || "");
     return title.includes(normalize(datePattern));
   });
   
-  console.log(`FILTRO 2: ${videosWithDate.length} videos con fecha "${datePattern}"`);
+  console.log(`FILTRO 2A: ${videosWithDate.length} videos con fecha "${datePattern}" en título`);
+  
+  // === FILTRO 2B: Si no hay match por título, intentar con publishedAt ===
+  if (videosWithDate.length === 0) {
+    console.log(`⚠️ No videos con fecha en título, intentando con publishedAt...`);
+    
+    videosWithDate = videos.filter(video => {
+      const publishedAt = video.snippet?.publishedAt || "";
+      return publishedAt.startsWith(targetDateStr);
+    });
+    
+    console.log(`FILTRO 2B: ${videosWithDate.length} videos publicados el ${targetDateStr}`);
+    
+    if (videosWithDate.length > 0) {
+      console.log(`Videos publicados ese día:`);
+      videosWithDate.forEach(v => {
+        console.log(`  - "${v.snippet?.title}"`);
+      });
+    }
+  }
   
   if (videosWithDate.length === 0) {
-    console.log("❌ No hay videos para esta fecha - NO FALLBACK, retornando null");
+    console.log("❌ No hay videos para esta fecha (ni en título ni por publishedAt)");
     return null;
   }
   
@@ -227,10 +257,14 @@ function findVideoStrictMatch(
   console.log(`FILTRO 3: ${videosWithCommission.length} videos con comisión "${commissionFullName}"`);
   
   if (videosWithCommission.length === 0) {
-    console.log(`❌ No hay videos de "${commissionFullName}" en fecha ${datePattern} - retornando null`);
+    console.log(`❌ No hay videos de "${commissionFullName}" en fecha indicada`);
+    console.log(`Normalized commission: "${normalizedCommission}"`);
     // Log what videos were found for this date (for debugging)
+    console.log(`Videos encontrados en esta fecha:`);
     videosWithDate.forEach(v => {
-      console.log(`  - Video en esta fecha: "${v.snippet?.title}"`);
+      const normalizedTitle = normalize(v.snippet?.title || "");
+      console.log(`  - Title: "${v.snippet?.title}"`);
+      console.log(`    Normalized: "${normalizedTitle}"`);
     });
     return null;
   }
