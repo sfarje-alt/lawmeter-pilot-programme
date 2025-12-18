@@ -223,13 +223,29 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
           description: `Se encontró el video con ${Math.round(data.similarity * 100)}% de similitud`,
         });
       } else {
-        setSessions(prev => prev.map(s => 
-          s.id === sessionId ? { ...s, video_status: 'NOT_FOUND' } : s
-        ));
+        // Store expectedTitle even when not found for debugging
+        setSessions(prev => prev.map(s => {
+          if (s.id !== sessionId) return s;
+          return {
+            ...s,
+            video_status: 'NOT_FOUND',
+            recording: data?.expectedTitle ? {
+              id: `recording-${sessionId}`,
+              session_id: sessionId,
+              provider: 'YOUTUBE' as const,
+              channel_name: 'Congreso de la República del Perú',
+              expected_title: data.expectedTitle,
+              resolution_confidence: undefined,
+              resolution_method: undefined,
+              last_error: data?.message,
+              created_at: new Date().toISOString(),
+            } : undefined,
+          };
+        }));
 
         toast({
           title: "Video no encontrado",
-          description: data?.message || "No se pudo encontrar el video. Puedes agregar el enlace manualmente.",
+          description: `Título buscado: "${data?.expectedTitle || 'N/A'}". ${data?.message || "Puedes agregar el enlace manualmente."}`,
           variant: "destructive",
         });
       }
