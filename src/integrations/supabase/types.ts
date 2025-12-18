@@ -260,6 +260,9 @@ export type Database = {
       }
       session_recordings: {
         Row: {
+          analysis_result: Json | null
+          analysis_status: string | null
+          analyzed_at: string | null
           channel_id: string | null
           channel_name: string | null
           created_at: string | null
@@ -271,10 +274,15 @@ export type Database = {
           resolution_method: string | null
           resolved_at: string | null
           session_id: string
+          transcription_status: string | null
+          transcription_text: string | null
           video_id: string | null
           video_url: string | null
         }
         Insert: {
+          analysis_result?: Json | null
+          analysis_status?: string | null
+          analyzed_at?: string | null
           channel_id?: string | null
           channel_name?: string | null
           created_at?: string | null
@@ -286,10 +294,15 @@ export type Database = {
           resolution_method?: string | null
           resolved_at?: string | null
           session_id: string
+          transcription_status?: string | null
+          transcription_text?: string | null
           video_id?: string | null
           video_url?: string | null
         }
         Update: {
+          analysis_result?: Json | null
+          analysis_status?: string | null
+          analyzed_at?: string | null
           channel_id?: string | null
           channel_name?: string | null
           created_at?: string | null
@@ -301,6 +314,8 @@ export type Database = {
           resolution_method?: string | null
           resolved_at?: string | null
           session_id?: string
+          transcription_status?: string | null
+          transcription_text?: string | null
           video_id?: string | null
           video_url?: string | null
         }

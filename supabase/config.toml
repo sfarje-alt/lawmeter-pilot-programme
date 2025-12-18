@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.sync-peru-sessions]
 verify_jwt = false
+
+[functions.fetch-youtube-transcript]
+verify_jwt = false
+
+[functions.analyze-session-transcript]
+verify_jwt = false
