@@ -1521,7 +1521,12 @@ export function convertirPeruAUnificado(item: PeruLegislationItem): UnifiedLegis
         competitiveRiskAssessment: item.resumenIA.analisisRiesgo.evaluacionRiesgoCompetitivo
       } : undefined,
       stakeholderAnalysis: item.resumenIA.analisisActores?.map(a => ({
-        stakeholder: a.actor, type: a.tipo === "regulador" ? "regulatory" : a.tipo === "industria" ? "industry" : a.tipo,
+        stakeholder: a.actor, 
+        type: a.tipo === "regulador" ? "regulatory" : 
+              a.tipo === "industria" ? "industry" : 
+              a.tipo === "externo" ? "external" :
+              a.tipo === "interno" ? "internal" : 
+              "external" as "regulatory" | "industry" | "external" | "internal",
         impactLevel: a.nivelImpacto === "alto" ? "high" : a.nivelImpacto === "medio" ? "medium" : "low",
         impactDescription: a.descripcionImpacto, requiredActions: a.accionesRequeridas, timeline: a.cronograma
       })),
