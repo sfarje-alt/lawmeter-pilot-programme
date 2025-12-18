@@ -236,33 +236,20 @@ function buildCongressUrl(periodoParlamentario: number, periodoLegislativo: stri
   return `https://wb2server.congreso.gob.pe/service-portal-publico-ext/x-pdf/sesiones/archivo/pdf/${base64Params}/reporte-sesiones.pdf`;
 }
 
-// Extract text from PDF using pdfjs-dist in Deno (no fs dependency)
+// Extract text from PDF using unpdf (edge-compatible)
 async function extractTextFromPdf(pdfBytes: ArrayBuffer): Promise<string> {
-  // Import pdfjs-dist legacy build which works in Deno without workers
-  const pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.mjs');
-  
-  // Disable worker to avoid web worker issues in Deno
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+  // unpdf is designed for edge/serverless environments
+  const { extractText, getDocumentProxy } = await import('https://esm.sh/unpdf@0.11.0');
   
   const uint8Array = new Uint8Array(pdfBytes);
-  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
-  const pdf = await loadingTask.promise;
+  const pdf = await getDocumentProxy(uint8Array);
   
   console.log(`[Sync] PDF loaded: ${pdf.numPages} pages`);
   
-  let fullText = '';
+  const { text } = await extractText(pdf, { mergePages: true });
   
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(' ');
-    fullText += pageText + '\n';
-  }
-  
-  console.log(`[Sync] Extracted ${pdf.numPages} pages, ${fullText.length} chars`);
-  return fullText;
+  console.log(`[Sync] Extracted ${pdf.numPages} pages, ${text.length} chars`);
+  return text;
 }
 
 Deno.serve(async (req) => {
