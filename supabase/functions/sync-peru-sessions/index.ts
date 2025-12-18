@@ -236,16 +236,33 @@ function buildCongressUrl(periodoParlamentario: number, periodoLegislativo: stri
   return `https://wb2server.congreso.gob.pe/service-portal-publico-ext/x-pdf/sesiones/archivo/pdf/${base64Params}/reporte-sesiones.pdf`;
 }
 
-// Extract text from PDF using pdfjs-dist in Deno
+// Extract text from PDF using pdfjs-dist in Deno (no fs dependency)
 async function extractTextFromPdf(pdfBytes: ArrayBuffer): Promise<string> {
-  // Use pdf-parse-fork which works in Deno
-  const { default: pdfParse } = await import('https://esm.sh/pdf-parse@1.1.1');
+  // Import pdfjs-dist legacy build which works in Deno without workers
+  const pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.mjs');
   
-  const buffer = new Uint8Array(pdfBytes);
-  const data = await pdfParse(buffer);
+  // Disable worker to avoid web worker issues in Deno
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
   
-  console.log(`[Sync] Extracted ${data.numpages} pages, ${data.text.length} chars`);
-  return data.text;
+  const uint8Array = new Uint8Array(pdfBytes);
+  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+  const pdf = await loadingTask.promise;
+  
+  console.log(`[Sync] PDF loaded: ${pdf.numPages} pages`);
+  
+  let fullText = '';
+  
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => item.str)
+      .join(' ');
+    fullText += pageText + '\n';
+  }
+  
+  console.log(`[Sync] Extracted ${pdf.numPages} pages, ${fullText.length} chars`);
+  return fullText;
 }
 
 Deno.serve(async (req) => {
