@@ -213,7 +213,7 @@ export type Database = {
           commission_name: string
           created_at: string | null
           documents_url: string | null
-          external_session_id: string | null
+          external_session_id: string
           id: string
           jurisdiction: string | null
           scheduled_at: string | null
@@ -229,7 +229,7 @@ export type Database = {
           commission_name: string
           created_at?: string | null
           documents_url?: string | null
-          external_session_id?: string | null
+          external_session_id: string
           id?: string
           jurisdiction?: string | null
           scheduled_at?: string | null
@@ -245,7 +245,7 @@ export type Database = {
           commission_name?: string
           created_at?: string | null
           documents_url?: string | null
-          external_session_id?: string | null
+          external_session_id?: string
           id?: string
           jurisdiction?: string | null
           scheduled_at?: string | null
