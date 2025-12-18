@@ -167,7 +167,7 @@ export function PeruSessionsSection() {
                 className="gap-2 text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
-                Limpiar Todo
+                Clear All
               </Button>
             )}
           </div>
