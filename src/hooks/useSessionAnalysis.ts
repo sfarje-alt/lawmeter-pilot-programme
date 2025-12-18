@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SessionAnalysis } from '@/types/peruSessions';
+import { extractYouTubeAudio } from '@/lib/youtubeAudioExtractor';
 
 interface UseSessionAnalysisResult {
   isAnalyzing: boolean;
@@ -13,11 +14,11 @@ interface UseSessionAnalysisResult {
 
 // Error messages based on error codes
 const ERROR_MESSAGES: Record<string, string> = {
-  NO_CAPTIONS: 'This video doesn\'t have captions available yet. It may be too new - try again in 24 hours.',
-  CAPTIONS_RESTRICTED: 'This video has captions but the owner has restricted access. Try a different video.',
-  CAPTIONS_UNAVAILABLE: 'Could not fetch captions. The video may still be processing.',
-  PAGE_FETCH_FAILED: 'Could not access the video. Please check if the video is available.',
-  INNERTUBE_ERROR: 'Error extracting video data. Please try again.',
+  NO_CAPTIONS: 'This video doesn\'t have captions available yet. Try again in 24 hours.',
+  CAPTIONS_RESTRICTED: 'This video has restricted caption access.',
+  CAPTIONS_UNAVAILABLE: 'Could not fetch captions.',
+  PAGE_FETCH_FAILED: 'Could not access the video.',
+  INNERTUBE_ERROR: 'Error extracting video data.',
   TIMEDTEXT_FAILED: 'Could not fetch captions using alternate method.',
   PARSE_FAILED: 'Captions were found but could not be read properly.',
   GOOGLE_NOT_CONFIGURED: 'Google Cloud STT not configured.',
@@ -29,13 +30,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   AUDIO_DOWNLOAD_FAILED: 'Could not download audio from video.',
   ALL_METHODS_FAILED: 'All transcription methods failed.',
   TRANSCRIPTION_UNAVAILABLE: 'Video has no captions and audio transcription failed.',
-  UNKNOWN_ERROR: 'An unexpected error occurred. Please try again.',
+  CLIENT_AUDIO_EXTRACTION_FAILED: 'Client-side audio extraction failed.',
+  UNKNOWN_ERROR: 'An unexpected error occurred.',
 };
 
 const TIER_MESSAGES: Record<string, string> = {
   youtube: 'YouTube captions (free)',
   google_stt: 'Google Cloud STT (free tier)',
-  whisper: 'OpenAI Whisper (paid)'
+  whisper: 'OpenAI Whisper (paid)',
+  client_stt: 'Client audio + STT'
 };
 
 export function useSessionAnalysis(): UseSessionAnalysisResult {
@@ -91,41 +94,93 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
       }
 
       toast.info('Fetching video transcription...', { 
-        description: 'Trying YouTube captions first, then STT services if needed.',
+        description: 'Trying YouTube captions first, then client-side audio extraction.',
         duration: 5000 
       });
 
-      // Step 2: Fetch transcription with 3-tier fallback
-      const { data: transcriptData, error: transcriptError } = await supabase.functions.invoke(
+      let transcriptData: any = null;
+
+      // METHOD 1: Try server-side YouTube captions first (fastest)
+      const { data: serverData, error: serverError } = await supabase.functions.invoke(
         'fetch-youtube-transcript',
         { body: { videoId, skipCostWarning } }
       );
 
-      // Handle Whisper cost warning
-      if (transcriptData?.errorCode === 'WHISPER_COST_WARNING') {
-        console.log('Whisper cost warning received:', transcriptData.costWarning);
+      if (serverData?.transcription) {
+        transcriptData = serverData;
+        console.log('Got transcription from server (YouTube captions)');
+      } else if (serverData?.errorCode === 'WHISPER_COST_WARNING') {
+        // Handle Whisper cost warning
+        console.log('Whisper cost warning received:', serverData.costWarning);
         setPendingWhisperCost({
           sessionId,
           videoId,
           commissionName,
           sessionTitle,
           sessionDate,
-          costWarning: transcriptData.costWarning
+          costWarning: serverData.costWarning
         });
         setIsAnalyzing(false);
-        
         toast.warning('Paid transcription required', {
-          description: transcriptData.costWarning,
+          description: serverData.costWarning,
           duration: 10000
         });
         return null;
+      } else {
+        // METHOD 2: Try client-side audio extraction
+        console.log('Server-side failed, trying client-side audio extraction...');
+        toast.info('Trying client-side audio extraction...', { duration: 3000 });
+
+        try {
+          const audioData = await extractYouTubeAudio(videoId);
+          
+          if (audioData) {
+            console.log(`Client extracted audio: ${audioData.durationMinutes.toFixed(1)} min`);
+            toast.info('Audio extracted, sending to STT...', { duration: 3000 });
+
+            // Send audio to transcribe-audio edge function
+            const { data: sttData, error: sttError } = await supabase.functions.invoke(
+              'transcribe-audio',
+              { 
+                body: { 
+                  audioBase64: audioData.audioBase64,
+                  durationMinutes: audioData.durationMinutes,
+                  skipCostWarning
+                } 
+              }
+            );
+
+            if (sttData?.transcription) {
+              transcriptData = { ...sttData, tier: 'client_stt' };
+              console.log('Got transcription from client audio + STT');
+            } else if (sttData?.errorCode === 'WHISPER_COST_WARNING') {
+              setPendingWhisperCost({
+                sessionId,
+                videoId,
+                commissionName,
+                sessionTitle,
+                sessionDate,
+                costWarning: sttData.costWarning
+              });
+              setIsAnalyzing(false);
+              toast.warning('Paid transcription required', {
+                description: sttData.costWarning,
+                duration: 10000
+              });
+              return null;
+            }
+          }
+        } catch (clientError) {
+          console.error('Client-side extraction failed:', clientError);
+        }
       }
 
-      if (transcriptError || !transcriptData?.transcription) {
-        const errorCode = transcriptData?.errorCode || 'UNKNOWN_ERROR';
-        const errorMsg = ERROR_MESSAGES[errorCode] || transcriptData?.error || 'Failed to fetch transcription';
+      // If no transcription from any method
+      if (!transcriptData?.transcription) {
+        const errorCode = serverData?.errorCode || 'ALL_METHODS_FAILED';
+        const errorMsg = ERROR_MESSAGES[errorCode] || serverData?.error || 'Failed to fetch transcription';
         
-        console.error('Transcription error:', errorCode, transcriptData?.error);
+        console.error('All transcription methods failed:', errorCode);
         
         await supabase
           .from('session_recordings')
@@ -135,28 +190,10 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
           })
           .eq('session_id', sessionId);
         
-        // Show specific error message based on error code
-        if (errorCode === 'NO_CAPTIONS') {
-          toast.error('No captions available', {
-            description: 'This video doesn\'t have captions yet. Try again later.',
-            duration: 6000
-          });
-        } else if (errorCode === 'CAPTIONS_RESTRICTED') {
-          toast.error('Captions restricted', {
-            description: 'The video owner has restricted caption access.',
-            duration: 6000
-          });
-        } else if (errorCode === 'GOOGLE_QUOTA_EXHAUSTED') {
-          toast.error('Google quota exhausted', {
-            description: 'Free Google STT quota used up. Whisper (paid) is available.',
-            duration: 6000
-          });
-        } else {
-          toast.error('Transcription failed', {
-            description: errorMsg,
-            duration: 6000
-          });
-        }
+        toast.error('Transcription failed', {
+          description: errorMsg,
+          duration: 6000
+        });
         
         return null;
       }
