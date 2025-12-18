@@ -453,6 +453,108 @@ async function downloadAudioFromYouTubeDirect(videoId: string): Promise<{ audioB
   }
 }
 
+// ==================== Piped API for Audio Download ====================
+
+const PIPED_INSTANCES = [
+  'https://pipedapi.kavin.rocks',
+  'https://pipedapi.adminforge.de',
+  'https://api.piped.yt',
+  'https://pipedapi.r4fo.com',
+  'https://pipedapi.darkness.services',
+  'https://pipedapi.in.projectsegfau.lt',
+  'https://pipedapi.leptons.xyz',
+];
+
+async function downloadAudioWithPiped(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
+  console.log(`[Piped] Attempting audio download for: ${videoId}`);
+  
+  for (const instance of PIPED_INSTANCES) {
+    try {
+      console.log(`[Piped] Trying instance: ${instance}`);
+      
+      const infoResponse = await fetch(`${instance}/streams/${videoId}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(15000)
+      });
+      
+      if (!infoResponse.ok) {
+        console.log(`[Piped] ${instance} returned ${infoResponse.status}`);
+        continue;
+      }
+      
+      const data = await infoResponse.json();
+      
+      if (data.error) {
+        console.log(`[Piped] ${instance} error: ${data.error}`);
+        continue;
+      }
+      
+      const durationMinutes = (data.duration || 0) / 60;
+      console.log(`[Piped] Video duration: ${durationMinutes.toFixed(1)} minutes`);
+      
+      // Find audio streams
+      const audioStreams = (data.audioStreams || [])
+        .filter((s: any) => s.url && s.mimeType?.includes('audio'))
+        .sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0)); // Lowest bitrate first
+      
+      if (audioStreams.length === 0) {
+        console.log(`[Piped] No audio streams from ${instance}`);
+        continue;
+      }
+      
+      console.log(`[Piped] Found ${audioStreams.length} audio streams`);
+      
+      // Try downloading audio streams
+      for (const stream of audioStreams) {
+        console.log(`[Piped] Trying stream: ${stream.mimeType}, ${stream.bitrate}bps`);
+        
+        try {
+          const audioResponse = await fetch(stream.url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': '*/*',
+            },
+            signal: AbortSignal.timeout(180000) // 3 minute timeout for large files
+          });
+          
+          if (!audioResponse.ok) {
+            console.log(`[Piped] Stream download failed: ${audioResponse.status}`);
+            continue;
+          }
+          
+          const audioBuffer = await audioResponse.arrayBuffer();
+          
+          if (audioBuffer.byteLength < 10000) {
+            console.log(`[Piped] Audio too small: ${audioBuffer.byteLength} bytes`);
+            continue;
+          }
+          
+          const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+          console.log(`[Piped] Success: ${(audioBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+          
+          return { audioBase64, durationMinutes };
+          
+        } catch (streamError) {
+          const msg = streamError instanceof Error ? streamError.message : 'Unknown';
+          console.log(`[Piped] Stream download error: ${msg}`);
+          continue;
+        }
+      }
+      
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown';
+      console.log(`[Piped] ${instance} failed: ${msg}`);
+      continue;
+    }
+  }
+  
+  console.log('[Piped] All instances failed');
+  return null;
+}
+
 // Invidious instances for fallback audio download
 const INVIDIOUS_INSTANCES = [
   'https://inv.nadeko.net',
@@ -526,14 +628,22 @@ async function downloadAudioWithInvidious(videoId: string): Promise<{ audioBase6
 async function downloadAudioFromYouTube(videoId: string): Promise<{ audioBase64: string; durationMinutes: number } | null> {
   console.log(`[Audio Download] Starting for video: ${videoId}`);
   
-  // Method 1: Direct YouTube extraction (preferred)
+  // Method 1: Piped API (most reliable, designed for this purpose)
+  const pipedResult = await downloadAudioWithPiped(videoId);
+  if (pipedResult) {
+    console.log('[Audio Download] Success with Piped');
+    return pipedResult;
+  }
+  
+  // Method 2: Direct YouTube extraction
+  console.log('[Audio Download] Piped failed, trying YouTube Direct...');
   const directResult = await downloadAudioFromYouTubeDirect(videoId);
   if (directResult) {
     console.log('[Audio Download] Success with YouTube Direct');
     return directResult;
   }
   
-  // Method 2: Invidious fallback
+  // Method 3: Invidious fallback
   console.log('[Audio Download] YouTube Direct failed, trying Invidious...');
   const invResult = await downloadAudioWithInvidious(videoId);
   if (invResult) {
