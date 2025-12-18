@@ -67,7 +67,7 @@ export function PeruSessionCard({
 }: PeruSessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
-  const { isAnalyzing, pendingWhisperCost, analyzeSession, confirmWhisperCost, cancelWhisperCost } = useSessionAnalysis();
+  const { isAnalyzing, analyzeSession } = useSessionAnalysis();
 
   // Get analysis from recording if available
   const analysis = session.recording?.analysis_result as SessionAnalysis | undefined;
@@ -278,26 +278,7 @@ export function PeruSessionCard({
                     </Button>
                     
                     {/* AI Analysis Button */}
-                    {pendingWhisperCost?.sessionId === session.id ? (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2 border-amber-500/50 text-amber-600"
-                          onClick={confirmWhisperCost}
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          Confirm Whisper
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={cancelWhisperCost}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    ) : analysisStatus === 'COMPLETED' ? (
+                    {analysisStatus === 'COMPLETED' ? (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
