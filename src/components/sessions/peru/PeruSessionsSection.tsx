@@ -17,7 +17,8 @@ import {
   Clock,
   Search,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { usePeruSessions } from '@/hooks/usePeruSessions';
 import { PeruSessionCard } from './PeruSessionCard';
@@ -43,11 +44,18 @@ export function PeruSessionsSection() {
     resolveSessionVideo,
     setManualVideoUrl,
     importSessions,
+    clearAllSessions,
   } = usePeruSessions({
     commissionFilter: searchQuery,
     showOnlyRecommended,
     showOnlySelected,
   });
+
+  const handleClearAll = async () => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar todas las sesiones? Esta acción no se puede deshacer.')) {
+      await clearAllSessions();
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -137,6 +145,16 @@ export function PeruSessionsSection() {
               <Upload className="h-4 w-4" />
               Upload Sessions
             </Button>
+            {stats.total > 0 && (
+              <Button 
+                variant="outline" 
+                onClick={handleClearAll}
+                className="gap-2 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                Limpiar Todo
+              </Button>
+            )}
           </div>
         </div>
 
