@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { PeruSession, WatchedCommission } from '@/types/peruSessions';
 import { PERU_MOCK_SESSIONS, PERU_MOCK_RECORDINGS, DEFAULT_WATCHED_COMMISSIONS } from '@/data/peruSessionsMockData';
 import { useToast } from '@/hooks/use-toast';
-
+import { supabase } from '@/integrations/supabase/client';
 // Type for parsed sessions from PDF importer
 export interface ImportedSession {
   tipo_comision: string;
@@ -150,7 +150,7 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     });
   };
 
-  // Resolve video for a session (mock implementation)
+  // Resolve video for a session using real YouTube API
   const resolveSessionVideo = async (sessionId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
@@ -160,48 +160,92 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
       s.id === sessionId ? { ...s, video_status: 'RESOLVING' } : s
     ));
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Mock result - 70% success rate
-    const success = Math.random() > 0.3;
-    
-    setSessions(prev => prev.map(s => {
-      if (s.id !== sessionId) return s;
+    try {
+      // Get the date from scheduled_at or scheduled_date_text
+      const scheduledDate = session.scheduled_at || session.scheduled_date_text;
       
-      if (success) {
-        return {
-          ...s,
-          video_status: 'FOUND_HIGH',
-          recording: {
-            id: `recording-${sessionId}`,
-            session_id: sessionId,
-            provider: 'YOUTUBE' as const,
-            channel_name: 'Congreso de la República del Perú',
-            expected_title: `🔴 EN VIVO: Comisión de ${s.commission_name}`,
-            video_id: 'dQw4w9WgXcQ',
-            video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            resolution_confidence: 'HIGH',
-            resolution_method: 'EXACT_STRIP_EMOJI',
-            resolved_at: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-          },
-        };
-      } else {
-        return {
-          ...s,
-          video_status: 'NOT_FOUND',
-        };
+      if (!scheduledDate) {
+        throw new Error("No scheduled date available for this session");
       }
-    }));
 
-    toast({
-      title: success ? "Video encontrado" : "Video no encontrado",
-      description: success 
-        ? "Se encontró el video de la sesión en YouTube"
-        : "No se pudo encontrar el video. Puedes agregar el enlace manualmente.",
-      variant: success ? "default" : "destructive",
-    });
+      console.log(`Resolving video for: ${session.commission_name} on ${scheduledDate}`);
+
+      // Call Edge Function to resolve video
+      const { data, error } = await supabase.functions.invoke('resolve-peru-session-video', {
+        body: {
+          commissionName: session.commission_name,
+          scheduledDate: scheduledDate,
+        },
+      });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Error calling video resolution service");
+      }
+
+      console.log("Resolution result:", data);
+
+      if (data?.found) {
+        // Determine video status based on confidence
+        let videoStatus: 'FOUND_HIGH' | 'FOUND_MEDIUM' | 'FOUND_LOW';
+        if (data.confidence === 'HIGH') {
+          videoStatus = 'FOUND_HIGH';
+        } else if (data.confidence === 'MEDIUM') {
+          videoStatus = 'FOUND_MEDIUM';
+        } else {
+          videoStatus = 'FOUND_LOW';
+        }
+
+        setSessions(prev => prev.map(s => {
+          if (s.id !== sessionId) return s;
+          return {
+            ...s,
+            video_status: videoStatus,
+            recording: {
+              id: `recording-${sessionId}`,
+              session_id: sessionId,
+              provider: 'YOUTUBE' as const,
+              channel_name: data.channelName || 'Congreso de la República del Perú',
+              channel_id: data.channelId,
+              expected_title: data.expectedTitle,
+              video_id: data.videoId,
+              video_url: data.videoUrl,
+              resolution_confidence: data.confidence,
+              resolution_method: data.method,
+              resolved_at: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+            },
+          };
+        }));
+
+        toast({
+          title: "Video encontrado",
+          description: `Se encontró el video con ${Math.round(data.similarity * 100)}% de similitud`,
+        });
+      } else {
+        setSessions(prev => prev.map(s => 
+          s.id === sessionId ? { ...s, video_status: 'NOT_FOUND' } : s
+        ));
+
+        toast({
+          title: "Video no encontrado",
+          description: data?.message || "No se pudo encontrar el video. Puedes agregar el enlace manualmente.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Error resolving video:", err);
+      
+      setSessions(prev => prev.map(s => 
+        s.id === sessionId ? { ...s, video_status: 'NOT_FOUND' } : s
+      ));
+
+      toast({
+        title: "Error al buscar video",
+        description: err instanceof Error ? err.message : "Error desconocido",
+        variant: "destructive",
+      });
+    }
   };
 
   // Set manual video URL
