@@ -214,48 +214,89 @@ export function PeruSessionImporter({
     }
   };
 
+  // Generate Congress PDF URL
+  const generateCongressPdfUrl = () => {
+    const params = {
+      periodoParlamentario: 2021,
+      periodoLegislativo: "2025",
+      tipoComision: null,
+      comision: null,
+      fecha: null,
+      sesion: null,
+      descentralizada: null,
+      conjunta: null,
+      continuada: null
+    };
+    const base64Params = btoa(JSON.stringify(params));
+    return `https://wb2server.congreso.gob.pe/service-portal-publico-ext/x-pdf/sesiones/archivo/pdf/${base64Params}/reporte-sesiones.pdf`;
+  };
+
   const handleAutoSync = async () => {
     setIsSyncing(true);
     setSyncError(null);
     setSyncResult(null);
     
     try {
-      console.log('[Sync] Calling sync-peru-sessions edge function...');
+      console.log('[Sync] Attempting client-side PDF fetch from Congress...');
       
-      const { data, error } = await supabase.functions.invoke('sync-peru-sessions', {
-        body: {}
+      const pdfUrl = generateCongressPdfUrl();
+      
+      // Try to fetch from user's browser (not blocked like server IPs)
+      const response = await fetch(pdfUrl, {
+        method: 'GET',
+        mode: 'cors',
       });
       
-      if (error) {
-        console.error('[Sync] Edge function error:', error);
-        setSyncError(`Error de conexión: ${error.message}`);
-        return;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      const result = data as SyncResult;
+      console.log('[Sync] PDF downloaded successfully, parsing...');
+      const pdfBlob = await response.blob();
+      const pdfFile = new File([pdfBlob], 'sesiones-congreso.pdf', { type: 'application/pdf' });
       
-      if (!result.success) {
-        console.error('[Sync] Sync failed:', result.error);
-        // Check if it's a 403 error (blocked by Congress server)
-        if (result.error?.includes('403')) {
-          setSyncError('El servidor del Congreso está bloqueando la descarga automática. Por favor, usa la opción "Subir PDF" para importar manualmente.');
-        } else {
-          setSyncError(result.error || 'Error desconocido durante la sincronización');
+      // Parse with existing client-side parser
+      const sessions = await parsePeruSessionsPdf(pdfFile);
+      
+      if (sessions.length === 0) {
+        throw new Error('No se encontraron sesiones en el PDF');
+      }
+      
+      console.log(`[Sync] Parsed ${sessions.length} sessions, saving to database...`);
+      
+      // Convert and save to database
+      const sessionsToImport = sessions.map(convertToExportFormat);
+      await onImport(sessionsToImport);
+      
+      setSyncResult({
+        success: true,
+        message: 'Sincronización completada',
+        stats: {
+          parsed: sessions.length,
+          inserted: sessions.length,
+          updated: 0,
+          unchanged: 0
         }
-        return;
-      }
+      });
       
-      setSyncResult(result);
-      toast.success(result.message || 'Sincronización completada');
+      toast.success(`Se sincronizaron ${sessions.length} sesiones`);
       
-      // Notify parent to refresh data
       if (onSyncComplete) {
         onSyncComplete();
       }
       
     } catch (error) {
-      console.error('[Sync] Unexpected error:', error);
-      setSyncError(error instanceof Error ? error.message : 'Error inesperado');
+      console.error('[Sync] Error:', error);
+      
+      // Check for CORS error
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        setSyncError(
+          'El servidor del Congreso bloquea las solicitudes desde el navegador (CORS). ' +
+          'Por favor, descarga el PDF manualmente y súbelo usando la opción "Subir PDF".'
+        );
+      } else {
+        setSyncError(error instanceof Error ? error.message : 'Error inesperado');
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -397,9 +438,9 @@ export function PeruSessionImporter({
               <Card className="bg-muted/30">
                 <CardContent className="pt-4">
                   <div className="text-xs text-muted-foreground space-y-1">
-                    <p>• La sincronización automática se ejecuta diariamente a las 6:00 AM (hora de Lima)</p>
-                    <p>• Las sesiones ya seleccionadas y los videos resueltos se preservan</p>
-                    <p>• Si la fecha u hora de una sesión cambia, se actualizará automáticamente</p>
+                    <p>• La sincronización descarga el PDF directamente desde tu navegador</p>
+                    <p>• Si el servidor bloquea la descarga (CORS), usa "Subir PDF" manualmente</p>
+                    <p>• Las sesiones existentes se actualizan preservando tus selecciones y videos</p>
                   </div>
                 </CardContent>
               </Card>
