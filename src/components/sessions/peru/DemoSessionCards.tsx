@@ -36,13 +36,21 @@ interface DemoSession {
 
 const demoSessions: DemoSession[] = [
   {
-    id: 'demo-2',
-    commission: 'CIENCIA, INNOVACIÓN Y TECNOLOGÍA',
-    date: 'Jueves, 19 De Diciembre 2025, 10:00',
+    id: 'demo-5',
+    commission: 'SALUD Y POBLACIÓN',
+    date: 'Martes, 24 De Diciembre 2025, 09:00',
     status: 'scheduled',
-    videoStatus: 'found',
-    analysisStatus: 'completed',
-    relevanceScore: 92,
+    videoStatus: 'resolving',
+    analysisStatus: 'pending',
+    isRecommended: false,
+  },
+  {
+    id: 'demo-4',
+    commission: 'CIENCIA, INNOVACIÓN Y TECNOLOGÍA',
+    date: 'Lunes, 23 De Diciembre 2025, 11:00',
+    status: 'scheduled',
+    videoStatus: 'pending',
+    analysisStatus: 'pending',
     isRecommended: true,
   },
   {
@@ -55,22 +63,14 @@ const demoSessions: DemoSession[] = [
     isRecommended: true,
   },
   {
-    id: 'demo-4',
+    id: 'demo-2',
     commission: 'CIENCIA, INNOVACIÓN Y TECNOLOGÍA',
-    date: 'Lunes, 23 De Diciembre 2025, 11:00',
+    date: 'Jueves, 19 De Diciembre 2025, 10:00',
     status: 'scheduled',
-    videoStatus: 'pending',
-    analysisStatus: 'pending',
+    videoStatus: 'found',
+    analysisStatus: 'completed',
+    relevanceScore: 92,
     isRecommended: true,
-  },
-  {
-    id: 'demo-5',
-    commission: 'SALUD Y POBLACIÓN',
-    date: 'Martes, 24 De Diciembre 2025, 09:00',
-    status: 'scheduled',
-    videoStatus: 'resolving',
-    analysisStatus: 'pending',
-    isRecommended: false,
   },
 ];
 
