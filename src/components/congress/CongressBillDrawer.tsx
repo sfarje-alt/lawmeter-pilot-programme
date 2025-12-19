@@ -122,10 +122,21 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
             setSponsorDetails(sponsorData);
           }
 
-          // Analyze bill with AI if text is available
-          if (textVersionsData && textVersionsData.length > 0) {
-            analyzeBillWithAI(textVersionsData, bill.title, bill.policyArea?.name);
-          }
+          // Always analyze bill with AI - pass all available context
+          analyzeBillWithAI({
+            textVersions: textVersionsData,
+            title: bill.title,
+            policyArea: bill.policyArea?.name,
+            subjects: subjectsData?.legislativeSubjects,
+            sponsors: details?.sponsors || bill.sponsors,
+            cosponsorCount: cosponsorData?.length || details?.cosponsors?.count,
+            latestAction: bill.latestAction,
+            originChamber: bill.originChamber,
+            introducedDate: details?.introducedDate || bill.introducedDate,
+            crsSummary: summariesData?.[0]?.text,
+            committees: committeesData,
+            billStage: deriveBillStatusFromActions(actionsData)
+          });
         })
         .catch((error) => {
           console.error("Error fetching bill data:", error);
@@ -136,29 +147,74 @@ export function CongressBillDrawer({ bill, open, onOpenChange }: CongressBillDra
     }
   }, [open, bill]);
 
-  const analyzeBillWithAI = async (versions: any[], title: string, policyArea?: string) => {
-    if (!versions || versions.length === 0) return;
+  // Helper to derive bill stage from actions
+  const deriveBillStatusFromActions = (actionsData: any[]): string => {
+    if (!actionsData || actionsData.length === 0) return "Introduced";
+    
+    for (const action of actionsData) {
+      const text = action.text?.toLowerCase() || "";
+      if (text.includes("became public law") || text.includes("signed by president")) return "Became Law";
+      if (text.includes("presented to president") || text.includes("sent to president")) return "To President";
+      if (text.includes("passed") && text.includes("senate")) return "Passed Senate";
+      if (text.includes("passed") && (text.includes("house") || text.includes("h.r."))) return "Passed House";
+    }
+    return "Introduced";
+  };
 
+  interface AnalysisContext {
+    textVersions?: any[];
+    title: string;
+    policyArea?: string;
+    subjects?: any[];
+    sponsors?: any[];
+    cosponsorCount?: number;
+    latestAction?: { actionDate: string; text: string };
+    originChamber?: string;
+    introducedDate?: string;
+    crsSummary?: string;
+    committees?: any[];
+    billStage?: string;
+  }
+
+  const analyzeBillWithAI = async (context: AnalysisContext) => {
     setAnalyzingBill(true);
     try {
-      // Find the latest "Formatted Text" version
-      const latestVersion = versions[0];
-      const formattedText = latestVersion?.formats?.find((f: any) => f.type === "Formatted Text");
-      
-      if (!formattedText?.url) {
-        console.log("No formatted text URL found");
-        setAnalyzingBill(false);
-        return;
+      // Try to find formatted text URL if text versions exist
+      let billTextUrl: string | undefined;
+      if (context.textVersions && context.textVersions.length > 0) {
+        const latestVersion = context.textVersions[0];
+        const formattedText = latestVersion?.formats?.find((f: any) => f.type === "Formatted Text");
+        billTextUrl = formattedText?.url;
       }
 
-      console.log("Sending bill text URL to analyze:", formattedText.url);
+      // Clean CRS summary HTML if present
+      let cleanCrsSummary = context.crsSummary;
+      if (cleanCrsSummary) {
+        cleanCrsSummary = cleanCrsSummary.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      }
 
-      // Send the URL to the edge function - it will fetch the text server-side
+      console.log("Analyzing bill with context:", {
+        hasBillTextUrl: !!billTextUrl,
+        hasCrsSummary: !!cleanCrsSummary,
+        subjectsCount: context.subjects?.length || 0,
+        sponsorsCount: context.sponsors?.length || 0,
+        hasCommittees: !!context.committees?.length
+      });
+
       const { data, error } = await supabase.functions.invoke('analyze-bill', {
         body: {
-          billTextUrl: formattedText.url,
-          billTitle: title,
-          policyArea: policyArea
+          billTextUrl,
+          billTitle: context.title,
+          policyArea: context.policyArea,
+          legislativeSubjects: context.subjects,
+          sponsors: context.sponsors,
+          cosponsorCount: context.cosponsorCount,
+          latestAction: context.latestAction,
+          originChamber: context.originChamber,
+          introducedDate: context.introducedDate,
+          crsSummary: cleanCrsSummary,
+          committees: context.committees,
+          billStage: context.billStage
         }
       });
 

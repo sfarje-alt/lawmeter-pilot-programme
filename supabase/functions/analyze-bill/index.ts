@@ -11,28 +11,44 @@ serve(async (req) => {
   }
 
   try {
-    const { billTextUrl, billTitle, policyArea } = await req.json();
+    const { 
+      billTextUrl, 
+      billTitle, 
+      policyArea,
+      // Enhanced context fields
+      legislativeSubjects,
+      sponsors,
+      cosponsorCount,
+      latestAction,
+      originChamber,
+      introducedDate,
+      crsSummary,
+      committees,
+      billStage
+    } = await req.json();
     
-    if (!billTextUrl && !billTitle) {
+    if (!billTitle) {
       return new Response(
-        JSON.stringify({ error: "billTextUrl or billTitle is required" }),
+        JSON.stringify({ error: "billTitle is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     let billText = "";
     let textCharCount = 0;
+    let usedFullText = false;
+    let usedCRSSummary = false;
 
-    // Fetch bill text from Congress.gov (server-side, no CORS issues)
+    // Try to fetch full bill text first (highest quality)
     if (billTextUrl) {
       console.log(`Fetching bill text from: ${billTextUrl}`);
       try {
         const textResponse = await fetch(billTextUrl);
         if (textResponse.ok) {
           billText = await textResponse.text();
-          // Clean HTML tags if present
           billText = billText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
           textCharCount = billText.length;
+          usedFullText = textCharCount > 500; // Only count as full text if substantial
           console.log(`Successfully fetched ${textCharCount} characters from bill text`);
         } else {
           console.warn(`Failed to fetch bill text: ${textResponse.status}`);
@@ -42,10 +58,69 @@ serve(async (req) => {
       }
     }
 
-    if (!billText) {
-      console.log("No bill text available, using title only");
-      billText = billTitle;
-      textCharCount = 0;
+    // Fall back to CRS summary if no full text (second highest quality)
+    if (!usedFullText && crsSummary) {
+      console.log("Using CRS summary for analysis");
+      billText = crsSummary;
+      textCharCount = crsSummary.length;
+      usedCRSSummary = true;
+    }
+
+    // Build context string from all available metadata
+    const contextParts: string[] = [];
+    
+    if (legislativeSubjects && legislativeSubjects.length > 0) {
+      contextParts.push(`Legislative Subjects: ${legislativeSubjects.map((s: any) => s.name || s).join(", ")}`);
+    }
+    
+    if (sponsors && sponsors.length > 0) {
+      const sponsorInfo = sponsors.map((s: any) => 
+        `${s.fullName || s.name} (${s.party}-${s.state})`
+      ).join(", ");
+      contextParts.push(`Sponsors: ${sponsorInfo}`);
+      
+      // Analyze bipartisan support
+      const parties = new Set(sponsors.map((s: any) => s.party));
+      if (parties.size > 1) {
+        contextParts.push("Bipartisan Support: Yes");
+      }
+    }
+    
+    if (cosponsorCount !== undefined) {
+      contextParts.push(`Number of Cosponsors: ${cosponsorCount}`);
+    }
+    
+    if (originChamber) {
+      contextParts.push(`Origin Chamber: ${originChamber}`);
+    }
+    
+    if (introducedDate) {
+      contextParts.push(`Introduced: ${introducedDate}`);
+    }
+    
+    if (latestAction) {
+      contextParts.push(`Latest Action (${latestAction.actionDate}): ${latestAction.text}`);
+    }
+    
+    if (billStage) {
+      contextParts.push(`Current Stage: ${billStage}`);
+    }
+    
+    if (committees && committees.length > 0) {
+      const committeeNames = committees.map((c: any) => c.name || c).join(", ");
+      contextParts.push(`Committees: ${committeeNames}`);
+    }
+
+    const additionalContext = contextParts.join("\n");
+
+    // Determine confidence level
+    let confidenceLevel: "high" | "medium" | "low" = "low";
+    if (usedFullText) {
+      confidenceLevel = "high";
+    } else if (usedCRSSummary) {
+      confidenceLevel = "medium";
+    } else if (contextParts.length >= 3) {
+      confidenceLevel = "low"; // At least we have some metadata
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -53,7 +128,18 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-const systemPrompt = `You are a legislative risk analyst for a company that manufactures smart kettles and espresso machines. Analyze the given legislation and provide:
+    // Adjust system prompt based on available data
+    const analysisMode = usedFullText 
+      ? "FULL TEXT MODE: You have access to the complete bill text. Provide a thorough analysis."
+      : usedCRSSummary 
+        ? "SUMMARY MODE: You have the official CRS summary. Provide a solid analysis based on this authoritative summary."
+        : "METADATA MODE: You only have bill metadata (title, subjects, sponsors). Provide a best-effort analysis with appropriate caveats about limited information.";
+
+const systemPrompt = `You are a legislative risk analyst for a company that manufactures smart kettles and espresso machines. 
+
+${analysisMode}
+
+Analyze the given legislation and provide:
 1. A risk score from 0-100 (where 100 is highest risk for a smart kitchen appliance manufacturer)
 2. A risk category: "Critical", "Urgent", "High", "Medium", "Low", or "Minimal"
 3. A detailed explanation of why this legislation poses that level of risk
@@ -76,6 +162,14 @@ Consider impacts on:
 - Cybersecurity requirements for IoT/connected devices
 - Energy efficiency and eco-design standards
 - Labeling and certification requirements
+
+${!usedFullText && !usedCRSSummary ? `
+IMPORTANT - LIMITED DATA WARNING:
+Since you only have metadata, be conservative in your assessment:
+- Clearly state in your explanation that this is a preliminary analysis
+- Use phrases like "Based on available metadata..." or "Pending full text review..."
+- If the legislative subjects or title suggest potential relevance, note what additional review would be needed
+` : ''}
 
 IMPORTANT: The keyDeadline field MUST include specific dates when available. Use formats like:
 - "Effective since Jan 15, 2025" for enacted legislation
@@ -103,11 +197,20 @@ Respond ONLY with valid JSON in this exact format:
   ]
 }`;
 
-    const userPrompt = `Bill Title: ${billTitle}
-Policy Area: ${policyArea || "Not specified"}
+    // Build user prompt with all available information
+    let userPrompt = `Bill Title: ${billTitle}
+Policy Area: ${policyArea || "Not specified"}`;
 
-Bill Text:
-${billText.substring(0, 8000)}`; // Limit to avoid token limits
+    if (additionalContext) {
+      userPrompt += `\n\nAdditional Context:\n${additionalContext}`;
+    }
+
+    if (billText) {
+      const source = usedFullText ? "Bill Text" : usedCRSSummary ? "CRS Summary" : "Content";
+      userPrompt += `\n\n${source}:\n${billText.substring(0, 8000)}`;
+    }
+
+    console.log(`Analysis mode: ${confidenceLevel}, usedFullText: ${usedFullText}, usedCRSSummary: ${usedCRSSummary}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -166,7 +269,10 @@ ${billText.substring(0, 8000)}`; // Limit to avoid token limits
       ...analysis,
       metadata: {
         textCharCount,
-        usedFullText: textCharCount > 0
+        usedFullText,
+        usedCRSSummary,
+        confidenceLevel,
+        contextFieldsUsed: contextParts.length
       }
     };
 

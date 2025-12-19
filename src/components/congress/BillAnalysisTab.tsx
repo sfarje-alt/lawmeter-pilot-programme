@@ -1,8 +1,9 @@
 import { BillAnalysis } from "@/types/congress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, TrendingUp, Users, Building2, Landmark, Globe, CheckCircle2, FileText } from "lucide-react";
+import { AlertTriangle, TrendingUp, Users, Building2, Landmark, Globe, CheckCircle2, FileText, AlertCircle, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BillAnalysisTabProps {
   analysis: BillAnalysis | null;
@@ -34,7 +35,7 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
       <Card>
         <CardContent className="pt-6">
           <p className="text-muted-foreground text-center">
-            No analysis available for this bill. Analysis is generated automatically when loading bill text.
+            No analysis available for this bill. Analysis is generated automatically when opening bill details.
           </p>
         </CardContent>
       </Card>
@@ -91,34 +92,86 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
     }
   };
 
+  const getConfidenceConfig = (metadata?: BillAnalysis['metadata']) => {
+    if (!metadata) {
+      return {
+        level: "unknown",
+        label: "Analysis Complete",
+        icon: <Info className="h-5 w-5 text-muted-foreground" />,
+        color: "border-muted bg-muted/50",
+        description: "Analysis generated from available data"
+      };
+    }
+
+    if (metadata.usedFullText) {
+      return {
+        level: "high",
+        label: "Full Text Analysis",
+        icon: <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />,
+        color: "border-green-200 bg-green-50/50 dark:bg-green-950/20",
+        description: `Analyzed ${metadata.textCharCount?.toLocaleString() || 0} characters from complete bill text`
+      };
+    }
+
+    if (metadata.usedCRSSummary) {
+      return {
+        level: "medium",
+        label: "Summary-Based Analysis",
+        icon: <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+        color: "border-blue-200 bg-blue-50/50 dark:bg-blue-950/20",
+        description: "Based on official CRS summary - bill text not yet available"
+      };
+    }
+
+    return {
+      level: "low",
+      label: "Metadata Analysis",
+      icon: <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
+      color: "border-amber-200 bg-amber-50/50 dark:bg-amber-950/20",
+      description: `Preliminary analysis from ${metadata.contextFieldsUsed || 0} metadata fields (title, subjects, sponsors, etc.)`
+    };
+  };
+
+  const confidenceConfig = getConfidenceConfig(analysis.metadata);
+
   return (
     <div className="space-y-6">
-      {/* Analysis Metadata */}
-      {analysis.metadata && (
-        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              {analysis.metadata.usedFullText ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-              ) : (
-                <FileText className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-              )}
-              <div className="flex-1">
+      {/* Analysis Confidence Indicator */}
+      <Card className={confidenceConfig.color}>
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            {confidenceConfig.icon}
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-foreground">
-                  {analysis.metadata.usedFullText 
-                    ? "✓ Analysis based on full bill text" 
-                    : "⚠ Analysis based on title only"}
+                  {confidenceConfig.label}
                 </p>
-                {analysis.metadata.usedFullText && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Analyzed {analysis.metadata.textCharCount.toLocaleString()} characters from bill text
-                  </p>
-                )}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="outline" className="text-xs">
+                        {confidenceConfig.level === "high" ? "High Confidence" : 
+                         confidenceConfig.level === "medium" ? "Good Confidence" : 
+                         confidenceConfig.level === "low" ? "Preliminary" : ""}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-sm">
+                        {confidenceConfig.level === "high" && "Analysis based on complete bill text provides the most accurate risk assessment."}
+                        {confidenceConfig.level === "medium" && "CRS summaries are official Congressional Research Service analyses that provide reliable context."}
+                        {confidenceConfig.level === "low" && "This analysis uses available metadata. Results may change once full bill text becomes available."}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {confidenceConfig.description}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Risk Score Card */}
       <Card>
@@ -202,7 +255,10 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
       )}
 
       <div className="text-xs text-muted-foreground text-center pt-2">
-        <p>AI-generated analysis based on bill text</p>
+        <p>
+          AI-generated analysis • {confidenceConfig.level === "high" ? "Based on full bill text" : 
+            confidenceConfig.level === "medium" ? "Based on CRS summary" : "Based on available metadata"}
+        </p>
       </div>
     </div>
   );
