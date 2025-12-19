@@ -432,6 +432,20 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     });
   };
 
+  // Update session recording locally (for instant UI update after analysis)
+  const updateSessionRecording = useCallback((sessionId: string, recordingUpdate: Partial<PeruSession['recording']>) => {
+    setSessions(prev => prev.map(s => {
+      if (s.id !== sessionId) return s;
+      return {
+        ...s,
+        recording: {
+          ...s.recording,
+          ...recordingUpdate,
+        } as PeruSession['recording'],
+      };
+    }));
+  }, []);
+
   // Import sessions from parsed PDF data - saves to Supabase
   const importSessions = async (importedSessions: ImportedSession[]): Promise<{ inserted: number; updated: number }> => {
     // Helper to convert DD/MM/YYYY to YYYY-MM-DD
@@ -673,5 +687,6 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     importSessions,
     clearAllSessions,
     syncFromCongress,
+    updateSessionRecording,
   };
 }

@@ -47,6 +47,7 @@ export function PeruSessionsSection() {
     importSessions,
     clearAllSessions,
     syncFromCongress,
+    updateSessionRecording,
   } = usePeruSessions({
     commissionFilter: searchQuery,
     showOnlyRecommended,
@@ -245,6 +246,7 @@ export function PeruSessionsSection() {
                         onToggleSelection={toggleSessionSelection}
                         onResolveVideo={resolveSessionVideo}
                         onSetManualUrl={setManualVideoUrl}
+                        onUpdateRecording={updateSessionRecording}
                       />
                     ))}
                   </div>
