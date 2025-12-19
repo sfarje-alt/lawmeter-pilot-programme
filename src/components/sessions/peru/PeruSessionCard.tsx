@@ -55,7 +55,7 @@ interface PeruSessionCardProps {
   onToggleSelection: (sessionId: string) => void;
   onResolveVideo: (sessionId: string) => void;
   onSetManualUrl: (sessionId: string, url: string) => void;
-  onAnalysisComplete?: () => void;
+  onUpdateRecording?: (sessionId: string, recordingUpdate: Partial<PeruSession['recording']>) => void;
 }
 
 export function PeruSessionCard({
@@ -63,7 +63,7 @@ export function PeruSessionCard({
   onToggleSelection,
   onResolveVideo,
   onSetManualUrl,
-  onAnalysisComplete,
+  onUpdateRecording,
 }: PeruSessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
@@ -194,8 +194,14 @@ export function PeruSessionCard({
       session.scheduled_at
     );
     
-    if (result && onAnalysisComplete) {
-      onAnalysisComplete();
+    // Update local state immediately with the result
+    if (result && onUpdateRecording) {
+      onUpdateRecording(session.id, {
+        analysis_result: result,
+        analysis_status: 'COMPLETED',
+        analyzed_at: new Date().toISOString(),
+        transcription_status: 'COMPLETED',
+      });
     }
   };
   
