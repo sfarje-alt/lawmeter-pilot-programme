@@ -1,10 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { supabase } from "@/integrations/supabase/client";
+import { BillAnalysis } from "@/types/congress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -27,7 +29,9 @@ import {
   Sparkles,
   Copy,
   Check,
-  MapPin
+  MapPin,
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -56,6 +60,8 @@ export function UnifiedLegislationDrawer({
   onOpenChange 
 }: UnifiedLegislationDrawerProps) {
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<BillAnalysis | null>(null);
+  const [analyzingBill, setAnalyzingBill] = useState(false);
 
   // All hooks must be called before any conditional returns
   const theme = item ? regionThemes[item.region] : regionThemes.NAM;
@@ -122,6 +128,60 @@ export function UnifiedLegislationDrawer({
     ].filter(Boolean);
     return parts.join(" · ");
   }, [item, config, isPeru, peruData]);
+
+  // Check if US legislation that can be analyzed
+  const isUSLegislation = item?.jurisdictionCode === "US" || item?.region === "NAM";
+  
+  // Analyze bill with AI when drawer opens for US items
+  useEffect(() => {
+    const analyzeBillWithAI = async () => {
+      if (!item || !open || !isUSLegislation) return;
+      if (aiAnalysis) return; // Already analyzed
+      
+      // Check for cached analysis
+      const cacheKey = `unified_bill_analysis_${item.id}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          setAiAnalysis(JSON.parse(cached));
+          return;
+        } catch {
+          localStorage.removeItem(cacheKey);
+        }
+      }
+      
+      // Need a text URL or title to analyze
+      const textUrl = item.textUrl || item.sourceUrl;
+      if (!textUrl && !item.title) return;
+      
+      setAnalyzingBill(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('analyze-bill', {
+          body: {
+            billTextUrl: textUrl,
+            billTitle: item.title,
+            policyArea: item.policyArea
+          }
+        });
+
+        if (error) {
+          console.error("Error analyzing bill:", error);
+          return;
+        }
+
+        if (data && !data.error) {
+          setAiAnalysis(data);
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+        }
+      } catch (error) {
+        console.error("Error in analyzeBillWithAI:", error);
+      } finally {
+        setAnalyzingBill(false);
+      }
+    };
+
+    analyzeBillWithAI();
+  }, [open, item, isUSLegislation, aiAnalysis]);
 
   // Early return after all hooks
   if (!item) return null;
@@ -579,59 +639,230 @@ export function UnifiedLegislationDrawer({
               )}
             </TabsContent>
 
-            {/* AI Analysis Tab - Simplified like US Federal */}
+            {/* AI Analysis Tab - Dynamic for US, fallback for others */}
             <TabsContent value="analysis" className="space-y-6 mt-6">
-              {/* Risk Assessment Card - Always show with mock fallback */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5" />
-                      Risk Assessment for Smart Kitchen Appliances
-                    </CardTitle>
-                    <Badge 
-                      variant="outline" 
-                      className={cn(
-                        "px-3 py-1",
-                        item.riskLevel === "high" ? "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20" :
-                        item.riskLevel === "medium" ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20" :
-                        "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
-                      )}
-                    >
-                      {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Risk Score</span>
-                      <span className="font-bold text-lg">{item.riskScore || 0}/100</span>
-                    </div>
-                    <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          (item.riskScore || 0) >= 75 ? "bg-red-500" :
-                          (item.riskScore || 0) >= 50 ? "bg-orange-500" :
-                          (item.riskScore || 0) >= 25 ? "bg-yellow-500" : "bg-green-500"
-                        )}
-                        style={{ width: `${item.riskScore || 0}%` }}
-                      />
-                    </div>
-                  </div>
+              {/* Loading State for US Legislation */}
+              {isUSLegislation && analyzingBill && (
+                <div className="space-y-4 animate-pulse">
+                  <Card>
+                    <CardHeader>
+                      <div className="h-6 bg-muted rounded w-1/3"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-full"></div>
+                        <div className="h-4 bg-muted rounded w-5/6"></div>
+                        <div className="h-4 bg-muted rounded w-4/6"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
-                  <div className="pt-4 border-t">
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Impact Analysis
-                    </h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {item.aiSummary?.riskExplanation && item.aiSummary.riskExplanation.length > 100 
-                        ? item.aiSummary.riskExplanation 
-                        : item.aiSummary?.executiveSummary && item.aiSummary.executiveSummary.length > 100
-                        ? item.aiSummary.executiveSummary
-                        : `This regulation presents significant compliance implications for smart kitchen appliance manufacturers operating in ${item.jurisdictionCode === "PE" ? "Peru" : item.jurisdictionCode === "CR" ? "Costa Rica" : "this jurisdiction"}.
+              {/* US Legislation with AI Analysis */}
+              {isUSLegislation && aiAnalysis && !analyzingBill && (
+                <>
+                  {/* Analysis Metadata */}
+                  {aiAnalysis.metadata && (
+                    <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-3">
+                          {aiAnalysis.metadata.usedFullText ? (
+                            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <FileText className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                          )}
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-foreground">
+                              {aiAnalysis.metadata.usedFullText 
+                                ? "✓ Analysis based on full bill text" 
+                                : "⚠ Analysis based on title only"}
+                            </p>
+                            {aiAnalysis.metadata.usedFullText && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Analyzed {aiAnalysis.metadata.textCharCount.toLocaleString()} characters from bill text
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Risk Score Card */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5" />
+                          Risk Assessment for Smart Kitchen Appliances
+                        </CardTitle>
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "px-3 py-1",
+                            aiAnalysis.riskCategory === "Critical" || aiAnalysis.riskCategory === "Urgent" ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20" :
+                            aiAnalysis.riskCategory === "High" ? "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20" :
+                            aiAnalysis.riskCategory === "Medium" ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20" :
+                            "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
+                          )}
+                        >
+                          {aiAnalysis.riskCategory} Risk
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Risk Score</span>
+                          <span className="font-bold text-lg">{aiAnalysis.riskScore}/100</span>
+                        </div>
+                        <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              aiAnalysis.riskScore >= 75 ? "bg-red-500" :
+                              aiAnalysis.riskScore >= 50 ? "bg-orange-500" :
+                              aiAnalysis.riskScore >= 25 ? "bg-yellow-500" : "bg-green-500"
+                            )}
+                            style={{ width: `${aiAnalysis.riskScore}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Impact Analysis
+                        </h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                          {aiAnalysis.explanation}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Stakeholders Card */}
+                  {aiAnalysis.stakeholders && aiAnalysis.stakeholders.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          Stakeholder Analysis
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {aiAnalysis.stakeholders.map((stakeholder, index) => (
+                            <div 
+                              key={index} 
+                              className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
+                            >
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  {stakeholder.type === "Industry" || stakeholder.type === "Company" ? (
+                                    <Building className="h-4 w-4" />
+                                  ) : stakeholder.type === "Government" ? (
+                                    <Scale className="h-4 w-4" />
+                                  ) : (
+                                    <Users className="h-4 w-4" />
+                                  )}
+                                  <div>
+                                    <h4 className="font-semibold">{stakeholder.name}</h4>
+                                    <Badge variant="outline" className="mt-1">
+                                      {stakeholder.type}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Badge className={cn(
+                                  stakeholder.position === "Oppose" ? "bg-red-500/10 text-red-700 dark:text-red-400" :
+                                  stakeholder.position === "Support" ? "bg-green-500/10 text-green-700 dark:text-green-400" :
+                                  "bg-gray-500/10 text-gray-700 dark:text-gray-400"
+                                )}>
+                                  {stakeholder.position}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-2">
+                                {stakeholder.impact}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="text-xs text-muted-foreground text-center pt-2">
+                    <p>AI-generated analysis based on bill text</p>
+                  </div>
+                </>
+              )}
+
+              {/* US Legislation without analysis yet */}
+              {isUSLegislation && !aiAnalysis && !analyzingBill && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-muted-foreground text-center">
+                      No analysis available for this legislation. Analysis is generated automatically when bill text is available.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Non-US Legislation - Original fallback behavior */}
+              {!isUSLegislation && (
+                <>
+                  {/* Risk Assessment Card */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5" />
+                          Risk Assessment for Smart Kitchen Appliances
+                        </CardTitle>
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "px-3 py-1",
+                            item.riskLevel === "high" ? "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20" :
+                            item.riskLevel === "medium" ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20" :
+                            "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
+                          )}
+                        >
+                          {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Risk Score</span>
+                          <span className="font-bold text-lg">{item.riskScore || 0}/100</span>
+                        </div>
+                        <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              (item.riskScore || 0) >= 75 ? "bg-red-500" :
+                              (item.riskScore || 0) >= 50 ? "bg-orange-500" :
+                              (item.riskScore || 0) >= 25 ? "bg-yellow-500" : "bg-green-500"
+                            )}
+                            style={{ width: `${item.riskScore || 0}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Impact Analysis
+                        </h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                          {item.aiSummary?.riskExplanation && item.aiSummary.riskExplanation.length > 100 
+                            ? item.aiSummary.riskExplanation 
+                            : item.aiSummary?.executiveSummary && item.aiSummary.executiveSummary.length > 100
+                            ? item.aiSummary.executiveSummary
+                            : `This regulation presents significant compliance implications for smart kitchen appliance manufacturers operating in ${item.jurisdictionCode === "PE" ? "Peru" : item.jurisdictionCode === "CR" ? "Costa Rica" : "this jurisdiction"}.
 
 Key Business Impacts:
 • Product Compliance: May require modifications to product design, safety features, labeling requirements, or technical documentation to meet new regulatory standards.
@@ -649,114 +880,117 @@ Recommended Actions:
 • Engage with local regulatory consultants for interpretation guidance
 • Budget for certification and testing requirements
 • Monitor for implementing regulations and technical standards`}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Stakeholder Analysis Card - Always show with mock fallback */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Stakeholder Analysis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {(item.aiSummary?.stakeholderAnalysis && item.aiSummary.stakeholderAnalysis.length > 0) ? (
-                      item.aiSummary.stakeholderAnalysis.map((stakeholder, index) => (
-                        <div 
-                          key={index} 
-                          className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
-                        >
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2">
-                              {stakeholder.type === "industry" || stakeholder.type === "internal" ? (
-                                <Building className="h-4 w-4" />
-                              ) : stakeholder.type === "regulatory" ? (
-                                <Scale className="h-4 w-4" />
-                              ) : (
-                                <Users className="h-4 w-4" />
-                              )}
-                              <div>
-                                <h4 className="font-semibold">{stakeholder.stakeholder}</h4>
-                                <Badge variant="outline" className="mt-1 capitalize">
-                                  {stakeholder.type}
+                  {/* Stakeholder Analysis Card - Always show with mock fallback */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Stakeholder Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {(item.aiSummary?.stakeholderAnalysis && item.aiSummary.stakeholderAnalysis.length > 0) ? (
+                          item.aiSummary.stakeholderAnalysis.map((stakeholder, index) => (
+                            <div 
+                              key={index} 
+                              className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
+                            >
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  {stakeholder.type === "industry" || stakeholder.type === "internal" ? (
+                                    <Building className="h-4 w-4" />
+                                  ) : stakeholder.type === "regulatory" ? (
+                                    <Scale className="h-4 w-4" />
+                                  ) : (
+                                    <Users className="h-4 w-4" />
+                                  )}
+                                  <div>
+                                    <h4 className="font-semibold">{stakeholder.stakeholder}</h4>
+                                    <Badge variant="outline" className="mt-1 capitalize">
+                                      {stakeholder.type}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Badge className={cn(
+                                  stakeholder.impactLevel === "high" ? "bg-red-500/10 text-red-700 dark:text-red-400" :
+                                  stakeholder.impactLevel === "medium" ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400" :
+                                  "bg-green-500/10 text-green-700 dark:text-green-400"
+                                )}>
+                                  {stakeholder.impactLevel.charAt(0).toUpperCase() + stakeholder.impactLevel.slice(1)} Impact
                                 </Badge>
                               </div>
+                              <p className="text-sm text-muted-foreground mt-2">
+                                {stakeholder.impactDescription}
+                              </p>
                             </div>
-                            <Badge className={cn(
-                              stakeholder.impactLevel === "high" ? "bg-red-500/10 text-red-700 dark:text-red-400" :
-                              stakeholder.impactLevel === "medium" ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400" :
-                              "bg-green-500/10 text-green-700 dark:text-green-400"
-                            )}>
-                              {stakeholder.impactLevel.charAt(0).toUpperCase() + stakeholder.impactLevel.slice(1)} Impact
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {stakeholder.impactDescription}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      /* Mock stakeholder data as fallback */
-                      <>
-                        <div className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Scale className="h-4 w-4" />
-                              <div>
-                                <h4 className="font-semibold">{item.jurisdictionCode === "PE" ? "INDECOPI / DIGESA" : item.jurisdictionCode === "CR" ? "MEIC / Ministerio de Salud" : "Regulatory Authority"}</h4>
-                                <Badge variant="outline" className="mt-1">Regulatory</Badge>
+                          ))
+                        ) : (
+                          /* Mock stakeholder data as fallback */
+                          <>
+                            <div className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Scale className="h-4 w-4" />
+                                  <div>
+                                    <h4 className="font-semibold">{item.jurisdictionCode === "PE" ? "INDECOPI / DIGESA" : item.jurisdictionCode === "CR" ? "MEIC / Ministerio de Salud" : "Regulatory Authority"}</h4>
+                                    <Badge variant="outline" className="mt-1">Regulatory</Badge>
+                                  </div>
+                                </div>
+                                <Badge className="bg-red-500/10 text-red-700 dark:text-red-400">High Impact</Badge>
                               </div>
+                              <p className="text-sm text-muted-foreground mt-2">
+                                Primary enforcement authority responsible for compliance verification, product registration, and sanctions for non-compliance.
+                              </p>
                             </div>
-                            <Badge className="bg-red-500/10 text-red-700 dark:text-red-400">High Impact</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Primary enforcement authority responsible for compliance verification, product registration, and sanctions for non-compliance.
-                          </p>
-                        </div>
-                        <div className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Building className="h-4 w-4" />
-                              <div>
-                                <h4 className="font-semibold">Smart Kitchen Appliance Manufacturers</h4>
-                                <Badge variant="outline" className="mt-1">Industry</Badge>
+                            <div className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Building className="h-4 w-4" />
+                                  <div>
+                                    <h4 className="font-semibold">Smart Kitchen Appliance Manufacturers</h4>
+                                    <Badge variant="outline" className="mt-1">Industry</Badge>
+                                  </div>
+                                </div>
+                                <Badge className="bg-red-500/10 text-red-700 dark:text-red-400">High Impact</Badge>
                               </div>
+                              <p className="text-sm text-muted-foreground mt-2">
+                                Must adapt product designs, update documentation, obtain new certifications, and potentially modify supply chain to meet new requirements.
+                              </p>
                             </div>
-                            <Badge className="bg-red-500/10 text-red-700 dark:text-red-400">High Impact</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Must adapt product designs, update documentation, obtain new certifications, and potentially modify supply chain to meet new requirements.
-                          </p>
-                        </div>
-                        <div className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4" />
-                              <div>
-                                <h4 className="font-semibold">Importers & Distributors</h4>
-                                <Badge variant="outline" className="mt-1">External</Badge>
+                            <div className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4" />
+                                  <div>
+                                    <h4 className="font-semibold">Importers & Distributors</h4>
+                                    <Badge variant="outline" className="mt-1">External</Badge>
+                                  </div>
+                                </div>
+                                <Badge className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">Medium Impact</Badge>
                               </div>
+                              <p className="text-sm text-muted-foreground mt-2">
+                                Must verify compliance documentation, update import registrations, and ensure products meet local market requirements before distribution.
+                              </p>
                             </div>
-                            <Badge className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">Medium Impact</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Must verify compliance documentation, update import registrations, and ensure products meet local market requirements before distribution.
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <div className="text-xs text-muted-foreground text-center pt-2">
-                <p>AI-generated analysis based on legislation text</p>
-              </div>
+                  <div className="text-xs text-muted-foreground text-center pt-2">
+                    <p>AI-generated analysis based on legislation text</p>
+                  </div>
+                </>
+              )}
             </TabsContent>
+
 
             {/* Votes Tab */}
             <TabsContent value="votes" className="space-y-4 mt-6">
