@@ -228,7 +228,7 @@ export function DemoAnalyzedCard() {
                   variant="default"
                   size="sm"
                   className="gap-2 bg-green-600 hover:bg-green-700"
-                  onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}
+                  onClick={() => window.open('https://www.youtube.com/watch?v=Ux0Sn3C3bKE', '_blank')}
                 >
                   <Video className="h-4 w-4" />
                   Open Video
@@ -268,7 +268,7 @@ export function DemoAnalyzedCard() {
                   <iframe
                     width="100%"
                     height="100%"
-                    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                    src="https://www.youtube.com/embed/Ux0Sn3C3bKE"
                     title="Session Recording"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
