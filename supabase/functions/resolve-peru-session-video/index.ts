@@ -165,19 +165,39 @@ async function fetchChannelVideosByDate(
     `&publishedBefore=${publishedBefore.toISOString()}` +
     `&key=${apiKey}`;
   
+  console.log(`API URL (without key): search?channelId=${CHANNEL_ID}&type=video&maxResults=${maxResults}&publishedAfter=${publishedAfter.toISOString()}&publishedBefore=${publishedBefore.toISOString()}`);
   console.log(`Searching videos from ${publishedAfter.toISOString().substring(0, 10)} to ${publishedBefore.toISOString().substring(0, 10)}`);
   
   const response = await fetch(url);
+  const responseText = await response.text();
+  
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`YouTube API error: ${response.status}`, errorText);
-    throw new Error(`YouTube API error: ${response.status} - ${errorText}`);
+    console.error(`YouTube API error: ${response.status}`, responseText);
+    throw new Error(`YouTube API error: ${response.status} - ${responseText}`);
   }
   
-  const data = await response.json();
-  console.log(`Found ${data.items?.length || 0} videos in date range`);
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    console.error(`Failed to parse YouTube API response:`, responseText.substring(0, 500));
+    throw new Error(`Invalid JSON from YouTube API`);
+  }
   
-  return data.items || [];
+  const items = data.items || [];
+  console.log(`Found ${items.length} videos in date range`);
+  
+  // Verify we got videos from the correct channel
+  if (items.length > 0) {
+    const firstChannelId = items[0].snippet?.channelId;
+    console.log(`First video channelId: ${firstChannelId}`);
+    if (firstChannelId && firstChannelId !== CHANNEL_ID) {
+      console.error(`⚠️ WARNING: Videos returned from wrong channel! Expected ${CHANNEL_ID}, got ${firstChannelId}`);
+      console.error(`This suggests the API key may be restricted or the channelId filter isn't working.`);
+    }
+  }
+  
+  return items;
 }
 
 // Fetch videos with API key fallback
