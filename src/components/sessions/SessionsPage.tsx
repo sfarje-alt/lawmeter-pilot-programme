@@ -9,11 +9,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SESSION_REGIONS, SessionRegion, SessionCountryConfig } from '@/types/peruSessions';
 import { PeruSessionsSection } from './peru/PeruSessionsSection';
 import { SessionEmptyState } from './shared/SessionEmptyState';
-import { Video, Globe, MapPin, Building } from 'lucide-react';
+import { Video, MapPin } from 'lucide-react';
+import { RegionCode, regionThemes, NAMIcon, LATAMIcon, EUIcon, GCCIcon, APACIcon } from '@/components/regions/RegionConfig';
+import { CountryFlag } from '@/components/shared/CountryFlag';
 
 interface SessionsPageProps {
   className?: string;
 }
+
+// Map SessionRegion to RegionCode icon components
+const regionIconComponents: Record<RegionCode, React.FC<{ size?: number; className?: string }>> = {
+  NAM: NAMIcon,
+  LATAM: LATAMIcon,
+  EU: EUIcon,
+  GCC: GCCIcon,
+  APAC: APACIcon,
+};
 
 export function SessionsPage({ className }: SessionsPageProps) {
   const [selectedRegion, setSelectedRegion] = useState<SessionRegion>('LATAM');
@@ -77,21 +88,40 @@ export function SessionsPage({ className }: SessionsPageProps) {
         }
       }}>
         <TabsList className="bg-muted/50 p-1">
-          {SESSION_REGIONS.map(region => (
-            <TabsTrigger 
-              key={region.id} 
-              value={region.id}
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              <Globe className="h-4 w-4 mr-2" />
-              {region.name}
-              {region.countries.some(c => c.isImplemented) && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  Live
-                </Badge>
-              )}
-            </TabsTrigger>
-          ))}
+          {SESSION_REGIONS.map(region => {
+            const theme = regionThemes[region.id as RegionCode];
+            const IconComponent = regionIconComponents[region.id as RegionCode];
+            const isSelected = selectedRegion === region.id;
+            
+            return (
+              <TabsTrigger 
+                key={region.id} 
+                value={region.id}
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2"
+                style={isSelected ? { color: theme?.primaryColor } : undefined}
+              >
+                {IconComponent && (
+                  <IconComponent 
+                    size={16} 
+                    className={isSelected ? '' : 'text-muted-foreground'}
+                  />
+                )}
+                <span>{region.name}</span>
+                {region.countries.some(c => c.isImplemented) && (
+                  <Badge 
+                    variant="secondary" 
+                    className="ml-1 text-xs"
+                    style={{ 
+                      backgroundColor: `${theme?.primaryColor}20`,
+                      color: theme?.primaryColor 
+                    }}
+                  >
+                    Live
+                  </Badge>
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         {SESSION_REGIONS.map(region => (
@@ -117,7 +147,12 @@ export function SessionsPage({ className }: SessionsPageProps) {
                           }`}
                           onClick={() => handleCountrySelect(country.code)}
                         >
-                          <span className="text-lg">{country.flag}</span>
+                          <CountryFlag 
+                            countryKey={country.code} 
+                            variant="flag" 
+                            size="sm" 
+                            showTooltip={false}
+                          />
                           <span>{country.name}</span>
                           {!country.isImplemented && (
                             <Badge variant="outline" className="ml-1 text-xs">
