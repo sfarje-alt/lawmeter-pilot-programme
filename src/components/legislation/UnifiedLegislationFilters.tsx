@@ -40,6 +40,8 @@ interface UnifiedLegislationFiltersProps {
   activePresetId?: string;
   onApplyPreset?: (preset: UnifiedFilterPreset) => void;
   categories?: string[];
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function UnifiedLegislationFilters({
@@ -50,9 +52,10 @@ export function UnifiedLegislationFilters({
   presets = [],
   activePresetId,
   onApplyPreset,
-  categories = []
+  categories = [],
+  isOpen,
+  onOpenChange
 }: UnifiedLegislationFiltersProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const theme = regionThemes[config.region];
   
@@ -105,26 +108,7 @@ export function UnifiedLegislationFilters({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Toggle Button */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8 gap-2"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <SlidersHorizontal className="h-4 w-4" />
-        {isOpen ? "Hide Filters" : "Show Filters"}
-        {activeFilterCount > 0 && (
-          <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-            {activeFilterCount}
-          </Badge>
-        )}
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-      </Button>
-
-      {/* Collapsible Filters */}
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible open={isOpen} onOpenChange={onOpenChange}>
         <CollapsibleContent>
           <div className="space-y-4">
             {/* Presets Row */}
@@ -544,8 +528,42 @@ export function UnifiedLegislationFilters({
             </Collapsible>
           </div>
         </CollapsibleContent>
-      </Collapsible>
-    </div>
+    </Collapsible>
+  );
+}
+
+// Separate toggle button component
+export function UnifiedFilterToggleButton({
+  isOpen,
+  onToggle,
+  activeFilterCount,
+  primaryColor
+}: {
+  isOpen: boolean;
+  onToggle: () => void;
+  activeFilterCount: number;
+  primaryColor?: string;
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-7 gap-1.5 text-xs"
+      onClick={onToggle}
+    >
+      <SlidersHorizontal className="h-3.5 w-3.5" />
+      {isOpen ? "Hide" : "Filters"}
+      {activeFilterCount > 0 && (
+        <Badge 
+          variant="secondary" 
+          className="h-4 px-1 text-[10px]"
+          style={primaryColor ? { backgroundColor: primaryColor, color: 'white' } : undefined}
+        >
+          {activeFilterCount}
+        </Badge>
+      )}
+      <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+    </Button>
   );
 }
 
