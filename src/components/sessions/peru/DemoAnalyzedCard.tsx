@@ -197,7 +197,7 @@ export function DemoAnalyzedCard() {
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4 flex-shrink-0" />
-                  <span className="capitalize">Miércoles, 17 de Diciembre 2025, 18:15</span>
+                  <span className="capitalize">Wednesday, December 17, 2025, 18:15</span>
                 </div>
               </div>
 

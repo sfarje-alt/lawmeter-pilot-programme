@@ -38,7 +38,7 @@ const demoSessions: DemoSession[] = [
   {
     id: 'demo-5',
     commission: 'SALUD Y POBLACIÓN',
-    date: 'Martes, 24 De Diciembre 2025, 09:00',
+    date: 'Tuesday, December 24, 2025, 09:00',
     status: 'scheduled',
     videoStatus: 'resolving',
     analysisStatus: 'pending',
@@ -47,7 +47,7 @@ const demoSessions: DemoSession[] = [
   {
     id: 'demo-4',
     commission: 'CIENCIA, INNOVACIÓN Y TECNOLOGÍA',
-    date: 'Lunes, 23 De Diciembre 2025, 11:00',
+    date: 'Monday, December 23, 2025, 11:00',
     status: 'scheduled',
     videoStatus: 'pending',
     analysisStatus: 'pending',
@@ -56,7 +56,7 @@ const demoSessions: DemoSession[] = [
   {
     id: 'demo-3',
     commission: 'SALUD Y POBLACIÓN',
-    date: 'Viernes, 20 De Diciembre 2025, 15:30',
+    date: 'Friday, December 20, 2025, 15:30',
     status: 'scheduled',
     videoStatus: 'found',
     analysisStatus: 'processing',
@@ -65,7 +65,7 @@ const demoSessions: DemoSession[] = [
   {
     id: 'demo-2',
     commission: 'CIENCIA, INNOVACIÓN Y TECNOLOGÍA',
-    date: 'Jueves, 19 De Diciembre 2025, 10:00',
+    date: 'Thursday, December 19, 2025, 10:00',
     status: 'scheduled',
     videoStatus: 'found',
     analysisStatus: 'completed',
