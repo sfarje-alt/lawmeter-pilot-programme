@@ -29,6 +29,7 @@ import { PeruWatchedCommissions } from './PeruWatchedCommissions';
 import { PeruSessionImporter } from './PeruSessionImporter';
 import { DemoAnalyzedCard } from './DemoAnalyzedCard';
 import { DemoSessionCards } from './DemoSessionCards';
+import { DemoRecommendedSessions } from './DemoRecommendedSessions';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
 
 export function PeruSessionsSection() {
@@ -308,12 +309,15 @@ export function PeruSessionsSection() {
             </div>
           )}
 
+          {/* Demo Recommended Sessions - shown when filter is active */}
+          {showOnlyRecommended && <DemoRecommendedSessions />}
+
           {/* Sessions List */}
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : sessions.length === 0 ? (
+          ) : sessions.length === 0 && !showOnlyRecommended ? (
             <Card className="border-dashed">
               <CardContent className="py-12">
                 <div className="text-center">
