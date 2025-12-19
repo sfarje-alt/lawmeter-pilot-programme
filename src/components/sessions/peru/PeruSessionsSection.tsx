@@ -1,6 +1,6 @@
 // Peru Sessions Section - Main container for Peru Congress sessions
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,12 +18,16 @@ import {
   Search,
   Filter,
   RefreshCw,
-  Trash2
+  Trash2,
+  Brain
 } from 'lucide-react';
 import { usePeruSessions } from '@/hooks/usePeruSessions';
 import { PeruSessionCard } from './PeruSessionCard';
 import { PeruWatchedCommissions } from './PeruWatchedCommissions';
 import { PeruSessionImporter } from './PeruSessionImporter';
+import { RecommendedSessionsSection } from './RecommendedSessionsSection';
+import { SessionPipelineView } from './SessionPipelineView';
+import { DemoAnalyzedCard } from './DemoAnalyzedCard';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
 
 export function PeruSessionsSection() {
@@ -32,10 +36,13 @@ export function PeruSessionsSection() {
   const [showOnlyRecommended, setShowOnlyRecommended] = useState(false);
   const [showOnlySelected, setShowOnlySelected] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
+  const [pipelineStage, setPipelineStage] = useState<'all' | 'recommended' | 'selected' | 'video' | 'analyzed'>('all');
 
   const {
     sessions,
+    allSessions,
     watchedCommissions,
+    selectedSessionIds,
     isLoading,
     isSyncing,
     stats,
@@ -54,6 +61,47 @@ export function PeruSessionsSection() {
     showOnlySelected,
   });
 
+  // Get recommended sessions
+  const recommendedSessions = useMemo(() => {
+    return allSessions.filter(s => s.is_recommended);
+  }, [allSessions]);
+
+  // Get selected session IDs as Set
+  const selectedIdsSet = useMemo(() => new Set(selectedSessionIds), [selectedSessionIds]);
+
+  // Calculate analyzed count
+  const analyzedCount = useMemo(() => {
+    return allSessions.filter(s => s.recording?.analysis_status === 'COMPLETED').length;
+  }, [allSessions]);
+
+  // Pipeline stats
+  const pipelineStats = useMemo(() => ({
+    recommended: stats.recommended,
+    selected: stats.selected,
+    withVideo: stats.withVideo,
+    analyzed: analyzedCount,
+  }), [stats, analyzedCount]);
+
+  // Filter sessions based on pipeline stage
+  const filteredByPipeline = useMemo(() => {
+    let filtered = sessions;
+    switch (pipelineStage) {
+      case 'recommended':
+        filtered = sessions.filter(s => s.is_recommended);
+        break;
+      case 'selected':
+        filtered = sessions.filter(s => s.is_selected);
+        break;
+      case 'video':
+        filtered = sessions.filter(s => s.recording?.video_url);
+        break;
+      case 'analyzed':
+        filtered = sessions.filter(s => s.recording?.analysis_status === 'COMPLETED');
+        break;
+    }
+    return filtered;
+  }, [sessions, pipelineStage]);
+
   const handleClearAll = async () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar todas las sesiones? Esta acción no se puede deshacer.')) {
       await clearAllSessions();
@@ -62,6 +110,22 @@ export function PeruSessionsSection() {
 
   const handleSync = async () => {
     await syncFromCongress();
+  };
+
+  const handleSelectAllRecommended = () => {
+    recommendedSessions.forEach(s => {
+      if (!selectedIdsSet.has(s.id)) {
+        toggleSessionSelection(s.id);
+      }
+    });
+  };
+
+  const handleClearRecommendedSelection = () => {
+    recommendedSessions.forEach(s => {
+      if (selectedIdsSet.has(s.id)) {
+        toggleSessionSelection(s.id);
+      }
+    });
   };
 
   return (
@@ -127,6 +191,16 @@ export function PeruSessionsSection() {
             <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
           </CardContent>
         </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4 text-purple-600" />
+              <span className="text-sm text-muted-foreground">Analyzed</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{analyzedCount}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content */}
@@ -174,14 +248,39 @@ export function PeruSessionsSection() {
           </div>
         </div>
 
-        <TabsContent value="sessions" className="mt-6">
+        <TabsContent value="sessions" className="mt-6 space-y-6">
+          {/* Demo Analyzed Card */}
+          <DemoAnalyzedCard />
+
+          {/* Recommended Sessions Section */}
+          <RecommendedSessionsSection
+            recommendedSessions={recommendedSessions}
+            selectedSessionIds={selectedIdsSet}
+            onSelectAll={handleSelectAllRecommended}
+            onClearSelection={handleClearRecommendedSelection}
+            onToggleSelection={toggleSessionSelection}
+          />
+
+          {/* Pipeline View */}
+          <SessionPipelineView
+            stats={pipelineStats}
+            activeStage={pipelineStage}
+            onStageClick={setPipelineStage}
+          />
+
+          {/* All Sessions Card */}
           <Card>
             <CardHeader className="pb-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <span className="text-lg">🇵🇪</span>
-                    Peru Congress Sessions
+                    All Sessions
+                    {pipelineStage !== 'all' && (
+                      <Badge variant="secondary" className="ml-2">
+                        Filtered: {pipelineStage}
+                      </Badge>
+                    )}
                   </CardTitle>
                   <CardDescription>
                     Committee sessions from Congreso de la República del Perú
@@ -228,7 +327,7 @@ export function PeruSessionsSection() {
                 <div className="flex items-center justify-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : sessions.length === 0 ? (
+              ) : filteredByPipeline.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium text-foreground">No sessions found</h3>
@@ -239,7 +338,7 @@ export function PeruSessionsSection() {
               ) : (
                 <ScrollArea className="h-[600px] pr-4">
                   <div className="space-y-3">
-                    {sessions.map(session => (
+                    {filteredByPipeline.map(session => (
                       <PeruSessionCard
                         key={session.id}
                         session={session}
