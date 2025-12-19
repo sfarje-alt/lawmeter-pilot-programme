@@ -20,7 +20,8 @@ import {
   Trash2,
   Brain,
   Building2,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 import { usePeruSessions } from '@/hooks/usePeruSessions';
 import { PeruSessionCard } from './PeruSessionCard';
@@ -59,6 +60,11 @@ export function PeruSessionsSection() {
     showOnlyRecommended,
     showOnlySelected,
   });
+
+  // Get monitored (selected) sessions
+  const monitoredSessions = useMemo(() => {
+    return allSessions.filter(s => s.is_selected);
+  }, [allSessions]);
 
   // Calculate analyzed count
   const analyzedCount = useMemo(() => {
@@ -201,6 +207,50 @@ export function PeruSessionsSection() {
         <TabsContent value="sessions" className="mt-6 space-y-6">
           {/* Demo Analyzed Card */}
           <DemoAnalyzedCard />
+
+          {/* Monitored Sessions Card */}
+          <Card className="border-blue-500/20">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/10 rounded-lg">
+                    <Eye className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Monitored Sessions</CardTitle>
+                    <CardDescription>
+                      Sessions you've selected for monitoring ({monitoredSessions.length})
+                    </CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {monitoredSessions.length === 0 ? (
+                <div className="text-center py-8">
+                  <CheckCircle2 className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    No sessions selected for monitoring yet. Select sessions from the list below.
+                  </p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[300px] pr-4">
+                  <div className="space-y-3">
+                    {monitoredSessions.map(session => (
+                      <PeruSessionCard
+                        key={session.id}
+                        session={session}
+                        onToggleSelection={toggleSessionSelection}
+                        onResolveVideo={resolveSessionVideo}
+                        onSetManualUrl={setManualVideoUrl}
+                        onUpdateRecording={updateSessionRecording}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
 
           {/* All Sessions Card */}
           <Card>
