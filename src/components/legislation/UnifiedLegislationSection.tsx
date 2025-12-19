@@ -11,7 +11,6 @@ import {
   UnifiedFilterPreset 
 } from "@/types/unifiedLegislation";
 import { JurisdictionConfig } from "@/config/jurisdictionConfig";
-import { RegionHeader } from "@/components/regions/RegionHeader";
 import { RegionEmptyState } from "@/components/regions/RegionEmptyState";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import { useStarredBills } from "@/hooks/useStarredBills";
@@ -195,14 +194,6 @@ export function UnifiedLegislationSection({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <RegionHeader 
-        region={config.region}
-        title={title}
-        subtitle={subtitle}
-        alertCount={unreadCount}
-      />
-
       {/* Active State/Province Filter Badge */}
       {initialSubnationalFilter && (
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg border" style={{
