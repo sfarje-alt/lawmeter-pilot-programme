@@ -231,47 +231,213 @@ export function SocialListeningDemo() {
     return date.toLocaleDateString();
   };
 
-  // Press Coverage Data (renamed from Newspapers)
+  // Press Coverage Data - International News Sources
   const pressCoverage = [
+    // Global Wire Services
+    {
+      source: "Reuters",
+      country: "UK",
+      headline: "Global Supply Chains Face New Regulatory Hurdles as Trade Barriers Rise",
+      sentiment: "negative" as const,
+      score: -0.42,
+      date: "2025-01-16",
+      excerpt: "International manufacturers are bracing for increased compliance costs as new trade regulations take effect across major markets, with electronics and automotive sectors most affected...",
+      reach: "45M readers"
+    },
+    {
+      source: "Associated Press",
+      country: "USA",
+      headline: "Consumer Electronics Safety Standards Get Major Overhaul",
+      sentiment: "neutral" as const,
+      score: 0.12,
+      date: "2025-01-16",
+      excerpt: "Federal agencies announce comprehensive review of product safety regulations affecting smart home devices and IoT appliances, citing cybersecurity concerns...",
+      reach: "38M readers"
+    },
+    // US News
+    {
+      source: "The New York Times",
+      country: "USA",
+      headline: "Tech Giants Push Back Against Proposed AI Regulation Framework",
+      sentiment: "negative" as const,
+      score: -0.55,
+      date: "2025-01-15",
+      excerpt: "Silicon Valley executives warn that overly restrictive AI regulations could stifle innovation and push development overseas, as Congress debates new oversight measures...",
+      reach: "52M readers"
+    },
+    {
+      source: "The Washington Post",
+      country: "USA",
+      headline: "Administration Unveils New Environmental Standards for Electronics Manufacturing",
+      sentiment: "positive" as const,
+      score: 0.65,
+      date: "2025-01-15",
+      excerpt: "New EPA guidelines set ambitious targets for reducing e-waste and improving recyclability of consumer electronics, with industry expressing cautious optimism...",
+      reach: "48M readers"
+    },
+    {
+      source: "Bloomberg",
+      country: "USA",
+      headline: "Smart Appliance Market to Reach $180B by 2027 Despite Regulatory Headwinds",
+      sentiment: "positive" as const,
+      score: 0.72,
+      date: "2025-01-14",
+      excerpt: "Market analysts project continued growth in connected home devices segment, though compliance costs and data privacy regulations may slow adoption in certain regions...",
+      reach: "35M readers"
+    },
+    {
+      source: "The Wall Street Journal",
+      country: "USA",
+      headline: "Manufacturing Sector Adapts to New Trade Compliance Requirements",
+      sentiment: "neutral" as const,
+      score: 0.08,
+      date: "2025-01-14",
+      excerpt: "Companies investing heavily in supply chain visibility and compliance technology as cross-border trade regulations become increasingly complex...",
+      reach: "42M readers"
+    },
+    // UK/Europe News
+    {
+      source: "Financial Times",
+      country: "UK",
+      headline: "EU Digital Markets Act Forces Tech Giants to Open Ecosystems",
+      sentiment: "neutral" as const,
+      score: 0.18,
+      date: "2025-01-16",
+      excerpt: "Brussels enforcement of DMA creates new opportunities for smaller players in European markets, though implementation challenges persist for compliance teams...",
+      reach: "28M readers"
+    },
+    {
+      source: "The Guardian",
+      country: "UK",
+      headline: "Right to Repair Movement Gains Momentum Across Europe",
+      sentiment: "positive" as const,
+      score: 0.78,
+      date: "2025-01-15",
+      excerpt: "Consumer advocacy groups celebrate new regulations requiring manufacturers to make spare parts and repair documentation available for at least 10 years...",
+      reach: "32M readers"
+    },
+    {
+      source: "BBC News",
+      country: "UK",
+      headline: "UK Post-Brexit Product Safety Framework Takes Shape",
+      sentiment: "neutral" as const,
+      score: 0.05,
+      date: "2025-01-14",
+      excerpt: "British government outlines plans for new product certification system to replace CE marking, with industry seeking clarity on transition timelines...",
+      reach: "55M readers"
+    },
+    {
+      source: "Der Spiegel",
+      country: "DE",
+      headline: "German Industry Calls for Streamlined EU Regulations",
+      sentiment: "negative" as const,
+      score: -0.38,
+      date: "2025-01-14",
+      excerpt: "BDI warns that overlapping compliance requirements are undermining European competitiveness, calls for regulatory harmonization across member states...",
+      reach: "18M readers"
+    },
+    {
+      source: "Le Monde",
+      country: "FR",
+      headline: "France Leads Push for Stricter Digital Sovereignty Measures",
+      sentiment: "positive" as const,
+      score: 0.52,
+      date: "2025-01-13",
+      excerpt: "Paris champions new EU initiatives to reduce dependence on non-European technology providers, with implications for cloud services and IoT devices...",
+      reach: "15M readers"
+    },
+    // Middle East
+    {
+      source: "Al Jazeera",
+      country: "QA",
+      headline: "GCC Nations Harmonize Product Import Standards",
+      sentiment: "positive" as const,
+      score: 0.61,
+      date: "2025-01-15",
+      excerpt: "Gulf states move toward unified certification system for consumer goods, simplifying market access for international manufacturers...",
+      reach: "40M readers"
+    },
+    {
+      source: "Arab News",
+      country: "SA",
+      headline: "Saudi Arabia Accelerates Smart City Initiatives with New Tech Regulations",
+      sentiment: "positive" as const,
+      score: 0.68,
+      date: "2025-01-14",
+      excerpt: "Kingdom introduces fast-track approval process for IoT devices as NEOM and other megaprojects drive demand for connected infrastructure...",
+      reach: "12M readers"
+    },
+    {
+      source: "The National",
+      country: "UAE",
+      headline: "Dubai Emerges as Testing Ground for Consumer Tech Regulations",
+      sentiment: "neutral" as const,
+      score: 0.22,
+      date: "2025-01-13",
+      excerpt: "UAE regulatory sandbox approach attracts international attention as alternative to rigid compliance frameworks in other markets...",
+      reach: "8M readers"
+    },
+    // Asia-Pacific
+    {
+      source: "NHK World",
+      country: "JP",
+      headline: "Japan Tightens Cybersecurity Requirements for Connected Devices",
+      sentiment: "neutral" as const,
+      score: 0.15,
+      date: "2025-01-16",
+      excerpt: "New METI guidelines mandate security assessments for smart home appliances sold in Japanese market, effective April 2025...",
+      reach: "25M readers"
+    },
+    {
+      source: "Nikkei Asia",
+      country: "JP",
+      headline: "Asian Manufacturers Pivot to Comply with Global Sustainability Standards",
+      sentiment: "positive" as const,
+      score: 0.58,
+      date: "2025-01-15",
+      excerpt: "Regional suppliers invest in green manufacturing capabilities to meet EU and US environmental compliance requirements...",
+      reach: "22M readers"
+    },
+    {
+      source: "The Korea Herald",
+      country: "KR",
+      headline: "South Korea Updates Electronics Safety Certification Process",
+      sentiment: "neutral" as const,
+      score: 0.08,
+      date: "2025-01-14",
+      excerpt: "KCC streamlines KC Mark certification procedures, reducing approval times for imported consumer electronics while maintaining safety standards...",
+      reach: "15M readers"
+    },
+    {
+      source: "Taipei Times",
+      country: "TW",
+      headline: "Taiwan Semiconductor Suppliers Adapt to New Export Controls",
+      sentiment: "negative" as const,
+      score: -0.45,
+      date: "2025-01-13",
+      excerpt: "Chip makers face complex compliance landscape as geopolitical tensions reshape global supply chains and export regulations tighten...",
+      reach: "6M readers"
+    },
+    // Latin America
     {
       source: "La Nación",
-      country: "costa-rica",
+      country: "CR",
       headline: "Ley Fintech Promete Modernización Bancaria, BAC Alerta Sobre Riesgos",
       sentiment: "neutral" as const,
       score: 0.08,
-      date: "2025-01-16",
-      excerpt: "El proyecto de regulación fintech ha generado debate en la Asamblea. Mientras el gobierno destaca innovación, el sector bancario tradicional señala preocupaciones sobre competencia desleal...",
-      reach: "850K lectores"
+      date: "2025-01-12",
+      excerpt: "El proyecto de regulación fintech ha generado debate en la Asamblea. Mientras el gobierno destaca innovación, el sector bancario tradicional señala preocupaciones...",
+      reach: "850K readers"
     },
     {
-      source: "El Financiero",
-      country: "costa-rica",
-      headline: "BAC y Banca Privada Exigen Igualdad Regulatoria ante Avance Fintech",
-      sentiment: "negative" as const,
-      score: -0.62,
-      date: "2025-01-15",
-      excerpt: "Los principales bancos del país, liderados por BAC, han manifestado su rechazo a disposiciones que permitirían a plataformas fintech operar con menores requisitos de capital y liquidez...",
-      reach: "420K lectores"
-    },
-    {
-      source: "CRHoy",
-      country: "costa-rica",
-      headline: "SUGEF Respalda Marco Regulatorio que Equilibra Innovación y Estabilidad",
+      source: "El Comercio",
+      country: "PE",
+      headline: "Congreso Debate Nueva Ley de Protección al Consumidor Digital",
       sentiment: "positive" as const,
-      score: 0.71,
-      date: "2025-01-14",
-      excerpt: "La Superintendencia General de Entidades Financieras destacó que el proyecto incluye salvaguardas prudenciales adecuadas para proteger el sistema financiero nacional...",
-      reach: "320K lectores"
-    },
-    {
-      source: "Semanario Universidad",
-      country: "costa-rica",
-      headline: "Proyecto Fintech Ignora Inclusión Financiera en Zonas Rurales",
-      sentiment: "negative" as const,
-      score: -0.78,
-      date: "2025-01-13",
-      excerpt: "Organizaciones de consumidores critican que la ley no contempla mecanismos para garantizar acceso bancario digital a comunidades alejadas de centros urbanos...",
-      reach: "280K lectores"
+      score: 0.42,
+      date: "2025-01-12",
+      excerpt: "Legisladores peruanos avanzan proyecto que fortalece derechos de usuarios en comercio electrónico y establece estándares para productos conectados...",
+      reach: "1.2M readers"
     }
   ];
 

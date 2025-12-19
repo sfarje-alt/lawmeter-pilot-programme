@@ -27,8 +27,18 @@ export const COUNTRY_FLAGS: Record<string, CountryFlagInfo> = {
   "CR": { code: "CR", name: "Costa Rica", flagUrl: "https://flagcdn.com/w80/cr.png", emoji: "🇨🇷", region: "LATAM" },
   "CRI": { code: "CR", name: "Costa Rica", flagUrl: "https://flagcdn.com/w80/cr.png", emoji: "🇨🇷", region: "LATAM" },
   
-  // European Union (EU)
+  // European Union (EU) and European Countries
   "EU": { code: "EU", name: "European Union", flagUrl: "https://flagcdn.com/w80/eu.png", emoji: "🇪🇺", region: "EU" },
+  "UK": { code: "GB", name: "United Kingdom", flagUrl: "https://flagcdn.com/w80/gb.png", emoji: "🇬🇧", region: "EU" },
+  "GB": { code: "GB", name: "United Kingdom", flagUrl: "https://flagcdn.com/w80/gb.png", emoji: "🇬🇧", region: "EU" },
+  "Germany": { code: "DE", name: "Germany", flagUrl: "https://flagcdn.com/w80/de.png", emoji: "🇩🇪", region: "EU" },
+  "DE": { code: "DE", name: "Germany", flagUrl: "https://flagcdn.com/w80/de.png", emoji: "🇩🇪", region: "EU" },
+  "France": { code: "FR", name: "France", flagUrl: "https://flagcdn.com/w80/fr.png", emoji: "🇫🇷", region: "EU" },
+  "FR": { code: "FR", name: "France", flagUrl: "https://flagcdn.com/w80/fr.png", emoji: "🇫🇷", region: "EU" },
+  "Spain": { code: "ES", name: "Spain", flagUrl: "https://flagcdn.com/w80/es.png", emoji: "🇪🇸", region: "EU" },
+  "ES": { code: "ES", name: "Spain", flagUrl: "https://flagcdn.com/w80/es.png", emoji: "🇪🇸", region: "EU" },
+  "Switzerland": { code: "CH", name: "Switzerland", flagUrl: "https://flagcdn.com/w80/ch.png", emoji: "🇨🇭", region: "EU" },
+  "CH": { code: "CH", name: "Switzerland", flagUrl: "https://flagcdn.com/w80/ch.png", emoji: "🇨🇭", region: "EU" },
   
   // Gulf Cooperation Council (GCC)
   "UAE": { code: "AE", name: "United Arab Emirates", flagUrl: "https://flagcdn.com/w80/ae.png", emoji: "🇦🇪", region: "GCC" },
