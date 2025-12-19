@@ -26,6 +26,8 @@ import { BillDrawer } from "@/components/bills/BillDrawer";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { LegislativeSessionsCalendar } from "@/components/calendar/LegislativeSessionsCalendar";
 import { ContactForm } from "@/components/ContactForm";
+import { MediaSection } from "@/components/media/MediaSection";
+import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { isUpcomingDeadline } from "@/lib/dateUtils";
 import { CongressBillsSection } from "@/components/congress/CongressBillsSection";
 import { CongressBillDrawer } from "@/components/congress/CongressBillDrawer";
@@ -982,6 +984,13 @@ export default function LawMeterDashboard() {
             <SessionsPage />
           </TabsContent>
 
+          <TabsContent value="media" className="mt-6">
+            <MediaSection />
+          </TabsContent>
+
+          <TabsContent value="social" className="mt-6">
+            <SocialListeningDemo />
+          </TabsContent>
 
           <TabsContent value="contact" className="mt-6">
             <ContactForm />

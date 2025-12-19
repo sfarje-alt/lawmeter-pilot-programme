@@ -67,10 +67,9 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
         console.log(`Got transcription from YouTube captions: ${transcription.length} chars`);
         toast.success('Subtítulos de YouTube obtenidos', { duration: 2000 });
       } else {
-        // Step 3: Try Python microservice (yt-dlp + AssemblyAI)
-        // Note: This may fail due to YouTube bot detection
+        // Step 3: Use Python microservice (yt-dlp + AssemblyAI)
         toast.info('Transcribiendo con servicio dedicado...', { 
-          description: 'Primera vez puede tomar ~30s extra',
+          description: 'Primera vez puede tomar ~30s extra (servicio despertando)',
           duration: 120000 
         });
 
@@ -101,25 +100,17 @@ export function useSessionAnalysis(): UseSessionAnalysisResult {
         } catch (serviceError) {
           console.error('[Python Service] Transcription failed:', serviceError);
           
-          // Check if it's a YouTube bot detection error
-          const errorMessage = serviceError instanceof Error ? serviceError.message : 'Unknown error';
-          const isBotDetection = errorMessage.includes('Sign in to confirm') || errorMessage.includes('bot');
-          
           await supabase
             .from('session_recordings')
             .upsert({ 
               session_id: sessionId,
               transcription_status: 'FAILED',
-              last_error: isBotDetection 
-                ? 'YouTube requiere autenticación - video sin subtítulos automáticos'
-                : `Transcription failed: ${errorMessage}`
+              last_error: `Transcription service failed: ${serviceError instanceof Error ? serviceError.message : 'Unknown error'}`
             }, { onConflict: 'session_id' });
           
-          toast.error('No se pudo transcribir', {
-            description: isBotDetection 
-              ? 'Este video no tiene subtítulos y YouTube bloquea la descarga. Intenta con otro video que tenga subtítulos habilitados.'
-              : 'Error en el servicio de transcripción',
-            duration: 8000
+          toast.error('Error en transcripción', {
+            description: serviceError instanceof Error ? serviceError.message : 'Intenta de nuevo más tarde',
+            duration: 6000
           });
           
           return null;
