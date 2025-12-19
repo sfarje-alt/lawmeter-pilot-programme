@@ -51,9 +51,17 @@ export interface BillAnalysis {
   riskCategory: "Critical" | "Urgent" | "High" | "Medium" | "Low" | "Minimal";
   explanation: string;
   stakeholders: BillStakeholder[];
+  cardSummary?: {
+    whatChanges: string;
+    whoImpacted: string;
+    keyDeadline: string;
+  };
   metadata?: {
     textCharCount: number;
     usedFullText: boolean;
+    usedCRSSummary?: boolean;
+    confidenceLevel?: "high" | "medium" | "low";
+    contextFieldsUsed?: number;
   };
 }
 
