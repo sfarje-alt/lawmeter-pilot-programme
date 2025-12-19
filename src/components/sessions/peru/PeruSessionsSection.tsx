@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -16,17 +16,16 @@ import {
   CheckCircle2, 
   Clock,
   Search,
-  Filter,
   RefreshCw,
   Trash2,
-  Brain
+  Brain,
+  Building2,
+  FileText
 } from 'lucide-react';
 import { usePeruSessions } from '@/hooks/usePeruSessions';
 import { PeruSessionCard } from './PeruSessionCard';
 import { PeruWatchedCommissions } from './PeruWatchedCommissions';
 import { PeruSessionImporter } from './PeruSessionImporter';
-import { RecommendedSessionsSection } from './RecommendedSessionsSection';
-
 import { DemoAnalyzedCard } from './DemoAnalyzedCard';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
 
@@ -61,14 +60,6 @@ export function PeruSessionsSection() {
     showOnlySelected,
   });
 
-  // Get recommended sessions
-  const recommendedSessions = useMemo(() => {
-    return allSessions.filter(s => s.is_recommended);
-  }, [allSessions]);
-
-  // Get selected session IDs as Set
-  const selectedIdsSet = useMemo(() => new Set(selectedSessionIds), [selectedSessionIds]);
-
   // Calculate analyzed count
   const analyzedCount = useMemo(() => {
     return allSessions.filter(s => s.recording?.analysis_status === 'COMPLETED').length;
@@ -86,21 +77,6 @@ export function PeruSessionsSection() {
     await syncFromCongress();
   };
 
-  const handleSelectAllRecommended = () => {
-    recommendedSessions.forEach(s => {
-      if (!selectedIdsSet.has(s.id)) {
-        toggleSessionSelection(s.id);
-      }
-    });
-  };
-
-  const handleClearRecommendedSelection = () => {
-    recommendedSessions.forEach(s => {
-      if (selectedIdsSet.has(s.id)) {
-        toggleSessionSelection(s.id);
-      }
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -226,16 +202,6 @@ export function PeruSessionsSection() {
           {/* Demo Analyzed Card */}
           <DemoAnalyzedCard />
 
-          {/* Recommended Sessions Section */}
-          <RecommendedSessionsSection
-            recommendedSessions={recommendedSessions}
-            selectedSessionIds={selectedIdsSet}
-            onSelectAll={handleSelectAllRecommended}
-            onClearSelection={handleClearRecommendedSelection}
-            onToggleSelection={toggleSessionSelection}
-          />
-
-
           {/* All Sessions Card */}
           <Card>
             <CardHeader className="pb-4">
@@ -283,6 +249,35 @@ export function PeruSessionsSection() {
                   Selected
                 </Button>
               </div>
+
+              {/* Recommendation explanation - shows when filter is active */}
+              {showOnlyRecommended && (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-start gap-3 p-3 bg-amber-500/5 rounded-lg border border-amber-500/10">
+                    <div className="p-1.5 bg-amber-500/10 rounded">
+                      <Building2 className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm text-foreground">Committees & Chambers</p>
+                      <p className="text-muted-foreground text-xs mt-1">
+                        Sessions from your watched commissions in Congress, Senate, or Parliament bodies configured in Monitoring Settings.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-3 bg-orange-500/5 rounded-lg border border-orange-500/10">
+                    <div className="p-1.5 bg-orange-500/10 rounded">
+                      <FileText className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm text-foreground">Agenda Content</p>
+                      <p className="text-muted-foreground text-xs mt-1">
+                        Sessions whose agenda mentions topics related to your starred bills, keywords, or regulatory areas of interest.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardHeader>
 
             <CardContent>
