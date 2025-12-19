@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Grid, List, Loader2 } from "lucide-react";
 import { UnifiedLegislationCard } from "./UnifiedLegislationCard";
-import { UnifiedLegislationFilters } from "./UnifiedLegislationFilters";
+import { UnifiedLegislationFilters, UnifiedFilterToggleButton } from "./UnifiedLegislationFilters";
 import { 
   UnifiedLegislationItem, 
   UnifiedFilterState, 
@@ -49,6 +49,7 @@ export function UnifiedLegislationSection({
   const [filters, setFilters] = useState<UnifiedFilterState>(defaultFilterState);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [activePresetId, setActivePresetId] = useState<string | undefined>();
+  const [filtersOpen, setFiltersOpen] = useState(false);
   
   const { markAsRead, toggleRead, isRead, deleteAlert, isDeleted } = useReadAlerts();
   const { isStarred, toggleStar } = useStarredBills();
@@ -175,6 +176,20 @@ export function UnifiedLegislationSection({
     sortedItems.filter(i => !isRead(i.id)).length
   , [sortedItems, isRead]);
 
+  // Active filter count for badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.instrumentTypes.length > 0) count++;
+    if (filters.hierarchyLevels.length > 0) count++;
+    if (filters.statuses.length > 0) count++;
+    if (filters.subnationalUnits.length > 0) count++;
+    if (filters.riskLevels.length > 0) count++;
+    if (filters.categories.length > 0) count++;
+    if (filters.authorities.length > 0) count++;
+    if (filters.deadlinePreset !== "none") count++;
+    return count;
+  }, [filters]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -213,27 +228,23 @@ export function UnifiedLegislationSection({
         </div>
       )}
 
-      {/* Filters */}
-      <UnifiedLegislationFilters
-        config={config}
-        filters={filters}
-        onFiltersChange={setFilters}
-        counts={counts}
-        presets={presets}
-        activePresetId={activePresetId}
-        onApplyPreset={applyPreset}
-        categories={categories}
-      />
-
-      {/* View Mode Toggle + Results Count */}
+      {/* View Mode Toggle + Results Count + Filter Toggle */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{sortedItems.length}</span> results
-          {unreadCount > 0 && (
-            <span className="ml-2">
-              (<span style={{ color: theme.primaryColor }}>{unreadCount} unread</span>)
-            </span>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium text-foreground">{sortedItems.length}</span> results
+            {unreadCount > 0 && (
+              <span className="ml-2">
+                (<span style={{ color: theme.primaryColor }}>{unreadCount} unread</span>)
+              </span>
+            )}
+          </div>
+          <UnifiedFilterToggleButton
+            isOpen={filtersOpen}
+            onToggle={() => setFiltersOpen(!filtersOpen)}
+            activeFilterCount={activeFilterCount}
+            primaryColor={theme.primaryColor}
+          />
         </div>
         
         <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
@@ -255,6 +266,20 @@ export function UnifiedLegislationSection({
           </Button>
         </div>
       </div>
+
+      {/* Collapsible Filters */}
+      <UnifiedLegislationFilters
+        config={config}
+        filters={filters}
+        onFiltersChange={setFilters}
+        counts={counts}
+        presets={presets}
+        activePresetId={activePresetId}
+        onApplyPreset={applyPreset}
+        categories={categories}
+        isOpen={filtersOpen}
+        onOpenChange={setFiltersOpen}
+      />
 
       {/* Items */}
       {sortedItems.length === 0 ? (

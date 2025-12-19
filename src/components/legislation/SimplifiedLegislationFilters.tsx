@@ -43,6 +43,8 @@ interface SimplifiedLegislationFiltersProps {
     inForce: number;
     pipeline: number;
   };
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export const defaultSimplifiedFilters: SimplifiedFilterState = {
@@ -55,9 +57,10 @@ export const defaultSimplifiedFilters: SimplifiedFilterState = {
 export function SimplifiedLegislationFilters({
   filters,
   onFiltersChange,
-  counts
+  counts,
+  isOpen,
+  onOpenChange
 }: SimplifiedLegislationFiltersProps) {
-  const [isOpen, setIsOpen] = useState(false);
   
   const updateFilter = <K extends keyof SimplifiedFilterState>(
     key: K, 
@@ -92,26 +95,7 @@ export function SimplifiedLegislationFilters({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Toggle Button */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8 gap-2"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <SlidersHorizontal className="h-4 w-4" />
-        {isOpen ? "Hide Filters" : "Show Filters"}
-        {activeFilterCount > 0 && (
-          <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-            {activeFilterCount}
-          </Badge>
-        )}
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-      </Button>
-
-      {/* Collapsible Filters */}
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible open={isOpen} onOpenChange={onOpenChange}>
         <CollapsibleContent>
           <div className="flex items-center gap-3 flex-wrap p-3 rounded-lg bg-muted/30">
             {/* Lifecycle Filter */}
@@ -224,7 +208,35 @@ export function SimplifiedLegislationFilters({
             )}
           </div>
         </CollapsibleContent>
-      </Collapsible>
-    </div>
+    </Collapsible>
+  );
+}
+
+// Separate toggle button component
+export function SimplifiedFilterToggleButton({
+  isOpen,
+  onToggle,
+  activeFilterCount
+}: {
+  isOpen: boolean;
+  onToggle: () => void;
+  activeFilterCount: number;
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-7 gap-1.5 text-xs"
+      onClick={onToggle}
+    >
+      <SlidersHorizontal className="h-3.5 w-3.5" />
+      {isOpen ? "Hide" : "Filters"}
+      {activeFilterCount > 0 && (
+        <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+          {activeFilterCount}
+        </Badge>
+      )}
+      <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+    </Button>
   );
 }

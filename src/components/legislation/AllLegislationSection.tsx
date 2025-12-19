@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Grid, List, Globe } from "lucide-react";
 import { UnifiedLegislationCard } from "./UnifiedLegislationCard";
-import { SimplifiedLegislationFilters, defaultSimplifiedFilters } from "./SimplifiedLegislationFilters";
+import { SimplifiedLegislationFilters, SimplifiedFilterToggleButton, defaultSimplifiedFilters } from "./SimplifiedLegislationFilters";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { RegionEmptyState } from "@/components/regions/RegionEmptyState";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
@@ -23,6 +23,7 @@ export function AllLegislationSection({
 }: AllLegislationSectionProps) {
   const [filters, setFilters] = useState(defaultSimplifiedFilters);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   
   const { markAsRead, toggleRead, isRead, deleteAlert, isDeleted } = useReadAlerts();
   const { isStarred, toggleStar } = useStarredBills();
@@ -115,24 +116,32 @@ export function AllLegislationSection({
     sortedItems.filter(i => !isRead(i.id)).length
   , [sortedItems, isRead]);
 
+  // Active filter count for badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.riskLevels.length > 0) count++;
+    if (filters.deadlinePreset !== "none") count++;
+    return count;
+  }, [filters]);
+
   return (
     <div className="space-y-6">
-      {/* Simplified Filters */}
-      <SimplifiedLegislationFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        counts={counts}
-      />
-
-      {/* View Mode Toggle + Results Count */}
+      {/* View Mode Toggle + Results Count + Filter Toggle */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{sortedItems.length}</span> results
-          {unreadCount > 0 && (
-            <span className="ml-2">
-              (<span className="text-primary">{unreadCount} unread</span>)
-            </span>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium text-foreground">{sortedItems.length}</span> results
+            {unreadCount > 0 && (
+              <span className="ml-2">
+                (<span className="text-primary">{unreadCount} unread</span>)
+              </span>
+            )}
+          </div>
+          <SimplifiedFilterToggleButton
+            isOpen={filtersOpen}
+            onToggle={() => setFiltersOpen(!filtersOpen)}
+            activeFilterCount={activeFilterCount}
+          />
         </div>
         
         <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
@@ -154,6 +163,15 @@ export function AllLegislationSection({
           </Button>
         </div>
       </div>
+
+      {/* Collapsible Filters */}
+      <SimplifiedLegislationFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        counts={counts}
+        isOpen={filtersOpen}
+        onOpenChange={setFiltersOpen}
+      />
 
       {/* Items */}
       {sortedItems.length === 0 ? (
