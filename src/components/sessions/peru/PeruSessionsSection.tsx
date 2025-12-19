@@ -187,7 +187,7 @@ export function PeruSessionsSection() {
               className="gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
+              {isSyncing ? 'Syncing...' : 'Sync'}
             </Button>
             <Button 
               variant="outline" 
