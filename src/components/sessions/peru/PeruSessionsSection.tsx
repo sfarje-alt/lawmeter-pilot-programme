@@ -210,11 +210,11 @@ export function PeruSessionsSection() {
         </div>
 
         <TabsContent value="monitored" className="mt-6 space-y-6">
-          {/* Demo Analyzed Card - Always shown */}
-          <DemoAnalyzedCard />
-
-          {/* Additional Demo Cards */}
+          {/* Demo Cards - Newest first */}
           <DemoSessionCards />
+
+          {/* Demo Analyzed Card - Oldest, shown at bottom */}
+          <DemoAnalyzedCard />
 
           {/* Monitored Sessions Content */}
           {monitoredSessions.length === 0 ? (
