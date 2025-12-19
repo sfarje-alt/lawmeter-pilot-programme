@@ -1,11 +1,14 @@
+import { useState, useEffect, useCallback } from "react";
 import { USLegislationItem, documentTypeLabels, authorityLabels } from "@/types/usaLegislation";
 import { ExtendedUSLegislationItem } from "@/data/usaLegislationMockData";
+import { BillAnalysis } from "@/types/congress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   X,
   ExternalLink,
@@ -23,10 +26,16 @@ import {
   TrendingUp,
   ThumbsUp,
   ChevronRight,
-  User
+  User,
+  Briefcase,
+  Building,
+  Globe,
+  UsersRound
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/shared/CountryFlag";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Drawer,
   DrawerClose,
@@ -67,6 +76,57 @@ function getStageIndex(status: string): number {
 }
 
 export function USALegislationDrawer({ item, open, onClose }: USALegislationDrawerProps) {
+  const [analysis, setAnalysis] = useState<BillAnalysis | null>(null);
+  const [analyzingBill, setAnalyzingBill] = useState(false);
+  const { toast } = useToast();
+
+  const analyzeBillWithAI = useCallback(async (legislationItem: USLegislationItem) => {
+    const cacheKey = `usa-legislation-analysis-${legislationItem.id}`;
+    const cached = localStorage.getItem(cacheKey);
+    
+    if (cached) {
+      try {
+        setAnalysis(JSON.parse(cached));
+        return;
+      } catch (e) {
+        localStorage.removeItem(cacheKey);
+      }
+    }
+
+    setAnalyzingBill(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-bill', {
+        body: {
+          billTitle: legislationItem.title,
+          policyArea: legislationItem.regulatoryCategory
+        }
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        setAnalysis(data);
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+      }
+    } catch (error) {
+      console.error('Error analyzing legislation:', error);
+      toast({
+        title: "Analysis unavailable",
+        description: "Could not generate AI analysis for this item.",
+        variant: "destructive"
+      });
+    } finally {
+      setAnalyzingBill(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (open && item) {
+      setAnalysis(null);
+      analyzeBillWithAI(item);
+    }
+  }, [open, item?.id, analyzeBillWithAI]);
+
   if (!item) return null;
 
   // Cast to extended type to access additional fields
@@ -281,45 +341,164 @@ export function USALegislationDrawer({ item, open, onClose }: USALegislationDraw
 
               {/* AI Analysis Tab */}
               <TabsContent value="analysis" className="space-y-4 mt-6">
-                <div className="p-6 rounded-lg bg-muted/50 border space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Risk Assessment
-                    </h3>
-                    <Badge className={getRiskBadgeClass(item.riskLevel)}>
-                      Score: {item.riskScore}/100
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Risk Level</h4>
-                      <Progress value={item.riskScore} className="h-2" />
+                {analyzingBill ? (
+                  <div className="space-y-4">
+                    <div className="p-6 rounded-lg bg-muted/50 border space-y-4">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-20 w-full" />
                     </div>
-                    
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Analysis</h4>
-                      <p className="text-sm text-muted-foreground">
-                        This {documentTypeLabels[item.documentType].toLowerCase()} has been assessed as {item.riskLevel} risk 
-                        for smart appliance manufacturers. Key concerns include compliance with {item.regulatoryCategory.toLowerCase()} requirements
-                        and potential impacts on {item.impactAreas.slice(0, 2).join(" and ").toLowerCase()}.
-                      </p>
+                    <div className="p-6 rounded-lg bg-muted/50 border space-y-4">
+                      <Skeleton className="h-6 w-40" />
+                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                  </div>
+                ) : analysis ? (
+                  <div className="space-y-4">
+                    {/* Metadata */}
+                    {analysis.metadata && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <FileText className="h-3 w-3" />
+                        <span>
+                          Analysis based on {analysis.metadata.usedFullText 
+                            ? `full text (${analysis.metadata.textCharCount?.toLocaleString()} chars)` 
+                            : 'title only'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Risk Assessment Card */}
+                    <div className="p-6 rounded-lg bg-muted/50 border space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Risk Assessment
+                        </h3>
+                        <Badge className={cn(
+                          analysis.riskCategory === "Critical" && "bg-red-600 text-white",
+                          analysis.riskCategory === "Urgent" && "bg-orange-600 text-white",
+                          analysis.riskCategory === "High" && "bg-risk-high text-risk-high-foreground",
+                          analysis.riskCategory === "Medium" && "bg-risk-medium text-risk-medium-foreground",
+                          analysis.riskCategory === "Low" && "bg-risk-low text-risk-low-foreground",
+                          analysis.riskCategory === "Minimal" && "bg-green-600 text-white"
+                        )}>
+                          {analysis.riskCategory}: {analysis.riskScore}/100
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="font-medium">Risk Level</span>
+                            <span className="text-muted-foreground">{analysis.riskScore}%</span>
+                          </div>
+                          <Progress 
+                            value={analysis.riskScore} 
+                            className={cn(
+                              "h-2",
+                              analysis.riskScore >= 80 && "[&>div]:bg-red-500",
+                              analysis.riskScore >= 60 && analysis.riskScore < 80 && "[&>div]:bg-orange-500",
+                              analysis.riskScore >= 40 && analysis.riskScore < 60 && "[&>div]:bg-yellow-500",
+                              analysis.riskScore < 40 && "[&>div]:bg-green-500"
+                            )}
+                          />
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Impact Explanation</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {analysis.explanation}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Recommended Actions</h4>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• Review {item.regulatoryCategory} compliance requirements</li>
-                        <li>• Assess impact on current product lines</li>
-                        {item.complianceDeadline && (
-                          <li>• Plan for compliance by {formatDate(item.complianceDeadline)}</li>
-                        )}
-                        <li>• Monitor for updates and amendments</li>
-                      </ul>
+                    {/* Stakeholder Analysis Card */}
+                    {analysis.stakeholders && analysis.stakeholders.length > 0 && (
+                      <div className="p-6 rounded-lg bg-muted/50 border space-y-4">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <UsersRound className="h-4 w-4" />
+                          Stakeholder Analysis
+                        </h3>
+                        <div className="space-y-3">
+                          {analysis.stakeholders.map((stakeholder, idx) => (
+                            <div key={idx} className="p-3 rounded-lg bg-background border">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  {stakeholder.type === "Industry" && <Briefcase className="h-4 w-4 text-blue-500" />}
+                                  {stakeholder.type === "Company" && <Building className="h-4 w-4 text-purple-500" />}
+                                  {stakeholder.type === "Government" && <Building2 className="h-4 w-4 text-amber-500" />}
+                                  {stakeholder.type === "Public" && <Globe className="h-4 w-4 text-green-500" />}
+                                  <span className="font-medium text-sm">{stakeholder.name}</span>
+                                </div>
+                                <Badge 
+                                  variant="outline" 
+                                  className={cn(
+                                    "text-xs",
+                                    stakeholder.position === "Support" && "border-green-500 text-green-600",
+                                    stakeholder.position === "Oppose" && "border-red-500 text-red-600",
+                                    stakeholder.position === "Neutral" && "border-muted-foreground text-muted-foreground"
+                                  )}
+                                >
+                                  {stakeholder.position}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{stakeholder.impact}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AI Footer */}
+                    <p className="text-xs text-muted-foreground text-center">
+                      AI-generated analysis • Results may vary
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-lg bg-muted/50 border space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Risk Assessment
+                      </h3>
+                      <Badge className={getRiskBadgeClass(item.riskLevel)}>
+                        Score: {item.riskScore}/100
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Risk Level</h4>
+                        <Progress value={item.riskScore} className="h-2" />
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Analysis</h4>
+                        <p className="text-sm text-muted-foreground">
+                          This {documentTypeLabels[item.documentType].toLowerCase()} has been assessed as {item.riskLevel} risk 
+                          for smart appliance manufacturers. Key concerns include compliance with {item.regulatoryCategory.toLowerCase()} requirements
+                          and potential impacts on {item.impactAreas.slice(0, 2).join(" and ").toLowerCase()}.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Recommended Actions</h4>
+                        <ul className="text-sm text-muted-foreground space-y-1">
+                          <li>• Review {item.regulatoryCategory} compliance requirements</li>
+                          <li>• Assess impact on current product lines</li>
+                          {item.complianceDeadline && (
+                            <li>• Plan for compliance by {formatDate(item.complianceDeadline)}</li>
+                          )}
+                          <li>• Monitor for updates and amendments</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </TabsContent>
 
               {/* Votes Tab */}
