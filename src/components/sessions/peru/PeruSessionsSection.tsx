@@ -26,7 +26,7 @@ import { PeruSessionCard } from './PeruSessionCard';
 import { PeruWatchedCommissions } from './PeruWatchedCommissions';
 import { PeruSessionImporter } from './PeruSessionImporter';
 import { RecommendedSessionsSection } from './RecommendedSessionsSection';
-import { SessionPipelineView } from './SessionPipelineView';
+
 import { DemoAnalyzedCard } from './DemoAnalyzedCard';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
 
@@ -36,7 +36,7 @@ export function PeruSessionsSection() {
   const [showOnlyRecommended, setShowOnlyRecommended] = useState(false);
   const [showOnlySelected, setShowOnlySelected] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
-  const [pipelineStage, setPipelineStage] = useState<'all' | 'recommended' | 'selected' | 'video' | 'analyzed'>('all');
+  
 
   const {
     sessions,
@@ -74,33 +74,7 @@ export function PeruSessionsSection() {
     return allSessions.filter(s => s.recording?.analysis_status === 'COMPLETED').length;
   }, [allSessions]);
 
-  // Pipeline stats
-  const pipelineStats = useMemo(() => ({
-    recommended: stats.recommended,
-    selected: stats.selected,
-    withVideo: stats.withVideo,
-    analyzed: analyzedCount,
-  }), [stats, analyzedCount]);
 
-  // Filter sessions based on pipeline stage
-  const filteredByPipeline = useMemo(() => {
-    let filtered = sessions;
-    switch (pipelineStage) {
-      case 'recommended':
-        filtered = sessions.filter(s => s.is_recommended);
-        break;
-      case 'selected':
-        filtered = sessions.filter(s => s.is_selected);
-        break;
-      case 'video':
-        filtered = sessions.filter(s => s.recording?.video_url);
-        break;
-      case 'analyzed':
-        filtered = sessions.filter(s => s.recording?.analysis_status === 'COMPLETED');
-        break;
-    }
-    return filtered;
-  }, [sessions, pipelineStage]);
 
   const handleClearAll = async () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar todas las sesiones? Esta acción no se puede deshacer.')) {
@@ -261,12 +235,6 @@ export function PeruSessionsSection() {
             onToggleSelection={toggleSessionSelection}
           />
 
-          {/* Pipeline View */}
-          <SessionPipelineView
-            stats={pipelineStats}
-            activeStage={pipelineStage}
-            onStageClick={setPipelineStage}
-          />
 
           {/* All Sessions Card */}
           <Card>
@@ -276,11 +244,6 @@ export function PeruSessionsSection() {
                   <CardTitle className="flex items-center gap-2">
                     <span className="text-lg">🇵🇪</span>
                     All Sessions
-                    {pipelineStage !== 'all' && (
-                      <Badge variant="secondary" className="ml-2">
-                        Filtered: {pipelineStage}
-                      </Badge>
-                    )}
                   </CardTitle>
                   <CardDescription>
                     Committee sessions from Congreso de la República del Perú
@@ -327,7 +290,7 @@ export function PeruSessionsSection() {
                 <div className="flex items-center justify-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : filteredByPipeline.length === 0 ? (
+              ) : sessions.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium text-foreground">No sessions found</h3>
@@ -338,7 +301,7 @@ export function PeruSessionsSection() {
               ) : (
                 <ScrollArea className="h-[600px] pr-4">
                   <div className="space-y-3">
-                    {filteredByPipeline.map(session => (
+                    {sessions.map(session => (
                       <PeruSessionCard
                         key={session.id}
                         session={session}
