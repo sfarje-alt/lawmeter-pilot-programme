@@ -21,10 +21,8 @@ import {
   Users,
   Zap,
   FileText,
-  MessageSquare,
   CheckCircle,
   ExternalLink,
-  Play,
   Clock
 } from 'lucide-react';
 
@@ -37,37 +35,44 @@ const DEMO_ANALYSIS = {
     { 
       topic: 'Pharmaceutical Pricing Regulation', 
       relevance: 'Direct', 
+      timestamp: '00:15:32',
       details: 'Discussion of price cap legislation for essential medicines under consideration in draft bill PL-2025-1234. Proposed 15% price reduction on generic medications.' 
     },
     { 
       topic: 'Telemedicine Framework', 
       relevance: 'Direct', 
+      timestamp: '00:48:17',
       details: 'New regulatory framework for remote healthcare service providers including licensing requirements, data protection standards, and cross-border service provisions.' 
     },
     { 
       topic: 'Medical Device Certification', 
       relevance: 'Direct', 
+      timestamp: '01:22:45',
       details: 'Updates to DIGEMID requirements for Class II and Class III medical device imports, including new documentation requirements.' 
     },
     { 
       topic: 'Public Health Funding 2026', 
       relevance: 'Indirect', 
+      timestamp: '01:58:03',
       details: 'Budget allocation discussions for public health infrastructure, hospital modernization, and rural healthcare access programs.' 
     },
   ],
   regulatoryMentions: [
     { 
       type: 'Drug Import Regulations', 
+      timestamp: '00:23:18',
       quote: 'Se propone modificar el artículo 15 del reglamento de importación de medicamentos para agilizar los procesos de registro sanitario...', 
       implication: 'May affect pharmaceutical import licensing requirements and timeline for product approvals' 
     },
     { 
       type: 'Digital Health Standards', 
+      timestamp: '00:52:41',
       quote: 'Los proveedores de telemedicina deberán cumplir con los estándares de protección de datos personales establecidos en la Ley 29733...', 
       implication: 'New compliance requirements for telehealth platforms including data localization and patient consent protocols' 
     },
     { 
       type: 'Medical Device Registration', 
+      timestamp: '01:31:55',
       quote: 'Se actualizarán los requisitos técnicos para el registro de dispositivos médicos de clase II y III...', 
       implication: 'Updated technical dossier requirements may require additional testing and documentation' 
     },
@@ -82,16 +87,19 @@ const DEMO_ANALYSIS = {
     { 
       speaker: 'Congresista María García (Chair)', 
       position: 'Supportive', 
+      timestamp: '00:18:42',
       keyStatement: 'This reform will benefit millions of Peruvians who struggle to afford essential medications. We must prioritize public health over corporate profits.' 
     },
     { 
       speaker: 'Congresista Roberto Mendoza', 
       position: 'Opposed', 
+      timestamp: '00:35:28',
       keyStatement: 'We must consider the impact on pharmaceutical investment in Peru. Price controls could reduce access to innovative treatments and harm our biotechnology sector.' 
     },
     { 
       speaker: 'Congresista Ana Torres', 
       position: 'Neutral', 
+      timestamp: '01:45:11',
       keyStatement: 'I support the goals of this legislation but believe we need more data on potential market impacts before proceeding with such significant changes.' 
     },
   ],
@@ -160,25 +168,6 @@ export function DemoAnalyzedCard() {
           </p>
         </div>
 
-        {/* Video Preview */}
-        <div className="relative bg-slate-900 rounded-lg overflow-hidden aspect-video max-w-md">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center space-y-3">
-              <div className="p-4 bg-white/10 rounded-full">
-                <Play className="h-8 w-8 text-white" />
-              </div>
-              <p className="text-white/80 text-sm">Session Recording Available</p>
-            </div>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-white/80 text-xs">Duration: 2h 34m</span>
-              <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                Transcript Available
-              </Badge>
-            </div>
-          </div>
-        </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2">
@@ -225,7 +214,10 @@ export function DemoAnalyzedCard() {
                 <div className="space-y-2">
                   {DEMO_ANALYSIS.keyTopics.map((topic, idx) => (
                     <div key={idx} className="bg-background/50 rounded-md p-2">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Badge variant="outline" className="font-mono text-xs bg-slate-500/10 border-slate-500/30">
+                          {topic.timestamp}
+                        </Badge>
                         <Badge variant="outline" className={
                           topic.relevance === 'Direct' ? 'border-green-500/50 text-green-600' :
                           'border-amber-500/50 text-amber-600'
@@ -253,8 +245,13 @@ export function DemoAnalyzedCard() {
                 <div className="space-y-2">
                   {DEMO_ANALYSIS.regulatoryMentions.map((mention, idx) => (
                     <div key={idx} className="bg-background/50 rounded-md p-2">
-                      <Badge variant="outline" className="mb-1">{mention.type}</Badge>
-                      <p className="text-xs text-muted-foreground italic mb-1">"{mention.quote}"</p>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Badge variant="outline" className="font-mono text-xs bg-slate-500/10 border-slate-500/30">
+                          {mention.timestamp}
+                        </Badge>
+                        <Badge variant="outline">{mention.type}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground italic mb-1">{mention.quote}</p>
                       <p className="text-xs font-medium text-foreground">{mention.implication}</p>
                     </div>
                   ))}
@@ -294,7 +291,10 @@ export function DemoAnalyzedCard() {
                 <div className="space-y-2">
                   {DEMO_ANALYSIS.speakerSentiments.map((speaker, idx) => (
                     <div key={idx} className="bg-background/50 rounded-md p-2">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Badge variant="outline" className="font-mono text-xs bg-slate-500/10 border-slate-500/30">
+                          {speaker.timestamp}
+                        </Badge>
                         <span className="font-medium text-sm">{speaker.speaker}</span>
                         <Badge variant="outline" className={
                           speaker.position === 'Supportive' ? 'border-green-500/50 text-green-600' :
@@ -304,7 +304,7 @@ export function DemoAnalyzedCard() {
                           {speaker.position}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground italic">"{speaker.keyStatement}"</p>
+                      <p className="text-xs text-muted-foreground italic">&quot;{speaker.keyStatement}&quot;</p>
                     </div>
                   ))}
                 </div>
