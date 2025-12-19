@@ -27,7 +27,7 @@ import { usePeruSessions } from '@/hooks/usePeruSessions';
 import { PeruSessionCard } from './PeruSessionCard';
 import { PeruWatchedCommissions } from './PeruWatchedCommissions';
 import { PeruSessionImporter } from './PeruSessionImporter';
-// Removed DemoAnalyzedCard - monitored sessions use same format as all sessions
+import { DemoAnalyzedCard } from './DemoAnalyzedCard';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
 
 export function PeruSessionsSection() {
@@ -209,6 +209,9 @@ export function PeruSessionsSection() {
         </div>
 
         <TabsContent value="monitored" className="mt-6 space-y-6">
+          {/* Demo Analyzed Card - Always shown */}
+          <DemoAnalyzedCard />
+
           {/* Monitored Sessions Content */}
           {monitoredSessions.length === 0 ? (
             <Card className="border-dashed">
