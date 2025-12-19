@@ -117,51 +117,6 @@ export function AllLegislationSection({
 
   return (
     <div className="space-y-6">
-      {/* All Legislation Header - Neutral styling */}
-      <div className="relative overflow-hidden rounded-lg border p-4 bg-card">
-        {/* Subtle gradient overlay - neutral purple/indigo */}
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--muted) / 0.5))" }}
-        />
-        
-        {/* Header content */}
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Globe className="h-6 w-6 text-primary" />
-            </div>
-            
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-primary">
-                  All Legislation
-                </h3>
-                <Badge 
-                  variant="outline" 
-                  className="text-[10px] font-bold tracking-wider px-1.5 py-0 border-primary text-primary"
-                >
-                  ALL
-                </Badge>
-                {unreadCount > 0 && (
-                  <Badge className="text-[10px] px-1.5 py-0 bg-primary text-primary-foreground">
-                    {unreadCount}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                All jurisdictions - Regulatory Monitoring
-              </p>
-            </div>
-          </div>
-          
-          {/* Region full name */}
-          <div className="hidden md:block text-right">
-            <span className="text-xs text-muted-foreground">Global Coverage</span>
-          </div>
-        </div>
-      </div>
-
       {/* Simplified Filters */}
       <SimplifiedLegislationFilters
         filters={filters}
