@@ -159,14 +159,6 @@ export function DemoAnalyzedCard() {
       <Card className="border-primary bg-primary/5">
         <CardContent className="pt-4">
           <div className="flex flex-col gap-3">
-            {/* Demo Badge */}
-            <div className="flex items-center gap-2">
-              <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                <Sparkles className="h-3 w-3 mr-1" />
-                Demo: Fully Analyzed Session
-              </Badge>
-            </div>
-
             {/* Header Row */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
