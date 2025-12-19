@@ -28,6 +28,7 @@ import { PeruSessionCard } from './PeruSessionCard';
 import { PeruWatchedCommissions } from './PeruWatchedCommissions';
 import { PeruSessionImporter } from './PeruSessionImporter';
 import { DemoAnalyzedCard } from './DemoAnalyzedCard';
+import { DemoSessionCards } from './DemoSessionCards';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
 
 export function PeruSessionsSection() {
@@ -211,6 +212,9 @@ export function PeruSessionsSection() {
         <TabsContent value="monitored" className="mt-6 space-y-6">
           {/* Demo Analyzed Card - Always shown */}
           <DemoAnalyzedCard />
+
+          {/* Additional Demo Cards */}
+          <DemoSessionCards />
 
           {/* Monitored Sessions Content */}
           {monitoredSessions.length === 0 ? (
