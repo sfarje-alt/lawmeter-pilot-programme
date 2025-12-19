@@ -98,7 +98,7 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
         level: "unknown",
         label: "Analysis Complete",
         icon: <Info className="h-5 w-5 text-muted-foreground" />,
-        color: "border-muted bg-muted/50",
+        color: "border-border bg-muted/30",
         description: "Analysis generated from available data"
       };
     }
@@ -107,8 +107,8 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
       return {
         level: "high",
         label: "Full Text Analysis",
-        icon: <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />,
-        color: "border-green-200 bg-green-50/50 dark:bg-green-950/20",
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+        color: "border-green-500/30 bg-green-500/10",
         description: `Analyzed ${metadata.textCharCount?.toLocaleString() || 0} characters from complete bill text`
       };
     }
@@ -117,8 +117,8 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
       return {
         level: "medium",
         label: "Summary-Based Analysis",
-        icon: <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
-        color: "border-blue-200 bg-blue-50/50 dark:bg-blue-950/20",
+        icon: <FileText className="h-5 w-5 text-blue-400" />,
+        color: "border-blue-500/30 bg-blue-500/10",
         description: "Based on official CRS summary - bill text not yet available"
       };
     }
@@ -126,8 +126,8 @@ export function BillAnalysisTab({ analysis, loading }: BillAnalysisTabProps) {
     return {
       level: "low",
       label: "Metadata Analysis",
-      icon: <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
-      color: "border-amber-200 bg-amber-50/50 dark:bg-amber-950/20",
+      icon: <AlertCircle className="h-5 w-5 text-amber-400" />,
+      color: "border-amber-500/30 bg-amber-500/10",
       description: `Preliminary analysis from ${metadata.contextFieldsUsed || 0} metadata fields (title, subjects, sponsors, etc.)`
     };
   };
