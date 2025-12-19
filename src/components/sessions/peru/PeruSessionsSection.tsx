@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { 
   Upload, 
   Settings, 
@@ -31,7 +31,7 @@ import { DemoAnalyzedCard } from './DemoAnalyzedCard';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
 
 export function PeruSessionsSection() {
-  const [activeTab, setActiveTab] = useState<'sessions' | 'settings'>('sessions');
+  const [activeTab, setActiveTab] = useState<'monitored' | 'all' | 'settings'>('monitored');
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyRecommended, setShowOnlyRecommended] = useState(false);
   const [showOnlySelected, setShowOnlySelected] = useState(false);
@@ -160,12 +160,16 @@ export function PeruSessionsSection() {
       </div>
 
       {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'sessions' | 'settings')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'monitored' | 'all' | 'settings')}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <TabsList className="bg-muted/50">
-            <TabsTrigger value="sessions" className="data-[state=active]:bg-background">
+            <TabsTrigger value="monitored" className="data-[state=active]:bg-background">
+              <Eye className="h-4 w-4 mr-2" />
+              Monitored Sessions
+            </TabsTrigger>
+            <TabsTrigger value="all" className="data-[state=active]:bg-background">
               <Calendar className="h-4 w-4 mr-2" />
-              Sessions
+              All Sessions
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-background">
               <Settings className="h-4 w-4 mr-2" />
@@ -204,163 +208,133 @@ export function PeruSessionsSection() {
           </div>
         </div>
 
-        <TabsContent value="sessions" className="mt-6 space-y-6">
+        <TabsContent value="monitored" className="mt-6 space-y-6">
           {/* Demo Analyzed Card */}
           <DemoAnalyzedCard />
 
-          {/* Monitored Sessions Card */}
-          <Card className="border-blue-500/20">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/10 rounded-lg">
-                    <Eye className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Monitored Sessions</CardTitle>
-                    <CardDescription>
-                      Sessions you've selected for monitoring ({monitoredSessions.length})
-                    </CardDescription>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {monitoredSessions.length === 0 ? (
-                <div className="text-center py-8">
-                  <CheckCircle2 className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    No sessions selected for monitoring yet. Select sessions from the list below.
+          {/* Monitored Sessions Content */}
+          {monitoredSessions.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <CheckCircle2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium text-foreground">No sessions selected for monitoring</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Go to "All Sessions" tab to select sessions you want to monitor.
                   </p>
                 </div>
-              ) : (
-                <ScrollArea className="h-[300px] pr-4">
-                  <div className="space-y-3">
-                    {monitoredSessions.map(session => (
-                      <PeruSessionCard
-                        key={session.id}
-                        session={session}
-                        onToggleSelection={toggleSessionSelection}
-                        onResolveVideo={resolveSessionVideo}
-                        onSetManualUrl={setManualVideoUrl}
-                        onUpdateRecording={updateSessionRecording}
-                      />
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {monitoredSessions.map(session => (
+                <PeruSessionCard
+                  key={session.id}
+                  session={session}
+                  onToggleSelection={toggleSessionSelection}
+                  onResolveVideo={resolveSessionVideo}
+                  onSetManualUrl={setManualVideoUrl}
+                  onUpdateRecording={updateSessionRecording}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-          {/* All Sessions Card */}
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <TabsContent value="all" className="mt-6 space-y-6">
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by commission name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <Button
+              variant={showOnlyRecommended ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowOnlyRecommended(!showOnlyRecommended)}
+              className="gap-2"
+            >
+              <Star className="h-4 w-4" />
+              Recommended
+            </Button>
+
+            <Button
+              variant={showOnlySelected ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowOnlySelected(!showOnlySelected)}
+              className="gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Selected
+            </Button>
+          </div>
+
+          {/* Recommendation explanation - shows when filter is active */}
+          {showOnlyRecommended && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-start gap-3 p-3 bg-amber-500/5 rounded-lg border border-amber-500/10">
+                <div className="p-1.5 bg-amber-500/10 rounded">
+                  <Building2 className="h-4 w-4 text-amber-600" />
+                </div>
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="text-lg">🇵🇪</span>
-                    All Sessions
-                  </CardTitle>
-                  <CardDescription>
-                    Committee sessions from Congreso de la República del Perú
-                  </CardDescription>
+                  <p className="font-medium text-sm text-foreground">Committees & Chambers</p>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    Sessions from your watched commissions in Congress, Senate, or Parliament bodies configured in Monitoring Settings.
+                  </p>
                 </div>
               </div>
-
-              {/* Filters */}
-              <div className="flex flex-wrap items-center gap-3 mt-4">
-                <div className="relative flex-1 min-w-[200px] max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by commission name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+              
+              <div className="flex items-start gap-3 p-3 bg-orange-500/5 rounded-lg border border-orange-500/10">
+                <div className="p-1.5 bg-orange-500/10 rounded">
+                  <FileText className="h-4 w-4 text-orange-600" />
                 </div>
-
-                <Button
-                  variant={showOnlyRecommended ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowOnlyRecommended(!showOnlyRecommended)}
-                  className="gap-2"
-                >
-                  <Star className="h-4 w-4" />
-                  Recommended
-                </Button>
-
-                <Button
-                  variant={showOnlySelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowOnlySelected(!showOnlySelected)}
-                  className="gap-2"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Selected
-                </Button>
+                <div>
+                  <p className="font-medium text-sm text-foreground">Agenda Content</p>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    Sessions whose agenda mentions topics related to your starred bills, keywords, or regulatory areas of interest.
+                  </p>
+                </div>
               </div>
+            </div>
+          )}
 
-              {/* Recommendation explanation - shows when filter is active */}
-              {showOnlyRecommended && (
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="flex items-start gap-3 p-3 bg-amber-500/5 rounded-lg border border-amber-500/10">
-                    <div className="p-1.5 bg-amber-500/10 rounded">
-                      <Building2 className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm text-foreground">Committees & Chambers</p>
-                      <p className="text-muted-foreground text-xs mt-1">
-                        Sessions from your watched commissions in Congress, Senate, or Parliament bodies configured in Monitoring Settings.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 p-3 bg-orange-500/5 rounded-lg border border-orange-500/10">
-                    <div className="p-1.5 bg-orange-500/10 rounded">
-                      <FileText className="h-4 w-4 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm text-foreground">Agenda Content</p>
-                      <p className="text-muted-foreground text-xs mt-1">
-                        Sessions whose agenda mentions topics related to your starred bills, keywords, or regulatory areas of interest.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardHeader>
-
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : sessions.length === 0 ? (
-                <div className="text-center py-12">
-                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+          {/* Sessions List */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
                   <h3 className="text-lg font-medium text-foreground">No sessions found</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Try adjusting your filters or upload sessions from the Congress website.
                   </p>
                 </div>
-              ) : (
-                <ScrollArea className="h-[600px] pr-4">
-                  <div className="space-y-3">
-                    {sessions.map(session => (
-                      <PeruSessionCard
-                        key={session.id}
-                        session={session}
-                        onToggleSelection={toggleSessionSelection}
-                        onResolveVideo={resolveSessionVideo}
-                        onSetManualUrl={setManualVideoUrl}
-                        onUpdateRecording={updateSessionRecording}
-                      />
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {sessions.map(session => (
+                <PeruSessionCard
+                  key={session.id}
+                  session={session}
+                  onToggleSelection={toggleSessionSelection}
+                  onResolveVideo={resolveSessionVideo}
+                  onSetManualUrl={setManualVideoUrl}
+                  onUpdateRecording={updateSessionRecording}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="settings" className="mt-6">
