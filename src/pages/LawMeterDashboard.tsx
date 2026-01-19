@@ -12,71 +12,8 @@ import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Inbox, Building2, FileText, BarChart3, Plus, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-
-// Placeholder components for new pages - will be implemented next
-function InboxPlaceholder() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Inbox</h1>
-          <p className="text-muted-foreground">Review and manage legislation alerts for your clients</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search alerts..." className="pl-10 w-64" />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-foreground">12</div>
-            <div className="text-sm text-muted-foreground">Pending Review</div>
-          </CardContent>
-        </Card>
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-destructive">3</div>
-            <div className="text-sm text-muted-foreground">High Priority</div>
-          </CardContent>
-        </Card>
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-warning">5</div>
-            <div className="text-sm text-muted-foreground">Upcoming Deadlines</div>
-          </CardContent>
-        </Card>
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-success">8</div>
-            <div className="text-sm text-muted-foreground">Published Today</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="glass-card border-border/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Inbox className="h-5 w-5" />
-            Alert Cards
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <Inbox className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No pending alerts to review.</p>
-            <p className="text-sm mt-1">Alerts matching your clients' monitoring rules will appear here.</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+import { Building2, FileText, BarChart3, Plus } from "lucide-react";
+import Inbox from "@/pages/Inbox";
 
 function ClientsPlaceholder() {
   return (
@@ -268,7 +205,7 @@ export default function LawMeterDashboard() {
       case "sessions":
         return <SessionsPage />;
       case "inbox":
-        return <InboxPlaceholder />;
+        return <Inbox />;
       case "clients":
         return <ClientsPlaceholder />;
       case "reports":
@@ -290,7 +227,7 @@ export default function LawMeterDashboard() {
       case "contact":
         return <ContactForm />;
       default:
-        return <InboxPlaceholder />;
+        return <Inbox />;
     }
   };
 
