@@ -1,7 +1,37 @@
 // Mock data generated from matriz_pls.xlsx and matriz_normas.xlsx
 // Complete dataset with 37 bills and 50 representative regulations
 
-export interface PeruAlert {
+// Types for expanded fields
+export interface StageHistoryItem {
+  stage: string;
+  date: string;
+  description?: string;
+  completed: boolean;
+}
+
+export interface Stakeholder {
+  name: string;
+  role: string;
+  position: "favor" | "against" | "neutral";
+}
+
+export interface VoteRecord {
+  favor: number;
+  against: number;
+  abstention: number;
+  date?: string;
+}
+
+export interface AffectedClient {
+  id: string;
+  name: string;
+  sector: string;
+  areas: string[];
+  matchScore: number;
+}
+
+// Base interface for raw data (without expanded fields)
+interface PeruAlertBase {
   id: string;
   legislation_id: string;
   legislation_type: "proyecto_de_ley" | "norma";
@@ -29,6 +59,65 @@ export interface PeruAlert {
   created_at: string;
   updated_at: string;
 }
+
+// Full interface with expanded fields
+export interface PeruAlert extends PeruAlertBase {
+  sector: string;
+  geography: string;
+  approval_probability: number | null;
+  stakeholders: Stakeholder[];
+  votes: VoteRecord | null;
+  co_sponsors: string[];
+  committee: string | null;
+  stage_history: StageHistoryItem[];
+  next_action: string | null;
+  client_commentaries: Record<string, string>;
+  affected_clients: AffectedClient[];
+}
+
+// Mock clients for matching
+export const MOCK_CLIENTS: AffectedClient[] = [
+  { id: "client-001", name: "Clínica Ricardo Palma", sector: "Salud Privada", areas: ["General", "Oncológico"], matchScore: 85 },
+  { id: "client-002", name: "Laboratorios Bagó", sector: "Farmacéutico", areas: ["General", "Dispositivos Médicos"], matchScore: 70 },
+  { id: "client-003", name: "Oncosalud", sector: "Salud Privada", areas: ["Oncológico", "Raras y huérfanas"], matchScore: 95 },
+  { id: "client-004", name: "EsSalud", sector: "Salud Pública", areas: ["General", "Financiamiento y Presupuesto"], matchScore: 60 },
+  { id: "client-005", name: "INEN", sector: "Salud Pública", areas: ["Oncológico"], matchScore: 90 },
+];
+
+// Sectors available
+export const SECTORS = [
+  "Salud Pública",
+  "Salud Privada",
+  "Farmacéutico",
+  "Dispositivos Médicos",
+  "Seguros",
+];
+
+// Geographies available
+export const GEOGRAPHIES = [
+  "Nacional",
+  "Lima",
+  "Tacna",
+  "Junín",
+  "Ica",
+  "Arequipa",
+  "Cusco",
+  "La Libertad",
+];
+
+// Entities for filtering
+export const ENTITIES = [
+  "MINSA",
+  "EsSalud",
+  "IETSI",
+  "INS",
+  "SIS",
+  "SUSALUD",
+  "INEN",
+  "RENETSA",
+  "FISSAL",
+  "Congreso de la República",
+];
 
 // Stage mapping for bills
 export const STAGE_TO_KANBAN: Record<string, PeruAlert["kanban_stage"]> = {
@@ -67,8 +156,86 @@ function determineUrgency(stage: string): "high" | "medium" | "low" {
   return "low";
 }
 
+// Helper to generate mock stage history
+function generateStageHistory(currentStage: string, stageDate: string): StageHistoryItem[] {
+  const stages = ["PRESENTADO", "EN COMISIÓN", "DICTAMEN", "EN AGENDA DEL PLENO", "APROBADO"];
+  const currentIndex = stages.indexOf(currentStage);
+  if (currentIndex === -1) return [];
+  
+  const baseDate = new Date(stageDate);
+  return stages.slice(0, currentIndex + 1).map((stage, index) => {
+    const date = new Date(baseDate);
+    date.setDate(date.getDate() - (currentIndex - index) * 7);
+    return {
+      stage,
+      date: date.toISOString(),
+      completed: index < currentIndex,
+    };
+  });
+}
+
+// Helper to get affected clients based on areas
+function getAffectedClients(areas: string[]): AffectedClient[] {
+  return MOCK_CLIENTS.filter(client => 
+    client.areas.some(area => areas.includes(area))
+  ).map(client => ({
+    ...client,
+    matchScore: Math.min(100, Math.round((client.areas.filter(a => areas.includes(a)).length / Math.max(1, areas.length)) * 100 + Math.random() * 20))
+  }));
+}
+
+// Helper to assign sector based on entity or areas
+function determineSector(entity?: string, areas?: string[]): string {
+  if (entity === "EsSalud" || entity === "MINSA" || entity === "SIS") return "Salud Pública";
+  if (areas?.includes("Oncológico")) return "Salud Privada";
+  if (areas?.includes("Dispositivos Médicos")) return "Dispositivos Médicos";
+  return "Salud Pública";
+}
+
+// Helper to assign geography
+function determineGeography(title: string): string {
+  if (title.includes("TACNA")) return "Tacna";
+  if (title.includes("JUNÍN") || title.includes("CHANCHAMAYO")) return "Junín";
+  if (title.includes("ICA") || title.includes("CHINCHA")) return "Ica";
+  if (title.includes("LIMA")) return "Lima";
+  if (title.includes("AREQUIPA")) return "Arequipa";
+  if (title.includes("CUSCO")) return "Cusco";
+  return "Nacional";
+}
+
+// Sample stakeholders for demo
+const SAMPLE_STAKEHOLDERS: Stakeholder[] = [
+  { name: "Comisión de Salud", role: "Comisión Dictaminadora", position: "favor" },
+  { name: "MINSA", role: "Ministerio de Salud", position: "neutral" },
+  { name: "Colegio Médico", role: "Organismo Profesional", position: "favor" },
+];
+
+// Function to enrich base data with expanded fields
+function enrichAlert(base: PeruAlertBase): PeruAlert {
+  const isBill = base.legislation_type === "proyecto_de_ley";
+  const currentStage = base.ai_analysis.current_stage || "PRESENTADO";
+  const stageDate = base.ai_analysis.stage_date || base.created_at;
+  
+  return {
+    ...base,
+    sector: determineSector(base.ai_analysis.entity, base.affected_areas),
+    geography: determineGeography(base.legislation_title),
+    approval_probability: isBill ? Math.round(30 + Math.random() * 50) : null,
+    stakeholders: isBill ? SAMPLE_STAKEHOLDERS.slice(0, Math.floor(Math.random() * 3) + 1) : [],
+    votes: isBill && ["APROBADO", "EN AGENDA DEL PLENO"].includes(currentStage) 
+      ? { favor: Math.round(60 + Math.random() * 40), against: Math.round(10 + Math.random() * 30), abstention: Math.round(Math.random() * 10) }
+      : null,
+    co_sponsors: isBill ? [] : [],
+    committee: isBill ? "Comisión de Salud y Población" : null,
+    stage_history: isBill ? generateStageHistory(currentStage, stageDate) : [],
+    next_action: isBill ? (currentStage === "PRESENTADO" ? "Derivar a comisión" : currentStage === "EN COMISIÓN" ? "Pendiente dictamen" : "En seguimiento") : null,
+    client_commentaries: {},
+    affected_clients: getAffectedClients(base.affected_areas),
+  };
+}
+
 // Complete Bills data from matriz_pls.xlsx (37 bills)
-export const MOCK_BILLS: PeruAlert[] = [
+const MOCK_BILLS_RAW: PeruAlertBase[] = [
   {
     id: "bill-001",
     legislation_id: "13172/2025-CR",
