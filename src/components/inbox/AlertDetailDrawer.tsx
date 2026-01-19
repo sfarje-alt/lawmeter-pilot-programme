@@ -2,9 +2,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { 
   ExternalLink, 
   Calendar, 
@@ -15,25 +16,44 @@ import {
   PenLine,
   Send,
   Archive,
-  Clock
+  Clock,
+  CheckCircle2,
+  MessageSquarePlus
 } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor } from "@/data/peruAlertsMockData";
+import { PeruAlert, getTypeLabel, getTypeColor, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface ClientCommentary {
+  clientId: string;
+  commentary: string;
+}
 
 interface AlertDetailDrawerProps {
   alert: PeruAlert | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDecline: (alert: PeruAlert) => void;
-  onPublish: (alert: PeruAlert, clientId: string) => void;
+  onPublish: (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => void;
 }
 
 export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPublish }: AlertDetailDrawerProps) {
-  const [commentary, setCommentary] = useState(alert?.expert_commentary || "");
-  const [selectedClient, setSelectedClient] = useState<string>("");
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [clientCommentaries, setClientCommentaries] = useState<Record<string, string>>({});
+  const [useSharedCommentary, setUseSharedCommentary] = useState(true);
+  const [sharedCommentary, setSharedCommentary] = useState("");
+
+  // Reset state when alert changes
+  useEffect(() => {
+    if (alert) {
+      setSelectedClients([]);
+      setClientCommentaries({});
+      setSharedCommentary(alert.expert_commentary || "");
+      setUseSharedCommentary(true);
+    }
+  }, [alert?.id]);
 
   if (!alert) return null;
 
@@ -54,15 +74,34 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
   };
 
   const handlePublish = () => {
-    if (selectedClient) {
-      onPublish(alert, selectedClient);
+    if (selectedClients.length > 0) {
+      const commentaries: ClientCommentary[] = selectedClients.map(clientId => ({
+        clientId,
+        commentary: useSharedCommentary ? sharedCommentary : (clientCommentaries[clientId] || "")
+      }));
+      onPublish(alert, selectedClients, commentaries);
       onOpenChange(false);
     }
   };
 
+  const toggleClient = (clientId: string) => {
+    setSelectedClients(prev => 
+      prev.includes(clientId) 
+        ? prev.filter(id => id !== clientId)
+        : [...prev, clientId]
+    );
+  };
+
+  const updateClientCommentary = (clientId: string, commentary: string) => {
+    setClientCommentaries(prev => ({
+      ...prev,
+      [clientId]: commentary
+    }));
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl bg-card border-border/50 p-0">
+      <SheetContent className="w-full sm:max-w-2xl bg-card border-border/50 p-0">
         <ScrollArea className="h-full">
           <div className="p-6 space-y-6">
             {/* Header */}
@@ -169,61 +208,144 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
               </>
             )}
 
-            {/* Expert Commentary Section */}
-            <div className="space-y-3">
+            {/* EDITORIAL SECTION - Publish for Client (Multi-selection) */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Send className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Publicar para Cliente
+                </h3>
+                <Badge variant="secondary" className="text-xs">Multi-selección</Badge>
+              </div>
+              
+              <div className="grid gap-2">
+                {MOCK_CLIENTS.map((client) => (
+                  <div 
+                    key={client.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+                      selectedClients.includes(client.id)
+                        ? "bg-primary/10 border-primary/50"
+                        : "bg-muted/20 border-border/30 hover:border-border/50"
+                    )}
+                    onClick={() => toggleClient(client.id)}
+                  >
+                    <Checkbox 
+                      checked={selectedClients.includes(client.id)}
+                      onCheckedChange={() => toggleClient(client.id)}
+                      className="pointer-events-none"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{client.name}</p>
+                      <p className="text-xs text-muted-foreground">{client.sector}</p>
+                    </div>
+                    {selectedClients.includes(client.id) && (
+                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {selectedClients.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedClients.length} cliente{selectedClients.length > 1 ? 's' : ''} seleccionado{selectedClients.length > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+
+            <Separator className="bg-border/30" />
+
+            {/* EDITORIAL SECTION - Expert Commentary */}
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <PenLine className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                   Comentario Experto
                 </h3>
               </div>
-              <Textarea
-                placeholder="Agregar comentario experto..."
-                value={commentary}
-                onChange={(e) => setCommentary(e.target.value)}
-                className="min-h-[120px] bg-muted/30 border-border/50 resize-none"
-              />
-            </div>
 
-            <Separator className="bg-border/30" />
+              {/* Toggle between shared and personalized */}
+              <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/20 border border-border/30">
+                <div 
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-colors",
+                    useSharedCommentary ? "bg-primary text-primary-foreground" : "hover:bg-muted/50"
+                  )}
+                  onClick={() => setUseSharedCommentary(true)}
+                >
+                  <MessageSquarePlus className="h-4 w-4" />
+                  <span className="text-sm font-medium">Compartido</span>
+                </div>
+                <div 
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-colors",
+                    !useSharedCommentary ? "bg-primary text-primary-foreground" : "hover:bg-muted/50"
+                  )}
+                  onClick={() => setUseSharedCommentary(false)}
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm font-medium">Por Cliente</span>
+                </div>
+              </div>
 
-            {/* Client Assignment */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Asignar a Cliente
-              </h3>
-              <Select value={selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger className="bg-muted/30 border-border/50">
-                  <SelectValue placeholder="Seleccionar cliente..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="client-001">Clínica Ricardo Palma</SelectItem>
-                  <SelectItem value="client-002">Laboratorios Bagó</SelectItem>
-                  <SelectItem value="client-003">Oncosalud</SelectItem>
-                  <SelectItem value="client-004">EsSalud</SelectItem>
-                </SelectContent>
-              </Select>
+              {useSharedCommentary ? (
+                <Textarea
+                  placeholder="Agregar comentario experto compartido para todos los clientes..."
+                  value={sharedCommentary}
+                  onChange={(e) => setSharedCommentary(e.target.value)}
+                  className="min-h-[120px] bg-muted/30 border-border/50 resize-none"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {selectedClients.length === 0 ? (
+                    <p className="text-sm text-muted-foreground italic">
+                      Selecciona clientes arriba para agregar comentarios personalizados
+                    </p>
+                  ) : (
+                    selectedClients.map(clientId => {
+                      const client = MOCK_CLIENTS.find(c => c.id === clientId);
+                      if (!client) return null;
+                      return (
+                        <div key={clientId} className="space-y-2">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Building2 className="h-3.5 w-3.5" />
+                            {client.name}
+                          </Label>
+                          <Textarea
+                            placeholder={`Comentario personalizado para ${client.name}...`}
+                            value={clientCommentaries[clientId] || ""}
+                            onChange={(e) => updateClientCommentary(clientId, e.target.value)}
+                            className="min-h-[80px] bg-muted/30 border-border/50 resize-none"
+                          />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
 
             <Separator className="bg-border/30" />
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="space-y-3">
+              <Button
+                className="w-full"
+                onClick={handlePublish}
+                disabled={selectedClients.length === 0}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Publicar a {selectedClients.length > 0 ? `${selectedClients.length} Cliente${selectedClients.length > 1 ? 's' : ''}` : 'Cliente'}
+              </Button>
+              
               <Button
                 variant="outline"
-                className="flex-1 border-destructive/50 text-destructive hover:bg-destructive/10"
+                className="w-full border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
                 onClick={handleDecline}
               >
                 <Archive className="h-4 w-4 mr-2" />
-                Declinar
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={handlePublish}
-                disabled={!selectedClient}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Publicar a Cliente
+                Declinar para Cliente
+                <span className="ml-2 text-xs text-muted-foreground">(Auditoría interna)</span>
               </Button>
             </div>
 
