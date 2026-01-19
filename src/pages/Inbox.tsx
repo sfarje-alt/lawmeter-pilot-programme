@@ -7,7 +7,13 @@ import { useInboxAlerts } from "@/hooks/useInboxAlerts";
 import { InboxFilterBar } from "@/components/inbox/InboxFilterBar";
 import { KanbanColumn } from "@/components/inbox/KanbanColumn";
 import { AlertDetailDrawer } from "@/components/inbox/AlertDetailDrawer";
-import { PeruAlert } from "@/data/peruAlertsMockData";
+import { PeruAlert, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
+import { toast } from "sonner";
+
+interface ClientCommentary {
+  clientId: string;
+  commentary: string;
+}
 
 export default function Inbox() {
   const {
@@ -30,10 +36,24 @@ export default function Inbox() {
 
   const handleDecline = (alert: PeruAlert) => {
     declineAlert(alert);
+    toast.success("Alerta declinada", {
+      description: "Guardada para auditoría interna del equipo legal"
+    });
   };
 
-  const handlePublish = (alert: PeruAlert, clientId: string) => {
-    publishAlert(alert, clientId);
+  const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => {
+    // Publish to each selected client
+    clientIds.forEach(clientId => {
+      publishAlert(alert, clientId);
+    });
+    
+    const clientNames = clientIds.map(id => 
+      MOCK_CLIENTS.find(c => c.id === id)?.name || id
+    ).join(", ");
+    
+    toast.success(`Publicado a ${clientIds.length} cliente${clientIds.length > 1 ? 's' : ''}`, {
+      description: clientNames
+    });
   };
 
   // Calculate pending count (non-archived, non-published)
