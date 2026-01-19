@@ -60,19 +60,19 @@ interface PeruAlertBase {
   updated_at: string;
 }
 
-// Full interface with expanded fields
+// Full interface with expanded fields (new fields are optional for backward compatibility)
 export interface PeruAlert extends PeruAlertBase {
-  sector: string;
-  geography: string;
-  approval_probability: number | null;
-  stakeholders: Stakeholder[];
-  votes: VoteRecord | null;
-  co_sponsors: string[];
-  committee: string | null;
-  stage_history: StageHistoryItem[];
-  next_action: string | null;
-  client_commentaries: Record<string, string>;
-  affected_clients: AffectedClient[];
+  sector?: string;
+  geography?: string;
+  approval_probability?: number | null;
+  stakeholders?: Stakeholder[];
+  votes?: VoteRecord | null;
+  co_sponsors?: string[];
+  committee?: string | null;
+  stage_history?: StageHistoryItem[];
+  next_action?: string | null;
+  client_commentaries?: Record<string, string>;
+  affected_clients?: AffectedClient[];
 }
 
 // Mock clients for matching
@@ -1163,8 +1163,11 @@ const MOCK_BILLS_RAW: PeruAlertBase[] = [
   },
 ];
 
+// Enriched bills with expanded fields
+export const MOCK_BILLS: PeruAlert[] = MOCK_BILLS_RAW.map(enrichAlert);
+
 // Complete Regulations data from matriz_normas.xlsx (50 representative samples)
-export const MOCK_REGULATIONS: PeruAlert[] = [
+const MOCK_REGULATIONS_RAW: PeruAlertBase[] = [
   {
     id: "reg-001",
     legislation_id: "GPC-NAC-PEDIATRICA-2025",
@@ -2266,6 +2269,9 @@ export const MOCK_REGULATIONS: PeruAlert[] = [
     updated_at: "2025-11-16T00:00:00Z",
   },
 ];
+
+// Enriched regulations with expanded fields
+export const MOCK_REGULATIONS: PeruAlert[] = MOCK_REGULATIONS_RAW.map(enrichAlert);
 
 // All alerts combined
 export const ALL_MOCK_ALERTS: PeruAlert[] = [...MOCK_BILLS, ...MOCK_REGULATIONS];
