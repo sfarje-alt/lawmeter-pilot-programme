@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Star, ExternalLink, Clock, Building2, User, Users } from "lucide-react";
+import { Star, ExternalLink, Clock, Building2, User, Users, FileText, Tag } from "lucide-react";
 import { PeruAlert, getTypeLabel, getTypeColor } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -28,14 +28,15 @@ export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
     }
   };
 
-  // Get display date based on type
-  const displayDate = isBill 
-    ? alert.stage_date || alert.project_date 
-    : alert.publication_date;
-  
-  const formattedDate = displayDate 
-    ? format(new Date(displayDate), "dd MMM yyyy", { locale: es })
-    : null;
+  // Format dates
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return null;
+    try {
+      return format(new Date(dateStr), "dd MMM yyyy", { locale: es });
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <Card 
@@ -49,12 +50,12 @@ export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
             {getTypeLabel(alert.legislation_type)}
           </Badge>
           {isBill && alert.legislation_id && (
-            <span className="text-xs text-muted-foreground font-mono">
+            <span className="text-xs text-primary font-mono font-medium">
               {alert.legislation_id}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {alert.source_url && (
             <button
               onClick={handleLinkClick}
@@ -83,34 +84,33 @@ export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
         {alert.legislation_title}
       </h4>
 
-      {/* Author/Entity Row */}
-      {isBill ? (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-          <User className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{alert.author}</span>
+      {/* Bill-specific: Author + Parliamentary Group */}
+      {isBill && (
+        <div className="space-y-1 mb-2">
+          {alert.author && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <User className="h-3 w-3 shrink-0" />
+              <span className="truncate">{alert.author}</span>
+            </div>
+          )}
           {alert.parliamentary_group && (
-            <>
-              <span className="text-border">|</span>
-              <Users className="h-3.5 w-3.5 shrink-0" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Users className="h-3 w-3 shrink-0" />
               <span className="truncate">{alert.parliamentary_group}</span>
-            </>
+            </div>
           )}
         </div>
-      ) : (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-          <Building2 className="h-3.5 w-3.5 shrink-0" />
-          <span>{alert.entity}</span>
+      )}
+
+      {/* Norma-specific: Entity */}
+      {!isBill && alert.entity && (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+          <Building2 className="h-3 w-3 shrink-0" />
+          <span className="font-medium">{alert.entity}</span>
         </div>
       )}
 
-      {/* Summary (for normas only) */}
-      {!isBill && alert.legislation_summary && (
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic">
-          "{alert.legislation_summary}"
-        </p>
-      )}
-
-      {/* Stage (for bills only) */}
+      {/* Bill-specific: Current Stage */}
       {isBill && alert.current_stage && (
         <div className="mb-2">
           <Badge variant="secondary" className="text-xs bg-muted/50">
@@ -119,37 +119,61 @@ export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
         </div>
       )}
 
+      {/* Norma-specific: Summary/Commentary (truncated) */}
+      {!isBill && alert.legislation_summary && (
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2">
+          {alert.legislation_summary}
+        </p>
+      )}
+
+      {/* Bill-specific: Expert Commentary indicator or preview */}
+      {isBill && alert.expert_commentary && (
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2">
+          {alert.expert_commentary}
+        </p>
+      )}
+
       {/* Area Tags */}
-      <div className="flex items-center gap-2 flex-wrap mb-2">
+      <div className="flex items-center gap-1.5 flex-wrap mb-2">
+        <Tag className="h-3 w-3 text-muted-foreground" />
         {alert.affected_areas.slice(0, 2).map((area) => (
-          <Badge key={area} variant="secondary" className="text-xs bg-muted/50">
+          <Badge key={area} variant="secondary" className="text-xs bg-muted/50 py-0">
             {area}
           </Badge>
         ))}
         {alert.affected_areas.length > 2 && (
-          <Badge variant="secondary" className="text-xs bg-muted/50">
+          <Badge variant="secondary" className="text-xs bg-muted/50 py-0">
             +{alert.affected_areas.length - 2}
           </Badge>
         )}
       </div>
 
-      {/* Footer: Date */}
-      {formattedDate && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          <span>{formattedDate}</span>
-        </div>
-      )}
-
-      {/* Expert commentary indicator */}
-      {alert.expert_commentary && (
-        <div className="mt-2 pt-2 border-t border-border/30">
-          <div className="flex items-center gap-1.5 text-xs text-primary">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <span>Con comentario experto</span>
-          </div>
-        </div>
-      )}
+      {/* Footer: Dates */}
+      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-border/30">
+        {isBill ? (
+          <>
+            {alert.project_date && (
+              <div className="flex items-center gap-1">
+                <FileText className="h-3 w-3" />
+                <span>{formatDate(alert.project_date)}</span>
+              </div>
+            )}
+            {alert.stage_date && alert.stage_date !== alert.project_date && (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{formatDate(alert.stage_date)}</span>
+              </div>
+            )}
+          </>
+        ) : (
+          alert.publication_date && (
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>{formatDate(alert.publication_date)}</span>
+            </div>
+          )
+        )}
+      </div>
     </Card>
   );
 }
