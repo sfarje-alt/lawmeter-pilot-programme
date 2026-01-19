@@ -14,6 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerts: {
+        Row: {
+          affected_areas: string[] | null
+          ai_analysis: Json | null
+          ai_summary: string | null
+          client_id: string | null
+          created_at: string
+          deadline: string | null
+          expert_commentary: string | null
+          id: string
+          legislation_id: string | null
+          legislation_summary: string | null
+          legislation_title: string
+          legislation_type: string | null
+          organization_id: string | null
+          published_at: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_level: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+          urgency_level: string | null
+        }
+        Insert: {
+          affected_areas?: string[] | null
+          ai_analysis?: Json | null
+          ai_summary?: string | null
+          client_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          expert_commentary?: string | null
+          id?: string
+          legislation_id?: string | null
+          legislation_summary?: string | null
+          legislation_title: string
+          legislation_type?: string | null
+          organization_id?: string | null
+          published_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          urgency_level?: string | null
+        }
+        Update: {
+          affected_areas?: string[] | null
+          ai_analysis?: Json | null
+          ai_summary?: string | null
+          client_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          expert_commentary?: string | null
+          id?: string
+          legislation_id?: string | null
+          legislation_summary?: string | null
+          legislation_title?: string
+          legislation_type?: string | null
+          organization_id?: string | null
+          published_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          urgency_level?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_session_links: {
         Row: {
           bill_id: string
@@ -129,47 +226,241 @@ export type Database = {
           },
         ]
       }
+      client_users: {
+        Row: {
+          area: string | null
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          profile_id: string | null
+          title: string | null
+          whatsapp_enabled: boolean | null
+        }
+        Insert: {
+          area?: string | null
+          client_id: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          profile_id?: string | null
+          title?: string | null
+          whatsapp_enabled?: boolean | null
+        }
+        Update: {
+          area?: string | null
+          client_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          profile_id?: string | null
+          title?: string | null
+          whatsapp_enabled?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_users_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_users_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
+          additional_entities: string[] | null
+          affected_areas: Json | null
+          business_model_description: string | null
           client_name: string
+          company_type: string | null
           contact_email: string | null
           contact_person: string | null
           contact_phone: string | null
           created_at: string | null
+          created_by: string | null
+          cross_border_countries: string[] | null
+          customer_segments: string[] | null
+          daily_report_schedule: string | null
+          delivery_channels: Json | null
+          detail_level: string | null
+          distribution_channels: string[] | null
+          email_recipients: Json | null
+          exclusions: string[] | null
+          high_impact_definition: string | null
+          high_urgency_definition: string | null
           id: string
+          include_analytics: boolean | null
+          include_expert_commentary: boolean | null
           industry: string | null
+          instrument_types: string[] | null
           internal_code: string | null
+          is_cross_border: boolean | null
+          is_regulated: boolean | null
+          keywords: string[] | null
+          law_branches: string[] | null
+          legal_name: string | null
+          locations: Json | null
+          monitoring_objective: string | null
           notes: string | null
+          organization_id: string | null
+          pdf_naming_convention: string | null
+          primary_contact_id: string | null
           primary_country: string | null
+          primary_sector: string | null
+          products_services: Json | null
+          report_default_filters: Json | null
+          secondary_sectors: string[] | null
+          send_only_if_alerts: boolean | null
+          short_description: string | null
+          source_acknowledgement: boolean | null
+          stakeholders_affected: string[] | null
+          status: string | null
+          supervising_authorities: string[] | null
+          timezone: string | null
+          trade_name: string | null
           updated_at: string | null
+          website: string | null
+          weekly_report_schedule: Json | null
+          whatsapp_consent: boolean | null
+          whatsapp_recipients: Json | null
         }
         Insert: {
+          additional_entities?: string[] | null
+          affected_areas?: Json | null
+          business_model_description?: string | null
           client_name: string
+          company_type?: string | null
           contact_email?: string | null
           contact_person?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          created_by?: string | null
+          cross_border_countries?: string[] | null
+          customer_segments?: string[] | null
+          daily_report_schedule?: string | null
+          delivery_channels?: Json | null
+          detail_level?: string | null
+          distribution_channels?: string[] | null
+          email_recipients?: Json | null
+          exclusions?: string[] | null
+          high_impact_definition?: string | null
+          high_urgency_definition?: string | null
           id?: string
+          include_analytics?: boolean | null
+          include_expert_commentary?: boolean | null
           industry?: string | null
+          instrument_types?: string[] | null
           internal_code?: string | null
+          is_cross_border?: boolean | null
+          is_regulated?: boolean | null
+          keywords?: string[] | null
+          law_branches?: string[] | null
+          legal_name?: string | null
+          locations?: Json | null
+          monitoring_objective?: string | null
           notes?: string | null
+          organization_id?: string | null
+          pdf_naming_convention?: string | null
+          primary_contact_id?: string | null
           primary_country?: string | null
+          primary_sector?: string | null
+          products_services?: Json | null
+          report_default_filters?: Json | null
+          secondary_sectors?: string[] | null
+          send_only_if_alerts?: boolean | null
+          short_description?: string | null
+          source_acknowledgement?: boolean | null
+          stakeholders_affected?: string[] | null
+          status?: string | null
+          supervising_authorities?: string[] | null
+          timezone?: string | null
+          trade_name?: string | null
           updated_at?: string | null
+          website?: string | null
+          weekly_report_schedule?: Json | null
+          whatsapp_consent?: boolean | null
+          whatsapp_recipients?: Json | null
         }
         Update: {
+          additional_entities?: string[] | null
+          affected_areas?: Json | null
+          business_model_description?: string | null
           client_name?: string
+          company_type?: string | null
           contact_email?: string | null
           contact_person?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          created_by?: string | null
+          cross_border_countries?: string[] | null
+          customer_segments?: string[] | null
+          daily_report_schedule?: string | null
+          delivery_channels?: Json | null
+          detail_level?: string | null
+          distribution_channels?: string[] | null
+          email_recipients?: Json | null
+          exclusions?: string[] | null
+          high_impact_definition?: string | null
+          high_urgency_definition?: string | null
           id?: string
+          include_analytics?: boolean | null
+          include_expert_commentary?: boolean | null
           industry?: string | null
+          instrument_types?: string[] | null
           internal_code?: string | null
+          is_cross_border?: boolean | null
+          is_regulated?: boolean | null
+          keywords?: string[] | null
+          law_branches?: string[] | null
+          legal_name?: string | null
+          locations?: Json | null
+          monitoring_objective?: string | null
           notes?: string | null
+          organization_id?: string | null
+          pdf_naming_convention?: string | null
+          primary_contact_id?: string | null
           primary_country?: string | null
+          primary_sector?: string | null
+          products_services?: Json | null
+          report_default_filters?: Json | null
+          secondary_sectors?: string[] | null
+          send_only_if_alerts?: boolean | null
+          short_description?: string | null
+          source_acknowledgement?: boolean | null
+          stakeholders_affected?: string[] | null
+          status?: string | null
+          supervising_authorities?: string[] | null
+          timezone?: string | null
+          trade_name?: string | null
           updated_at?: string | null
+          website?: string | null
+          weekly_report_schedule?: Json | null
+          whatsapp_consent?: boolean | null
+          whatsapp_recipients?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       congress_bill_statuses: {
         Row: {
@@ -206,6 +497,44 @@ export type Database = {
           stages?: Json
         }
         Relationships: []
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          max_clients: number | null
+          max_users: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_clients?: number | null
+          max_users?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_clients?: number | null
+          max_users?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       peru_sessions: {
         Row: {
@@ -257,6 +586,132 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_type: Database["public"]["Enums"]["app_role"]
+          client_id: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          last_daily_popup_shown: string | null
+          last_login_at: string | null
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["app_role"]
+          client_id?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          last_daily_popup_shown?: string | null
+          last_login_at?: string | null
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["app_role"]
+          client_id?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          last_daily_popup_shown?: string | null
+          last_login_at?: string | null
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          alert_ids: string[] | null
+          client_id: string
+          created_at: string
+          created_by: string | null
+          detail_level: string | null
+          id: string
+          include_analytics: boolean | null
+          organization_id: string | null
+          pdf_url: string | null
+          period_end: string | null
+          period_start: string | null
+          report_type: string | null
+          sent_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alert_ids?: string[] | null
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          detail_level?: string | null
+          id?: string
+          include_analytics?: boolean | null
+          organization_id?: string | null
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          report_type?: string | null
+          sent_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alert_ids?: string[] | null
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          detail_level?: string | null
+          id?: string
+          include_analytics?: boolean | null
+          organization_id?: string | null
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          report_type?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       session_recordings: {
         Row: {
