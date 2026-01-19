@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { DailySummaryPopup } from "@/components/landing/DailySummaryPopup";
 import { SessionsPage } from "@/components/sessions";
-import { LegislativeSessionsCalendar } from "@/components/calendar/LegislativeSessionsCalendar";
+import { AlertsCalendar } from "@/components/calendar/AlertsCalendar";
 import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { ContactForm } from "@/components/ContactForm";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
@@ -215,15 +215,7 @@ export default function LawMeterDashboard() {
       case "analytics":
         return <ClientAnalyticsDashboard />;
       case "calendar":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-              <p className="text-muted-foreground">Track deadlines and legislative sessions</p>
-            </div>
-            <LegislativeSessionsCalendar />
-          </div>
-        );
+        return <AlertsCalendar />;
       case "social":
         return <SocialListeningDemo />;
       case "contact":
