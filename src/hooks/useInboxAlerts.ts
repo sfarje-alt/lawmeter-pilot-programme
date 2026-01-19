@@ -1,6 +1,12 @@
 import { useState, useMemo, useCallback } from "react";
 import { ALL_MOCK_ALERTS, PeruAlert, KANBAN_COLUMNS } from "@/data/peruAlertsMockData";
-import { InboxFilters } from "@/components/inbox/InboxFilterBar";
+
+export interface InboxFilters {
+  search: string;
+  type: "all" | "proyecto_de_ley" | "norma";
+  area: string;
+  entity: string;
+}
 
 export function useInboxAlerts() {
   const [alerts, setAlerts] = useState<PeruAlert[]>(ALL_MOCK_ALERTS);
@@ -8,7 +14,7 @@ export function useInboxAlerts() {
     search: "",
     type: "all",
     area: "all",
-    riskLevel: "all",
+    entity: "all",
   });
 
   // Filter alerts
@@ -18,8 +24,10 @@ export function useInboxAlerts() {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesTitle = alert.legislation_title.toLowerCase().includes(searchLower);
-        const matchesId = alert.legislation_id.toLowerCase().includes(searchLower);
-        if (!matchesTitle && !matchesId) return false;
+        const matchesId = alert.legislation_id?.toLowerCase().includes(searchLower) || false;
+        const matchesAuthor = alert.author?.toLowerCase().includes(searchLower) || false;
+        const matchesEntity = alert.entity?.toLowerCase().includes(searchLower) || false;
+        if (!matchesTitle && !matchesId && !matchesAuthor && !matchesEntity) return false;
       }
 
       // Type filter
@@ -32,8 +40,8 @@ export function useInboxAlerts() {
         return false;
       }
 
-      // Risk level filter
-      if (filters.riskLevel !== "all" && alert.risk_level !== filters.riskLevel) {
+      // Entity filter (for normas)
+      if (filters.entity !== "all" && alert.entity !== filters.entity) {
         return false;
       }
 
