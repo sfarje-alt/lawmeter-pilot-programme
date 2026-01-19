@@ -7,19 +7,17 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   ExternalLink, 
-  AlertCircle, 
   Calendar, 
   User, 
   Building2, 
   FileText,
-  Sparkles,
+  Users,
   PenLine,
-  X,
   Send,
   Archive,
   Clock
 } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor, getRiskColor, getRiskBgColor } from "@/data/peruAlertsMockData";
+import { PeruAlert, getTypeLabel, getTypeColor } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -39,8 +37,16 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
 
   if (!alert) return null;
 
-  const displayDate = alert.ai_analysis.publication_date || alert.ai_analysis.stage_date || alert.created_at;
-  const formattedDate = format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es });
+  const isBill = alert.legislation_type === "proyecto_de_ley";
+  
+  // Get display date based on type
+  const displayDate = isBill 
+    ? alert.stage_date || alert.project_date 
+    : alert.publication_date;
+  
+  const formattedDate = displayDate 
+    ? format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es })
+    : format(new Date(alert.created_at), "dd 'de' MMMM, yyyy", { locale: es });
 
   const handleDecline = () => {
     onDecline(alert);
@@ -65,10 +71,11 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
                 <Badge variant="outline" className={cn("text-sm", getTypeColor(alert.legislation_type))}>
                   {getTypeLabel(alert.legislation_type)}
                 </Badge>
-                <Badge variant="outline" className={cn("text-sm", getRiskBgColor(alert.risk_level))}>
-                  <AlertCircle className={cn("h-3.5 w-3.5 mr-1.5", getRiskColor(alert.risk_level))} />
-                  Riesgo {alert.risk_level === "high" ? "Alto" : alert.risk_level === "medium" ? "Medio" : "Bajo"}
-                </Badge>
+                {isBill && alert.current_stage && (
+                  <Badge variant="secondary" className="text-sm">
+                    {alert.current_stage}
+                  </Badge>
+                )}
               </div>
               <SheetTitle className="text-left text-lg font-semibold leading-tight">
                 {alert.legislation_title}
@@ -84,33 +91,35 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
               </h3>
               
               <div className="grid gap-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">ID:</span>
-                  <span className="text-foreground font-medium">{alert.legislation_id}</span>
-                </div>
+                {alert.legislation_id && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">ID:</span>
+                    <span className="text-foreground font-medium font-mono">{alert.legislation_id}</span>
+                  </div>
+                )}
 
-                {alert.ai_analysis.author && (
+                {isBill && alert.author && (
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Autor:</span>
-                    <span className="text-foreground">{alert.ai_analysis.author}</span>
+                    <span className="text-foreground">{alert.author}</span>
                   </div>
                 )}
 
-                {alert.ai_analysis.parliamentary_group && (
+                {isBill && alert.parliamentary_group && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Grupo:</span>
-                    <span className="text-foreground">{alert.ai_analysis.parliamentary_group}</span>
+                    <span className="text-foreground">{alert.parliamentary_group}</span>
                   </div>
                 )}
 
-                {alert.ai_analysis.entity && (
+                {!isBill && alert.entity && (
                   <div className="flex items-center gap-2 text-sm">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Entidad:</span>
-                    <span className="text-foreground">{alert.ai_analysis.entity}</span>
+                    <span className="text-foreground">{alert.entity}</span>
                   </div>
                 )}
 
@@ -120,13 +129,13 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
                   <span className="text-foreground">{formattedDate}</span>
                 </div>
 
-                {alert.ai_analysis.current_stage && (
+                {isBill && alert.project_date && alert.stage_date && alert.project_date !== alert.stage_date && (
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Estado:</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {alert.ai_analysis.current_stage}
-                    </Badge>
+                    <span className="text-muted-foreground">Fecha proyecto:</span>
+                    <span className="text-foreground">
+                      {format(new Date(alert.project_date), "dd MMM yyyy", { locale: es })}
+                    </span>
                   </div>
                 )}
               </div>
@@ -139,38 +148,26 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
                   </Badge>
                 ))}
               </div>
+            </div>
 
-              {/* Deadline */}
-              {alert.deadline && (
-                <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
-                  <div className="flex items-center gap-2 text-warning">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm font-medium">
-                      Fecha límite: {format(new Date(alert.deadline), "dd 'de' MMMM, yyyy", { locale: es })}
-                    </span>
+            <Separator className="bg-border/30" />
+
+            {/* Summary Section (for normas) */}
+            {!isBill && alert.legislation_summary && (
+              <>
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    Resumen
+                  </h3>
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
+                    <p className="text-sm text-foreground leading-relaxed">
+                      {alert.legislation_summary}
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
-
-            <Separator className="bg-border/30" />
-
-            {/* AI Summary Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  Resumen AI
-                </h3>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-                <p className="text-sm text-foreground leading-relaxed">
-                  {alert.ai_analysis.summary || alert.legislation_summary || "Sin resumen disponible."}
-                </p>
-              </div>
-            </div>
-
-            <Separator className="bg-border/30" />
+                <Separator className="bg-border/30" />
+              </>
+            )}
 
             {/* Expert Commentary Section */}
             <div className="space-y-3">

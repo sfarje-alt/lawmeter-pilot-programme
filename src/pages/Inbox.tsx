@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Inbox as InboxIcon, FileText, Scale, AlertTriangle } from "lucide-react";
+import { Inbox as InboxIcon, FileText, Scale } from "lucide-react";
 import { useInboxAlerts } from "@/hooks/useInboxAlerts";
 import { InboxFilterBar } from "@/components/inbox/InboxFilterBar";
 import { KanbanColumn } from "@/components/inbox/KanbanColumn";
@@ -42,10 +42,6 @@ export default function Inbox() {
     alertsByStage.pleno.length + 
     alertsByStage.tramite_final.length;
 
-  const highRiskCount = Object.values(alertsByStage)
-    .flat()
-    .filter(a => a.risk_level === "high" && a.status === "inbox").length;
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -62,7 +58,7 @@ export default function Inbox() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="glass-card border-border/30">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
@@ -72,20 +68,6 @@ export default function Inbox() {
               <div>
                 <div className="text-2xl font-bold text-foreground">{pendingCount}</div>
                 <div className="text-xs text-muted-foreground">Pendientes</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-destructive">{highRiskCount}</div>
-                <div className="text-xs text-muted-foreground">Alto Riesgo</div>
               </div>
             </div>
           </CardContent>
