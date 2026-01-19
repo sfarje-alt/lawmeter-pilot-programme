@@ -10,6 +10,7 @@ import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
 import { ContactForm } from "@/components/ContactForm";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { ClientsPage } from "@/components/clients/ClientsPage";
+import { ClientAnalyticsDashboard } from "@/components/analytics/ClientAnalyticsDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -212,7 +213,7 @@ export default function LawMeterDashboard() {
       case "reports":
         return <ReportsPlaceholder />;
       case "analytics":
-        return <AnalyticsPlaceholder />;
+        return <ClientAnalyticsDashboard />;
       case "calendar":
         return (
           <div className="space-y-6">
