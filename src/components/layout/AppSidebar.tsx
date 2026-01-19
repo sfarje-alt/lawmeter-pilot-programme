@@ -1,4 +1,4 @@
-import { Scale, BarChart3, Star, Users, Calendar, Settings, BookOpen, Clock, MessageSquare, LogOut, Video } from "lucide-react";
+import { Inbox, Building2, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
@@ -25,10 +25,11 @@ interface AppSidebarProps {
 }
 
 const menuItems = [
-  { id: "starred", title: "Starred", icon: Star },
-  { id: "legislation", title: "Legislation", icon: Scale },
-  { id: "sessions", title: "Sessions / Hearings", icon: Video },
-  { id: "social", title: "Social Listening", icon: Users },
+  { id: "sessions", title: "Sessions", icon: Video },
+  { id: "inbox", title: "Inbox", icon: Inbox },
+  { id: "clients", title: "Clients", icon: Building2 },
+  { id: "reports", title: "Reports", icon: FileText },
+  { id: "analytics", title: "Analytics", icon: BarChart3 },
   { id: "calendar", title: "Calendar", icon: Calendar },
 ];
 
@@ -66,7 +67,7 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
               alt="LawMeter" 
               className="w-full h-auto object-contain max-h-32" 
             />
-            <h1 className="text-sm font-bold text-foreground leading-tight">Regulatory and Political Intelligence Hub</h1>
+            <h1 className="text-sm font-bold text-foreground leading-tight">Regulatory Intelligence Hub</h1>
           </div>
         )}
       </SidebarHeader>
@@ -98,24 +99,6 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
       <SidebarSeparator className="bg-white/10" />
 
       <div className="p-2 space-y-1">
-        <SidebarMenuButton
-          onClick={() => onTabChange("contact")}
-          tooltip="Contact"
-          className="text-sidebar-foreground hover:bg-white/10"
-        >
-          <MessageSquare className="h-4 w-4" />
-          {!isCollapsed && <span>Contact</span>}
-        </SidebarMenuButton>
-
-        <SidebarMenuButton
-          onClick={() => window.open("/documentation", "_self")}
-          tooltip="Documentation"
-          className="text-sidebar-foreground hover:bg-white/10"
-        >
-          <BookOpen className="h-4 w-4" />
-          {!isCollapsed && <span>Documentation</span>}
-        </SidebarMenuButton>
-        
         <SidebarMenuButton
           onClick={() => navigate('/settings')}
           tooltip="Settings"
