@@ -8,15 +8,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Search, Filter, X, SlidersHorizontal } from "lucide-react";
-import { PeruAlert } from "@/data/peruAlertsMockData";
-
-export interface InboxFilters {
-  search: string;
-  type: "all" | "proyecto_de_ley" | "norma";
-  area: string;
-  riskLevel: "all" | "high" | "medium" | "low";
-}
+import { Search, X } from "lucide-react";
+import { ENTITIES } from "@/data/peruAlertsMockData";
+import { InboxFilters } from "@/hooks/useInboxAlerts";
 
 interface InboxFilterBarProps {
   filters: InboxFilters;
@@ -31,7 +25,14 @@ interface InboxFilterBarProps {
 const AREAS = [
   "General",
   "Oncológico",
+  "Raras y huérfanas",
+  "Dispositivos Médicos",
   "Financiamiento y Presupuesto",
+  "Contrataciones Públicas",
+  "Salud Mental",
+  "Tecnología",
+  "Investigación",
+  "Laboral",
 ];
 
 export function InboxFilterBar({ filters, onFiltersChange, alertCounts }: InboxFilterBarProps) {
@@ -39,14 +40,14 @@ export function InboxFilterBar({ filters, onFiltersChange, alertCounts }: InboxF
     filters.search !== "" || 
     filters.type !== "all" || 
     filters.area !== "all" || 
-    filters.riskLevel !== "all";
+    filters.entity !== "all";
 
   const clearFilters = () => {
     onFiltersChange({
       search: "",
       type: "all",
       area: "all",
-      riskLevel: "all",
+      entity: "all",
     });
   };
 
@@ -58,7 +59,7 @@ export function InboxFilterBar({ filters, onFiltersChange, alertCounts }: InboxF
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por título o ID..."
+            placeholder="Buscar por título, autor, ID..."
             value={filters.search}
             onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
             className="pl-10 bg-muted/30 border-border/50"
@@ -96,19 +97,19 @@ export function InboxFilterBar({ filters, onFiltersChange, alertCounts }: InboxF
           </SelectContent>
         </Select>
 
-        {/* Risk Level Filter */}
+        {/* Entity Filter (for normas) */}
         <Select
-          value={filters.riskLevel}
-          onValueChange={(value) => onFiltersChange({ ...filters, riskLevel: value as InboxFilters["riskLevel"] })}
+          value={filters.entity}
+          onValueChange={(value) => onFiltersChange({ ...filters, entity: value })}
         >
-          <SelectTrigger className="w-[150px] bg-muted/30 border-border/50">
-            <SelectValue placeholder="Riesgo" />
+          <SelectTrigger className="w-[180px] bg-muted/30 border-border/50">
+            <SelectValue placeholder="Institución" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todo riesgo</SelectItem>
-            <SelectItem value="high">Alto</SelectItem>
-            <SelectItem value="medium">Medio</SelectItem>
-            <SelectItem value="low">Bajo</SelectItem>
+            <SelectItem value="all">Todas las instituciones</SelectItem>
+            {ENTITIES.map((entity) => (
+              <SelectItem key={entity} value={entity}>{entity}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -154,10 +155,10 @@ export function InboxFilterBar({ filters, onFiltersChange, alertCounts }: InboxF
               </button>
             </Badge>
           )}
-          {filters.riskLevel !== "all" && (
+          {filters.entity !== "all" && (
             <Badge variant="secondary" className="gap-1">
-              Riesgo: {filters.riskLevel === "high" ? "Alto" : filters.riskLevel === "medium" ? "Medio" : "Bajo"}
-              <button onClick={() => onFiltersChange({ ...filters, riskLevel: "all" })}>
+              Institución: {filters.entity}
+              <button onClick={() => onFiltersChange({ ...filters, entity: "all" })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
