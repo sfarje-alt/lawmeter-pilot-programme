@@ -13,6 +13,9 @@ interface BillsInboxProps {
   alerts: PeruAlert[];
   onDecline: (alert: PeruAlert) => void;
   onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
+  onTogglePin: (alertId: string) => void;
+  selectedClientId: string | null;
+  hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
 }
 
 export interface BillsFilters {
@@ -21,9 +24,9 @@ export interface BillsFilters {
   stage: string;
 }
 
-type BillKanbanStage = "comision" | "pleno" | "tramite_final" | "archivado";
+type BillKanbanStage = "comision" | "pleno" | "tramite_final";
 
-export function BillsInbox({ alerts, onDecline, onPublish }: BillsInboxProps) {
+export function BillsInbox({ alerts, onDecline, onPublish, onTogglePin, selectedClientId, hasCommentaryForClient }: BillsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<BillsFilters>({
@@ -69,7 +72,6 @@ export function BillsInbox({ alerts, onDecline, onPublish }: BillsInboxProps) {
       comision: [],
       pleno: [],
       tramite_final: [],
-      archivado: [],
     };
 
     filteredAlerts.forEach((alert) => {
@@ -103,7 +105,6 @@ export function BillsInbox({ alerts, onDecline, onPublish }: BillsInboxProps) {
       comision: alertsByStage.comision.length,
       pleno: alertsByStage.pleno.length,
       tramite_final: alertsByStage.tramite_final.length,
-      archivado: alertsByStage.archivado.length,
     }
   }), [billAlerts, filteredAlerts, alertsByStage]);
 

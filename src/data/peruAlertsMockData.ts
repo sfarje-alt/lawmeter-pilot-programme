@@ -1,8 +1,14 @@
 // Mock data generated from matriz_pls.xlsx and matriz_normas.xlsx
 // Complete dataset with real data from XLSX files
 
-// Simplified interface matching XLSX fields EXACTLY
-export interface PeruAlert {
+// Client-specific commentary for multi-client publishing
+export interface ClientCommentary {
+  clientId: string;
+  commentary: string;
+}
+
+// Base interface for alerts (without runtime-added fields)
+interface BasePeruAlert {
   id: string;
   legislation_type: "proyecto_de_ley" | "norma";
   legislation_title: string;        // "Título" (PLs) or "Norma" (Normas)
@@ -29,6 +35,12 @@ export interface PeruAlert {
   entity?: string;                   // "Institución"
   publication_date?: string;         // "Fecha"
   legislation_summary?: string | null; // "Resumen/Comentario"
+}
+
+// Full interface with publication workflow fields
+export interface PeruAlert extends BasePeruAlert {
+  is_pinned_for_publication: boolean;  // Whether this alert is marked for publication
+  client_commentaries: ClientCommentary[];  // Commentaries per client
 }
 
 // Mock clients for matching
@@ -84,20 +96,16 @@ export const KANBAN_COLUMNS = [
   { id: "archivado", label: "Archivado / Retirado", color: "bg-gray-500" },
 ];
 
-// Columns for Bills Inbox (without publicado - that's for regulations)
+// Columns for Bills Inbox (legislative process only - no archivado)
 export const BILLS_KANBAN_COLUMNS = [
   { id: "comision", label: "Comisión", color: "bg-blue-500" },
   { id: "pleno", label: "Pleno", color: "bg-purple-500" },
   { id: "tramite_final", label: "Trámite Final", color: "bg-orange-500" },
-  { id: "archivado", label: "Archivado", color: "bg-gray-500" },
 ];
 
-// Columns for Regulations Inbox (review workflow)
+// Columns for Regulations Inbox (single column - just pending review)
 export const REGULATIONS_KANBAN_COLUMNS = [
   { id: "pendiente", label: "Pendiente Revisión", color: "bg-yellow-500" },
-  { id: "en_revision", label: "En Revisión", color: "bg-blue-500" },
-  { id: "publicado", label: "Publicado a Cliente", color: "bg-green-500" },
-  { id: "archivado", label: "Archivado", color: "bg-gray-500" },
 ];
 
 // Stage values for filtering bills
@@ -134,7 +142,7 @@ function getKanbanStage(stage: string): PeruAlert["kanban_stage"] {
 }
 
 // Complete Bills data from matriz_pls.xlsx (real data)
-export const MOCK_BILLS: PeruAlert[] = [
+const MOCK_BILLS_RAW: BasePeruAlert[] = [
   {
     id: "bill-001",
     legislation_id: "13172/2025-CR",
@@ -442,7 +450,7 @@ export const MOCK_BILLS: PeruAlert[] = [
 ];
 
 // Complete Regulations data from matriz_normas.xlsx (real data)
-export const MOCK_REGULATIONS: PeruAlert[] = [
+const MOCK_REGULATIONS_RAW: BasePeruAlert[] = [
   {
     id: "reg-001",
     legislation_type: "norma",
@@ -745,8 +753,24 @@ export const MOCK_REGULATIONS: PeruAlert[] = [
   },
 ];
 
-// All alerts combined
-export const ALL_MOCK_ALERTS: PeruAlert[] = [...MOCK_BILLS, ...MOCK_REGULATIONS];
+// Helper to add default values to alerts
+function addAlertDefaults(alert: BasePeruAlert): PeruAlert {
+  return {
+    ...alert,
+    is_pinned_for_publication: false,
+    client_commentaries: [],
+  };
+}
+
+// Export processed arrays with defaults
+export const MOCK_BILLS: PeruAlert[] = MOCK_BILLS_RAW.map(addAlertDefaults);
+export const MOCK_REGULATIONS: PeruAlert[] = MOCK_REGULATIONS_RAW.map(addAlertDefaults);
+
+// All alerts combined with defaults
+export const ALL_MOCK_ALERTS: PeruAlert[] = [
+  ...MOCK_BILLS,
+  ...MOCK_REGULATIONS,
+];
 
 // Helper functions for filtering and display
 export function getAlertsByKanbanStage(stage: PeruAlert["kanban_stage"]): PeruAlert[] {
