@@ -1,14 +1,10 @@
-import { useState } from "react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useState, useMemo, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Inbox as InboxIcon, FileText, Scale } from "lucide-react";
-import { useInboxAlerts } from "@/hooks/useInboxAlerts";
-import { InboxFilterBar } from "@/components/inbox/InboxFilterBar";
-import { KanbanColumn } from "@/components/inbox/KanbanColumn";
-import { AlertDetailDrawer } from "@/components/inbox/AlertDetailDrawer";
-import { PeruAlert, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Scale, FileText } from "lucide-react";
+import { BillsInbox } from "@/components/inbox/BillsInbox";
+import { RegulationsInbox } from "@/components/inbox/RegulationsInbox";
+import { ALL_MOCK_ALERTS, PeruAlert } from "@/data/peruAlertsMockData";
 
 interface ClientCommentary {
   clientId: string;
@@ -16,51 +12,52 @@ interface ClientCommentary {
 }
 
 export default function Inbox() {
-  const {
-    alertsByStage,
-    alertCounts,
-    filters,
-    setFilters,
-    declineAlert,
-    publishAlert,
-    kanbanColumns,
-  } = useInboxAlerts();
+  const [alerts, setAlerts] = useState<PeruAlert[]>(ALL_MOCK_ALERTS);
 
-  const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Count by type
+  const counts = useMemo(() => ({
+    bills: alerts.filter(a => a.legislation_type === "proyecto_de_ley").length,
+    regulations: alerts.filter(a => a.legislation_type === "norma").length,
+  }), [alerts]);
 
-  const handleAlertClick = (alert: PeruAlert) => {
-    setSelectedAlert(alert);
-    setDrawerOpen(true);
-  };
+  // Decline alert (move to archivado)
+  const declineAlert = useCallback((alert: PeruAlert) => {
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.id === alert.id
+          ? { ...a, kanban_stage: "archivado" as const, status: "declined" as const, updated_at: new Date().toISOString() }
+          : a
+      )
+    );
+  }, []);
 
-  const handleDecline = (alert: PeruAlert) => {
-    declineAlert(alert);
-    toast.success("Alerta declinada", {
-      description: "Guardada para auditoría interna del equipo legal"
-    });
-  };
+  // Publish alert (move to publicado and assign client)
+  const publishAlert = useCallback((alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => {
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.id === alert.id
+          ? { 
+              ...a, 
+              kanban_stage: "publicado" as const, 
+              status: "published" as const, 
+              client_id: clientIds[0] || null,
+              updated_at: new Date().toISOString() 
+            }
+          : a
+      )
+    );
+  }, []);
 
-  const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => {
-    // Publish to each selected client
-    clientIds.forEach(clientId => {
-      publishAlert(alert, clientId);
-    });
-    
-    const clientNames = clientIds.map(id => 
-      MOCK_CLIENTS.find(c => c.id === id)?.name || id
-    ).join(", ");
-    
-    toast.success(`Publicado a ${clientIds.length} cliente${clientIds.length > 1 ? 's' : ''}`, {
-      description: clientNames
-    });
-  };
-
-  // Calculate pending count (non-archived, non-published)
-  const pendingCount = 
-    alertsByStage.comision.length + 
-    alertsByStage.pleno.length + 
-    alertsByStage.tramite_final.length;
+  // Move alert to a different stage
+  const moveAlert = useCallback((alertId: string, newStage: PeruAlert["kanban_stage"]) => {
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.id === alertId
+          ? { ...a, kanban_stage: newStage, updated_at: new Date().toISOString() }
+          : a
+      )
+    );
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -77,85 +74,42 @@ export default function Inbox() {
         </Badge>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <InboxIcon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{pendingCount}</div>
-                <div className="text-xs text-muted-foreground">Pendientes</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Tabs for Bills vs Regulations */}
+      <Tabs defaultValue="bills" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2 bg-muted/30">
+          <TabsTrigger value="bills" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+            <Scale className="h-4 w-4" />
+            <span>Proyectos de Ley</span>
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {counts.bills}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="regulations" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+            <FileText className="h-4 w-4" />
+            <span>Normas</span>
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {counts.regulations}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
 
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Scale className="h-5 w-5 text-blue-400" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{alertCounts.bills}</div>
-                <div className="text-xs text-muted-foreground">Proyectos de Ley</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="bills" className="mt-6">
+          <BillsInbox
+            alerts={alerts}
+            onDecline={declineAlert}
+            onPublish={publishAlert}
+          />
+        </TabsContent>
 
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <FileText className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{alertCounts.norms}</div>
-                <div className="text-xs text-muted-foreground">Normas</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <InboxFilterBar
-        filters={filters}
-        onFiltersChange={setFilters}
-        alertCounts={alertCounts}
-      />
-
-      {/* Kanban Board */}
-      <div className="relative">
-        <ScrollArea className="w-full pb-4">
-          <div className="flex gap-4 min-w-max">
-            {kanbanColumns.map((column) => (
-              <KanbanColumn
-                key={column.id}
-                id={column.id}
-                label={column.label}
-                color={column.color}
-                alerts={alertsByStage[column.id as PeruAlert["kanban_stage"]]}
-                onAlertClick={handleAlertClick}
-              />
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
-
-      {/* Alert Detail Drawer */}
-      <AlertDetailDrawer
-        alert={selectedAlert}
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        onDecline={handleDecline}
-        onPublish={handlePublish}
-      />
+        <TabsContent value="regulations" className="mt-6">
+          <RegulationsInbox
+            alerts={alerts}
+            onDecline={declineAlert}
+            onPublish={publishAlert}
+            onMoveAlert={moveAlert}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
