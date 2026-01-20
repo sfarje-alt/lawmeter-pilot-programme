@@ -9,9 +9,21 @@ interface KanbanColumnProps {
   color: string;
   alerts: PeruAlert[];
   onAlertClick: (alert: PeruAlert) => void;
+  onTogglePin?: (alertId: string) => void;
+  selectedClientId?: string | null;
+  hasCommentaryForClient?: (alert: PeruAlert, clientId: string) => boolean;
 }
 
-export function KanbanColumn({ id, label, color, alerts, onAlertClick }: KanbanColumnProps) {
+export function KanbanColumn({ 
+  id, 
+  label, 
+  color, 
+  alerts, 
+  onAlertClick,
+  onTogglePin,
+  selectedClientId,
+  hasCommentaryForClient
+}: KanbanColumnProps) {
   return (
     <div className="flex flex-col min-w-[300px] max-w-[300px] bg-card/30 rounded-lg border border-border/30">
       {/* Column Header */}
@@ -36,6 +48,9 @@ export function KanbanColumn({ id, label, color, alerts, onAlertClick }: KanbanC
                 key={alert.id}
                 alert={alert}
                 onClick={() => onAlertClick(alert)}
+                onTogglePin={onTogglePin}
+                selectedClientId={selectedClientId}
+                hasCommentaryForClient={hasCommentaryForClient}
               />
             ))
           )}
