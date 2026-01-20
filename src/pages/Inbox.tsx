@@ -4,15 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scale, FileText } from "lucide-react";
 import { BillsInbox } from "@/components/inbox/BillsInbox";
 import { RegulationsInbox } from "@/components/inbox/RegulationsInbox";
-import { ALL_MOCK_ALERTS, PeruAlert } from "@/data/peruAlertsMockData";
-
-interface ClientCommentary {
-  clientId: string;
-  commentary: string;
-}
+import { PublicationPanel } from "@/components/inbox/PublicationPanel";
+import { ALL_MOCK_ALERTS, PeruAlert, ClientCommentary } from "@/data/peruAlertsMockData";
 
 export default function Inbox() {
   const [alerts, setAlerts] = useState<PeruAlert[]>(ALL_MOCK_ALERTS);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // Count by type
   const counts = useMemo(() => ({
@@ -20,19 +17,42 @@ export default function Inbox() {
     regulations: alerts.filter(a => a.legislation_type === "norma").length,
   }), [alerts]);
 
-  // Decline alert (move to archivado)
-  const declineAlert = useCallback((alert: PeruAlert) => {
+  // Pinned alerts
+  const pinnedAlerts = useMemo(() => {
+    return alerts.filter(a => a.is_pinned_for_publication);
+  }, [alerts]);
+
+  // Check if alert has commentary for client
+  const hasCommentaryForClient = useCallback((alert: PeruAlert, clientId: string): boolean => {
+    const clientCommentary = alert.client_commentaries.find(c => c.clientId === clientId);
+    if (clientCommentary && clientCommentary.commentary.trim()) return true;
+    return !!(alert.expert_commentary && alert.expert_commentary.trim());
+  }, []);
+
+  // Toggle pin for publication
+  const togglePinAlert = useCallback((alertId: string) => {
     setAlerts((prev) =>
       prev.map((a) =>
-        a.id === alert.id
-          ? { ...a, kanban_stage: "archivado" as const, status: "declined" as const, updated_at: new Date().toISOString() }
+        a.id === alertId
+          ? { ...a, is_pinned_for_publication: !a.is_pinned_for_publication, updated_at: new Date().toISOString() }
           : a
       )
     );
   }, []);
 
-  // Publish alert (move to publicado and assign client)
-  const publishAlert = useCallback((alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => {
+  // Decline alert
+  const declineAlert = useCallback((alert: PeruAlert) => {
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.id === alert.id
+          ? { ...a, kanban_stage: "archivado" as const, status: "declined" as const, is_pinned_for_publication: false, updated_at: new Date().toISOString() }
+          : a
+      )
+    );
+  }, []);
+
+  // Publish alert
+  const publishAlert = useCallback((alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
     setAlerts((prev) =>
       prev.map((a) =>
         a.id === alert.id
@@ -41,6 +61,7 @@ export default function Inbox() {
               kanban_stage: "publicado" as const, 
               status: "published" as const, 
               client_id: clientIds[0] || null,
+              is_pinned_for_publication: false,
               updated_at: new Date().toISOString() 
             }
           : a
@@ -48,7 +69,24 @@ export default function Inbox() {
     );
   }, []);
 
-  // Move alert to a different stage
+  // Batch publish pinned alerts
+  const batchPublishPinned = useCallback((clientIds: string[]) => {
+    setAlerts((prev) =>
+      prev.map((a) => {
+        if (!a.is_pinned_for_publication) return a;
+        return {
+          ...a,
+          kanban_stage: "publicado" as const,
+          status: "published" as const,
+          client_id: clientIds[0] || null,
+          is_pinned_for_publication: false,
+          updated_at: new Date().toISOString()
+        };
+      })
+    );
+  }, []);
+
+  // Move alert
   const moveAlert = useCallback((alertId: string, newStage: PeruAlert["kanban_stage"]) => {
     setAlerts((prev) =>
       prev.map((a) =>
@@ -69,9 +107,19 @@ export default function Inbox() {
             Revisa y gestiona alertas legislativas para tus clientes
           </p>
         </div>
-        <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
-          Perú
-        </Badge>
+        <div className="flex items-center gap-3">
+          <PublicationPanel
+            pinnedAlerts={pinnedAlerts}
+            selectedClientId={selectedClientId}
+            onClientChange={setSelectedClientId}
+            hasCommentaryForClient={hasCommentaryForClient}
+            onBatchPublish={batchPublishPinned}
+            onUnpinAlert={togglePinAlert}
+          />
+          <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
+            Perú
+          </Badge>
+        </div>
       </div>
 
       {/* Tabs for Bills vs Regulations */}
@@ -98,6 +146,9 @@ export default function Inbox() {
             alerts={alerts}
             onDecline={declineAlert}
             onPublish={publishAlert}
+            onTogglePin={togglePinAlert}
+            selectedClientId={selectedClientId}
+            hasCommentaryForClient={hasCommentaryForClient}
           />
         </TabsContent>
 
@@ -107,6 +158,9 @@ export default function Inbox() {
             onDecline={declineAlert}
             onPublish={publishAlert}
             onMoveAlert={moveAlert}
+            onTogglePin={togglePinAlert}
+            selectedClientId={selectedClientId}
+            hasCommentaryForClient={hasCommentaryForClient}
           />
         </TabsContent>
       </Tabs>

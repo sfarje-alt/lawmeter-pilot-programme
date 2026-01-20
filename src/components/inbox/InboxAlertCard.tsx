@@ -1,24 +1,37 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Star, ExternalLink, Clock, Building2, User, Users, FileText, Tag } from "lucide-react";
+import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle } from "lucide-react";
 import { PeruAlert, getTypeLabel, getTypeColor } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 interface InboxAlertCardProps {
   alert: PeruAlert;
   onClick: () => void;
+  onTogglePin?: (alertId: string) => void;
+  selectedClientId?: string | null;
+  hasCommentaryForClient?: (alert: PeruAlert, clientId: string) => boolean;
 }
 
-export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
-  const [isStarred, setIsStarred] = useState(false);
+export function InboxAlertCard({ 
+  alert, 
+  onClick, 
+  onTogglePin,
+  selectedClientId,
+  hasCommentaryForClient
+}: InboxAlertCardProps) {
   const isBill = alert.legislation_type === "proyecto_de_ley";
+  const isPinned = alert.is_pinned_for_publication;
+  
+  // Determine commentary status for the selected client
+  const hasCommentary = selectedClientId && hasCommentaryForClient 
+    ? hasCommentaryForClient(alert, selectedClientId)
+    : !!(alert.expert_commentary && alert.expert_commentary.trim());
 
-  const handleStarClick = (e: React.MouseEvent) => {
+  const handlePinClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsStarred(!isStarred);
+    onTogglePin?.(alert.id);
   };
 
   const handleLinkClick = (e: React.MouseEvent) => {
@@ -40,7 +53,12 @@ export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
 
   return (
     <Card 
-      className="p-3 bg-card/50 border-border/30 hover:bg-card/80 hover:border-primary/30 transition-all cursor-pointer group"
+      className={cn(
+        "p-3 bg-card/50 border-border/30 hover:bg-card/80 transition-all cursor-pointer group",
+        isPinned && "border-primary/50 bg-primary/5",
+        isPinned && hasCommentary && "ring-1 ring-green-500/30",
+        isPinned && !hasCommentary && "ring-1 ring-amber-500/30"
+      )}
       onClick={onClick}
     >
       {/* Header: Type Badge + ID + Actions */}
@@ -56,6 +74,18 @@ export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {/* Commentary Status Badge (only when pinned) */}
+          {isPinned && (
+            hasCommentary ? (
+              <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-500 border-green-500/30 py-0 px-1.5">
+                <CheckCircle2 className="h-3 w-3" />
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-500 border-amber-500/30 py-0 px-1.5">
+                <AlertCircle className="h-3 w-3" />
+              </Badge>
+            )
+          )}
           {alert.source_url && (
             <button
               onClick={handleLinkClick}
@@ -65,17 +95,25 @@ export function InboxAlertCard({ alert, onClick }: InboxAlertCardProps) {
               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
             </button>
           )}
-          <button
-            onClick={handleStarClick}
-            className="p-1 hover:bg-white/10 rounded transition-colors"
-          >
-            <Star 
+          {onTogglePin && (
+            <button
+              onClick={handlePinClick}
               className={cn(
-                "h-3.5 w-3.5 transition-colors",
-                isStarred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-              )} 
-            />
-          </button>
+                "p-1 rounded transition-colors",
+                isPinned 
+                  ? "bg-primary/20 hover:bg-primary/30" 
+                  : "hover:bg-white/10"
+              )}
+              title={isPinned ? "Quitar de publicación" : "Pinear para publicación"}
+            >
+              <Pin 
+                className={cn(
+                  "h-3.5 w-3.5 transition-colors",
+                  isPinned ? "fill-primary text-primary" : "text-muted-foreground"
+                )} 
+              />
+            </button>
+          )}
         </div>
       </div>
 
