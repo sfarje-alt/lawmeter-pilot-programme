@@ -75,12 +75,46 @@ export const STAGE_TO_KANBAN: Record<string, PeruAlert["kanban_stage"]> = {
   "RETIRADO": "archivado",
 };
 
+// Original columns (keep for backwards compatibility)
 export const KANBAN_COLUMNS = [
   { id: "comision", label: "Comisión / Consulta Pública", color: "bg-blue-500" },
   { id: "pleno", label: "Pleno", color: "bg-purple-500" },
   { id: "tramite_final", label: "Trámite Final", color: "bg-orange-500" },
   { id: "publicado", label: "Publicado / Vigente", color: "bg-green-500" },
   { id: "archivado", label: "Archivado / Retirado", color: "bg-gray-500" },
+];
+
+// Columns for Bills Inbox (without publicado - that's for regulations)
+export const BILLS_KANBAN_COLUMNS = [
+  { id: "comision", label: "Comisión", color: "bg-blue-500" },
+  { id: "pleno", label: "Pleno", color: "bg-purple-500" },
+  { id: "tramite_final", label: "Trámite Final", color: "bg-orange-500" },
+  { id: "archivado", label: "Archivado", color: "bg-gray-500" },
+];
+
+// Columns for Regulations Inbox (review workflow)
+export const REGULATIONS_KANBAN_COLUMNS = [
+  { id: "pendiente", label: "Pendiente Revisión", color: "bg-yellow-500" },
+  { id: "en_revision", label: "En Revisión", color: "bg-blue-500" },
+  { id: "publicado", label: "Publicado a Cliente", color: "bg-green-500" },
+  { id: "archivado", label: "Archivado", color: "bg-gray-500" },
+];
+
+// Stage values for filtering bills
+export const BILL_STAGES = [
+  "PRESENTADO",
+  "EN COMISIÓN",
+  "EN COMISIÓN PRIMARIA",
+  "EN COMISIÓN DICTAMINADORA",
+  "DICTAMEN",
+  "EN AGENDA DEL PLENO",
+  "EN PLENO",
+  "EN SEGUNDA VOTACIÓN",
+  "APROBADO",
+  "AUTÓGRAFA",
+  "OBSERVADO",
+  "ARCHIVADO",
+  "RETIRADO",
 ];
 
 // Helper functions for display
