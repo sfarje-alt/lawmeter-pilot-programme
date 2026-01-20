@@ -14,6 +14,9 @@ interface RegulationsInboxProps {
   onDecline: (alert: PeruAlert) => void;
   onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
   onMoveAlert: (alertId: string, newStage: PeruAlert["kanban_stage"]) => void;
+  onTogglePin: (alertId: string) => void;
+  selectedClientId: string | null;
+  hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
 }
 
 export interface RegulationsFilters {
@@ -22,9 +25,9 @@ export interface RegulationsFilters {
   entity: string;
 }
 
-type RegulationKanbanStage = "pendiente" | "en_revision" | "publicado" | "archivado";
+type RegulationKanbanStage = "pendiente";
 
-export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert }: RegulationsInboxProps) {
+export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert, onTogglePin, selectedClientId, hasCommentaryForClient }: RegulationsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<RegulationsFilters>({
@@ -64,12 +67,10 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert }: 
     });
   }, [regulationAlerts, filters]);
 
-  // Map regulation kanban stages (they use different stages)
+  // Map regulation kanban stages - all regulations go to pendiente for review
   const mapToRegulationStage = (alert: PeruAlert): RegulationKanbanStage => {
-    // Regulations by default come in as "publicado" (from source) but we treat them as "pendiente" for review workflow
-    if (alert.status === "published") return "publicado";
-    if (alert.status === "declined") return "archivado";
-    if (alert.status === "reviewed") return "en_revision";
+    // All regulations that aren't published or declined go to pendiente
+    if (alert.status === "published" || alert.status === "declined") return "pendiente"; // Hide from view
     return "pendiente";
   };
 
@@ -77,9 +78,6 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert }: 
   const alertsByStage = useMemo(() => {
     const grouped: Record<RegulationKanbanStage, PeruAlert[]> = {
       pendiente: [],
-      en_revision: [],
-      publicado: [],
-      archivado: [],
     };
 
     filteredAlerts.forEach((alert) => {
@@ -105,9 +103,6 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert }: 
     filtered: filteredAlerts.length,
     byStage: {
       pendiente: alertsByStage.pendiente.length,
-      en_revision: alertsByStage.en_revision.length,
-      publicado: alertsByStage.publicado.length,
-      archivado: alertsByStage.archivado.length,
     }
   }), [regulationAlerts, filteredAlerts, alertsByStage]);
 
@@ -148,13 +143,13 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert }: 
     });
   };
 
-  // Pending count (pendiente + en_revision)
-  const pendingCount = alertCounts.byStage.pendiente + alertCounts.byStage.en_revision;
+  // Pending count
+  const pendingCount = alertCounts.byStage.pendiente;
 
   return (
     <div className="space-y-4">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* KPI Cards - Simplified to just show total pending */}
+      <div className="grid grid-cols-2 gap-3">
         <Card className="glass-card border-border/30">
           <CardContent className="pt-3 pb-3">
             <div className="flex items-center gap-3">
@@ -162,50 +157,22 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert }: 
                 <InboxIcon className="h-4 w-4 text-primary" />
               </div>
               <div>
+                <div className="text-xl font-bold text-foreground">{alertCounts.total}</div>
+                <div className="text-xs text-muted-foreground">Total Normas</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card border-border/30">
+          <CardContent className="pt-3 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <FileText className="h-4 w-4 text-amber-400" />
+              </div>
+              <div>
                 <div className="text-xl font-bold text-foreground">{pendingCount}</div>
-                <div className="text-xs text-muted-foreground">Pendientes</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-yellow-500/10">
-                <FileText className="h-4 w-4 text-yellow-400" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.byStage.pendiente}</div>
                 <div className="text-xs text-muted-foreground">Por Revisar</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <FileText className="h-4 w-4 text-blue-400" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.byStage.en_revision}</div>
-                <div className="text-xs text-muted-foreground">En Revisión</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <Building2 className="h-4 w-4 text-green-400" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.byStage.publicado}</div>
-                <div className="text-xs text-muted-foreground">Publicadas</div>
               </div>
             </div>
           </CardContent>
@@ -233,6 +200,9 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert }: 
                 color={column.color}
                 alerts={alertsByStage[column.id as RegulationKanbanStage] || []}
                 onAlertClick={handleAlertClick}
+                onTogglePin={onTogglePin}
+                selectedClientId={selectedClientId}
+                hasCommentaryForClient={hasCommentaryForClient}
               />
             ))}
           </div>

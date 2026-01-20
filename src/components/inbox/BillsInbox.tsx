@@ -230,6 +230,9 @@ export function BillsInbox({ alerts, onDecline, onPublish, onTogglePin, selected
                 color={column.color}
                 alerts={alertsByStage[column.id as BillKanbanStage] || []}
                 onAlertClick={handleAlertClick}
+                onTogglePin={onTogglePin}
+                selectedClientId={selectedClientId}
+                hasCommentaryForClient={hasCommentaryForClient}
               />
             ))}
           </div>
