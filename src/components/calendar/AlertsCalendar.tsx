@@ -63,52 +63,91 @@ interface DateRuleConfig {
   showManual: boolean;
 }
 
+// Helper to parse date strings (supports both ISO "YYYY-MM-DD" and "DD/MM/YYYY" formats)
+const parseAlertDate = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+  
+  // Try ISO format first (YYYY-MM-DD)
+  if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+    const date = parseISO(dateStr);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  // Try DD/MM/YYYY format
+  const dateParts = dateStr.split('/');
+  if (dateParts.length === 3) {
+    const date = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  return null;
+};
+
+// Assign risk levels based on alert characteristics
+const getAlertRiskLevel = (alert: PeruAlert): 'high' | 'medium' | 'low' => {
+  const title = alert.legislation_title.toLowerCase();
+  const areas = alert.affected_areas;
+  
+  // High risk indicators
+  if (title.includes('obligatoriedad') || title.includes('sanciones') || 
+      title.includes('prohibe') || title.includes('declara de necesidad') ||
+      areas.includes('Oncológico') || areas.includes('Raras y huérfanas')) {
+    return 'high';
+  }
+  
+  // Low risk indicators  
+  if (title.includes('designa') || title.includes('renuncia') || 
+      title.includes('agradece') || alert.current_stage === 'ARCHIVADO') {
+    return 'low';
+  }
+  
+  return 'medium';
+};
+
 // Convert alerts to calendar events
 const convertToCalendarEvents = (alerts: PeruAlert[]): AlertCalendarEvent[] => {
   const events: AlertCalendarEvent[] = [];
   
   alerts.forEach(alert => {
     const isBill = alert.legislation_type === 'proyecto_de_ley';
+    const riskLevel = getAlertRiskLevel(alert);
     
-    // For bills - use stage_date
-    if (isBill && alert.stage_date) {
-      const dateParts = alert.stage_date.split('/');
-      if (dateParts.length === 3) {
-        const date = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
-        if (!isNaN(date.getTime())) {
-          events.push({
-            id: alert.id,
-            title: alert.legislation_title,
-            date,
-            dateType: 'stage_entry',
-            type: 'bill',
-            stage: alert.current_stage,
-            riskLevel: 'medium',
-            affectedAreas: alert.affected_areas,
-            clients: []
-          });
-        }
+    // For bills - use stage_date or project_date
+    if (isBill) {
+      const dateStr = alert.stage_date || alert.project_date;
+      const date = parseAlertDate(dateStr || '');
+      
+      if (date) {
+        events.push({
+          id: alert.id,
+          title: alert.legislation_title,
+          date,
+          dateType: 'stage_entry',
+          type: 'bill',
+          stage: alert.current_stage,
+          riskLevel,
+          affectedAreas: alert.affected_areas,
+          clients: []
+        });
       }
     }
     
     // For regulations - use publication_date
     if (!isBill && alert.publication_date) {
-      const dateParts = alert.publication_date.split('/');
-      if (dateParts.length === 3) {
-        const date = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
-        if (!isNaN(date.getTime())) {
-          events.push({
-            id: alert.id,
-            title: alert.legislation_title,
-            date,
-            dateType: 'publication',
-            type: 'regulation',
-            entity: alert.entity,
-            riskLevel: 'medium',
-            affectedAreas: alert.affected_areas,
-            clients: []
-          });
-        }
+      const date = parseAlertDate(alert.publication_date);
+      
+      if (date) {
+        events.push({
+          id: alert.id,
+          title: alert.legislation_title,
+          date,
+          dateType: 'publication',
+          type: 'regulation',
+          entity: alert.entity,
+          riskLevel,
+          affectedAreas: alert.affected_areas,
+          clients: []
+        });
       }
     }
   });
@@ -135,7 +174,8 @@ const getUniqueAreas = (alerts: PeruAlert[]): string[] => {
 };
 
 export function AlertsCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Set initial date to November 2025 where most mock data exists
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [view, setView] = useState<'day' | 'week' | 'month'>('month');
   const [showFilters, setShowFilters] = useState(false);
