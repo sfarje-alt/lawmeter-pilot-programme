@@ -1,13 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -17,6 +10,7 @@ import { format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { IMPACT_LEVELS } from "@/data/peruAlertsMockData";
 import { cn } from "@/lib/utils";
+import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
 
 interface RegulationsFilterBarProps {
   filters: RegulationsFilters;
@@ -51,10 +45,10 @@ export function RegulationsFilterBar({
 }: RegulationsFilterBarProps) {
   const hasActiveFilters = 
     filters.search !== "" || 
-    filters.area !== "all" || 
-    filters.entity !== "all" ||
-    filters.sector !== "all" ||
-    filters.impactLevel !== "all" ||
+    filters.areas.length > 0 || 
+    filters.entities.length > 0 ||
+    filters.sectors.length > 0 ||
+    filters.impactLevels.length > 0 ||
     filters.dateFrom !== undefined ||
     filters.dateTo !== undefined ||
     filters.onlyPinned;
@@ -62,10 +56,10 @@ export function RegulationsFilterBar({
   const clearFilters = () => {
     onFiltersChange({
       search: "",
-      area: "all",
-      entity: "all",
-      sector: "all",
-      impactLevel: "all",
+      areas: [],
+      entities: [],
+      sectors: [],
+      impactLevels: [],
       dateFrom: undefined,
       dateTo: undefined,
       onlyPinned: false,
@@ -77,6 +71,38 @@ export function RegulationsFilterBar({
     const fromDate = subDays(today, days);
     onFiltersChange({ ...filters, dateFrom: fromDate, dateTo: today });
   };
+
+  // Build options for multiselects
+  const impactOptions: MultiSelectOption[] = availableImpactLevels.map(level => {
+    const levelInfo = IMPACT_LEVELS.find(l => l.value === level);
+    return {
+      value: level,
+      label: levelInfo?.label || level,
+      icon: (
+        <div className={cn("w-2 h-2 rounded-full", 
+          level === "positivo" && "bg-green-500",
+          level === "leve" && "bg-gray-400",
+          level === "medio" && "bg-yellow-500",
+          level === "grave" && "bg-red-500"
+        )} />
+      ),
+    };
+  });
+
+  const sectorOptions: MultiSelectOption[] = availableSectors.map(sector => ({
+    value: sector,
+    label: sector,
+  }));
+
+  const entityOptions: MultiSelectOption[] = availableEntities.map(entity => ({
+    value: entity,
+    label: entity,
+  }));
+
+  const areaOptions: MultiSelectOption[] = availableAreas.map(area => ({
+    value: area,
+    label: area,
+  }));
 
   return (
     <div className="space-y-3">
@@ -109,75 +135,32 @@ export function RegulationsFilterBar({
           )}
         </Toggle>
 
-        {/* Impact Level Filter */}
-        <Select
-          value={filters.impactLevel}
-          onValueChange={(value) => onFiltersChange({ ...filters, impactLevel: value })}
-        >
-          <SelectTrigger className="w-[150px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue>
-              {filters.impactLevel === "all" 
-                ? "Impacto: Todos" 
-                : `Impacto: ${IMPACT_LEVELS.find(l => l.value === filters.impactLevel)?.label || filters.impactLevel}`
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los impactos</SelectItem>
-            {availableImpactLevels.map((level) => {
-              const levelInfo = IMPACT_LEVELS.find(l => l.value === level);
-              return (
-                <SelectItem key={level} value={level}>
-                  <div className="flex items-center gap-2">
-                    <div className={cn("w-2 h-2 rounded-full", 
-                      level === "positivo" && "bg-green-500",
-                      level === "leve" && "bg-gray-400",
-                      level === "medio" && "bg-yellow-500",
-                      level === "grave" && "bg-red-500"
-                    )} />
-                    {levelInfo?.label || level}
-                  </div>
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+        {/* Impact Level Filter - MultiSelect */}
+        <MultiSelect
+          options={impactOptions}
+          selected={filters.impactLevels}
+          onChange={(impactLevels) => onFiltersChange({ ...filters, impactLevels })}
+          placeholder="Impacto: Todos"
+          className="w-[160px]"
+        />
 
-        {/* Sector Filter */}
-        <Select
-          value={filters.sector}
-          onValueChange={(value) => onFiltersChange({ ...filters, sector: value })}
-        >
-          <SelectTrigger className="w-[155px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue>
-              {filters.sector === "all" ? "Sector: Todos" : filters.sector}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los sectores</SelectItem>
-            {availableSectors.map((sector) => (
-              <SelectItem key={sector} value={sector}>{sector}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Sector Filter - MultiSelect */}
+        <MultiSelect
+          options={sectorOptions}
+          selected={filters.sectors}
+          onChange={(sectors) => onFiltersChange({ ...filters, sectors })}
+          placeholder="Sector: Todos"
+          className="w-[160px]"
+        />
 
-        {/* Entity Filter */}
-        <Select
-          value={filters.entity}
-          onValueChange={(value) => onFiltersChange({ ...filters, entity: value })}
-        >
-          <SelectTrigger className="w-[165px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue>
-              {filters.entity === "all" ? "Institución: Todas" : filters.entity}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las instituciones</SelectItem>
-            {availableEntities.map((entity) => (
-              <SelectItem key={entity} value={entity}>{entity}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Entity Filter - MultiSelect */}
+        <MultiSelect
+          options={entityOptions}
+          selected={filters.entities}
+          onChange={(entities) => onFiltersChange({ ...filters, entities })}
+          placeholder="Institución: Todas"
+          className="w-[175px]"
+        />
 
         {/* Date Range Filter with Quick Options */}
         <Popover>
@@ -203,7 +186,7 @@ export function RegulationsFilterBar({
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 z-50" align="start">
             <div className="p-3 space-y-3">
               {/* Quick Date Options */}
               <div className="space-y-1">
@@ -263,23 +246,14 @@ export function RegulationsFilterBar({
           </PopoverContent>
         </Popover>
 
-        {/* Area Filter */}
-        <Select
-          value={filters.area}
-          onValueChange={(value) => onFiltersChange({ ...filters, area: value })}
-        >
-          <SelectTrigger className="w-[150px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue>
-              {filters.area === "all" ? "Área: Todas" : filters.area}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las áreas</SelectItem>
-            {availableAreas.map((area) => (
-              <SelectItem key={area} value={area}>{area}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Area Filter - MultiSelect */}
+        <MultiSelect
+          options={areaOptions}
+          selected={filters.areas}
+          onChange={(areas) => onFiltersChange({ ...filters, areas })}
+          placeholder="Área: Todas"
+          className="w-[160px]"
+        />
 
         {/* Clear Filters */}
         {hasActiveFilters && (
@@ -318,41 +292,41 @@ export function RegulationsFilterBar({
               </button>
             </Badge>
           )}
-          {filters.impactLevel !== "all" && (
-            <Badge variant="secondary" className={cn(
+          {filters.impactLevels.map(level => (
+            <Badge key={level} variant="secondary" className={cn(
               "gap-1 text-xs",
-              IMPACT_LEVELS.find(l => l.value === filters.impactLevel)?.color
+              IMPACT_LEVELS.find(l => l.value === level)?.color
             )}>
-              Impacto: {IMPACT_LEVELS.find(l => l.value === filters.impactLevel)?.label}
-              <button onClick={() => onFiltersChange({ ...filters, impactLevel: "all" })}>
+              Impacto: {IMPACT_LEVELS.find(l => l.value === level)?.label || level}
+              <button onClick={() => onFiltersChange({ ...filters, impactLevels: filters.impactLevels.filter(l => l !== level) })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
-          )}
-          {filters.sector !== "all" && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Sector: {filters.sector}
-              <button onClick={() => onFiltersChange({ ...filters, sector: "all" })}>
+          ))}
+          {filters.sectors.map(sector => (
+            <Badge key={sector} variant="secondary" className="gap-1 text-xs">
+              Sector: {sector}
+              <button onClick={() => onFiltersChange({ ...filters, sectors: filters.sectors.filter(s => s !== sector) })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
-          )}
-          {filters.entity !== "all" && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Institución: {filters.entity}
-              <button onClick={() => onFiltersChange({ ...filters, entity: "all" })}>
+          ))}
+          {filters.entities.map(entity => (
+            <Badge key={entity} variant="secondary" className="gap-1 text-xs">
+              Institución: {entity}
+              <button onClick={() => onFiltersChange({ ...filters, entities: filters.entities.filter(e => e !== entity) })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
-          )}
-          {filters.area !== "all" && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Área: {filters.area}
-              <button onClick={() => onFiltersChange({ ...filters, area: "all" })}>
+          ))}
+          {filters.areas.map(area => (
+            <Badge key={area} variant="secondary" className="gap-1 text-xs">
+              Área: {area}
+              <button onClick={() => onFiltersChange({ ...filters, areas: filters.areas.filter(a => a !== area) })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
-          )}
+          ))}
           {(filters.dateFrom || filters.dateTo) && (
             <Badge variant="secondary" className="gap-1 text-xs">
               {filters.dateFrom && filters.dateTo

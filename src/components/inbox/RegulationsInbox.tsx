@@ -19,10 +19,10 @@ interface RegulationsInboxProps {
 
 export interface RegulationsFilters {
   search: string;
-  area: string;
-  entity: string;
-  sector: string;
-  impactLevel: string;
+  areas: string[];
+  entities: string[];
+  sectors: string[];
+  impactLevels: string[];
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onlyPinned: boolean;
@@ -33,10 +33,10 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<RegulationsFilters>({
     search: "",
-    area: "all",
-    entity: "all",
-    sector: "all",
-    impactLevel: "all",
+    areas: [],
+    entities: [],
+    sectors: [],
+    impactLevels: [],
     dateFrom: undefined,
     dateTo: undefined,
     onlyPinned: false,
@@ -80,7 +80,7 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     return Array.from(areas).sort();
   }, [regulationAlerts]);
 
-  // Apply filters
+  // Apply filters with multi-select support
   const filteredAlerts = useMemo(() => {
     return regulationAlerts.filter((alert) => {
       // Pinned filter
@@ -97,23 +97,23 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         if (!matchesTitle && !matchesEntity && !matchesSummary) return false;
       }
 
-      // Area filter
-      if (filters.area !== "all" && !alert.affected_areas.includes(filters.area)) {
+      // Area filter (multi-select: match if any selected area is in affected_areas)
+      if (filters.areas.length > 0 && !filters.areas.some(area => alert.affected_areas.includes(area))) {
         return false;
       }
 
-      // Entity filter
-      if (filters.entity !== "all" && alert.entity !== filters.entity) {
+      // Entity filter (multi-select)
+      if (filters.entities.length > 0 && !filters.entities.includes(alert.entity || "")) {
         return false;
       }
 
-      // Sector filter
-      if (filters.sector !== "all" && alert.sector !== filters.sector) {
+      // Sector filter (multi-select)
+      if (filters.sectors.length > 0 && !filters.sectors.includes(alert.sector || "")) {
         return false;
       }
 
-      // Impact level filter
-      if (filters.impactLevel !== "all" && alert.impact_level !== filters.impactLevel) {
+      // Impact level filter (multi-select)
+      if (filters.impactLevels.length > 0 && !filters.impactLevels.includes(alert.impact_level || "")) {
         return false;
       }
 

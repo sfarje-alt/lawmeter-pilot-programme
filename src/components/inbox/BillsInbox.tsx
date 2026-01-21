@@ -5,7 +5,7 @@ import { Inbox as InboxIcon, Scale, Pin } from "lucide-react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
-import { PeruAlert, BILLS_KANBAN_COLUMNS, MOCK_CLIENTS, ImpactLevel } from "@/data/peruAlertsMockData";
+import { PeruAlert, BILLS_KANBAN_COLUMNS, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 import { toast } from "sonner";
 
 interface BillsInboxProps {
@@ -19,11 +19,11 @@ interface BillsInboxProps {
 
 export interface BillsFilters {
   search: string;
-  area: string;
-  stage: string;
-  sector: string;
-  parliamentaryGroup: string;
-  impactLevel: string;
+  areas: string[];
+  stages: string[];
+  sectors: string[];
+  parliamentaryGroups: string[];
+  impactLevels: string[];
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onlyPinned: boolean;
@@ -36,11 +36,11 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<BillsFilters>({
     search: "",
-    area: "all",
-    stage: "all",
-    sector: "all",
-    parliamentaryGroup: "all",
-    impactLevel: "all",
+    areas: [],
+    stages: [],
+    sectors: [],
+    parliamentaryGroups: [],
+    impactLevels: [],
     dateFrom: undefined,
     dateTo: undefined,
     onlyPinned: false,
@@ -109,7 +109,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     return Array.from(areas).sort();
   }, [billAlerts]);
 
-  // Apply filters
+  // Apply filters with multi-select support
   const filteredAlerts = useMemo(() => {
     return billAlerts.filter((alert) => {
       // Pinned filter
@@ -126,28 +126,28 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
         if (!matchesTitle && !matchesId && !matchesAuthor) return false;
       }
 
-      // Area filter
-      if (filters.area !== "all" && !alert.affected_areas.includes(filters.area)) {
+      // Area filter (multi-select: match if any selected area is in affected_areas)
+      if (filters.areas.length > 0 && !filters.areas.some(area => alert.affected_areas.includes(area))) {
         return false;
       }
 
-      // Stage filter (current_stage - "Último Estado")
-      if (filters.stage !== "all" && alert.current_stage !== filters.stage) {
+      // Stage filter (multi-select)
+      if (filters.stages.length > 0 && !filters.stages.includes(alert.current_stage || "")) {
         return false;
       }
 
-      // Sector filter
-      if (filters.sector !== "all" && alert.sector !== filters.sector) {
+      // Sector filter (multi-select)
+      if (filters.sectors.length > 0 && !filters.sectors.includes(alert.sector || "")) {
         return false;
       }
 
-      // Parliamentary Group filter
-      if (filters.parliamentaryGroup !== "all" && alert.parliamentary_group !== filters.parliamentaryGroup) {
+      // Parliamentary Group filter (multi-select)
+      if (filters.parliamentaryGroups.length > 0 && !filters.parliamentaryGroups.includes(alert.parliamentary_group || "")) {
         return false;
       }
 
-      // Impact Level filter
-      if (filters.impactLevel !== "all" && alert.impact_level !== filters.impactLevel) {
+      // Impact Level filter (multi-select)
+      if (filters.impactLevels.length > 0 && !filters.impactLevels.includes(alert.impact_level || "")) {
         return false;
       }
 
