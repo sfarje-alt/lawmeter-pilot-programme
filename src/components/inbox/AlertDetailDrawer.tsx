@@ -35,11 +35,11 @@ interface AlertDetailDrawerProps {
   alert: PeruAlert | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDecline: (alert: PeruAlert) => void;
   onPublish: (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => void;
+  onUpdateExpertCommentary?: (alertId: string, commentary: string) => void;
 }
 
-export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPublish }: AlertDetailDrawerProps) {
+export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpdateExpertCommentary }: AlertDetailDrawerProps) {
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [clientCommentaries, setClientCommentaries] = useState<Record<string, string>>({});
   const [useSharedCommentary, setUseSharedCommentary] = useState(true);
@@ -68,9 +68,12 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
     ? format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es })
     : format(new Date(alert.created_at), "dd 'de' MMMM, yyyy", { locale: es });
 
-  const handleDecline = () => {
-    onDecline(alert);
-    onOpenChange(false);
+  // Auto-save expert commentary when it changes
+  const handleCommentaryChange = (commentary: string) => {
+    setSharedCommentary(commentary);
+    if (onUpdateExpertCommentary && alert) {
+      onUpdateExpertCommentary(alert.id, commentary);
+    }
   };
 
   const handlePublish = () => {
@@ -292,7 +295,7 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
                 <Textarea
                   placeholder="Agregar comentario experto compartido para todos los clientes..."
                   value={sharedCommentary}
-                  onChange={(e) => setSharedCommentary(e.target.value)}
+                  onChange={(e) => handleCommentaryChange(e.target.value)}
                   className="min-h-[120px] bg-muted/30 border-border/50 resize-none"
                 />
               ) : (
@@ -338,15 +341,6 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onDecline, onPubl
                 Publicar a {selectedClients.length > 0 ? `${selectedClients.length} Cliente${selectedClients.length > 1 ? 's' : ''}` : 'Cliente'}
               </Button>
               
-              <Button
-                variant="outline"
-                className="w-full border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
-                onClick={handleDecline}
-              >
-                <Archive className="h-4 w-4 mr-2" />
-                Declinar para Cliente
-                <span className="ml-2 text-xs text-muted-foreground">(Auditoría interna)</span>
-              </Button>
             </div>
 
             {/* Source Link */}
