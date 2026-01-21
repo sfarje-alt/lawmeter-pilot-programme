@@ -1,12 +1,10 @@
 import { useState, useMemo } from "react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Inbox as InboxIcon, FileText, Building2 } from "lucide-react";
-import { KanbanColumn } from "./KanbanColumn";
+import { Inbox as InboxIcon, FileText, Pin } from "lucide-react";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { RegulationsFilterBar } from "./RegulationsFilterBar";
-import { PeruAlert, REGULATIONS_KANBAN_COLUMNS, MOCK_CLIENTS, ENTITIES } from "@/data/peruAlertsMockData";
+import { InboxAlertCard } from "./InboxAlertCard";
+import { PeruAlert, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 import { toast } from "sonner";
 
 interface RegulationsInboxProps {
@@ -23,9 +21,8 @@ export interface RegulationsFilters {
   search: string;
   area: string;
   entity: string;
+  onlyPinned: boolean;
 }
-
-type RegulationKanbanStage = "pendiente";
 
 export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary }: RegulationsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
@@ -34,6 +31,7 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     search: "",
     area: "all",
     entity: "all",
+    onlyPinned: false,
   });
 
   // Filter only regulations
@@ -44,6 +42,11 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
   // Apply filters
   const filteredAlerts = useMemo(() => {
     return regulationAlerts.filter((alert) => {
+      // Pinned filter
+      if (filters.onlyPinned && !alert.is_pinned_for_publication) {
+        return false;
+      }
+
       // Search filter
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -67,44 +70,30 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     });
   }, [regulationAlerts, filters]);
 
-  // Map regulation kanban stages - all regulations go to pendiente for review
-  const mapToRegulationStage = (alert: PeruAlert): RegulationKanbanStage => {
-    // All regulations that aren't published or declined go to pendiente
-    if (alert.status === "published" || alert.status === "declined") return "pendiente"; // Hide from view
-    return "pendiente";
-  };
+  // Pinned count
+  const pinnedCount = useMemo(() => {
+    return regulationAlerts.filter(a => a.is_pinned_for_publication).length;
+  }, [regulationAlerts]);
 
-  // Group alerts by kanban stage
-  const alertsByStage = useMemo(() => {
-    const grouped: Record<RegulationKanbanStage, PeruAlert[]> = {
-      pendiente: [],
-    };
-
-    filteredAlerts.forEach((alert) => {
-      const stage = mapToRegulationStage(alert);
-      grouped[stage].push(alert);
+  // Sort alerts by date (newest first) - with pinned at top
+  const sortedAlerts = useMemo(() => {
+    return [...filteredAlerts].sort((a, b) => {
+      // Pinned items first
+      if (a.is_pinned_for_publication && !b.is_pinned_for_publication) return -1;
+      if (!a.is_pinned_for_publication && b.is_pinned_for_publication) return 1;
+      
+      // Then by date
+      const dateA = new Date(a.updated_at).getTime();
+      const dateB = new Date(b.updated_at).getTime();
+      return dateB - dateA;
     });
-
-    // Sort each column by date (newest first)
-    Object.keys(grouped).forEach((stage) => {
-      grouped[stage as RegulationKanbanStage].sort((a, b) => {
-        const dateA = new Date(a.updated_at).getTime();
-        const dateB = new Date(b.updated_at).getTime();
-        return dateB - dateA;
-      });
-    });
-
-    return grouped;
   }, [filteredAlerts]);
 
   // Counts
   const alertCounts = useMemo(() => ({
     total: regulationAlerts.length,
     filtered: filteredAlerts.length,
-    byStage: {
-      pendiente: alertsByStage.pendiente.length,
-    }
-  }), [regulationAlerts, filteredAlerts, alertsByStage]);
+  }), [regulationAlerts, filteredAlerts]);
 
   // Get unique entities from the data for the filter
   const availableEntities = useMemo(() => {
@@ -137,13 +126,10 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     });
   };
 
-  // Pending count
-  const pendingCount = alertCounts.byStage.pendiente;
-
   return (
     <div className="space-y-4">
-      {/* KPI Cards - Simplified to just show total pending */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-3 gap-3">
         <Card className="glass-card border-border/30">
           <CardContent className="pt-3 pb-3">
             <div className="flex items-center gap-3">
@@ -165,8 +151,22 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
                 <FileText className="h-4 w-4 text-amber-400" />
               </div>
               <div>
-                <div className="text-xl font-bold text-foreground">{pendingCount}</div>
-                <div className="text-xs text-muted-foreground">Por Revisar</div>
+                <div className="text-xl font-bold text-foreground">{alertCounts.filtered}</div>
+                <div className="text-xs text-muted-foreground">Mostrando</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card border-border/30">
+          <CardContent className="pt-3 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Pin className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-foreground">{pinnedCount}</div>
+                <div className="text-xs text-muted-foreground">Pineados</div>
               </div>
             </div>
           </CardContent>
@@ -180,28 +180,30 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         availableEntities={availableEntities}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
+        pinnedCount={pinnedCount}
       />
 
-      {/* Kanban Board */}
-      <div className="relative">
-        <ScrollArea className="w-full pb-4">
-          <div className="flex gap-4 min-w-max">
-            {REGULATIONS_KANBAN_COLUMNS.map((column) => (
-              <KanbanColumn
-                key={column.id}
-                id={column.id}
-                label={column.label}
-                color={column.color}
-                alerts={alertsByStage[column.id as RegulationKanbanStage] || []}
-                onAlertClick={handleAlertClick}
-                onTogglePin={onTogglePin}
-                selectedClientId={selectedClientId}
-                hasCommentaryForClient={hasCommentaryForClient}
-              />
-            ))}
+      {/* Grid of Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        {sortedAlerts.length === 0 ? (
+          <div className="col-span-full p-8 text-center text-muted-foreground">
+            {filters.onlyPinned 
+              ? "No hay normas pineadas. Pinea algunas desde las cards para verlas aquí."
+              : "No hay normas que coincidan con los filtros."
+            }
           </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        ) : (
+          sortedAlerts.map((alert) => (
+            <InboxAlertCard
+              key={alert.id}
+              alert={alert}
+              onClick={() => handleAlertClick(alert)}
+              onTogglePin={onTogglePin}
+              selectedClientId={selectedClientId}
+              hasCommentaryForClient={hasCommentaryForClient}
+            />
+          ))
+        )}
       </div>
 
       {/* Alert Detail Drawer */}

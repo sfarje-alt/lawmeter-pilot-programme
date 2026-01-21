@@ -1,8 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Inbox as InboxIcon, Scale, Filter } from "lucide-react";
+import { Inbox as InboxIcon, Scale, Pin } from "lucide-react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
@@ -22,6 +21,7 @@ export interface BillsFilters {
   search: string;
   area: string;
   stage: string;
+  onlyPinned: boolean;
 }
 
 type BillKanbanStage = "comision" | "pleno" | "tramite_final";
@@ -33,6 +33,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     search: "",
     area: "all",
     stage: "all",
+    onlyPinned: false,
   });
 
   // Filter only bills
@@ -40,9 +41,19 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     return alerts.filter(a => a.legislation_type === "proyecto_de_ley");
   }, [alerts]);
 
+  // Pinned count
+  const pinnedCount = useMemo(() => {
+    return billAlerts.filter(a => a.is_pinned_for_publication).length;
+  }, [billAlerts]);
+
   // Apply filters
   const filteredAlerts = useMemo(() => {
     return billAlerts.filter((alert) => {
+      // Pinned filter
+      if (filters.onlyPinned && !alert.is_pinned_for_publication) {
+        return false;
+      }
+
       // Search filter
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -145,7 +156,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
   return (
     <div className="space-y-4">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="glass-card border-border/30">
           <CardContent className="pt-3 pb-3">
             <div className="flex items-center gap-3">
@@ -201,6 +212,20 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
             </div>
           </CardContent>
         </Card>
+
+        <Card className="glass-card border-border/30">
+          <CardContent className="pt-3 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Pin className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-foreground">{pinnedCount}</div>
+                <div className="text-xs text-muted-foreground">Pineados</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -210,6 +235,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
         availableStages={availableStages}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
+        pinnedCount={pinnedCount}
       />
 
       {/* Kanban Board */}
