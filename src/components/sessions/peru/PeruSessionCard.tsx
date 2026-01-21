@@ -49,6 +49,7 @@ import { PeruSession, SessionAnalysis } from '@/types/peruSessions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSessionAnalysis } from '@/hooks/useSessionAnalysis';
+import { SessionQAPanel } from './SessionQAPanel';
 
 interface PeruSessionCardProps {
   session: PeruSession;
@@ -67,6 +68,7 @@ export function PeruSessionCard({
 }: PeruSessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
+  const [qaMode, setQaMode] = useState<'summary' | 'qa'>('summary');
   const { isAnalyzing, analyzeSession } = useSessionAnalysis();
 
   // Get analysis from recording if available
@@ -353,22 +355,23 @@ export function PeruSessionCard({
             {/* Expanded Content */}
             <CollapsibleContent>
               <div className="pt-4 border-t border-border/50 space-y-4">
-                {/* AI Analysis Results */}
-                {analysis && (
+                {/* AI Analysis with Q&A Panel */}
+                {(analysis || session.recording?.transcription_text) && (
+                  <SessionQAPanel
+                    session={session}
+                    analysis={analysis || null}
+                    transcription={session.recording?.transcription_text || null}
+                    mode={qaMode}
+                    onModeChange={setQaMode}
+                  />
+                )}
+
+                {/* Legacy AI Analysis (when no Q&A panel) */}
+                {analysis && qaMode === 'summary' && (
                   <div className="bg-gradient-to-br from-purple-500/5 to-indigo-500/5 rounded-lg p-4 border border-purple-500/20">
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles className="h-5 w-5 text-purple-500" />
-                      <h4 className="font-semibold text-foreground">AI Analysis</h4>
-                      {session.recording?.analyzed_at && (
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          Analyzed: {format(new Date(session.recording.analyzed_at), 'MMM d, yyyy HH:mm')}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Executive Summary */}
-                    <div className="bg-background/50 rounded-md p-3 mb-4">
-                      <p className="text-sm text-foreground">{analysis.executiveSummary}</p>
+                      <h4 className="font-semibold text-foreground">AI Analysis Details</h4>
                     </div>
 
                     <Accordion type="single" collapsible className="space-y-2">
