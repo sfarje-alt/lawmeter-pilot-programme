@@ -5,7 +5,7 @@ import { Inbox as InboxIcon, Scale, Pin } from "lucide-react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
-import { PeruAlert, BILLS_KANBAN_COLUMNS, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
+import { PeruAlert, BILLS_KANBAN_COLUMNS, MOCK_CLIENTS, ImpactLevel } from "@/data/peruAlertsMockData";
 import { toast } from "sonner";
 
 interface BillsInboxProps {
@@ -21,6 +21,11 @@ export interface BillsFilters {
   search: string;
   area: string;
   stage: string;
+  sector: string;
+  parliamentaryGroup: string;
+  impactLevel: string;
+  dateFrom: Date | undefined;
+  dateTo: Date | undefined;
   onlyPinned: boolean;
 }
 
@@ -33,6 +38,11 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     search: "",
     area: "all",
     stage: "all",
+    sector: "all",
+    parliamentaryGroup: "all",
+    impactLevel: "all",
+    dateFrom: undefined,
+    dateTo: undefined,
     onlyPinned: false,
   });
 
@@ -44,6 +54,17 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
   // Pinned count
   const pinnedCount = useMemo(() => {
     return billAlerts.filter(a => a.is_pinned_for_publication).length;
+  }, [billAlerts]);
+
+  // Get unique parliamentary groups from data
+  const availableParliamentaryGroups = useMemo(() => {
+    const groups = new Set<string>();
+    billAlerts.forEach(alert => {
+      if (alert.parliamentary_group) {
+        groups.add(alert.parliamentary_group);
+      }
+    });
+    return Array.from(groups).sort();
   }, [billAlerts]);
 
   // Apply filters
@@ -68,9 +89,36 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
         return false;
       }
 
-      // Stage filter (current_stage)
+      // Stage filter (current_stage - "Último Estado")
       if (filters.stage !== "all" && alert.current_stage !== filters.stage) {
         return false;
+      }
+
+      // Sector filter
+      if (filters.sector !== "all" && alert.sector !== filters.sector) {
+        return false;
+      }
+
+      // Parliamentary Group filter
+      if (filters.parliamentaryGroup !== "all" && alert.parliamentary_group !== filters.parliamentaryGroup) {
+        return false;
+      }
+
+      // Impact Level filter
+      if (filters.impactLevel !== "all" && alert.impact_level !== filters.impactLevel) {
+        return false;
+      }
+
+      // Date range filter (using project_date or stage_date)
+      if (filters.dateFrom || filters.dateTo) {
+        const alertDate = alert.project_date ? new Date(alert.project_date) : null;
+        if (alertDate) {
+          if (filters.dateFrom && alertDate < filters.dateFrom) return false;
+          if (filters.dateTo && alertDate > filters.dateTo) return false;
+        } else {
+          // If no date, exclude when date filter is active
+          return false;
+        }
       }
 
       return true;
@@ -96,9 +144,13 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
       }
     });
 
-    // Sort each column by date (newest first)
+    // Sort each column: pinned first, then by date (newest first)
     Object.keys(grouped).forEach((stage) => {
       grouped[stage as BillKanbanStage].sort((a, b) => {
+        // Pinned items first
+        if (a.is_pinned_for_publication !== b.is_pinned_for_publication) {
+          return a.is_pinned_for_publication ? -1 : 1;
+        }
         const dateA = new Date(a.updated_at).getTime();
         const dateB = new Date(b.updated_at).getTime();
         return dateB - dateA;
@@ -118,17 +170,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
       tramite_final: alertsByStage.tramite_final.length,
     }
   }), [billAlerts, filteredAlerts, alertsByStage]);
-
-  // Get unique stages from the data for the filter
-  const availableStages = useMemo(() => {
-    const stages = new Set<string>();
-    billAlerts.forEach(alert => {
-      if (alert.current_stage) {
-        stages.add(alert.current_stage);
-      }
-    });
-    return Array.from(stages).sort();
-  }, [billAlerts]);
 
   const handleAlertClick = (alert: PeruAlert) => {
     setSelectedAlert(alert);
@@ -232,7 +273,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
       <BillsFilterBar
         filters={filters}
         onFiltersChange={setFilters}
-        availableStages={availableStages}
+        availableParliamentaryGroups={availableParliamentaryGroups}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}

@@ -7,6 +7,49 @@ export interface ClientCommentary {
   commentary: string;
 }
 
+// Impact levels for legislation
+export type ImpactLevel = "positivo" | "leve" | "medio" | "grave";
+
+export const IMPACT_LEVELS: { value: ImpactLevel; label: string; color: string }[] = [
+  { value: "positivo", label: "Positivo", color: "bg-green-500/20 text-green-500 border-green-500/30" },
+  { value: "leve", label: "Leve", color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
+  { value: "medio", label: "Medio", color: "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" },
+  { value: "grave", label: "Grave", color: "bg-red-500/20 text-red-500 border-red-500/30" },
+];
+
+// Sectors for filtering
+export const SECTORS = [
+  "Salud Pública",
+  "Farmacéutico",
+  "Dispositivos Médicos",
+  "Oncología",
+  "Investigación",
+  "Tecnología Médica",
+  "Financiamiento",
+  "Seguros",
+];
+
+// Complete list of legislative stages from source data
+export const ALL_LEGISLATIVE_STAGES = [
+  "ACLARACIÓN",
+  "AL ARCHIVO",
+  "APROBADO",
+  "APROBADO 1ERA. VOTACIÓN",
+  "AUTÓGRAFA",
+  "DECRETO DE ARCHIVO",
+  "DICTAMEN",
+  "EN AGENDA DEL PLENO",
+  "EN COMISIÓN",
+  "EN CUARTO INTERMEDIO",
+  "EN RECONSIDERACIÓN",
+  "ORDEN DEL DÍA",
+  "PENDIENTE 2DA. VOTACIÓN",
+  "PRESENTADO",
+  "PUBLICADA EN EL DIARIO OFICIAL EL PERUANO",
+  "RETIRADO POR SU AUTOR",
+  "RETORNA A COMISIÓN",
+];
+
 // Base interface for alerts (without runtime-added fields)
 interface BasePeruAlert {
   id: string;
@@ -30,6 +73,8 @@ interface BasePeruAlert {
   current_stage?: string;            // "Último Estado"
   stage_date?: string;               // "Fecha de Cambio de Estado"
   project_date?: string;             // "Fecha del Proyecto"
+  sector?: string;                   // Sector for filtering
+  impact_level?: ImpactLevel;        // Impact level
   
   // Regulation-specific fields (from matriz_normas.xlsx)
   entity?: string;                   // "Institución"
@@ -753,18 +798,41 @@ const MOCK_REGULATIONS_RAW: BasePeruAlert[] = [
   },
 ];
 
-// Helper to add default values to alerts
-function addAlertDefaults(alert: BasePeruAlert): PeruAlert {
+// Helper to assign random impact level
+function getRandomImpactLevel(): ImpactLevel {
+  const levels: ImpactLevel[] = ["positivo", "leve", "medio", "grave"];
+  return levels[Math.floor(Math.random() * levels.length)];
+}
+
+// Helper to assign random sector
+function getRandomSector(): string {
+  return SECTORS[Math.floor(Math.random() * SECTORS.length)];
+}
+
+// Seeded random for consistent values
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+// Helper to add default values to alerts with deterministic random values
+function addAlertDefaults(alert: BasePeruAlert, index: number): PeruAlert {
+  const impactLevels: ImpactLevel[] = ["positivo", "leve", "medio", "grave"];
+  const impactIndex = Math.floor(seededRandom(index * 13) * 4);
+  const sectorIndex = Math.floor(seededRandom(index * 17) * SECTORS.length);
+  
   return {
     ...alert,
     is_pinned_for_publication: false,
     client_commentaries: [],
+    impact_level: alert.impact_level || impactLevels[impactIndex],
+    sector: alert.sector || SECTORS[sectorIndex],
   };
 }
 
 // Export processed arrays with defaults
-export const MOCK_BILLS: PeruAlert[] = MOCK_BILLS_RAW.map(addAlertDefaults);
-export const MOCK_REGULATIONS: PeruAlert[] = MOCK_REGULATIONS_RAW.map(addAlertDefaults);
+export const MOCK_BILLS: PeruAlert[] = MOCK_BILLS_RAW.map((bill, i) => addAlertDefaults(bill, i));
+export const MOCK_REGULATIONS: PeruAlert[] = MOCK_REGULATIONS_RAW.map((reg, i) => addAlertDefaults(reg, i + 100));
 
 // All alerts combined with defaults
 export const ALL_MOCK_ALERTS: PeruAlert[] = [
@@ -785,4 +853,10 @@ export function getAlertCountByKanbanStage(): Record<PeruAlert["kanban_stage"], 
     publicado: getAlertsByKanbanStage("publicado").length,
     archivado: getAlertsByKanbanStage("archivado").length,
   };
+}
+
+// Get impact level display info
+export function getImpactLevelInfo(level: ImpactLevel | undefined) {
+  if (!level) return null;
+  return IMPACT_LEVELS.find(l => l.value === level) || null;
 }
