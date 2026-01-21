@@ -127,8 +127,10 @@ export function BillsFilterBar({
           value={filters.stage}
           onValueChange={(value) => onFiltersChange({ ...filters, stage: value })}
         >
-          <SelectTrigger className="w-[180px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Último estado" />
+          <SelectTrigger className="w-[170px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.stage === "all" ? "Estado: Todos" : filters.stage}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>
@@ -143,11 +145,16 @@ export function BillsFilterBar({
           value={filters.impactLevel}
           onValueChange={(value) => onFiltersChange({ ...filters, impactLevel: value })}
         >
-          <SelectTrigger className="w-[140px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Impacto" />
+          <SelectTrigger className="w-[150px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.impactLevel === "all" 
+                ? "Impacto: Todos" 
+                : `Impacto: ${IMPACT_LEVELS.find(l => l.value === filters.impactLevel)?.label || filters.impactLevel}`
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="all">Todos los impactos</SelectItem>
             {availableImpactLevels.map((level) => {
               const levelInfo = IMPACT_LEVELS.find(l => l.value === level);
               return (
@@ -172,8 +179,10 @@ export function BillsFilterBar({
           value={filters.parliamentaryGroup}
           onValueChange={(value) => onFiltersChange({ ...filters, parliamentaryGroup: value })}
         >
-          <SelectTrigger className="w-[180px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Grupo parlamentario" />
+          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.parliamentaryGroup === "all" ? "Grupo: Todos" : filters.parliamentaryGroup}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los grupos</SelectItem>
@@ -188,8 +197,10 @@ export function BillsFilterBar({
           value={filters.sector}
           onValueChange={(value) => onFiltersChange({ ...filters, sector: value })}
         >
-          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Sector" />
+          <SelectTrigger className="w-[155px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.sector === "all" ? "Sector: Todos" : filters.sector}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los sectores</SelectItem>
@@ -288,8 +299,10 @@ export function BillsFilterBar({
           value={filters.area}
           onValueChange={(value) => onFiltersChange({ ...filters, area: value })}
         >
-          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Área de interés" />
+          <SelectTrigger className="w-[150px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.area === "all" ? "Área: Todas" : filters.area}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las áreas</SelectItem>
