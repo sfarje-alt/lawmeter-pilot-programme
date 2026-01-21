@@ -15,35 +15,30 @@ import { Search, X, Pin, CalendarIcon, Filter } from "lucide-react";
 import { BillsFilters } from "./BillsInbox";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { SECTORS, ALL_LEGISLATIVE_STAGES, IMPACT_LEVELS, ImpactLevel } from "@/data/peruAlertsMockData";
+import { IMPACT_LEVELS } from "@/data/peruAlertsMockData";
 import { cn } from "@/lib/utils";
 
 interface BillsFilterBarProps {
   filters: BillsFilters;
   onFiltersChange: (filters: BillsFilters) => void;
   availableParliamentaryGroups: string[];
+  availableSectors: string[];
+  availableStages: string[];
+  availableImpactLevels: string[];
+  availableAreas: string[];
   totalCount: number;
   filteredCount: number;
   pinnedCount: number;
 }
 
-const AREAS = [
-  "General",
-  "Oncológico",
-  "Raras y huérfanas",
-  "Dispositivos Médicos",
-  "Financiamiento y Presupuesto",
-  "Contrataciones Públicas",
-  "Salud Mental",
-  "Tecnología",
-  "Investigación",
-  "Laboral",
-];
-
 export function BillsFilterBar({ 
   filters, 
   onFiltersChange, 
   availableParliamentaryGroups,
+  availableSectors,
+  availableStages,
+  availableImpactLevels,
+  availableAreas,
   totalCount,
   filteredCount,
   pinnedCount
@@ -123,7 +118,7 @@ export function BillsFilterBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>
-            {ALL_LEGISLATIVE_STAGES.map((stage) => (
+            {availableStages.map((stage) => (
               <SelectItem key={stage} value={stage}>{stage}</SelectItem>
             ))}
           </SelectContent>
@@ -139,19 +134,22 @@ export function BillsFilterBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {IMPACT_LEVELS.map((level) => (
-              <SelectItem key={level.value} value={level.value}>
-                <div className="flex items-center gap-2">
-                  <div className={cn("w-2 h-2 rounded-full", 
-                    level.value === "positivo" && "bg-green-500",
-                    level.value === "leve" && "bg-gray-400",
-                    level.value === "medio" && "bg-yellow-500",
-                    level.value === "grave" && "bg-red-500"
-                  )} />
-                  {level.label}
-                </div>
-              </SelectItem>
-            ))}
+            {availableImpactLevels.map((level) => {
+              const levelInfo = IMPACT_LEVELS.find(l => l.value === level);
+              return (
+                <SelectItem key={level} value={level}>
+                  <div className="flex items-center gap-2">
+                    <div className={cn("w-2 h-2 rounded-full", 
+                      level === "positivo" && "bg-green-500",
+                      level === "leve" && "bg-gray-400",
+                      level === "medio" && "bg-yellow-500",
+                      level === "grave" && "bg-red-500"
+                    )} />
+                    {levelInfo?.label || level}
+                  </div>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
 
@@ -181,7 +179,7 @@ export function BillsFilterBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los sectores</SelectItem>
-            {SECTORS.map((sector) => (
+            {availableSectors.map((sector) => (
               <SelectItem key={sector} value={sector}>{sector}</SelectItem>
             ))}
           </SelectContent>
@@ -260,7 +258,7 @@ export function BillsFilterBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las áreas</SelectItem>
-            {AREAS.map((area) => (
+            {availableAreas.map((area) => (
               <SelectItem key={area} value={area}>{area}</SelectItem>
             ))}
           </SelectContent>

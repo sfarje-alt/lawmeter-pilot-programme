@@ -67,6 +67,48 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     return Array.from(groups).sort();
   }, [billAlerts]);
 
+  // Get unique sectors from data
+  const availableSectors = useMemo(() => {
+    const sectors = new Set<string>();
+    billAlerts.forEach(alert => {
+      if (alert.sector) {
+        sectors.add(alert.sector);
+      }
+    });
+    return Array.from(sectors).sort();
+  }, [billAlerts]);
+
+  // Get unique stages from data
+  const availableStages = useMemo(() => {
+    const stages = new Set<string>();
+    billAlerts.forEach(alert => {
+      if (alert.current_stage) {
+        stages.add(alert.current_stage);
+      }
+    });
+    return Array.from(stages).sort();
+  }, [billAlerts]);
+
+  // Get unique impact levels from data
+  const availableImpactLevels = useMemo(() => {
+    const levels = new Set<string>();
+    billAlerts.forEach(alert => {
+      if (alert.impact_level) {
+        levels.add(alert.impact_level);
+      }
+    });
+    return Array.from(levels);
+  }, [billAlerts]);
+
+  // Get unique areas from data
+  const availableAreas = useMemo(() => {
+    const areas = new Set<string>();
+    billAlerts.forEach(alert => {
+      alert.affected_areas.forEach(area => areas.add(area));
+    });
+    return Array.from(areas).sort();
+  }, [billAlerts]);
+
   // Apply filters
   const filteredAlerts = useMemo(() => {
     return billAlerts.filter((alert) => {
@@ -274,6 +316,10 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
         filters={filters}
         onFiltersChange={setFilters}
         availableParliamentaryGroups={availableParliamentaryGroups}
+        availableSectors={availableSectors}
+        availableStages={availableStages}
+        availableImpactLevels={availableImpactLevels}
+        availableAreas={availableAreas}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}
