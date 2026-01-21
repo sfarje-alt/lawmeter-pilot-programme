@@ -114,11 +114,16 @@ export function RegulationsFilterBar({
           value={filters.impactLevel}
           onValueChange={(value) => onFiltersChange({ ...filters, impactLevel: value })}
         >
-          <SelectTrigger className="w-[140px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Impacto" />
+          <SelectTrigger className="w-[150px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.impactLevel === "all" 
+                ? "Impacto: Todos" 
+                : `Impacto: ${IMPACT_LEVELS.find(l => l.value === filters.impactLevel)?.label || filters.impactLevel}`
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="all">Todos los impactos</SelectItem>
             {availableImpactLevels.map((level) => {
               const levelInfo = IMPACT_LEVELS.find(l => l.value === level);
               return (
@@ -143,8 +148,10 @@ export function RegulationsFilterBar({
           value={filters.sector}
           onValueChange={(value) => onFiltersChange({ ...filters, sector: value })}
         >
-          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Sector" />
+          <SelectTrigger className="w-[155px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.sector === "all" ? "Sector: Todos" : filters.sector}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los sectores</SelectItem>
@@ -159,8 +166,10 @@ export function RegulationsFilterBar({
           value={filters.entity}
           onValueChange={(value) => onFiltersChange({ ...filters, entity: value })}
         >
-          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Institución" />
+          <SelectTrigger className="w-[165px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.entity === "all" ? "Institución: Todas" : filters.entity}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las instituciones</SelectItem>
@@ -259,8 +268,10 @@ export function RegulationsFilterBar({
           value={filters.area}
           onValueChange={(value) => onFiltersChange({ ...filters, area: value })}
         >
-          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
-            <SelectValue placeholder="Área de interés" />
+          <SelectTrigger className="w-[150px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue>
+              {filters.area === "all" ? "Área: Todas" : filters.area}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las áreas</SelectItem>
