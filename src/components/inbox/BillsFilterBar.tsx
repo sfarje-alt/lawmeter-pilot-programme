@@ -11,9 +11,9 @@ import {
 import { Toggle } from "@/components/ui/toggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, X, Pin, CalendarIcon, Filter } from "lucide-react";
+import { Search, X, Pin, CalendarIcon } from "lucide-react";
 import { BillsFilters } from "./BillsInbox";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { IMPACT_LEVELS } from "@/data/peruAlertsMockData";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,14 @@ interface BillsFilterBarProps {
   filteredCount: number;
   pinnedCount: number;
 }
+
+const QUICK_DATE_OPTIONS = [
+  { label: "Últimos 7 días", days: 7 },
+  { label: "Últimos 15 días", days: 15 },
+  { label: "Últimos 30 días", days: 30 },
+  { label: "Últimos 60 días", days: 60 },
+  { label: "Últimos 90 días", days: 90 },
+];
 
 export function BillsFilterBar({ 
   filters, 
@@ -66,6 +74,12 @@ export function BillsFilterBar({
       dateTo: undefined,
       onlyPinned: false,
     });
+  };
+
+  const applyQuickDateFilter = (days: number) => {
+    const today = new Date();
+    const fromDate = subDays(today, days);
+    onFiltersChange({ ...filters, dateFrom: fromDate, dateTo: today });
   };
 
   const activeFilterCount = [
@@ -185,7 +199,7 @@ export function BillsFilterBar({
           </SelectContent>
         </Select>
 
-        {/* Date Range Filter */}
+        {/* Date Range Filter with Quick Options */}
         <Popover>
           <PopoverTrigger asChild>
             <Button 
@@ -211,29 +225,50 @@ export function BillsFilterBar({
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <div className="p-3 space-y-3">
-              <div className="text-sm font-medium text-muted-foreground">Rango de fechas</div>
-              <div className="flex gap-2">
-                <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Desde</div>
-                  <Calendar
-                    mode="single"
-                    selected={filters.dateFrom}
-                    onSelect={(date) => onFiltersChange({ ...filters, dateFrom: date })}
-                    locale={es}
-                    className="rounded-md border"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Hasta</div>
-                  <Calendar
-                    mode="single"
-                    selected={filters.dateTo}
-                    onSelect={(date) => onFiltersChange({ ...filters, dateTo: date })}
-                    locale={es}
-                    className="rounded-md border"
-                  />
+              {/* Quick Date Options */}
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Acceso rápido</div>
+                <div className="flex flex-wrap gap-1">
+                  {QUICK_DATE_OPTIONS.map((option) => (
+                    <Button
+                      key={option.days}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => applyQuickDateFilter(option.days)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
                 </div>
               </div>
+              
+              <div className="border-t pt-3">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Rango personalizado</div>
+                <div className="flex gap-2">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Desde</div>
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateFrom}
+                      onSelect={(date) => onFiltersChange({ ...filters, dateFrom: date })}
+                      locale={es}
+                      className="rounded-md border pointer-events-auto"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Hasta</div>
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateTo}
+                      onSelect={(date) => onFiltersChange({ ...filters, dateTo: date })}
+                      locale={es}
+                      className="rounded-md border pointer-events-auto"
+                    />
+                  </div>
+                </div>
+              </div>
+              
               {(filters.dateFrom || filters.dateTo) && (
                 <Button
                   variant="ghost"

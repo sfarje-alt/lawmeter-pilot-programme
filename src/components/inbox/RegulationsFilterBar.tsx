@@ -9,35 +9,42 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
-import { Search, X, Pin } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Search, X, Pin, CalendarIcon } from "lucide-react";
 import { RegulationsFilters } from "./RegulationsInbox";
+import { format, subDays } from "date-fns";
+import { es } from "date-fns/locale";
+import { IMPACT_LEVELS } from "@/data/peruAlertsMockData";
+import { cn } from "@/lib/utils";
 
 interface RegulationsFilterBarProps {
   filters: RegulationsFilters;
   onFiltersChange: (filters: RegulationsFilters) => void;
   availableEntities: string[];
+  availableSectors: string[];
+  availableImpactLevels: string[];
+  availableAreas: string[];
   totalCount: number;
   filteredCount: number;
   pinnedCount: number;
 }
 
-const AREAS = [
-  "General",
-  "Oncológico",
-  "Raras y huérfanas",
-  "Dispositivos Médicos",
-  "Financiamiento y Presupuesto",
-  "Contrataciones Públicas",
-  "Salud Mental",
-  "Tecnología",
-  "Investigación",
-  "Laboral",
+const QUICK_DATE_OPTIONS = [
+  { label: "Últimos 7 días", days: 7 },
+  { label: "Últimos 15 días", days: 15 },
+  { label: "Últimos 30 días", days: 30 },
+  { label: "Últimos 60 días", days: 60 },
+  { label: "Últimos 90 días", days: 90 },
 ];
 
 export function RegulationsFilterBar({ 
   filters, 
   onFiltersChange, 
   availableEntities,
+  availableSectors,
+  availableImpactLevels,
+  availableAreas,
   totalCount,
   filteredCount,
   pinnedCount
@@ -46,6 +53,10 @@ export function RegulationsFilterBar({
     filters.search !== "" || 
     filters.area !== "all" || 
     filters.entity !== "all" ||
+    filters.sector !== "all" ||
+    filters.impactLevel !== "all" ||
+    filters.dateFrom !== undefined ||
+    filters.dateTo !== undefined ||
     filters.onlyPinned;
 
   const clearFilters = () => {
@@ -53,22 +64,32 @@ export function RegulationsFilterBar({
       search: "",
       area: "all",
       entity: "all",
+      sector: "all",
+      impactLevel: "all",
+      dateFrom: undefined,
+      dateTo: undefined,
       onlyPinned: false,
     });
+  };
+
+  const applyQuickDateFilter = (days: number) => {
+    const today = new Date();
+    const fromDate = subDays(today, days);
+    onFiltersChange({ ...filters, dateFrom: fromDate, dateTo: today });
   };
 
   return (
     <div className="space-y-3">
       {/* Main Filter Row */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por título, entidad, resumen..."
             value={filters.search}
             onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-            className="pl-10 bg-muted/30 border-border/50"
+            className="pl-10 bg-muted/30 border-border/50 h-9"
           />
         </div>
 
@@ -76,11 +97,11 @@ export function RegulationsFilterBar({
         <Toggle
           pressed={filters.onlyPinned}
           onPressedChange={(pressed) => onFiltersChange({ ...filters, onlyPinned: pressed })}
-          className="gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+          className="gap-1.5 h-9 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
           aria-label="Solo pineados"
         >
           <Pin className="h-4 w-4" />
-          <span className="hidden sm:inline">Pineados</span>
+          <span className="hidden sm:inline text-sm">Pineados</span>
           {pinnedCount > 0 && (
             <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
               {pinnedCount}
@@ -88,18 +109,47 @@ export function RegulationsFilterBar({
           )}
         </Toggle>
 
-        {/* Area Filter */}
+        {/* Impact Level Filter */}
         <Select
-          value={filters.area}
-          onValueChange={(value) => onFiltersChange({ ...filters, area: value })}
+          value={filters.impactLevel}
+          onValueChange={(value) => onFiltersChange({ ...filters, impactLevel: value })}
         >
-          <SelectTrigger className="w-[180px] bg-muted/30 border-border/50">
-            <SelectValue placeholder="Área de interés" />
+          <SelectTrigger className="w-[140px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue placeholder="Impacto" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas las áreas</SelectItem>
-            {AREAS.map((area) => (
-              <SelectItem key={area} value={area}>{area}</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
+            {availableImpactLevels.map((level) => {
+              const levelInfo = IMPACT_LEVELS.find(l => l.value === level);
+              return (
+                <SelectItem key={level} value={level}>
+                  <div className="flex items-center gap-2">
+                    <div className={cn("w-2 h-2 rounded-full", 
+                      level === "positivo" && "bg-green-500",
+                      level === "leve" && "bg-gray-400",
+                      level === "medio" && "bg-yellow-500",
+                      level === "grave" && "bg-red-500"
+                    )} />
+                    {levelInfo?.label || level}
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+
+        {/* Sector Filter */}
+        <Select
+          value={filters.sector}
+          onValueChange={(value) => onFiltersChange({ ...filters, sector: value })}
+        >
+          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue placeholder="Sector" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los sectores</SelectItem>
+            {availableSectors.map((sector) => (
+              <SelectItem key={sector} value={sector}>{sector}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -109,7 +159,7 @@ export function RegulationsFilterBar({
           value={filters.entity}
           onValueChange={(value) => onFiltersChange({ ...filters, entity: value })}
         >
-          <SelectTrigger className="w-[180px] bg-muted/30 border-border/50">
+          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
             <SelectValue placeholder="Institución" />
           </SelectTrigger>
           <SelectContent>
@@ -120,13 +170,113 @@ export function RegulationsFilterBar({
           </SelectContent>
         </Select>
 
+        {/* Date Range Filter with Quick Options */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={cn(
+                "h-9 gap-1.5 bg-muted/30 border-border/50 text-sm",
+                (filters.dateFrom || filters.dateTo) && "border-primary/50"
+              )}
+            >
+              <CalendarIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {filters.dateFrom && filters.dateTo
+                  ? `${format(filters.dateFrom, "dd/MM", { locale: es })} - ${format(filters.dateTo, "dd/MM", { locale: es })}`
+                  : filters.dateFrom
+                  ? `Desde ${format(filters.dateFrom, "dd/MM", { locale: es })}`
+                  : filters.dateTo
+                  ? `Hasta ${format(filters.dateTo, "dd/MM", { locale: es })}`
+                  : "Fechas"
+                }
+              </span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <div className="p-3 space-y-3">
+              {/* Quick Date Options */}
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Acceso rápido</div>
+                <div className="flex flex-wrap gap-1">
+                  {QUICK_DATE_OPTIONS.map((option) => (
+                    <Button
+                      key={option.days}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => applyQuickDateFilter(option.days)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="border-t pt-3">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Rango personalizado</div>
+                <div className="flex gap-2">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Desde</div>
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateFrom}
+                      onSelect={(date) => onFiltersChange({ ...filters, dateFrom: date })}
+                      locale={es}
+                      className="rounded-md border pointer-events-auto"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Hasta</div>
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateTo}
+                      onSelect={(date) => onFiltersChange({ ...filters, dateTo: date })}
+                      locale={es}
+                      className="rounded-md border pointer-events-auto"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {(filters.dateFrom || filters.dateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => onFiltersChange({ ...filters, dateFrom: undefined, dateTo: undefined })}
+                >
+                  Limpiar fechas
+                </Button>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Area Filter */}
+        <Select
+          value={filters.area}
+          onValueChange={(value) => onFiltersChange({ ...filters, area: value })}
+        >
+          <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-border/50 text-sm">
+            <SelectValue placeholder="Área de interés" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las áreas</SelectItem>
+            {availableAreas.map((area) => (
+              <SelectItem key={area} value={area}>{area}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         {/* Clear Filters */}
         {hasActiveFilters && (
           <Button
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="text-muted-foreground hover:text-foreground"
+            className="h-9 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4 mr-1" />
             Limpiar
@@ -141,7 +291,7 @@ export function RegulationsFilterBar({
             Mostrando {filteredCount} de {totalCount} normas:
           </span>
           {filters.search && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 text-xs">
               Búsqueda: "{filters.search}"
               <button onClick={() => onFiltersChange({ ...filters, search: "" })}>
                 <X className="h-3 w-3" />
@@ -149,7 +299,7 @@ export function RegulationsFilterBar({
             </Badge>
           )}
           {filters.onlyPinned && (
-            <Badge variant="secondary" className="gap-1 bg-primary/20 text-primary">
+            <Badge variant="secondary" className="gap-1 text-xs bg-primary/20 text-primary">
               <Pin className="h-3 w-3" />
               Solo pineados
               <button onClick={() => onFiltersChange({ ...filters, onlyPinned: false })}>
@@ -157,18 +307,50 @@ export function RegulationsFilterBar({
               </button>
             </Badge>
           )}
-          {filters.area !== "all" && (
-            <Badge variant="secondary" className="gap-1">
-              {filters.area}
-              <button onClick={() => onFiltersChange({ ...filters, area: "all" })}>
+          {filters.impactLevel !== "all" && (
+            <Badge variant="secondary" className={cn(
+              "gap-1 text-xs",
+              IMPACT_LEVELS.find(l => l.value === filters.impactLevel)?.color
+            )}>
+              Impacto: {IMPACT_LEVELS.find(l => l.value === filters.impactLevel)?.label}
+              <button onClick={() => onFiltersChange({ ...filters, impactLevel: "all" })}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {filters.sector !== "all" && (
+            <Badge variant="secondary" className="gap-1 text-xs">
+              Sector: {filters.sector}
+              <button onClick={() => onFiltersChange({ ...filters, sector: "all" })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
           )}
           {filters.entity !== "all" && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 text-xs">
               Institución: {filters.entity}
               <button onClick={() => onFiltersChange({ ...filters, entity: "all" })}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {filters.area !== "all" && (
+            <Badge variant="secondary" className="gap-1 text-xs">
+              Área: {filters.area}
+              <button onClick={() => onFiltersChange({ ...filters, area: "all" })}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {(filters.dateFrom || filters.dateTo) && (
+            <Badge variant="secondary" className="gap-1 text-xs">
+              {filters.dateFrom && filters.dateTo
+                ? `${format(filters.dateFrom, "dd/MM/yy")} - ${format(filters.dateTo, "dd/MM/yy")}`
+                : filters.dateFrom
+                ? `Desde ${format(filters.dateFrom, "dd/MM/yy")}`
+                : `Hasta ${format(filters.dateTo!, "dd/MM/yy")}`
+              }
+              <button onClick={() => onFiltersChange({ ...filters, dateFrom: undefined, dateTo: undefined })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>

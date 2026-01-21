@@ -21,6 +21,10 @@ export interface RegulationsFilters {
   search: string;
   area: string;
   entity: string;
+  sector: string;
+  impactLevel: string;
+  dateFrom: Date | undefined;
+  dateTo: Date | undefined;
   onlyPinned: boolean;
 }
 
@@ -31,6 +35,10 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     search: "",
     area: "all",
     entity: "all",
+    sector: "all",
+    impactLevel: "all",
+    dateFrom: undefined,
+    dateTo: undefined,
     onlyPinned: false,
   });
 
@@ -38,6 +46,39 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
   const regulationAlerts = useMemo(() => {
     return alerts.filter(a => a.legislation_type === "norma");
   }, [alerts]);
+
+  // Extract dynamic filter options from data
+  const availableEntities = useMemo(() => {
+    const entities = new Set<string>();
+    regulationAlerts.forEach(alert => {
+      if (alert.entity) entities.add(alert.entity);
+    });
+    return Array.from(entities).sort();
+  }, [regulationAlerts]);
+
+  const availableSectors = useMemo(() => {
+    const sectors = new Set<string>();
+    regulationAlerts.forEach(alert => {
+      if (alert.sector) sectors.add(alert.sector);
+    });
+    return Array.from(sectors).sort();
+  }, [regulationAlerts]);
+
+  const availableImpactLevels = useMemo(() => {
+    const levels = new Set<string>();
+    regulationAlerts.forEach(alert => {
+      if (alert.impact_level) levels.add(alert.impact_level);
+    });
+    return Array.from(levels);
+  }, [regulationAlerts]);
+
+  const availableAreas = useMemo(() => {
+    const areas = new Set<string>();
+    regulationAlerts.forEach(alert => {
+      alert.affected_areas.forEach(area => areas.add(area));
+    });
+    return Array.from(areas).sort();
+  }, [regulationAlerts]);
 
   // Apply filters
   const filteredAlerts = useMemo(() => {
@@ -64,6 +105,29 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
       // Entity filter
       if (filters.entity !== "all" && alert.entity !== filters.entity) {
         return false;
+      }
+
+      // Sector filter
+      if (filters.sector !== "all" && alert.sector !== filters.sector) {
+        return false;
+      }
+
+      // Impact level filter
+      if (filters.impactLevel !== "all" && alert.impact_level !== filters.impactLevel) {
+        return false;
+      }
+
+      // Date range filter (using publication_date for regulations)
+      if (filters.dateFrom || filters.dateTo) {
+        const alertDate = alert.publication_date ? new Date(alert.publication_date) : null;
+        if (!alertDate) return false;
+        
+        if (filters.dateFrom && alertDate < filters.dateFrom) return false;
+        if (filters.dateTo) {
+          const endOfDay = new Date(filters.dateTo);
+          endOfDay.setHours(23, 59, 59, 999);
+          if (alertDate > endOfDay) return false;
+        }
       }
 
       return true;
@@ -95,22 +159,10 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     filtered: filteredAlerts.length,
   }), [regulationAlerts, filteredAlerts]);
 
-  // Get unique entities from the data for the filter
-  const availableEntities = useMemo(() => {
-    const entities = new Set<string>();
-    regulationAlerts.forEach(alert => {
-      if (alert.entity) {
-        entities.add(alert.entity);
-      }
-    });
-    return Array.from(entities).sort();
-  }, [regulationAlerts]);
-
   const handleAlertClick = (alert: PeruAlert) => {
     setSelectedAlert(alert);
     setDrawerOpen(true);
   };
-
 
   const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
     clientIds.forEach(clientId => {
@@ -178,6 +230,9 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         filters={filters}
         onFiltersChange={setFilters}
         availableEntities={availableEntities}
+        availableSectors={availableSectors}
+        availableImpactLevels={availableImpactLevels}
+        availableAreas={availableAreas}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}
