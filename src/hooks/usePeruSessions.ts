@@ -1,7 +1,7 @@
 // Hook for managing Peru Congress sessions
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { PeruSession, WatchedCommission } from '@/types/peruSessions';
+import { PeruSession, WatchedCommission, SessionClientCommentary } from '@/types/peruSessions';
 import { PERU_MOCK_SESSIONS, PERU_MOCK_RECORDINGS, DEFAULT_WATCHED_COMMISSIONS } from '@/data/peruSessionsMockData';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -660,11 +660,45 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     return match ? match[1] : null;
   };
 
+  // Toggle pin for publication
+  const togglePinSession = useCallback((sessionId: string) => {
+    setSessions(prev => prev.map(s => 
+      s.id === sessionId ? { ...s, is_pinned_for_publication: !s.is_pinned_for_publication } : s
+    ));
+  }, []);
+
+  // Update expert commentary for a session
+  const updateSessionExpertCommentary = useCallback((sessionId: string, commentary: string) => {
+    setSessions(prev => prev.map(s => 
+      s.id === sessionId ? { ...s, expert_commentary: commentary } : s
+    ));
+  }, []);
+
+  // Publish session to clients
+  const publishSession = useCallback((sessionId: string, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
+    setSessions(prev => prev.map(s => {
+      if (s.id !== sessionId) return s;
+      return {
+        ...s,
+        published_to_clients: [...(s.published_to_clients || []), ...clientIds],
+        client_commentaries: [...(s.client_commentaries || []), ...commentaries],
+        publication_status: 'published' as const,
+      };
+    }));
+  }, []);
+
+  // Check if session has commentary for a specific client
+  const hasCommentaryForClient = useCallback((session: PeruSession, clientId: string): boolean => {
+    if (session.expert_commentary) return true;
+    return session.client_commentaries?.some(c => c.clientId === clientId && c.commentary) || false;
+  }, []);
+
   // Stats
   const stats = useMemo(() => ({
     total: sessions.length,
     recommended: sessions.filter(s => s.is_recommended).length,
     selected: sessions.filter(s => s.is_selected).length,
+    pinned: sessions.filter(s => s.is_pinned_for_publication).length,
     withVideo: sessions.filter(s => s.video_status === 'FOUND_HIGH' || s.video_status === 'FOUND_MEDIUM' || s.video_status === 'MANUAL').length,
     upcoming: sessions.filter(s => s.status === 'scheduled').length,
     completed: sessions.filter(s => s.status === 'completed').length,
@@ -688,5 +722,9 @@ export function usePeruSessions(options: UsePeruSessionsOptions = {}) {
     clearAllSessions,
     syncFromCongress,
     updateSessionRecording,
+    togglePinSession,
+    updateSessionExpertCommentary,
+    publishSession,
+    hasCommentaryForClient,
   };
 }

@@ -1,5 +1,11 @@
 // Peru Legislative Session Monitoring Types
 
+// Client-specific commentary for sessions
+export interface SessionClientCommentary {
+  clientId: string;
+  commentary: string;
+}
+
 export interface PeruSession {
   id: string;
   external_session_id?: string;
@@ -21,6 +27,13 @@ export interface PeruSession {
   is_selected?: boolean;
   video_status?: VideoResolutionStatus;
   recording?: SessionRecording;
+  
+  // Editorial workflow fields (mirroring Inbox)
+  is_pinned_for_publication?: boolean;
+  expert_commentary?: string;
+  client_commentaries?: SessionClientCommentary[];
+  published_to_clients?: string[];
+  publication_status?: 'draft' | 'pinned' | 'published';
 }
 
 export interface SessionRecording {

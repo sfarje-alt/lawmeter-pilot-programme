@@ -1,4 +1,4 @@
-// Peru Sessions Section - Main container for Peru Congress sessions
+// Peru Sessions Section - Main container for Peru Congress sessions (Unified with Inbox workflow)
 
 import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,22 +10,22 @@ import {
   Video, 
   Calendar, 
   Star, 
-  CheckCircle2, 
+  Pin,
   Clock,
   RefreshCw,
   Trash2,
   Brain,
-  Eye
+  CheckCircle2
 } from 'lucide-react';
 import { usePeruSessions } from '@/hooks/usePeruSessions';
 import { PeruSessionCard } from './PeruSessionCard';
 import { PeruWatchedCommissions } from './PeruWatchedCommissions';
 import { PeruSessionImporter } from './PeruSessionImporter';
-import { DemoAnalyzedCard } from './DemoAnalyzedCard';
-import { DemoSessionCards } from './DemoSessionCards';
-import { DemoRecommendedSessions } from './DemoRecommendedSessions';
+import { SessionDetailDrawer } from './SessionDetailDrawer';
+import { SessionPublicationPanel } from './SessionPublicationPanel';
 import { SessionsFilterBar, SessionsFilters, applySessionFilters } from './SessionsFilterBar';
-import { PERU_COMMISSIONS } from '@/types/peruSessions';
+import { PERU_COMMISSIONS, PeruSession, SessionClientCommentary } from '@/types/peruSessions';
+import { toast } from 'sonner';
 
 const defaultFilters: SessionsFilters = {
   searchQuery: '',
@@ -39,9 +39,12 @@ const defaultFilters: SessionsFilters = {
 };
 
 export function PeruSessionsSection() {
-  const [activeTab, setActiveTab] = useState<'monitored' | 'all' | 'settings'>('monitored');
+  const [activeTab, setActiveTab] = useState<'pinned' | 'all' | 'settings'>('pinned');
   const [filters, setFilters] = useState<SessionsFilters>(defaultFilters);
   const [showImporter, setShowImporter] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<PeruSession | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   const {
     sessions: rawSessions,
@@ -60,6 +63,10 @@ export function PeruSessionsSection() {
     clearAllSessions,
     syncFromCongress,
     updateSessionRecording,
+    togglePinSession,
+    updateSessionExpertCommentary,
+    publishSession,
+    hasCommentaryForClient,
   } = usePeruSessions();
 
   // Apply filters to sessions
@@ -67,18 +74,30 @@ export function PeruSessionsSection() {
     return applySessionFilters(allSessions, filters);
   }, [allSessions, filters]);
 
-  // Get monitored (selected) sessions with filters
-  const monitoredSessions = useMemo(() => {
-    const monitored = allSessions.filter(s => s.is_selected);
-    // Apply filters except showOnlySelected
+  // Get pinned sessions with filters
+  const pinnedSessions = useMemo(() => {
+    const pinned = allSessions.filter(s => s.is_pinned_for_publication);
     const filtersWithoutSelected = { ...filters, showOnlySelected: false };
-    return applySessionFilters(monitored, filtersWithoutSelected);
+    return applySessionFilters(pinned, filtersWithoutSelected);
   }, [allSessions, filters]);
 
   // Calculate analyzed count
   const analyzedCount = useMemo(() => {
     return allSessions.filter(s => s.recording?.analysis_status === 'COMPLETED').length;
   }, [allSessions]);
+
+  // Calculate pinned count
+  const pinnedCount = useMemo(() => {
+    return allSessions.filter(s => s.is_pinned_for_publication).length;
+  }, [allSessions]);
+
+  // Calculate ready to publish count (pinned with commentary)
+  const readyToPublishCount = useMemo(() => {
+    if (!selectedClientId) return 0;
+    return allSessions.filter(s => 
+      s.is_pinned_for_publication && hasCommentaryForClient(s, selectedClientId)
+    ).length;
+  }, [allSessions, selectedClientId, hasCommentaryForClient]);
 
   const handleClearAll = async () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar todas las sesiones? Esta acción no se puede deshacer.')) {
@@ -90,13 +109,25 @@ export function PeruSessionsSection() {
     await syncFromCongress();
   };
 
+  const handleOpenSession = (session: PeruSession) => {
+    setSelectedSession(session);
+    setDrawerOpen(true);
+  };
+
+  const handlePublishSession = (session: PeruSession, clientIds: string[], commentaries: SessionClientCommentary[]) => {
+    publishSession(session.id, clientIds, commentaries);
+    toast.success(`Sesión publicada a ${clientIds.length} cliente(s)`);
+  };
+
+  const handleBatchPublish = (sessionIds: string[], clientIds: string[]) => {
+    sessionIds.forEach(sessionId => {
+      publishSession(sessionId, clientIds, []);
+    });
+  };
+
   // Toggle filter helpers
   const toggleRecommended = () => {
     setFilters(prev => ({ ...prev, showOnlyRecommended: !prev.showOnlyRecommended }));
-  };
-
-  const toggleSelected = () => {
-    setFilters(prev => ({ ...prev, showOnlySelected: !prev.showOnlySelected }));
   };
 
   return (
@@ -123,13 +154,13 @@ export function PeruSessionsSection() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-muted-foreground">Seleccionadas</span>
+              <Pin className="h-4 w-4 text-primary" />
+              <span className="text-sm text-muted-foreground">Pineadas</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.selected}</p>
+            <p className="text-2xl font-bold text-foreground">{pinnedCount}</p>
           </CardContent>
         </Card>
 
@@ -175,12 +206,17 @@ export function PeruSessionsSection() {
       </div>
 
       {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'monitored' | 'all' | 'settings')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pinned' | 'all' | 'settings')}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <TabsList className="bg-muted/50">
-            <TabsTrigger value="monitored" className="data-[state=active]:bg-background">
-              <Eye className="h-4 w-4 mr-2" />
-              Sesiones Monitoreadas
+            <TabsTrigger value="pinned" className="data-[state=active]:bg-background">
+              <Pin className="h-4 w-4 mr-2" />
+              Sesiones Pineadas
+              {pinnedCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
+                  {pinnedCount}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="all" className="data-[state=active]:bg-background">
               <Calendar className="h-4 w-4 mr-2" />
@@ -193,6 +229,15 @@ export function PeruSessionsSection() {
           </TabsList>
 
           <div className="flex gap-2">
+            <SessionPublicationPanel
+              pinnedSessions={allSessions.filter(s => s.is_pinned_for_publication)}
+              selectedClientId={selectedClientId}
+              onClientChange={setSelectedClientId}
+              hasCommentaryForClient={hasCommentaryForClient}
+              onBatchPublish={handleBatchPublish}
+              onUnpinSession={(sessionId) => togglePinSession(sessionId)}
+              onOpenSession={handleOpenSession}
+            />
             <Button 
               variant="default" 
               onClick={handleSync}
@@ -223,57 +268,40 @@ export function PeruSessionsSection() {
           </div>
         </div>
 
-        {/* Monitored Sessions Tab */}
-        <TabsContent value="monitored" className="mt-6 space-y-6">
-          {/* Filters for Monitored */}
+        {/* Pinned Sessions Tab */}
+        <TabsContent value="pinned" className="mt-6 space-y-6">
+          {/* Filters for Pinned */}
           <SessionsFilterBar
             filters={filters}
             onFiltersChange={setFilters}
             sessions={allSessions}
           />
 
-          {/* Toggle Buttons */}
-          <div className="flex gap-2">
-            <Button
-              variant={filters.showOnlyRecommended ? "default" : "outline"}
-              size="sm"
-              onClick={toggleRecommended}
-              className="gap-2"
-            >
-              <Star className="h-4 w-4" />
-              Recomendadas
-            </Button>
-          </div>
-
-          {/* Demo Cards - Newest first */}
-          <DemoSessionCards />
-
-          {/* Demo Analyzed Card - Oldest, shown at bottom */}
-          <DemoAnalyzedCard />
-
-          {/* Monitored Sessions Content */}
-          {monitoredSessions.length === 0 ? (
+          {/* Pinned Sessions Content */}
+          {pinnedSessions.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12">
                 <div className="text-center">
-                  <CheckCircle2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium text-foreground">No hay sesiones seleccionadas para monitoreo</h3>
+                  <Pin className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium text-foreground">No hay sesiones pineadas</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Ve a la pestaña "Todas las Sesiones" para seleccionar las sesiones que deseas monitorear.
+                    Ve a la pestaña "Todas las Sesiones" y pinea las sesiones que deseas revisar y publicar.
                   </p>
                 </div>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
-              {monitoredSessions.map(session => (
+              {pinnedSessions.map(session => (
                 <PeruSessionCard
                   key={session.id}
                   session={session}
-                  onToggleSelection={toggleSessionSelection}
+                  onTogglePin={togglePinSession}
                   onResolveVideo={resolveSessionVideo}
                   onSetManualUrl={setManualVideoUrl}
                   onUpdateRecording={updateSessionRecording}
+                  onOpenDetail={handleOpenSession}
+                  showPinButton
                 />
               ))}
             </div>
@@ -300,19 +328,7 @@ export function PeruSessionsSection() {
               <Star className="h-4 w-4" />
               Recomendadas
             </Button>
-            <Button
-              variant={filters.showOnlySelected ? "default" : "outline"}
-              size="sm"
-              onClick={toggleSelected}
-              className="gap-2"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              Seleccionadas
-            </Button>
           </div>
-
-          {/* Recommendation explanation - shows when filter is active */}
-          {filters.showOnlyRecommended && <DemoRecommendedSessions />}
 
           {/* Sessions List */}
           {isLoading ? (
@@ -341,10 +357,12 @@ export function PeruSessionsSection() {
                   <PeruSessionCard
                     key={session.id}
                     session={session}
-                    onToggleSelection={toggleSessionSelection}
+                    onTogglePin={togglePinSession}
                     onResolveVideo={resolveSessionVideo}
                     onSetManualUrl={setManualVideoUrl}
                     onUpdateRecording={updateSessionRecording}
+                    onOpenDetail={handleOpenSession}
+                    showPinButton
                   />
                 ))}
               </div>
@@ -362,6 +380,18 @@ export function PeruSessionsSection() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Session Detail Drawer */}
+      <SessionDetailDrawer
+        session={selectedSession}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onPublish={handlePublishSession}
+        onUpdateExpertCommentary={updateSessionExpertCommentary}
+        onResolveVideo={resolveSessionVideo}
+        onSetManualUrl={setManualVideoUrl}
+        onUpdateRecording={updateSessionRecording}
+      />
 
       {/* Importer Dialog - Manual upload only */}
       {showImporter && (
