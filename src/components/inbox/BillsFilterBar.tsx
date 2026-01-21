@@ -8,7 +8,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Search, X } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
+import { Search, X, Pin } from "lucide-react";
 import { BillsFilters } from "./BillsInbox";
 
 interface BillsFilterBarProps {
@@ -17,6 +18,7 @@ interface BillsFilterBarProps {
   availableStages: string[];
   totalCount: number;
   filteredCount: number;
+  pinnedCount: number;
 }
 
 const AREAS = [
@@ -37,18 +39,21 @@ export function BillsFilterBar({
   onFiltersChange, 
   availableStages,
   totalCount,
-  filteredCount 
+  filteredCount,
+  pinnedCount
 }: BillsFilterBarProps) {
   const hasActiveFilters = 
     filters.search !== "" || 
     filters.area !== "all" || 
-    filters.stage !== "all";
+    filters.stage !== "all" ||
+    filters.onlyPinned;
 
   const clearFilters = () => {
     onFiltersChange({
       search: "",
       area: "all",
       stage: "all",
+      onlyPinned: false,
     });
   };
 
@@ -66,6 +71,22 @@ export function BillsFilterBar({
             className="pl-10 bg-muted/30 border-border/50"
           />
         </div>
+
+        {/* Pinned Filter Toggle */}
+        <Toggle
+          pressed={filters.onlyPinned}
+          onPressedChange={(pressed) => onFiltersChange({ ...filters, onlyPinned: pressed })}
+          className="gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+          aria-label="Solo pineados"
+        >
+          <Pin className="h-4 w-4" />
+          <span className="hidden sm:inline">Pineados</span>
+          {pinnedCount > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+              {pinnedCount}
+            </Badge>
+          )}
+        </Toggle>
 
         {/* Area Filter */}
         <Select
@@ -123,6 +144,15 @@ export function BillsFilterBar({
             <Badge variant="secondary" className="gap-1">
               Búsqueda: "{filters.search}"
               <button onClick={() => onFiltersChange({ ...filters, search: "" })}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {filters.onlyPinned && (
+            <Badge variant="secondary" className="gap-1 bg-primary/20 text-primary">
+              <Pin className="h-3 w-3" />
+              Solo pineados
+              <button onClick={() => onFiltersChange({ ...filters, onlyPinned: false })}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
