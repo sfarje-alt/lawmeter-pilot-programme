@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor } from "@/data/peruAlertsMockData";
+import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, TrendingUp, Minus, AlertTriangle, XCircle } from "lucide-react";
+import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, IMPACT_LEVELS } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -61,12 +61,24 @@ export function InboxAlertCard({
       )}
       onClick={onClick}
     >
-      {/* Header: Type Badge + ID + Actions */}
+      {/* Header: Type Badge + Impact + ID + Actions */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="outline" className={cn("text-xs", getTypeColor(alert.legislation_type))}>
             {getTypeLabel(alert.legislation_type)}
           </Badge>
+          {/* Impact Level Badge */}
+          {alert.impact_level && (
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "text-xs",
+                getImpactLevelInfo(alert.impact_level)?.color
+              )}
+            >
+              {getImpactLevelInfo(alert.impact_level)?.label}
+            </Badge>
+          )}
           {isBill && alert.legislation_id && (
             <span className="text-xs text-primary font-mono font-medium">
               {alert.legislation_id}
