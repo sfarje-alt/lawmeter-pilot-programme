@@ -11,11 +11,11 @@ import { toast } from "sonner";
 
 interface BillsInboxProps {
   alerts: PeruAlert[];
-  onDecline: (alert: PeruAlert) => void;
   onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
   onTogglePin: (alertId: string) => void;
   selectedClientId: string | null;
   hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
+  onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
 }
 
 export interface BillsFilters {
@@ -26,7 +26,7 @@ export interface BillsFilters {
 
 type BillKanbanStage = "comision" | "pleno" | "tramite_final";
 
-export function BillsInbox({ alerts, onDecline, onPublish, onTogglePin, selectedClientId, hasCommentaryForClient }: BillsInboxProps) {
+export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary }: BillsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<BillsFilters>({
@@ -124,12 +124,6 @@ export function BillsInbox({ alerts, onDecline, onPublish, onTogglePin, selected
     setDrawerOpen(true);
   };
 
-  const handleDecline = (alert: PeruAlert) => {
-    onDecline(alert);
-    toast.success("Proyecto declinado", {
-      description: "Guardado para auditoría interna"
-    });
-  };
 
   const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
     clientIds.forEach(clientId => {
@@ -245,8 +239,8 @@ export function BillsInbox({ alerts, onDecline, onPublish, onTogglePin, selected
         alert={selectedAlert}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
-        onDecline={handleDecline}
         onPublish={handlePublish}
+        onUpdateExpertCommentary={onUpdateExpertCommentary}
       />
     </div>
   );

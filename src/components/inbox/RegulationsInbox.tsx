@@ -11,12 +11,12 @@ import { toast } from "sonner";
 
 interface RegulationsInboxProps {
   alerts: PeruAlert[];
-  onDecline: (alert: PeruAlert) => void;
   onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
   onMoveAlert: (alertId: string, newStage: PeruAlert["kanban_stage"]) => void;
   onTogglePin: (alertId: string) => void;
   selectedClientId: string | null;
   hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
+  onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
 }
 
 export interface RegulationsFilters {
@@ -27,7 +27,7 @@ export interface RegulationsFilters {
 
 type RegulationKanbanStage = "pendiente";
 
-export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert, onTogglePin, selectedClientId, hasCommentaryForClient }: RegulationsInboxProps) {
+export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary }: RegulationsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<RegulationsFilters>({
@@ -122,12 +122,6 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert, on
     setDrawerOpen(true);
   };
 
-  const handleDecline = (alert: PeruAlert) => {
-    onDecline(alert);
-    toast.success("Norma declinada", {
-      description: "Guardada para auditoría interna"
-    });
-  };
 
   const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
     clientIds.forEach(clientId => {
@@ -215,8 +209,8 @@ export function RegulationsInbox({ alerts, onDecline, onPublish, onMoveAlert, on
         alert={selectedAlert}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
-        onDecline={handleDecline}
         onPublish={handlePublish}
+        onUpdateExpertCommentary={onUpdateExpertCommentary}
       />
     </div>
   );

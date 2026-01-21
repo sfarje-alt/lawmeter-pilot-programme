@@ -40,12 +40,12 @@ export default function Inbox() {
     );
   }, []);
 
-  // Decline alert
-  const declineAlert = useCallback((alert: PeruAlert) => {
+  // Update expert commentary
+  const updateExpertCommentary = useCallback((alertId: string, commentary: string) => {
     setAlerts((prev) =>
       prev.map((a) =>
-        a.id === alert.id
-          ? { ...a, kanban_stage: "archivado" as const, status: "declined" as const, is_pinned_for_publication: false, updated_at: new Date().toISOString() }
+        a.id === alertId
+          ? { ...a, expert_commentary: commentary, updated_at: new Date().toISOString() }
           : a
       )
     );
@@ -144,23 +144,23 @@ export default function Inbox() {
         <TabsContent value="bills" className="mt-6">
           <BillsInbox
             alerts={alerts}
-            onDecline={declineAlert}
             onPublish={publishAlert}
             onTogglePin={togglePinAlert}
             selectedClientId={selectedClientId}
             hasCommentaryForClient={hasCommentaryForClient}
+            onUpdateExpertCommentary={updateExpertCommentary}
           />
         </TabsContent>
 
         <TabsContent value="regulations" className="mt-6">
           <RegulationsInbox
             alerts={alerts}
-            onDecline={declineAlert}
             onPublish={publishAlert}
             onMoveAlert={moveAlert}
             onTogglePin={togglePinAlert}
             selectedClientId={selectedClientId}
             hasCommentaryForClient={hasCommentaryForClient}
+            onUpdateExpertCommentary={updateExpertCommentary}
           />
         </TabsContent>
       </Tabs>
