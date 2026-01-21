@@ -2,11 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
-import { Input } from '@/components/ui/input';
-
 import { 
   Upload, 
   Settings, 
@@ -15,12 +12,9 @@ import {
   Star, 
   CheckCircle2, 
   Clock,
-  Search,
   RefreshCw,
   Trash2,
   Brain,
-  Building2,
-  FileText,
   Eye
 } from 'lucide-react';
 import { usePeruSessions } from '@/hooks/usePeruSessions';
@@ -30,18 +24,27 @@ import { PeruSessionImporter } from './PeruSessionImporter';
 import { DemoAnalyzedCard } from './DemoAnalyzedCard';
 import { DemoSessionCards } from './DemoSessionCards';
 import { DemoRecommendedSessions } from './DemoRecommendedSessions';
+import { SessionsFilterBar, SessionsFilters, applySessionFilters } from './SessionsFilterBar';
 import { PERU_COMMISSIONS } from '@/types/peruSessions';
+
+const defaultFilters: SessionsFilters = {
+  searchQuery: '',
+  commissions: [],
+  dateFrom: undefined,
+  dateTo: undefined,
+  quickDateRange: '',
+  showOnlyRecommended: false,
+  showOnlySelected: false,
+  status: [],
+};
 
 export function PeruSessionsSection() {
   const [activeTab, setActiveTab] = useState<'monitored' | 'all' | 'settings'>('monitored');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showOnlyRecommended, setShowOnlyRecommended] = useState(false);
-  const [showOnlySelected, setShowOnlySelected] = useState(false);
+  const [filters, setFilters] = useState<SessionsFilters>(defaultFilters);
   const [showImporter, setShowImporter] = useState(false);
-  
 
   const {
-    sessions,
+    sessions: rawSessions,
     allSessions,
     watchedCommissions,
     selectedSessionIds,
@@ -57,23 +60,25 @@ export function PeruSessionsSection() {
     clearAllSessions,
     syncFromCongress,
     updateSessionRecording,
-  } = usePeruSessions({
-    commissionFilter: searchQuery,
-    showOnlyRecommended,
-    showOnlySelected,
-  });
+  } = usePeruSessions();
 
-  // Get monitored (selected) sessions
+  // Apply filters to sessions
+  const filteredSessions = useMemo(() => {
+    return applySessionFilters(allSessions, filters);
+  }, [allSessions, filters]);
+
+  // Get monitored (selected) sessions with filters
   const monitoredSessions = useMemo(() => {
-    return allSessions.filter(s => s.is_selected);
-  }, [allSessions]);
+    const monitored = allSessions.filter(s => s.is_selected);
+    // Apply filters except showOnlySelected
+    const filtersWithoutSelected = { ...filters, showOnlySelected: false };
+    return applySessionFilters(monitored, filtersWithoutSelected);
+  }, [allSessions, filters]);
 
   // Calculate analyzed count
   const analyzedCount = useMemo(() => {
     return allSessions.filter(s => s.recording?.analysis_status === 'COMPLETED').length;
   }, [allSessions]);
-
-
 
   const handleClearAll = async () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar todas las sesiones? Esta acción no se puede deshacer.')) {
@@ -85,11 +90,19 @@ export function PeruSessionsSection() {
     await syncFromCongress();
   };
 
+  // Toggle filter helpers
+  const toggleRecommended = () => {
+    setFilters(prev => ({ ...prev, showOnlyRecommended: !prev.showOnlyRecommended }));
+  };
+
+  const toggleSelected = () => {
+    setFilters(prev => ({ ...prev, showOnlySelected: !prev.showOnlySelected }));
+  };
 
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
@@ -104,7 +117,7 @@ export function PeruSessionsSection() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-amber-600" />
-              <span className="text-sm text-muted-foreground">Recommended</span>
+              <span className="text-sm text-muted-foreground">Recomendadas</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{stats.recommended}</p>
           </CardContent>
@@ -114,7 +127,7 @@ export function PeruSessionsSection() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-muted-foreground">Selected</span>
+              <span className="text-sm text-muted-foreground">Seleccionadas</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{stats.selected}</p>
           </CardContent>
@@ -124,7 +137,7 @@ export function PeruSessionsSection() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Video className="h-4 w-4 text-purple-600" />
-              <span className="text-sm text-muted-foreground">With Video</span>
+              <span className="text-sm text-muted-foreground">Con Video</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{stats.withVideo}</p>
           </CardContent>
@@ -134,7 +147,7 @@ export function PeruSessionsSection() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-muted-foreground">Upcoming</span>
+              <span className="text-sm text-muted-foreground">Próximas</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{stats.upcoming}</p>
           </CardContent>
@@ -144,7 +157,7 @@ export function PeruSessionsSection() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-slate-600" />
-              <span className="text-sm text-muted-foreground">Completed</span>
+              <span className="text-sm text-muted-foreground">Completadas</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
           </CardContent>
@@ -154,7 +167,7 @@ export function PeruSessionsSection() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4 text-purple-600" />
-              <span className="text-sm text-muted-foreground">Analyzed</span>
+              <span className="text-sm text-muted-foreground">Analizadas</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{analyzedCount}</p>
           </CardContent>
@@ -167,15 +180,15 @@ export function PeruSessionsSection() {
           <TabsList className="bg-muted/50">
             <TabsTrigger value="monitored" className="data-[state=active]:bg-background">
               <Eye className="h-4 w-4 mr-2" />
-              Monitored Sessions
+              Sesiones Monitoreadas
             </TabsTrigger>
             <TabsTrigger value="all" className="data-[state=active]:bg-background">
               <Calendar className="h-4 w-4 mr-2" />
-              All Sessions
+              Todas las Sesiones
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-background">
               <Settings className="h-4 w-4 mr-2" />
-              Monitoring Settings
+              Configuración
             </TabsTrigger>
           </TabsList>
 
@@ -187,7 +200,7 @@ export function PeruSessionsSection() {
               className="gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Syncing...' : 'Sync'}
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
             </Button>
             <Button 
               variant="outline" 
@@ -195,7 +208,7 @@ export function PeruSessionsSection() {
               className="gap-2"
             >
               <Upload className="h-4 w-4" />
-              Upload Manual
+              Subir Manual
             </Button>
             {stats.total > 0 && (
               <Button 
@@ -204,13 +217,34 @@ export function PeruSessionsSection() {
                 className="gap-2 text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
-                Clear All
+                Limpiar Todo
               </Button>
             )}
           </div>
         </div>
 
+        {/* Monitored Sessions Tab */}
         <TabsContent value="monitored" className="mt-6 space-y-6">
+          {/* Filters for Monitored */}
+          <SessionsFilterBar
+            filters={filters}
+            onFiltersChange={setFilters}
+            sessions={allSessions}
+          />
+
+          {/* Toggle Buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant={filters.showOnlyRecommended ? "default" : "outline"}
+              size="sm"
+              onClick={toggleRecommended}
+              className="gap-2"
+            >
+              <Star className="h-4 w-4" />
+              Recomendadas
+            </Button>
+          </div>
+
           {/* Demo Cards - Newest first */}
           <DemoSessionCards />
 
@@ -223,9 +257,9 @@ export function PeruSessionsSection() {
               <CardContent className="py-12">
                 <div className="text-center">
                   <CheckCircle2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium text-foreground">No sessions selected for monitoring</h3>
+                  <h3 className="text-lg font-medium text-foreground">No hay sesiones seleccionadas para monitoreo</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Go to "All Sessions" tab to select sessions you want to monitor.
+                    Ve a la pestaña "Todas las Sesiones" para seleccionar las sesiones que deseas monitorear.
                   </p>
                 </div>
               </CardContent>
@@ -246,105 +280,79 @@ export function PeruSessionsSection() {
           )}
         </TabsContent>
 
+        {/* All Sessions Tab */}
         <TabsContent value="all" className="mt-6 space-y-6">
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by commission name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
+          <SessionsFilterBar
+            filters={filters}
+            onFiltersChange={setFilters}
+            sessions={allSessions}
+          />
 
+          {/* Toggle Buttons */}
+          <div className="flex gap-2">
             <Button
-              variant={showOnlyRecommended ? "default" : "outline"}
+              variant={filters.showOnlyRecommended ? "default" : "outline"}
               size="sm"
-              onClick={() => setShowOnlyRecommended(!showOnlyRecommended)}
+              onClick={toggleRecommended}
               className="gap-2"
             >
               <Star className="h-4 w-4" />
-              Recommended
+              Recomendadas
             </Button>
-
             <Button
-              variant={showOnlySelected ? "default" : "outline"}
+              variant={filters.showOnlySelected ? "default" : "outline"}
               size="sm"
-              onClick={() => setShowOnlySelected(!showOnlySelected)}
+              onClick={toggleSelected}
               className="gap-2"
             >
               <CheckCircle2 className="h-4 w-4" />
-              Selected
+              Seleccionadas
             </Button>
           </div>
 
           {/* Recommendation explanation - shows when filter is active */}
-          {showOnlyRecommended && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex items-start gap-3 p-3 bg-amber-500/5 rounded-lg border border-amber-500/10">
-                <div className="p-1.5 bg-amber-500/10 rounded">
-                  <Building2 className="h-4 w-4 text-amber-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm text-foreground">Committees & Chambers</p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Sessions from your watched commissions in Congress, Senate, or Parliament bodies configured in Monitoring Settings.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-3 bg-orange-500/5 rounded-lg border border-orange-500/10">
-                <div className="p-1.5 bg-orange-500/10 rounded">
-                  <FileText className="h-4 w-4 text-orange-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm text-foreground">Agenda Content</p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Sessions whose agenda mentions topics related to your starred bills, keywords, or regulatory areas of interest.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Demo Recommended Sessions - shown when filter is active */}
-          {showOnlyRecommended && <DemoRecommendedSessions />}
+          {filters.showOnlyRecommended && <DemoRecommendedSessions />}
 
           {/* Sessions List */}
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : sessions.length === 0 && !showOnlyRecommended ? (
+          ) : filteredSessions.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12">
                 <div className="text-center">
                   <Calendar className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium text-foreground">No sessions found</h3>
+                  <h3 className="text-lg font-medium text-foreground">No se encontraron sesiones</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Try adjusting your filters or upload sessions from the Congress website.
+                    Intenta ajustar los filtros o sube sesiones desde el sitio web del Congreso.
                   </p>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {sessions.map(session => (
-                <PeruSessionCard
-                  key={session.id}
-                  session={session}
-                  onToggleSelection={toggleSessionSelection}
-                  onResolveVideo={resolveSessionVideo}
-                  onSetManualUrl={setManualVideoUrl}
-                  onUpdateRecording={updateSessionRecording}
-                />
-              ))}
-            </div>
+            <>
+              <p className="text-sm text-muted-foreground">
+                Mostrando {filteredSessions.length} de {allSessions.length} sesiones
+              </p>
+              <div className="space-y-3">
+                {filteredSessions.map(session => (
+                  <PeruSessionCard
+                    key={session.id}
+                    session={session}
+                    onToggleSelection={toggleSessionSelection}
+                    onResolveVideo={resolveSessionVideo}
+                    onSetManualUrl={setManualVideoUrl}
+                    onUpdateRecording={updateSessionRecording}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
 
+        {/* Settings Tab */}
         <TabsContent value="settings" className="mt-6">
           <PeruWatchedCommissions
             watchedCommissions={watchedCommissions}
