@@ -5,7 +5,7 @@ import { Inbox as InboxIcon, Scale, Pin } from "lucide-react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
-import { PeruAlert, BILLS_KANBAN_COLUMNS, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
+import { PeruAlert, BILLS_KANBAN_COLUMNS, MOCK_CLIENTS, ALL_LEGISLATIVE_STAGES } from "@/data/peruAlertsMockData";
 import { toast } from "sonner";
 
 interface BillsInboxProps {
@@ -78,16 +78,10 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     return Array.from(sectors).sort();
   }, [billAlerts]);
 
-  // Get unique stages from data
+  // Use canonical list of all legislative stages (normalized to uppercase)
   const availableStages = useMemo(() => {
-    const stages = new Set<string>();
-    billAlerts.forEach(alert => {
-      if (alert.current_stage) {
-        stages.add(alert.current_stage);
-      }
-    });
-    return Array.from(stages).sort();
-  }, [billAlerts]);
+    return ALL_LEGISLATIVE_STAGES;
+  }, []);
 
   // Get unique impact levels from data
   const availableImpactLevels = useMemo(() => {
