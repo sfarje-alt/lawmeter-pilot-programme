@@ -11,7 +11,7 @@ import { ContactForm } from "@/components/ContactForm";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { ClientsPage } from "@/components/clients/ClientsPage";
 import { ClientAnalyticsDashboard } from "@/components/analytics/ClientAnalyticsDashboard";
-import { ReportGenerator } from "@/components/reports/ReportGenerator";
+import { ReportsPage } from "@/components/reports/ReportsPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -212,7 +212,7 @@ export default function LawMeterDashboard() {
       case "clients":
         return <ClientsPage />;
       case "reports":
-        return <ReportGenerator />;
+        return <ReportsPage />;
       case "analytics":
         return <ClientAnalyticsDashboard />;
       case "calendar":
