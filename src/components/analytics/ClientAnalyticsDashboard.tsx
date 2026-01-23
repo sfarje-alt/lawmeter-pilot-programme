@@ -74,7 +74,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     sector: 'Banca y Finanzas',
     areas: ['Legal', 'Compliance', 'Finanzas', 'Operaciones'],
     parliamentaryGroups: ['Fuerza Popular', 'Alianza para el Progreso'],
-    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'Presentado'],
+    legislativeStages: ['PRESENTADO', 'EN COMISIÓN', 'DICTAMEN', 'EN AGENDA DEL PLENO'],
     entities: ['BCRP', 'SBS', 'MEF'],
     alerts: {
       total: 47,
@@ -87,7 +87,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     distribution: {
       byType: { 'Proyecto de Ley': 23, 'Decreto Supremo': 12, 'Resolución': 8, 'Otro': 4 },
       byArea: { 'Legal': 18, 'Compliance': 15, 'Finanzas': 10, 'Operaciones': 4 },
-      byStage: { 'Comisión': 12, 'Pleno': 8, 'Publicado': 20, 'Presentado': 7 }
+      byStage: { 'EN COMISIÓN': 12, 'EN PLENO': 8, 'PUBLICADO': 20, 'PRESENTADO': 7 }
     },
     matrix: [
       { id: '1', title: 'Ley de Protección de Datos Financieros', impact: 'high' as ImpactLevel, urgency: 'high' as UrgencyLevel },
@@ -108,7 +108,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     sector: 'Minería',
     areas: ['Legal', 'Operaciones', 'Ambiental', 'Comunidades'],
     parliamentaryGroups: ['Perú Libre', 'Acción Popular', 'Renovación Popular'],
-    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'En Agenda del Pleno'],
+    legislativeStages: ['EN PLENO', 'APROBADO', 'AUTÓGRAFA', 'PUBLICADO'],
     entities: ['OEFA', 'MINEM', 'MINAM'],
     alerts: {
       total: 32,
@@ -121,7 +121,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     distribution: {
       byType: { 'Proyecto de Ley': 15, 'Decreto Supremo': 10, 'Resolución': 5, 'Otro': 2 },
       byArea: { 'Legal': 12, 'Operaciones': 10, 'Ambiental': 8, 'Comunidades': 2 },
-      byStage: { 'Comisión': 8, 'Pleno': 5, 'Publicado': 15, 'Presentado': 4 }
+      byStage: { 'EN COMISIÓN': 8, 'EN PLENO': 5, 'PUBLICADO': 15, 'PRESENTADO': 4 }
     },
     matrix: [
       { id: '1', title: 'Ley de Canon Minero', impact: 'high' as ImpactLevel, urgency: 'high' as UrgencyLevel },
@@ -140,7 +140,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     sector: 'Telecomunicaciones',
     areas: ['Legal', 'Regulatorio', 'IT', 'Operaciones'],
     parliamentaryGroups: ['Avanza País', 'Podemos Perú'],
-    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'Dictamen'],
+    legislativeStages: ['PRESENTADO', 'EN COMISIÓN', 'EN SEGUNDA VOTACIÓN', 'OBSERVADO'],
     entities: ['MTC', 'OSIPTEL'],
     alerts: {
       total: 28,
@@ -153,7 +153,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     distribution: {
       byType: { 'Proyecto de Ley': 12, 'Decreto Supremo': 8, 'Resolución': 6, 'Otro': 2 },
       byArea: { 'Legal': 10, 'Regulatorio': 8, 'IT': 6, 'Operaciones': 4 },
-      byStage: { 'Comisión': 6, 'Pleno': 4, 'Publicado': 14, 'Presentado': 4 }
+      byStage: { 'EN COMISIÓN': 6, 'EN PLENO': 4, 'PUBLICADO': 14, 'PRESENTADO': 4 }
     },
     matrix: [
       { id: '1', title: 'Ley de Banda Ancha', impact: 'high' as ImpactLevel, urgency: 'medium' as UrgencyLevel },
@@ -171,7 +171,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     sector: 'Seguros',
     areas: ['Legal', 'Compliance', 'Actuarial', 'Comercial'],
     parliamentaryGroups: ['Somos Perú', 'Bloque Magisterial'],
-    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'Autógrafa'],
+    legislativeStages: ['DICTAMEN', 'ARCHIVADO', 'RETIRADO', 'EN COMISIÓN DICTAMINADORA'],
     entities: ['SBS', 'MEF'],
     alerts: {
       total: 21,
@@ -184,7 +184,7 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     distribution: {
       byType: { 'Proyecto de Ley': 8, 'Decreto Supremo': 7, 'Resolución': 4, 'Otro': 2 },
       byArea: { 'Legal': 8, 'Compliance': 6, 'Actuarial': 4, 'Comercial': 3 },
-      byStage: { 'Comisión': 4, 'Pleno': 3, 'Publicado': 12, 'Presentado': 2 }
+      byStage: { 'EN COMISIÓN': 4, 'EN PLENO': 3, 'PUBLICADO': 12, 'PRESENTADO': 2 }
     },
     matrix: [
       { id: '1', title: 'Solvencia II Adaptación', impact: 'high' as ImpactLevel, urgency: 'high' as UrgencyLevel },
