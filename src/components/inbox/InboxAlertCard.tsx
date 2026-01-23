@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, TrendingUp, Minus, AlertTriangle, XCircle } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, IMPACT_LEVELS } from "@/data/peruAlertsMockData";
+import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, Briefcase } from "lucide-react";
+import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,11 @@ export function InboxAlertCard({
   const hasCommentary = selectedClientId && hasCommentaryForClient 
     ? hasCommentaryForClient(alert, selectedClientId)
     : !!(alert.expert_commentary && alert.expert_commentary.trim());
+
+  // Get primary client name
+  const primaryClient = alert.primary_client_id 
+    ? MOCK_CLIENTS.find(c => c.id === alert.primary_client_id)
+    : null;
 
   const handlePinClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -197,6 +202,16 @@ export function InboxAlertCard({
           </Badge>
         )}
       </div>
+
+      {/* Client Tag */}
+      {primaryClient && (
+        <div className="flex items-center gap-1.5 mb-2">
+          <Briefcase className="h-3 w-3 text-primary/70" />
+          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30 py-0">
+            {primaryClient.name}
+          </Badge>
+        </div>
+      )}
 
       {/* Footer: Dates */}
       <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-border/30">
