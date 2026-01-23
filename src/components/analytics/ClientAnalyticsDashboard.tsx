@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -26,6 +25,7 @@ import { ClientDistributionCharts } from "./ClientDistributionCharts";
 import { 
   AnalyticsGlobalFilters, 
   AnalyticsFilters, 
+  AnalyticsFilterOptions,
   DEFAULT_ANALYTICS_FILTERS 
 } from "./AnalyticsGlobalFilters";
 
@@ -44,6 +44,10 @@ interface ClientAnalyticsData {
   id: string;
   name: string;
   sector: string;
+  areas: string[];
+  parliamentaryGroups: string[];
+  legislativeStages: string[];
+  entities: string[];
   alerts: {
     total: number;
     highImpact: number;
@@ -62,12 +66,16 @@ interface ClientAnalyticsData {
   trendValue: number;
 }
 
-// Mock client data for analytics
+// Mock client data for analytics - with dynamic filter values
 const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
   {
     id: '1',
     name: 'Banco del Pacífico S.A.',
     sector: 'Banca y Finanzas',
+    areas: ['Legal', 'Compliance', 'Finanzas', 'Operaciones'],
+    parliamentaryGroups: ['Fuerza Popular', 'Alianza para el Progreso'],
+    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'Presentado'],
+    entities: ['BCRP', 'SBS', 'MEF'],
     alerts: {
       total: 47,
       highImpact: 12,
@@ -98,6 +106,10 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     id: '2',
     name: 'Minera Andina Corp.',
     sector: 'Minería',
+    areas: ['Legal', 'Operaciones', 'Ambiental', 'Comunidades'],
+    parliamentaryGroups: ['Perú Libre', 'Acción Popular', 'Renovación Popular'],
+    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'En Agenda del Pleno'],
+    entities: ['OEFA', 'MINEM', 'MINAM'],
     alerts: {
       total: 32,
       highImpact: 8,
@@ -126,6 +138,10 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     id: '3',
     name: 'Telecom Perú S.A.C.',
     sector: 'Telecomunicaciones',
+    areas: ['Legal', 'Regulatorio', 'IT', 'Operaciones'],
+    parliamentaryGroups: ['Avanza País', 'Podemos Perú'],
+    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'Dictamen'],
+    entities: ['MTC', 'OSIPTEL'],
     alerts: {
       total: 28,
       highImpact: 6,
@@ -153,6 +169,10 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
     id: '4',
     name: 'Seguros Continental',
     sector: 'Seguros',
+    areas: ['Legal', 'Compliance', 'Actuarial', 'Comercial'],
+    parliamentaryGroups: ['Somos Perú', 'Bloque Magisterial'],
+    legislativeStages: ['Comisión', 'Pleno', 'Publicado', 'Autógrafa'],
+    entities: ['SBS', 'MEF'],
     alerts: {
       total: 21,
       highImpact: 5,
@@ -177,26 +197,62 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
   }
 ];
 
+// Helper to extract unique values from all clients
+function extractUniqueValues<T, K extends keyof T>(data: T[], key: K): string[] {
+  const allValues = data.flatMap(item => {
+    const val = item[key];
+    return Array.isArray(val) ? val : [val];
+  });
+  return [...new Set(allValues)].filter(Boolean).sort() as string[];
+}
+
 export function ClientAnalyticsDashboard() {
   const [selectedClient, setSelectedClient] = useState<string>('all');
   const [comparisonClients, setComparisonClients] = useState<string[]>(['1', '2']);
   const [globalFilters, setGlobalFilters] = useState<AnalyticsFilters>(DEFAULT_ANALYTICS_FILTERS);
 
-  // Convert mock clients for filter component
-  const availableClients = MOCK_CLIENTS_ANALYTICS.map(c => ({ id: c.id, name: c.name }));
+  // Extract dynamic filter options from the data
+  const filterOptions: AnalyticsFilterOptions = useMemo(() => ({
+    areas: extractUniqueValues(MOCK_CLIENTS_ANALYTICS, 'areas'),
+    sectors: extractUniqueValues(MOCK_CLIENTS_ANALYTICS, 'sector'),
+    legislativeStages: extractUniqueValues(MOCK_CLIENTS_ANALYTICS, 'legislativeStages'),
+    parliamentaryGroups: extractUniqueValues(MOCK_CLIENTS_ANALYTICS, 'parliamentaryGroups'),
+    entities: extractUniqueValues(MOCK_CLIENTS_ANALYTICS, 'entities'),
+  }), []);
 
-  // Apply global filters to data (for now, filters affect the display context)
+  // Apply global filters to data
   const filteredClientsData = useMemo(() => {
     let data = MOCK_CLIENTS_ANALYTICS;
-    
-    // Filter by selected clients
-    if (globalFilters.clients.length > 0) {
-      data = data.filter(c => globalFilters.clients.includes(c.id));
-    }
     
     // Filter by sectors
     if (globalFilters.sectors.length > 0) {
       data = data.filter(c => globalFilters.sectors.includes(c.sector));
+    }
+
+    // Filter by areas
+    if (globalFilters.areas.length > 0) {
+      data = data.filter(c => c.areas.some(a => globalFilters.areas.includes(a)));
+    }
+
+    // Filter by parliamentary groups
+    if (globalFilters.parliamentaryGroups.length > 0) {
+      data = data.filter(c => 
+        c.parliamentaryGroups.some(g => globalFilters.parliamentaryGroups.includes(g))
+      );
+    }
+
+    // Filter by legislative stages
+    if (globalFilters.legislativeStages.length > 0) {
+      data = data.filter(c => 
+        c.legislativeStages.some(s => globalFilters.legislativeStages.includes(s))
+      );
+    }
+
+    // Filter by entities
+    if (globalFilters.entities.length > 0) {
+      data = data.filter(c => 
+        c.entities.some(e => globalFilters.entities.includes(e))
+      );
     }
 
     return data;
@@ -249,11 +305,11 @@ export function ClientAnalyticsDashboard() {
         </div>
       </div>
 
-      {/* Global Filters */}
+      {/* Global Filters - now with dynamic options */}
       <AnalyticsGlobalFilters
         filters={globalFilters}
         onFiltersChange={setGlobalFilters}
-        availableClients={availableClients}
+        filterOptions={filterOptions}
       />
 
       {/* Overview Stats */}
