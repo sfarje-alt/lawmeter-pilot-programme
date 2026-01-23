@@ -2,9 +2,10 @@ import { useState } from "react";
 import { ClientsList } from "./ClientsList";
 import { ClientWizard } from "./ClientWizard";
 import { ClientProfile } from "./types";
+import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
 
 export function ClientsPage() {
-  const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [clients, setClients] = useState<ClientProfile[]>(MOCK_CLIENT_PROFILES);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientProfile | undefined>();
 

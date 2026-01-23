@@ -86,6 +86,7 @@ interface BasePeruAlert {
 export interface PeruAlert extends BasePeruAlert {
   is_pinned_for_publication: boolean;  // Whether this alert is marked for publication
   client_commentaries: ClientCommentary[];  // Commentaries per client
+  primary_client_id?: string;  // Primary client assigned to this alert
 }
 
 // Mock clients for matching
@@ -97,7 +98,17 @@ export interface AffectedClient {
   matchScore: number;
 }
 
+// Primary client - receives all alerts by default
+export const PRIMARY_CLIENT_ID = "client-farmasalud";
+
 export const MOCK_CLIENTS: AffectedClient[] = [
+  { 
+    id: PRIMARY_CLIENT_ID, 
+    name: "FarmaSalud Perú S.A.C.", 
+    sector: "Farmacéutico", 
+    areas: ["General", "Oncológico", "Dispositivos Médicos", "Financiamiento y Presupuesto", "Raras y huérfanas", "Contrataciones Públicas"], 
+    matchScore: 100 
+  },
   { id: "client-001", name: "Clínica Ricardo Palma", sector: "Salud Privada", areas: ["General", "Oncológico"], matchScore: 85 },
   { id: "client-002", name: "Laboratorios Bagó", sector: "Farmacéutico", areas: ["General", "Dispositivos Médicos"], matchScore: 70 },
   { id: "client-003", name: "Oncosalud", sector: "Salud Privada", areas: ["Oncológico", "Raras y huérfanas"], matchScore: 95 },
@@ -827,6 +838,7 @@ function addAlertDefaults(alert: BasePeruAlert, index: number): PeruAlert {
     client_commentaries: [],
     impact_level: alert.impact_level || impactLevels[impactIndex],
     sector: alert.sector || SECTORS[sectorIndex],
+    primary_client_id: PRIMARY_CLIENT_ID, // All alerts assigned to primary client
   };
 }
 

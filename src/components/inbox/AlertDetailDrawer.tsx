@@ -20,7 +20,7 @@ import {
   CheckCircle2,
   MessageSquarePlus
 } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
+import { PeruAlert, getTypeLabel, getTypeColor, MOCK_CLIENTS, PRIMARY_CLIENT_ID } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -45,10 +45,12 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpda
   const [useSharedCommentary, setUseSharedCommentary] = useState(true);
   const [sharedCommentary, setSharedCommentary] = useState("");
 
-  // Reset state when alert changes
+  // Reset state when alert changes - pre-select primary client if assigned
   useEffect(() => {
     if (alert) {
-      setSelectedClients([]);
+      // Pre-select the primary client if the alert has one assigned
+      const initialClients = alert.primary_client_id ? [alert.primary_client_id] : [];
+      setSelectedClients(initialClients);
       setClientCommentaries({});
       setSharedCommentary(alert.expert_commentary || "");
       setUseSharedCommentary(true);
