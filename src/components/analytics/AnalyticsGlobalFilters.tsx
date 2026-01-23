@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,50 +25,14 @@ import {
   Users,
   Tag,
   AlertTriangle,
-  FileText,
-  Briefcase
+  FileText
 } from "lucide-react";
 import { format, subDays, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { 
-  SECTORS, 
-  ENTITIES, 
-  ALL_LEGISLATIVE_STAGES,
-  IMPACT_LEVELS,
-  ImpactLevel 
-} from "@/data/peruAlertsMockData";
-
-// Available areas from data
-const AREAS = [
-  "General",
-  "Oncológico", 
-  "Dispositivos Médicos",
-  "Financiamiento y Presupuesto",
-  "Raras y huérfanas",
-  "Contrataciones Públicas",
-  "Legal",
-  "Compliance",
-  "Operaciones",
-  "Regulatorio",
-];
-
-// Parliamentary groups
-const PARLIAMENTARY_GROUPS = [
-  "Fuerza Popular",
-  "Alianza para el Progreso",
-  "Perú Libre",
-  "Acción Popular",
-  "Renovación Popular",
-  "Avanza País",
-  "Podemos Perú",
-  "Somos Perú",
-  "Bloque Magisterial",
-  "No Agrupado",
-];
+import { IMPACT_LEVELS, ImpactLevel } from "@/data/peruAlertsMockData";
 
 export interface AnalyticsFilters {
-  clients: string[];
   areas: string[];
   sectors: string[];
   impactLevels: ImpactLevel[];
@@ -84,7 +47,6 @@ export interface AnalyticsFilters {
 }
 
 export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFilters = {
-  clients: [],
   areas: [],
   sectors: [],
   impactLevels: [],
@@ -95,10 +57,19 @@ export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFilters = {
   legislationType: "all",
 };
 
+// Dynamic options interface - all options come from data
+export interface AnalyticsFilterOptions {
+  areas: string[];
+  sectors: string[];
+  legislativeStages: string[];
+  parliamentaryGroups: string[];
+  entities: string[];
+}
+
 interface AnalyticsGlobalFiltersProps {
   filters: AnalyticsFilters;
   onFiltersChange: (filters: AnalyticsFilters) => void;
-  availableClients: { id: string; name: string }[];
+  filterOptions: AnalyticsFilterOptions;
 }
 
 // Quick date range options
@@ -113,7 +84,7 @@ const DATE_PRESETS = [
 export function AnalyticsGlobalFilters({ 
   filters, 
   onFiltersChange, 
-  availableClients 
+  filterOptions 
 }: AnalyticsGlobalFiltersProps) {
   
   const updateFilter = <K extends keyof AnalyticsFilters>(
@@ -153,7 +124,6 @@ export function AnalyticsGlobalFilters({
 
   // Count active filters
   const activeFiltersCount = [
-    filters.clients.length,
     filters.areas.length,
     filters.sectors.length,
     filters.impactLevels.length,
@@ -191,92 +161,67 @@ export function AnalyticsGlobalFilters({
               </SelectContent>
             </Select>
 
-            {/* Clients multi-select */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
-                  <Briefcase className="h-3 w-3" />
-                  Clientes
-                  {filters.clients.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                      {filters.clients.length}
-                    </Badge>
-                  )}
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-3" align="start">
-                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                  {availableClients.map(client => (
-                    <div key={client.id} className="flex items-center gap-2">
-                      <Checkbox
-                        checked={filters.clients.includes(client.id)}
-                        onCheckedChange={() => toggleArrayFilter("clients", client.id)}
-                      />
-                      <Label className="text-sm cursor-pointer truncate">{client.name}</Label>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+            {/* Areas multi-select - dynamic */}
+            {filterOptions.areas.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
+                    <Tag className="h-3 w-3" />
+                    Áreas
+                    {filters.areas.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                        {filters.areas.length}
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[250px] p-3" align="start">
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {filterOptions.areas.map(area => (
+                      <div key={area} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={filters.areas.includes(area)}
+                          onCheckedChange={() => toggleArrayFilter("areas", area)}
+                        />
+                        <Label className="text-sm cursor-pointer">{area}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
 
-            {/* Areas multi-select */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
-                  <Tag className="h-3 w-3" />
-                  Áreas
-                  {filters.areas.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                      {filters.areas.length}
-                    </Badge>
-                  )}
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-3" align="start">
-                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                  {AREAS.map(area => (
-                    <div key={area} className="flex items-center gap-2">
-                      <Checkbox
-                        checked={filters.areas.includes(area)}
-                        onCheckedChange={() => toggleArrayFilter("areas", area)}
-                      />
-                      <Label className="text-sm cursor-pointer">{area}</Label>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Sectors multi-select */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
-                  <Building2 className="h-3 w-3" />
-                  Sectores
-                  {filters.sectors.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                      {filters.sectors.length}
-                    </Badge>
-                  )}
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-3" align="start">
-                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                  {SECTORS.map(sector => (
-                    <div key={sector} className="flex items-center gap-2">
-                      <Checkbox
-                        checked={filters.sectors.includes(sector)}
-                        onCheckedChange={() => toggleArrayFilter("sectors", sector)}
-                      />
-                      <Label className="text-sm cursor-pointer">{sector}</Label>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+            {/* Sectors multi-select - dynamic */}
+            {filterOptions.sectors.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
+                    <Building2 className="h-3 w-3" />
+                    Sectores
+                    {filters.sectors.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                        {filters.sectors.length}
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[250px] p-3" align="start">
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {filterOptions.sectors.map(sector => (
+                      <div key={sector} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={filters.sectors.includes(sector)}
+                          onCheckedChange={() => toggleArrayFilter("sectors", sector)}
+                        />
+                        <Label className="text-sm cursor-pointer">{sector}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
 
             {/* Impact levels multi-select */}
             <Popover>
@@ -307,8 +252,8 @@ export function AnalyticsGlobalFilters({
               </PopoverContent>
             </Popover>
 
-            {/* Legislative stages - only show for bills */}
-            {filters.legislationType !== "norma" && (
+            {/* Legislative stages - only show for bills and when options exist */}
+            {filters.legislationType !== "norma" && filterOptions.legislativeStages.length > 0 && (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
@@ -323,7 +268,7 @@ export function AnalyticsGlobalFilters({
                 </PopoverTrigger>
                 <PopoverContent className="w-[280px] p-3" align="start">
                   <div className="space-y-2 max-h-[250px] overflow-y-auto">
-                    {ALL_LEGISLATIVE_STAGES.map(stage => (
+                    {filterOptions.legislativeStages.map(stage => (
                       <div key={stage} className="flex items-center gap-2">
                         <Checkbox
                           checked={filters.legislativeStages.includes(stage)}
@@ -337,8 +282,8 @@ export function AnalyticsGlobalFilters({
               </Popover>
             )}
 
-            {/* Parliamentary groups - only show for bills */}
-            {filters.legislationType !== "norma" && (
+            {/* Parliamentary groups - only show for bills and when options exist */}
+            {filters.legislationType !== "norma" && filterOptions.parliamentaryGroups.length > 0 && (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
@@ -354,7 +299,7 @@ export function AnalyticsGlobalFilters({
                 </PopoverTrigger>
                 <PopoverContent className="w-[220px] p-3" align="start">
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                    {PARLIAMENTARY_GROUPS.map(group => (
+                    {filterOptions.parliamentaryGroups.map(group => (
                       <div key={group} className="flex items-center gap-2">
                         <Checkbox
                           checked={filters.parliamentaryGroups.includes(group)}
@@ -368,8 +313,8 @@ export function AnalyticsGlobalFilters({
               </Popover>
             )}
 
-            {/* Entities - only show for regulations */}
-            {filters.legislationType !== "proyecto_de_ley" && (
+            {/* Entities - only show for regulations and when options exist */}
+            {filters.legislationType !== "proyecto_de_ley" && filterOptions.entities.length > 0 && (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
@@ -385,7 +330,7 @@ export function AnalyticsGlobalFilters({
                 </PopoverTrigger>
                 <PopoverContent className="w-[200px] p-3" align="start">
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                    {ENTITIES.map(entity => (
+                    {filterOptions.entities.map(entity => (
                       <div key={entity} className="flex items-center gap-2">
                         <Checkbox
                           checked={filters.entities.includes(entity)}
@@ -482,18 +427,6 @@ export function AnalyticsGlobalFilters({
                   />
                 </Badge>
               )}
-              {filters.clients.map(id => {
-                const client = availableClients.find(c => c.id === id);
-                return client ? (
-                  <Badge key={id} variant="secondary" className="text-xs gap-1">
-                    {client.name.split(" ")[0]}
-                    <X 
-                      className="h-3 w-3 cursor-pointer" 
-                      onClick={() => toggleArrayFilter("clients", id)}
-                    />
-                  </Badge>
-                ) : null;
-              })}
               {filters.areas.map(area => (
                 <Badge key={area} variant="secondary" className="text-xs gap-1">
                   {area}
