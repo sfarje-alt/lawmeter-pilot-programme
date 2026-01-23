@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,11 @@ import {
 import { ClientImpactMatrix } from "./ClientImpactMatrix";
 import { ClientComparisonChart } from "./ClientComparisonChart";
 import { ClientDistributionCharts } from "./ClientDistributionCharts";
+import { 
+  AnalyticsGlobalFilters, 
+  AnalyticsFilters, 
+  DEFAULT_ANALYTICS_FILTERS 
+} from "./AnalyticsGlobalFilters";
 
 // Type definitions for matrix items
 type ImpactLevel = 'high' | 'medium' | 'low';
@@ -175,19 +180,40 @@ const MOCK_CLIENTS_ANALYTICS: ClientAnalyticsData[] = [
 export function ClientAnalyticsDashboard() {
   const [selectedClient, setSelectedClient] = useState<string>('all');
   const [comparisonClients, setComparisonClients] = useState<string[]>(['1', '2']);
+  const [globalFilters, setGlobalFilters] = useState<AnalyticsFilters>(DEFAULT_ANALYTICS_FILTERS);
+
+  // Convert mock clients for filter component
+  const availableClients = MOCK_CLIENTS_ANALYTICS.map(c => ({ id: c.id, name: c.name }));
+
+  // Apply global filters to data (for now, filters affect the display context)
+  const filteredClientsData = useMemo(() => {
+    let data = MOCK_CLIENTS_ANALYTICS;
+    
+    // Filter by selected clients
+    if (globalFilters.clients.length > 0) {
+      data = data.filter(c => globalFilters.clients.includes(c.id));
+    }
+    
+    // Filter by sectors
+    if (globalFilters.sectors.length > 0) {
+      data = data.filter(c => globalFilters.sectors.includes(c.sector));
+    }
+
+    return data;
+  }, [globalFilters]);
 
   const selectedClientData = selectedClient === 'all' 
     ? null 
-    : MOCK_CLIENTS_ANALYTICS.find(c => c.id === selectedClient);
+    : filteredClientsData.find(c => c.id === selectedClient);
 
-  const comparisonData = MOCK_CLIENTS_ANALYTICS.filter(c => comparisonClients.includes(c.id));
+  const comparisonData = filteredClientsData.filter(c => comparisonClients.includes(c.id));
 
-  const totalStats = {
-    totalAlerts: MOCK_CLIENTS_ANALYTICS.reduce((sum, c) => sum + c.alerts.total, 0),
-    highImpact: MOCK_CLIENTS_ANALYTICS.reduce((sum, c) => sum + c.alerts.highImpact, 0),
-    highUrgency: MOCK_CLIENTS_ANALYTICS.reduce((sum, c) => sum + c.alerts.highUrgency, 0),
-    pending: MOCK_CLIENTS_ANALYTICS.reduce((sum, c) => sum + c.alerts.pending, 0),
-  };
+  const totalStats = useMemo(() => ({
+    totalAlerts: filteredClientsData.reduce((sum, c) => sum + c.alerts.total, 0),
+    highImpact: filteredClientsData.reduce((sum, c) => sum + c.alerts.highImpact, 0),
+    highUrgency: filteredClientsData.reduce((sum, c) => sum + c.alerts.highUrgency, 0),
+    pending: filteredClientsData.reduce((sum, c) => sum + c.alerts.pending, 0),
+  }), [filteredClientsData]);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
@@ -203,25 +229,32 @@ export function ClientAnalyticsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
-          <p className="text-muted-foreground">Client comparison and impact analysis</p>
+          <p className="text-muted-foreground">Comparación de clientes y análisis de impacto</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={selectedClient} onValueChange={setSelectedClient}>
             <SelectTrigger className="w-[250px] bg-background/50">
-              <SelectValue placeholder="Select client" />
+              <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Clients (Overview)</SelectItem>
-              {MOCK_CLIENTS_ANALYTICS.map(client => (
+              <SelectItem value="all">Todos los Clientes (Vista General)</SelectItem>
+              {filteredClientsData.map(client => (
                 <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Badge variant="outline" className="bg-primary/10 border-primary/30">
-            Peru Focus
+            Perú
           </Badge>
         </div>
       </div>
+
+      {/* Global Filters */}
+      <AnalyticsGlobalFilters
+        filters={globalFilters}
+        onFiltersChange={setGlobalFilters}
+        availableClients={availableClients}
+      />
 
       {/* Overview Stats */}
       <div className="grid grid-cols-4 gap-4">
@@ -289,7 +322,7 @@ export function ClientAnalyticsDashboard() {
         <TabsContent value="matrix" className="space-y-4">
           {selectedClient === 'all' ? (
             <div className="grid grid-cols-2 gap-4">
-              {MOCK_CLIENTS_ANALYTICS.map(client => (
+              {filteredClientsData.map(client => (
                 <ClientImpactMatrix 
                   key={client.id} 
                   client={client} 
@@ -308,11 +341,11 @@ export function ClientAnalyticsDashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  Client Comparison
+                  Comparación de Clientes
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Compare:</span>
-                  {MOCK_CLIENTS_ANALYTICS.map(client => (
+                  <span className="text-sm text-muted-foreground">Comparar:</span>
+                  {filteredClientsData.map(client => (
                     <Badge
                       key={client.id}
                       variant={comparisonClients.includes(client.id) ? "default" : "outline"}
@@ -338,7 +371,7 @@ export function ClientAnalyticsDashboard() {
 
           {/* Client Cards for Quick Comparison */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {MOCK_CLIENTS_ANALYTICS.map(client => (
+            {filteredClientsData.map(client => (
               <Card 
                 key={client.id} 
                 className={`glass-card border-border/30 cursor-pointer transition-all ${
@@ -362,25 +395,25 @@ export function ClientAnalyticsDashboard() {
                   </div>
                   <div className="space-y-1 mt-3">
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Alerts</span>
+                      <span className="text-muted-foreground">Alertas</span>
                       <span className="font-medium">{client.alerts.total}</span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">High Impact</span>
+                      <span className="text-muted-foreground">Alto Impacto</span>
                       <span className="font-medium text-red-400">{client.alerts.highImpact}</span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">High Urgency</span>
+                      <span className="text-muted-foreground">Alta Urgencia</span>
                       <span className="font-medium text-amber-400">{client.alerts.highUrgency}</span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Pending</span>
+                      <span className="text-muted-foreground">Pendientes</span>
                       <span className="font-medium text-blue-400">{client.alerts.pending}</span>
                     </div>
                   </div>
                   {client.trendValue !== 0 && (
                     <div className={`mt-2 text-xs ${client.trend === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {client.trend === 'up' ? '+' : '-'}{Math.abs(client.trendValue)}% vs last month
+                      {client.trend === 'up' ? '+' : '-'}{Math.abs(client.trendValue)}% vs mes anterior
                     </div>
                   )}
                 </CardContent>
@@ -391,7 +424,7 @@ export function ClientAnalyticsDashboard() {
 
         <TabsContent value="distribution" className="space-y-4">
           <ClientDistributionCharts 
-            clients={MOCK_CLIENTS_ANALYTICS} 
+            clients={filteredClientsData} 
             selectedClient={selectedClient}
           />
         </TabsContent>
