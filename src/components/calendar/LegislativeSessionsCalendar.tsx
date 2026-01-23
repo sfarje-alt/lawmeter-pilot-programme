@@ -4,8 +4,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale, Download, Globe, Filter, X, Link2, Copy, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Building2, Users, FileText, ChevronDown, Scale, Download, Globe, Filter, X, Link2, Copy, Check, Video } from "lucide-react";
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +37,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   unifiedUSACombinedData,
   unifiedCanadaData,
   unifiedJapanData,
@@ -46,9 +52,12 @@ import {
 } from "@/data/unifiedMockData";
 import { UnifiedLegislationItem } from "@/types/unifiedLegislation";
 import { CountryFlag } from "@/components/shared/CountryFlag";
+import { usePeruSessions } from "@/hooks/usePeruSessions";
+import { PERU_COMMISSIONS } from "@/types/peruSessions";
 
 // Jurisdiction definitions for filtering (with countryKey for CountryFlag)
 const JURISDICTIONS = [
+  { code: "PER", name: "Peru", countryKey: "PE", region: "LATAM" },
   { code: "USA", name: "United States", countryKey: "USA", region: "NAM" },
   { code: "CAN", name: "Canada", countryKey: "Canada", region: "NAM" },
   { code: "CRI", name: "Costa Rica", countryKey: "Costa Rica", region: "LATAM" },
@@ -212,7 +221,30 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
   const [showSessions, setShowSessions] = useState<boolean>(true);
   const [showEffectiveDates, setShowEffectiveDates] = useState<boolean>(true);
   const [showDeadlines, setShowDeadlines] = useState<boolean>(true);
+  const [showPeruSessions, setShowPeruSessions] = useState<boolean>(true);
   const [selectedJurisdictions, setSelectedJurisdictions] = useState<string[]>(JURISDICTIONS.map(j => j.code));
+  const [selectedCommissions, setSelectedCommissions] = useState<string[]>([]);
+
+  // Load Peru sessions
+  const { sessions: peruSessions } = usePeruSessions();
+
+  // Get unique commissions from loaded sessions
+  const availableCommissions = useMemo(() => {
+    const commissions = new Set<string>();
+    peruSessions.forEach(s => {
+      if (s.commission_name) commissions.add(s.commission_name);
+    });
+    return Array.from(commissions).sort();
+  }, [peruSessions]);
+
+  // Helper to toggle commission selection
+  const toggleCommission = (commission: string) => {
+    setSelectedCommissions(prev => 
+      prev.includes(commission) 
+        ? prev.filter(c => c !== commission)
+        : [...prev, commission]
+    );
+  };
 
   // Helper to toggle jurisdiction selection
   const toggleJurisdiction = (code: string) => {
@@ -708,13 +740,45 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
 
   const sessions = generateMockSessions();
 
+  // Convert Peru sessions to LegislativeSession format
+  const peruSessionsForCalendar = useMemo((): LegislativeSession[] => {
+    if (!showPeruSessions || !selectedJurisdictions.includes("PER")) return [];
+
+    return peruSessions
+      .filter(session => {
+        // Filter by commission if any are selected
+        if (selectedCommissions.length > 0 && !selectedCommissions.includes(session.commission_name)) {
+          return false;
+        }
+        return session.scheduled_at;
+      })
+      .map(session => ({
+        date: parseISO(session.scheduled_at!),
+        sessionNumber: session.external_session_id || "",
+        time: session.scheduled_at ? format(parseISO(session.scheduled_at), "HH:mm") : "",
+        organType: "COMISIÓN",
+        organName: session.commission_name,
+        sessionType: session.session_title?.includes("EXTRAORDINARIA") ? "EXTRAORDINARIA" : "ORDINARIA",
+        status: session.status === "completed" ? "REALIZADA" : session.status === "cancelled" ? "CANCELADA" : "PENDIENTE",
+        agenda: session.session_title ? [session.session_title] : [],
+        jurisdiction: "PER",
+        agendaUrl: session.agenda_url,
+        videoUrl: session.recording?.video_url,
+      }));
+  }, [peruSessions, showPeruSessions, selectedJurisdictions, selectedCommissions]);
+
   // Filtrar sesiones según los filtros seleccionados
   const getFilteredSessions = () => {
-    return sessions.filter(session => {
+    const allSessions = [...sessions, ...peruSessionsForCalendar];
+    return allSessions.filter(session => {
       if (filterOrganType !== "all" && session.organType !== filterOrganType) {
         return false;
       }
       if (filterSessionType !== "all" && session.sessionType !== filterSessionType) {
+        return false;
+      }
+      // Filter by jurisdiction
+      if (session.jurisdiction && !selectedJurisdictions.includes(session.jurisdiction)) {
         return false;
       }
       return true;
@@ -1049,7 +1113,9 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                 <div className="flex flex-wrap gap-2">
                   {JURISDICTIONS.map((jurisdiction) => {
                     const isSelected = selectedJurisdictions.includes(jurisdiction.code);
-                    const count = allEffectiveDates.filter(ed => ed.jurisdiction === jurisdiction.code).length;
+                    const count = jurisdiction.code === "PER" 
+                      ? peruSessionsForCalendar.length 
+                      : allEffectiveDates.filter(ed => ed.jurisdiction === jurisdiction.code).length;
                     return (
                       <Button
                         key={jurisdiction.code}
@@ -1072,6 +1138,85 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                   })}
                 </div>
               </div>
+
+              {/* Peru Commissions filter - only show when Peru is selected */}
+              {selectedJurisdictions.includes("PER") && availableCommissions.length > 0 && (
+                <div className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg border-l-2 border-primary/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Video className="w-4 h-4" />
+                      <CountryFlag countryKey="PE" variant="compact" size="sm" showTooltip={false} />
+                      Comisiones del Perú ({selectedCommissions.length > 0 ? selectedCommissions.length : "Todas"})
+                    </span>
+                    {selectedCommissions.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setSelectedCommissions([])} 
+                        className="text-xs h-7"
+                      >
+                        Mostrar todas
+                      </Button>
+                    )}
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-between text-left font-normal">
+                        <span className="truncate">
+                          {selectedCommissions.length === 0 
+                            ? "Filtrar por comisión..." 
+                            : selectedCommissions.length === 1 
+                              ? selectedCommissions[0] 
+                              : `${selectedCommissions.length} comisiones seleccionadas`}
+                        </span>
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <ScrollArea className="h-[300px] p-3">
+                        <div className="space-y-2">
+                          {availableCommissions.map((commission) => {
+                            const isSelected = selectedCommissions.includes(commission);
+                            const sessionCount = peruSessions.filter(s => s.commission_name === commission).length;
+                            return (
+                              <div 
+                                key={commission} 
+                                className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted cursor-pointer"
+                                onClick={() => toggleCommission(commission)}
+                              >
+                                <Checkbox 
+                                  checked={isSelected} 
+                                  onCheckedChange={() => toggleCommission(commission)}
+                                />
+                                <span className="flex-1 text-sm truncate">{commission}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {sessionCount}
+                                </Badge>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
+                  {/* Selected commissions badges */}
+                  {selectedCommissions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {selectedCommissions.map(commission => (
+                        <Badge 
+                          key={commission} 
+                          variant="secondary" 
+                          className="text-xs cursor-pointer hover:bg-destructive/20"
+                          onClick={() => toggleCommission(commission)}
+                        >
+                          {commission.length > 30 ? commission.substring(0, 30) + "..." : commission}
+                          <X className="ml-1 h-3 w-3" />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -1169,6 +1314,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                         case "CAN":
                           return "bg-gradient-to-r from-blue-950/90 to-blue-900/80 dark:from-blue-950 dark:to-blue-900"; // NAM
                         case "CRI":
+                        case "PER":
                           return "bg-gradient-to-r from-emerald-950/90 to-teal-900/80 dark:from-emerald-950 dark:to-teal-900"; // LATAM
                         case "EU":
                           return "bg-gradient-to-r from-indigo-950/90 to-violet-900/80 dark:from-indigo-950 dark:to-violet-900"; // EU
@@ -1190,6 +1336,7 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                         case "CAN":
                           return "border-blue-500"; // NAM
                         case "CRI":
+                        case "PER":
                           return "border-emerald-500"; // LATAM
                         case "EU":
                           return "border-indigo-500"; // EU
@@ -1273,62 +1420,97 @@ export function LegislativeSessionsCalendar({ alerts = [], clientInterests = [],
                 {/* Sesiones legislativas */}
                 {selectedSessions
                   .sort((a, b) => a.date.getTime() - b.date.getTime())
-                  .map((session, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "p-4 rounded-lg border-l-4 bg-card hover:shadow-md transition-shadow",
-                      getStatusColor(session.status)
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={cn("mt-1", getStatusColor(session.status))}>
-                        {getOrganIcon(session.organType)}
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <h4 className="font-semibold text-sm">
-                          {session.organName}
-                        </h4>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="outline" className="text-xs">
-                            {session.organType}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {session.sessionType}
-                          </Badge>
-                          <Badge
-                            variant={getStatusBadgeVariant(session.status)}
-                            className="text-xs"
-                          >
-                            {session.status}
-                          </Badge>
-                          {session.sessionNumber && (
-                            <Badge variant="outline" className="text-xs">
-                              Sesión #{session.sessionNumber}
-                            </Badge>
-                          )}
-                        </div>
-                        {session.agenda && session.agenda.length > 0 && (
-                          <div className="mt-2 pt-2 border-t">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Agenda:</p>
-                            <ul className="text-xs text-muted-foreground space-y-1">
-                              {session.agenda.map((item, i) => (
-                                <li key={i} className="flex items-start gap-1">
-                                  <ChevronDown className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                  .map((session, index) => {
+                    const isPeruSession = session.jurisdiction === "PER";
+                    const peruSession = isPeruSession ? (session as any) : null;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={cn(
+                          "p-4 rounded-lg border-l-4 bg-card hover:shadow-md transition-shadow",
+                          getStatusColor(session.status)
                         )}
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          {format(session.date, "MMM d, yyyy 'at' HH:mm")}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={cn("mt-1", getStatusColor(session.status))}>
+                            {isPeruSession ? <Video className="w-4 h-4" /> : getOrganIcon(session.organType)}
+                          </div>
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              {session.jurisdiction && (
+                                <CountryFlag 
+                                  countryKey={getJurisdictionCountryKey(session.jurisdiction)} 
+                                  variant="compact" 
+                                  size="sm" 
+                                  showTooltip={false} 
+                                />
+                              )}
+                              <h4 className="font-semibold text-sm">
+                                {session.organName}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline" className="text-xs">
+                                {session.organType}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {session.sessionType}
+                              </Badge>
+                              <Badge
+                                variant={getStatusBadgeVariant(session.status)}
+                                className="text-xs"
+                              >
+                                {session.status}
+                              </Badge>
+                              {session.sessionNumber && (
+                                <Badge variant="outline" className="text-xs">
+                                  Sesión #{session.sessionNumber}
+                                </Badge>
+                              )}
+                              {peruSession?.videoUrl && (
+                                <Badge className="text-xs bg-red-600 hover:bg-red-700">
+                                  <Video className="w-3 h-3 mr-1" />
+                                  Video
+                                </Badge>
+                              )}
+                            </div>
+                            {session.agenda && session.agenda.length > 0 && (
+                              <div className="mt-2 pt-2 border-t">
+                                <p className="text-xs font-medium text-muted-foreground mb-1">Agenda:</p>
+                                <ul className="text-xs text-muted-foreground space-y-1">
+                                  {session.agenda.map((item, i) => (
+                                    <li key={i} className="flex items-start gap-1">
+                                      <ChevronDown className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                      <span>{item}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {format(session.date, "MMM d, yyyy 'at' HH:mm")}
+                              </span>
+                              {peruSession?.agendaUrl && (
+                                <a 
+                                  href={peruSession.agendaUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-primary hover:underline"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <FileText className="w-3 h-3" />
+                                  Ver Agenda
+                                </a>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
             )}
           </div>
