@@ -1,4 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { ClientAlertTimelineChart } from './ClientAlertTimelineChart';
 
 interface ClientData {
   id: string;
@@ -52,7 +53,10 @@ export function ClientComparisonChart({ clients }: ClientComparisonChartProps) {
   const clientKeys = clients.map(c => c.name.split(' ')[0]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Timeline Chart - Alert Evolution */}
+      <ClientAlertTimelineChart clients={clients} />
+
       {/* Bar Chart - Alerts Comparison */}
       <div>
         <h4 className="text-sm font-medium text-foreground mb-4">Alert Volume Comparison</h4>
