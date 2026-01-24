@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
 import { ALL_MOCK_ALERTS, MOCK_CLIENTS, PeruAlert } from "@/data/peruAlertsMockData";
 import { DATE_MODE_OPTIONS } from "./types";
 import { 
@@ -19,7 +18,6 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { toast } from "sonner";
 
 // PDF Styles (same as ReportPDFGenerator)
 const styles = StyleSheet.create({
@@ -38,6 +36,7 @@ const styles = StyleSheet.create({
   footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 8, color: '#a0aec0' },
   summary: { backgroundColor: '#edf2f7', padding: 15, marginBottom: 20, borderRadius: 4 },
   summaryItem: { fontSize: 10, marginBottom: 5 },
+  sourceLink: { fontSize: 8, color: '#2b6cb0', textDecoration: 'underline', marginTop: 4 },
 });
 
 // PDF Document Component
@@ -88,6 +87,11 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel }: { alerts: PeruAlert[
                     <Text style={styles.alertMeta}>
                       Autor: {bill.author || 'N/A'} | Grupo: {bill.parliamentary_group || 'N/A'}
                     </Text>
+                    {bill.source_url && (
+                      <Link src={bill.source_url} style={styles.sourceLink}>
+                        Fuente Oficial
+                      </Link>
+                    )}
                     {bill.expert_commentary && (
                       <View style={styles.commentary}>
                         <Text style={styles.commentaryLabel}>COMENTARIO EXPERTO:</Text>
@@ -111,6 +115,11 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel }: { alerts: PeruAlert[
                   <View key={norm.id} style={styles.alertCard}>
                     <Text style={styles.alertTitle}>{norm.legislation_title}</Text>
                     <Text style={styles.alertMeta}>Publicación: {norm.publication_date || 'N/A'}</Text>
+                    {norm.source_url && (
+                      <Link src={norm.source_url} style={styles.sourceLink}>
+                        Fuente Oficial
+                      </Link>
+                    )}
                   </View>
                 ))}
               </View>
