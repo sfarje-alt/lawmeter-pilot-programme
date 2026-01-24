@@ -26,6 +26,11 @@ export function Step07TypeOfLaws({ config, onUpdate }: Step07Props) {
     onUpdate({ entities: newEntities });
   };
 
+  const selectAllNormTypes = () => onUpdate({ normTypes: [...NORM_TYPE_OPTIONS] });
+  const clearAllNormTypes = () => onUpdate({ normTypes: [] });
+  const selectAllEntities = () => onUpdate({ entities: [...ENTITIES] });
+  const clearAllEntities = () => onUpdate({ entities: [] });
+
   // Skip this step if only_bills is selected
   if (config.legislationStage === 'only_bills') {
     return (
@@ -62,11 +67,20 @@ export function Step07TypeOfLaws({ config, onUpdate }: Step07Props) {
           <div className="flex items-center gap-2 mb-4">
             <Scale className="h-4 w-4 text-primary" />
             <span className="font-medium">Tipo de Instrumento</span>
-            {config.normTypes.length > 0 && (
-              <Badge variant="secondary" className="ml-auto">
-                {config.normTypes.length} seleccionados
-              </Badge>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {config.normTypes.length > 0 && (
+                <Badge variant="secondary">
+                  {config.normTypes.length}
+                </Badge>
+              )}
+              <button onClick={selectAllNormTypes} className="text-xs text-primary hover:underline">
+                Todos
+              </button>
+              <span className="text-muted-foreground text-xs">|</span>
+              <button onClick={clearAllNormTypes} className="text-xs text-muted-foreground hover:underline">
+                Ninguno
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {NORM_TYPE_OPTIONS.map(type => (
@@ -93,11 +107,20 @@ export function Step07TypeOfLaws({ config, onUpdate }: Step07Props) {
           <div className="flex items-center gap-2 mb-4">
             <Building2 className="h-4 w-4 text-primary" />
             <span className="font-medium">Entidad Emisora</span>
-            {config.entities.length > 0 && (
-              <Badge variant="secondary" className="ml-auto">
-                {config.entities.length} seleccionados
-              </Badge>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {config.entities.length > 0 && (
+                <Badge variant="secondary">
+                  {config.entities.length}
+                </Badge>
+              )}
+              <button onClick={selectAllEntities} className="text-xs text-primary hover:underline">
+                Todos
+              </button>
+              <span className="text-muted-foreground text-xs">|</span>
+              <button onClick={clearAllEntities} className="text-xs text-muted-foreground hover:underline">
+                Ninguno
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3 max-h-[250px] overflow-y-auto">
             {ENTITIES.map(entity => (

@@ -64,6 +64,13 @@ export function Step08BusinessFilters({ config, onUpdate }: Step08Props) {
     onUpdate({ themes: newThemes });
   };
 
+  const selectAllSectors = () => onUpdate({ sectors: [...SECTORS] });
+  const clearAllSectors = () => onUpdate({ sectors: [] });
+  const selectAllAreas = () => onUpdate({ areas: [...LEGAL_AREAS] });
+  const clearAllAreas = () => onUpdate({ areas: [] });
+  const selectAllThemes = () => onUpdate({ themes: [...LAW_THEMES] });
+  const clearAllThemes = () => onUpdate({ themes: [] });
+
   return (
     <div className="space-y-6">
       <div>
@@ -79,11 +86,20 @@ export function Step08BusinessFilters({ config, onUpdate }: Step08Props) {
           <div className="flex items-center gap-2 mb-4">
             <Briefcase className="h-4 w-4 text-primary" />
             <span className="font-medium">Sector Económico</span>
-            {config.sectors.length > 0 && (
-              <Badge variant="secondary" className="ml-auto">
-                {config.sectors.length}
-              </Badge>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {config.sectors.length > 0 && (
+                <Badge variant="secondary">
+                  {config.sectors.length}
+                </Badge>
+              )}
+              <button onClick={selectAllSectors} className="text-xs text-primary hover:underline">
+                Todos
+              </button>
+              <span className="text-muted-foreground text-xs">|</span>
+              <button onClick={clearAllSectors} className="text-xs text-muted-foreground hover:underline">
+                Ninguno
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-2 max-h-[120px] overflow-y-auto">
             {SECTORS.map(sector => (
@@ -110,11 +126,20 @@ export function Step08BusinessFilters({ config, onUpdate }: Step08Props) {
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="h-4 w-4 text-primary" />
             <span className="font-medium">Área Legal</span>
-            {config.areas.length > 0 && (
-              <Badge variant="secondary" className="ml-auto">
-                {config.areas.length}
-              </Badge>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {config.areas.length > 0 && (
+                <Badge variant="secondary">
+                  {config.areas.length}
+                </Badge>
+              )}
+              <button onClick={selectAllAreas} className="text-xs text-primary hover:underline">
+                Todos
+              </button>
+              <span className="text-muted-foreground text-xs">|</span>
+              <button onClick={clearAllAreas} className="text-xs text-muted-foreground hover:underline">
+                Ninguno
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-2 max-h-[120px] overflow-y-auto">
             {LEGAL_AREAS.map(area => (
@@ -141,11 +166,20 @@ export function Step08BusinessFilters({ config, onUpdate }: Step08Props) {
           <div className="flex items-center gap-2 mb-4">
             <Tag className="h-4 w-4 text-primary" />
             <span className="font-medium">Temática</span>
-            {config.themes.length > 0 && (
-              <Badge variant="secondary" className="ml-auto">
-                {config.themes.length}
-              </Badge>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {config.themes.length > 0 && (
+                <Badge variant="secondary">
+                  {config.themes.length}
+                </Badge>
+              )}
+              <button onClick={selectAllThemes} className="text-xs text-primary hover:underline">
+                Todos
+              </button>
+              <span className="text-muted-foreground text-xs">|</span>
+              <button onClick={clearAllThemes} className="text-xs text-muted-foreground hover:underline">
+                Ninguno
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {LAW_THEMES.map(theme => (
