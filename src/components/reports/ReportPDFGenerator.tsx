@@ -1,8 +1,7 @@
 import { useMemo } from "react";
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ReportConfig, DATE_MODE_OPTIONS } from "./types";
 import { ALL_MOCK_ALERTS, MOCK_CLIENTS, PeruAlert } from "@/data/peruAlertsMockData";
 import { ArrowLeft, Download, FileText } from "lucide-react";
@@ -31,6 +30,7 @@ const styles = StyleSheet.create({
   footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 8, color: '#a0aec0' },
   summary: { backgroundColor: '#edf2f7', padding: 15, marginBottom: 20, borderRadius: 4 },
   summaryItem: { fontSize: 10, marginBottom: 5 },
+  sourceLink: { fontSize: 8, color: '#2b6cb0', textDecoration: 'underline', marginTop: 4 },
 });
 
 // PDF Document Component
@@ -89,6 +89,11 @@ const ReportPDF = ({ config, alerts, clientName }: { config: ReportConfig; alert
                     <Text style={styles.alertMeta}>
                       Autor: {bill.author || 'N/A'} | Grupo: {bill.parliamentary_group || 'N/A'} | Fecha: {bill.stage_date || bill.project_date || 'N/A'}
                     </Text>
+                    {bill.source_url && (
+                      <Link src={bill.source_url} style={styles.sourceLink}>
+                        Fuente Oficial
+                      </Link>
+                    )}
                     {config.includeExpertCommentary && bill.expert_commentary && (
                       <View style={styles.commentary}>
                         <Text style={styles.commentaryLabel}>COMENTARIO EXPERTO:</Text>
@@ -117,6 +122,11 @@ const ReportPDF = ({ config, alerts, clientName }: { config: ReportConfig; alert
                     </Text>
                     {norm.legislation_summary && (
                       <Text style={{ fontSize: 9, marginTop: 4 }}>{norm.legislation_summary}</Text>
+                    )}
+                    {norm.source_url && (
+                      <Link src={norm.source_url} style={styles.sourceLink}>
+                        Fuente Oficial
+                      </Link>
                     )}
                     {config.includeExpertCommentary && norm.expert_commentary && (
                       <View style={styles.commentary}>
