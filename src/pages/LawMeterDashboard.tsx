@@ -244,7 +244,7 @@ export default function LawMeterDashboard() {
             </Badge>
           </header>
 
-          <div className="container mx-auto px-6 py-8">
+          <div className="flex-1 px-6 py-6 overflow-auto">
             {renderContent()}
           </div>
         </SidebarInset>
