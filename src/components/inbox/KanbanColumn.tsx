@@ -25,7 +25,7 @@ export function KanbanColumn({
   hasCommentaryForClient
 }: KanbanColumnProps) {
   return (
-    <div className="flex flex-col min-w-[300px] max-w-[300px] bg-card/30 rounded-lg border border-border/30">
+    <div className="flex flex-col flex-1 min-w-[320px] bg-card/30 rounded-lg border border-border/30">
       {/* Column Header */}
       <div className="flex items-center gap-2 p-3 border-b border-border/30">
         <div className={`w-2 h-2 rounded-full ${color}`} />

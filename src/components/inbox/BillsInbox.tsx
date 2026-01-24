@@ -320,25 +320,20 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
       />
 
       {/* Kanban Board */}
-      <div className="relative">
-        <ScrollArea className="w-full pb-4">
-          <div className="flex gap-4 min-w-max">
-            {BILLS_KANBAN_COLUMNS.map((column) => (
-              <KanbanColumn
-                key={column.id}
-                id={column.id}
-                label={column.label}
-                color={column.color}
-                alerts={alertsByStage[column.id as BillKanbanStage] || []}
-                onAlertClick={handleAlertClick}
-                onTogglePin={onTogglePin}
-                selectedClientId={selectedClientId}
-                hasCommentaryForClient={hasCommentaryForClient}
-              />
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+      <div className="flex gap-4 w-full">
+        {BILLS_KANBAN_COLUMNS.map((column) => (
+          <KanbanColumn
+            key={column.id}
+            id={column.id}
+            label={column.label}
+            color={column.color}
+            alerts={alertsByStage[column.id as BillKanbanStage] || []}
+            onAlertClick={handleAlertClick}
+            onTogglePin={onTogglePin}
+            selectedClientId={selectedClientId}
+            hasCommentaryForClient={hasCommentaryForClient}
+          />
+        ))}
       </div>
 
       {/* Alert Detail Drawer */}
