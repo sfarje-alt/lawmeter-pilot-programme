@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Lock, User, Loader2, ArrowLeft, Building2, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MOCK_CLIENTS, PRIMARY_CLIENT_ID } from "@/data/peruAlertsMockData";
 
 interface SignUpFormProps {
   onBack: () => void;
@@ -14,7 +16,8 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [accountType, setAccountType] = useState<'admin' | 'user'>('admin'); // admin = legal team, user = client
+  const [accountType, setAccountType] = useState<'admin' | 'user'>('admin');
+  const [selectedClientId, setSelectedClientId] = useState<string>(PRIMARY_CLIENT_ID);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signUp } = useAuth();
@@ -33,8 +36,14 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
       return;
     }
 
+    if (accountType === 'user' && !selectedClientId) {
+      setError("Please select a client organization.");
+      return;
+    }
+
     setIsLoading(true);
-    const { error } = await signUp(email.trim(), password, fullName.trim(), accountType);
+    const clientId = accountType === 'user' ? selectedClientId : undefined;
+    const { error } = await signUp(email.trim(), password, fullName.trim(), accountType, clientId);
     setIsLoading(false);
 
     if (error) {
@@ -88,6 +97,25 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
           </button>
         </div>
       </div>
+
+      {/* Client Selection (only for Client account type) */}
+      {accountType === 'user' && (
+        <div className="space-y-2">
+          <Label>Organization</Label>
+          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your organization" />
+            </SelectTrigger>
+            <SelectContent>
+              {MOCK_CLIENTS.map(client => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="fullName">Full Name</Label>
