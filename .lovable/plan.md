@@ -1,317 +1,150 @@
 
-# Plan: Generador Inteligente de Reportes
+# Plan: Fix FarmaSalud Client User Account Configuration
 
-## Resumen Ejecutivo
+## Problem Summary
 
-Se implementará un sistema completo de generación de reportes legislativos profesionales que permitirá a los administradores configurar, generar y programar reportes personalizados por cliente. Los reportes incluirán proyectos de ley, normas y sesiones legislativas, con subdivisión por estado procesal y comentarios expertos.
+The FarmaSalud user account (`farmasaludperu@test.com`) is incorrectly acting as an admin because:
 
-## Alcance del Feature
+1. **Database Profile Data is Incorrect**:
+   - Current: `account_type: 'admin'`, `client_id: null`
+   - Expected: `account_type: 'user'`, `client_id: 'client-farmasalud'`
 
-### Funcionalidades Principales
+2. **Client ID Mismatch in Code**:
+   - `INVITATION_CODES` uses `'farmasalud-peru'`
+   - `PRIMARY_CLIENT_ID` constant is `'client-farmasalud'`
+   - These must match for filtering to work
 
-1. **Wizard de Configuración de Reportes (16 pasos según screenshot)**
-   - Tipo de reporte (Diario, Semanal, Personalizado)
-   - Acción (Generar ahora, Programar, Ver historial)
-   - Audiencia (Selector de cliente, área opcional)
-   - Rango de fechas (Hoy, 7 días, 30 días, personalizado)
-   - Filtros de etapa (Solo Bills, Bills + Enacted, Solo Enacted)
-   - Estados de PLs (17 estados procesales)
-   - Tipos de normas (Ley, Decreto Supremo, Resoluciones, etc.)
-   - Filtros de negocio (Sector, Área, Tema)
-   - Opciones de contenido
-   - Opciones de analytics
-   - Output y delivery (PDF o DOCX)
-   - Configuración de programación (frecuencia, día, hora, timezone)
-   - Destinatarios (Email, WhatsApp)
-   - Preview y confirmación
-   - Audit trail
+3. **Database Trigger Doesn't Save client_id**:
+   - The `handle_new_user()` trigger only extracts `full_name` and `account_type` from user metadata, ignoring `client_id`
 
-2. **Generación de PDF Profesional**
-   - Portada con logo y datos del cliente
-   - Sección de Proyectos de Ley subdividida por estado procesal
-   - Sección de Normas agrupadas por institución
-   - Sección de Sesiones con resúmenes de AI
-   - Comentario experto por cada alerta
-   - Diseño profesional y consistente
+---
 
-3. **Integración con Datos Existentes**
-   - Usar alertas publicadas al cliente desde el Inbox
-   - Respetar filtros del perfil del cliente
-   - Incluir comentarios expertos por cliente
+## Implementation Steps
 
-## Arquitectura Técnica
+### Step 1: Fix the Existing FarmaSalud Profile in Database
 
-### Nuevos Archivos a Crear
+Update the existing profile to have the correct values:
 
-```text
-src/components/reports/
-├── ReportGenerator.tsx           # Componente principal del wizard
-├── ReportWizardSteps/
-│   ├── Step01TypeOfReport.tsx    # Tipo de reporte
-│   ├── Step02ChooseAction.tsx    # Acción a realizar
-│   ├── Step03Audience.tsx        # Selector de cliente
-│   ├── Step04DateRange.tsx       # Rango de fechas
-│   ├── Step05Stage.tsx           # Etapa legislativa
-│   ├── Step06BillsStatus.tsx     # Estados procesales
-│   ├── Step07TypeOfLaws.tsx      # Tipos de normas
-│   ├── Step08BusinessFilters.tsx # Filtros de negocio
-│   ├── Step09ContentOptions.tsx  # Opciones de contenido
-│   ├── Step10AnalyticsOptions.tsx# Opciones de analytics
-│   ├── Step11OutputDelivery.tsx  # Formato de salida
-│   ├── Step12ScheduleSettings.tsx# Programación
-│   ├── Step13Recipients.tsx      # Destinatarios
-│   ├── Step14PreviewConfirm.tsx  # Vista previa
-│   └── Step15AuditTrail.tsx      # Historial
-├── ReportPreview.tsx             # Vista previa del reporte
-├── ReportPDFGenerator.tsx        # Generador de PDF
-├── ReportHistory.tsx             # Historial de reportes
-├── ReportScheduler.tsx           # Programador de reportes
-└── types.ts                      # Tipos para reportes
+```sql
+UPDATE profiles 
+SET 
+  account_type = 'user',
+  client_id = 'client-farmasalud'
+WHERE email = 'farmasaludperu@test.com';
 ```
 
-### Dependencia Nueva Requerida
-- `@react-pdf/renderer` - Para generación de PDF profesional client-side
+### Step 2: Align Client IDs in SignUpForm
 
-### Flujo de Datos
+**File: `src/components/auth/SignUpForm.tsx`**
 
-```text
-+-------------------+       +------------------+       +-------------------+
-|   Report Wizard   |  -->  |  Filter Alerts   |  -->  |  Generate PDF     |
-|   (16 Steps)      |       |  (Published to   |       |  (Professional    |
-|                   |       |   Client)        |       |   Layout)         |
-+-------------------+       +------------------+       +-------------------+
-         |                          |                          |
-         v                          v                          v
-+-------------------+       +------------------+       +-------------------+
-| Client Profile    |       | peruAlertsMock   |       | Download/Email    |
-| Settings          |       | Data.ts          |       | Distribution      |
-+-------------------+       +------------------+       +-------------------+
-```
-
-## Implementación Detallada
-
-### Paso 1: Tipos y Interfaces
+Update the `INVITATION_CODES` to use the correct `PRIMARY_CLIENT_ID`:
 
 ```typescript
-// src/components/reports/types.ts
+// Before:
+const INVITATION_CODES: Record<string, { clientId: string; clientName: string }> = {
+  'FARMA2024': { clientId: 'farmasalud-peru', clientName: 'FarmaSalud Perú S.A.C.' },
+  ...
+};
 
-export type ReportType = 'daily' | 'weekly' | 'custom';
-export type ReportAction = 'generate_now' | 'schedule' | 'view_history';
-export type OutputFormat = 'pdf' | 'docx';
-export type DateMode = 'today' | 'last_7' | 'last_15' | 'last_30' | 'last_60' | 'last_90' | 'custom';
-export type LegislationStage = 'only_bills' | 'bills_and_enacted' | 'only_enacted';
-
-export interface ReportConfig {
-  // Step 1: Type of Report
-  reportType: ReportType;
-  
-  // Step 2: Action
-  action: ReportAction;
-  
-  // Step 3: Audience
-  clientIds: string[];
-  targetAreas?: string[];
-  
-  // Step 4: Date Range
-  dateMode: DateMode;
-  customDateFrom?: Date;
-  customDateTo?: Date;
-  
-  // Step 5: Stage
-  legislationStage: LegislationStage;
-  
-  // Step 6: Bills Status
-  billsStatuses: string[];  // 17 estados procesales
-  
-  // Step 7: Type of Laws (Normas)
-  normTypes: string[];
-  entities: string[];
-  
-  // Step 8: Business Filters
-  sectors: string[];
-  areas: string[];
-  themes: string[];  // Law branches
-  
-  // Step 9: Content Options
-  includeSessions: boolean;
-  includeExpertCommentary: boolean;
-  
-  // Step 10: Analytics Options
-  includeAnalytics: boolean;
-  analyticsSections: string[];
-  
-  // Step 11: Output & Delivery
-  outputFormat: OutputFormat;
-  
-  // Step 12: Schedule (only for scheduled reports)
-  frequency?: 'daily' | 'weekly';
-  weeklyDay?: number;
-  scheduleTime?: string;
-  timezone?: string;
-  sendOnlyIfAlerts?: boolean;
-  
-  // Step 13: Recipients
-  emailRecipients: string[];
-  whatsappRecipients: string[];
-}
-
-export interface ReportAuditEntry {
-  id: string;
-  generatedAt: string;
-  generatedBy: string;
-  reportType: ReportType;
-  clientIds: string[];
-  filters: Partial<ReportConfig>;
-  status: 'sent' | 'failed' | 'pending';
-  channels: ('email' | 'whatsapp')[];
-  downloadUrl?: string;
-}
+// After:
+const INVITATION_CODES: Record<string, { clientId: string; clientName: string }> = {
+  'FARMA2024': { clientId: 'client-farmasalud', clientName: 'FarmaSalud Perú S.A.C.' },
+  ...
+};
 ```
 
-### Paso 2: Estructura del PDF
+### Step 3: Update Database Trigger to Include client_id
 
-```text
-+================================================+
-|                                                |
-|  [LOGO]     REPORTE LEGISLATIVO                |
-|             FarmaSalud Perú S.A.C.             |
-|             23 de Enero 2026                   |
-|             Período: Últimos 7 días            |
-|                                                |
-+================================================+
+**Database Migration**: Update `handle_new_user()` function:
 
-+------------------------------------------------+
-| RESUMEN EJECUTIVO                              |
-+------------------------------------------------+
-| • 5 Proyectos de Ley relevantes               |
-| • 3 Normas publicadas                          |
-| • 2 Sesiones de comisión monitoreadas         |
-+------------------------------------------------+
-
-+================================================+
-| PROYECTOS DE LEY                               |
-+================================================+
-
-+--- PRESENTADO (2) -----------------------------|
-|                                                |
-| PL 13172/2025-CR                              |
-| Título: PROYECTO DE LEY QUE CREA LA AUTORIDAD |
-|         NACIONAL DE SALUD...                   |
-| Autor: Bustamante Donayre, Carlos             |
-| Grupo: Fuerza Popular                          |
-| Fecha: 11/11/2025                             |
-|                                                |
-| COMENTARIO EXPERTO:                            |
-| Se modifican los principios de la Ley...       |
-|                                                |
-+------------------------------------------------+
-
-+--- EN COMISIÓN (2) ----------------------------|
-| ...                                            |
-+------------------------------------------------+
-
-+--- DICTAMEN (1) -------------------------------|
-| ...                                            |
-+------------------------------------------------+
-
-+================================================+
-| NORMAS PUBLICADAS                              |
-+================================================+
-
-+--- MINSA (2) ----------------------------------|
-| ...                                            |
-+------------------------------------------------+
-
-+--- ESSALUD (1) --------------------------------|
-| ...                                            |
-+------------------------------------------------+
-
-+================================================+
-| SESIONES DE COMISIÓN                           |
-+================================================+
-| ...                                            |
-+================================================+
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, account_type, client_id)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    COALESCE((NEW.raw_user_meta_data->>'account_type')::app_role, 'user'),
+    NEW.raw_user_meta_data->>'client_id'
+  );
+  RETURN NEW;
+END;
+$function$;
 ```
 
-### Paso 3: Integración en Sidebar
+### Step 4: Verify Client Portal Logic
 
-El sidebar ya tiene un ítem "Reports" definido. Se conectará el componente del wizard a esta sección.
+Confirm the `useClientUser` hook correctly identifies client users:
 
-### Paso 4: Lógica de Filtrado
+**File: `src/hooks/useClientUser.ts`** (no changes needed, logic is correct):
+- `isClientUser = account_type === 'user' && !!client_id`
+- `clientName` is derived from `PRIMARY_CLIENT_ID` match
 
-```typescript
-// Pseudocódigo del filtrado de alertas para el reporte
-function getAlertsForReport(config: ReportConfig): PeruAlert[] {
-  return ALL_MOCK_ALERTS.filter(alert => {
-    // Solo alertas publicadas al cliente seleccionado
-    if (alert.status !== 'published') return false;
-    if (!config.clientIds.includes(alert.client_id)) return false;
-    
-    // Filtrar por rango de fechas
-    const alertDate = parseDate(alert.stage_date || alert.publication_date);
-    if (!isWithinDateRange(alertDate, config)) return false;
-    
-    // Filtrar por tipo de legislación
-    if (config.legislationStage === 'only_bills' && alert.legislation_type !== 'proyecto_de_ley') return false;
-    if (config.legislationStage === 'only_enacted' && alert.legislation_type !== 'norma') return false;
-    
-    // Filtrar por estados (para PLs)
-    if (alert.legislation_type === 'proyecto_de_ley') {
-      if (config.billsStatuses.length && !config.billsStatuses.includes(alert.current_stage)) return false;
-    }
-    
-    // Filtrar por tipo de norma
-    if (alert.legislation_type === 'norma') {
-      if (config.normTypes.length && !matchesNormType(alert, config.normTypes)) return false;
-      if (config.entities.length && !config.entities.includes(alert.entity)) return false;
-    }
-    
-    // Filtrar por sector/área/tema
-    if (config.sectors.length && !matchesSector(alert, config.sectors)) return false;
-    if (config.areas.length && !matchesArea(alert, config.areas)) return false;
-    
-    return true;
-  });
-}
-```
+### Step 5: Verify Component Data Filtering
 
-## Plan de Implementación
+The following components already filter correctly once the profile data is fixed:
 
-### Fase 1: Estructura Base
-1. Crear tipos e interfaces en `src/components/reports/types.ts`
-2. Crear componente principal `ReportGenerator.tsx` con navegación del wizard
-3. Implementar los primeros 8 pasos del wizard (configuración de contenido)
+| Component | Filter Logic |
+|-----------|--------------|
+| `ClientInbox.tsx` | Shows alerts where `status === 'published'` AND `client_id` or `primary_client_id` matches |
+| `ClientCalendar.tsx` | Uses same published alerts filter |
+| `ClientAnalytics.tsx` | Filters data specific to clientId |
+| `ClientReports.tsx` | Shows reports filtered by client |
+| `ClientProfileView.tsx` | Displays client config in read-only mode |
+| `ClientSettings.tsx` | Shows account, notifications, invoicing (terms), and Calendly embed |
 
-### Fase 2: Generación de PDF
-1. Instalar `@react-pdf/renderer`
-2. Crear `ReportPDFGenerator.tsx` con el diseño profesional
-3. Implementar la lógica de agrupación por estado procesal
-4. Agregar comentarios expertos por alerta
+### Step 6: Verify Navigation Routing
 
-### Fase 3: Preview y Descarga
-1. Implementar `ReportPreview.tsx` para vista previa
-2. Agregar botón de descarga de PDF
-3. Conectar con la pestaña "Reports" en el sidebar
+**File: `src/components/layout/AppSidebar.tsx`**
+- Uses `isClientUser` from hook to show client menu items
+- Shows "Portal Cliente" header and "Solo Lectura" badge
 
-### Fase 4: Programación y Historial
-1. Implementar `ReportScheduler.tsx` (configuración de programación)
-2. Crear `ReportHistory.tsx` para audit trail
-3. Almacenar configuraciones programadas (mock inicial)
+**File: `src/pages/LawMeterDashboard.tsx`**
+- Switches between admin and client views based on `isClientUser`
+- Sets default tab to `"client-inbox"` for client users
 
-### Fase 5: Integración Final
-1. Conectar el filtrado con datos de alertas publicadas del Inbox
-2. Agregar validaciones de formulario
-3. Pulir diseño y UX
+---
 
-## Consideraciones Importantes
+## Technical Details
 
-1. **Datos Mock**: Inicialmente, los reportes usarán datos mock de `peruAlertsMockData.ts`. Las alertas "publicadas" al cliente serán las que aparezcan en el reporte.
+### Files to Modify
 
-2. **Estados Procesales**: Se usará la lista canónica de 17 estados de `ALL_LEGISLATIVE_STAGES` para garantizar consistencia con Inbox y Analytics.
+1. **Database Migration** (SQL):
+   - Update existing FarmaSalud profile
+   - Update `handle_new_user()` trigger to include `client_id`
 
-3. **Comentarios Expertos**: El PDF mostrará el `expert_commentary` de cada alerta o el `client_commentaries` específico para el cliente seleccionado.
+2. **`src/components/auth/SignUpForm.tsx`**:
+   - Change `FARMA2024` clientId from `'farmasalud-peru'` to `'client-farmasalud'`
 
-4. **Sesiones**: Se incluirán las sesiones pineadas y publicadas al cliente desde la sección Sessions.
+### Expected Behavior After Fix
 
-5. **PDF vs DOCX**: La implementación inicial soportará solo PDF. DOCX puede agregarse posteriormente.
+When user logs in as `farmasaludperu@test.com`:
 
+| Feature | Behavior |
+|---------|----------|
+| **Sidebar** | Shows client menu: Alertas, Mi Perfil, Reportes, Analytics, Calendario |
+| **Header** | Shows "Portal Cliente" and "Solo Lectura" badge |
+| **Inbox** | Only shows published alerts with `client_id = 'client-farmasalud'` |
+| **Profile** | Read-only view of client monitoring configuration |
+| **Reports** | View-only history and scheduled reports |
+| **Analytics** | Filtered charts specific to this client |
+| **Calendar** | Only published alert dates for this client |
+| **Settings** | Account info, notifications toggles, invoicing terms, Calendly embed |
+
+---
+
+## Testing Checklist
+
+After implementation:
+
+1. Log in as `farmasaludperu@test.com` / `FarmaSaludPeru`
+2. Verify sidebar shows "Portal Cliente" header
+3. Verify "Solo Lectura" badge appears
+4. Navigate through each section and confirm read-only behavior
+5. Create a new client user with `FARMA2024` code and verify profile is created correctly
