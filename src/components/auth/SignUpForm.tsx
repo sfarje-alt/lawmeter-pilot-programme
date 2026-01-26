@@ -7,10 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Invitation codes mapping (in production, this would be validated server-side)
+// Must match PRIMARY_CLIENT_ID from peruAlertsMockData for FarmaSalud
 const INVITATION_CODES: Record<string, { clientId: string; clientName: string }> = {
-  'FARMA2024': { clientId: 'farmasalud-peru', clientName: 'FarmaSalud Perú S.A.C.' },
-  'BANCO2024': { clientId: 'banco-nacional', clientName: 'Banco Nacional' },
-  'MINERA2024': { clientId: 'minera-andina', clientName: 'Minera Andina S.A.' },
+  'FARMA2024': { clientId: 'client-farmasalud', clientName: 'FarmaSalud Perú S.A.C.' },
+  'BANCO2024': { clientId: 'client-banco-nacional', clientName: 'Banco Nacional' },
+  'MINERA2024': { clientId: 'client-minera-andina', clientName: 'Minera Andina S.A.' },
 };
 
 interface SignUpFormProps {
