@@ -139,9 +139,24 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
               disabled={isLoading}
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Contact your administrator if you don't have an invitation code.
-          </p>
+          {invitationCode.trim() && validateInvitationCode(invitationCode).valid && (
+            <div className="flex items-center gap-2 p-2 bg-primary/10 border border-primary/30 rounded-md">
+              <Building2 className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary">
+                Organization: <strong>{validateInvitationCode(invitationCode).clientName}</strong>
+              </span>
+            </div>
+          )}
+          {invitationCode.trim() && !validateInvitationCode(invitationCode).valid && (
+            <p className="text-xs text-destructive">
+              Invalid code. Contact your administrator.
+            </p>
+          )}
+          {!invitationCode.trim() && (
+            <p className="text-xs text-muted-foreground">
+              Contact your administrator if you don't have an invitation code.
+            </p>
+          )}
         </div>
       )}
 
