@@ -4,23 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scale, FileText, Search, Eye, Calendar, User, Building2, ExternalLink, Lightbulb } from "lucide-react";
-import { ALL_MOCK_ALERTS, PeruAlert, MOCK_CLIENTS, IMPACT_LEVELS } from "@/data/peruAlertsMockData";
+import { PeruAlert, IMPACT_LEVELS } from "@/data/peruAlertsMockData";
 import { useClientUser } from "@/hooks/useClientUser";
+import { useAlerts } from "@/contexts/AlertsContext";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export function ClientInbox() {
   const { clientId, clientName } = useClientUser();
+  const { getPublishedAlertsForClient } = useAlerts();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
 
-  // Filter only published alerts for this client
+  // Get published alerts for this client from shared context
   const publishedAlerts = useMemo(() => {
-    return ALL_MOCK_ALERTS.filter(alert => 
-      alert.status === "published" && 
-      (alert.client_id === clientId || alert.primary_client_id === clientId)
-    );
-  }, [clientId]);
+    if (!clientId) return [];
+    return getPublishedAlertsForClient(clientId);
+  }, [clientId, getPublishedAlertsForClient]);
 
   // Further filter by search
   const filteredAlerts = useMemo(() => {

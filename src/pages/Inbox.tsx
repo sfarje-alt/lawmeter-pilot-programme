@@ -5,10 +5,18 @@ import { Scale, FileText } from "lucide-react";
 import { BillsInbox } from "@/components/inbox/BillsInbox";
 import { RegulationsInbox } from "@/components/inbox/RegulationsInbox";
 import { PublicationPanel } from "@/components/inbox/PublicationPanel";
-import { ALL_MOCK_ALERTS, PeruAlert, ClientCommentary } from "@/data/peruAlertsMockData";
+import { useAlerts } from "@/contexts/AlertsContext";
+import { PeruAlert } from "@/data/peruAlertsMockData";
 
 export default function Inbox() {
-  const [alerts, setAlerts] = useState<PeruAlert[]>(ALL_MOCK_ALERTS);
+  const { 
+    alerts, 
+    publishAlert, 
+    togglePinAlert, 
+    updateSharedCommentary,
+    getPinnedAlerts,
+    hasCommentaryForClient 
+  } = useAlerts();
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // Count by type
@@ -18,83 +26,28 @@ export default function Inbox() {
   }), [alerts]);
 
   // Pinned alerts
-  const pinnedAlerts = useMemo(() => {
-    return alerts.filter(a => a.is_pinned_for_publication);
-  }, [alerts]);
+  const pinnedAlerts = useMemo(() => getPinnedAlerts(), [getPinnedAlerts]);
 
-  // Check if alert has commentary for client
-  const hasCommentaryForClient = useCallback((alert: PeruAlert, clientId: string): boolean => {
-    const clientCommentary = alert.client_commentaries.find(c => c.clientId === clientId);
-    if (clientCommentary && clientCommentary.commentary.trim()) return true;
-    return !!(alert.expert_commentary && alert.expert_commentary.trim());
-  }, []);
-
-  // Toggle pin for publication
-  const togglePinAlert = useCallback((alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
-        a.id === alertId
-          ? { ...a, is_pinned_for_publication: !a.is_pinned_for_publication, updated_at: new Date().toISOString() }
-          : a
-      )
-    );
-  }, []);
-
-  // Update expert commentary
+  // Update expert commentary wrapper
   const updateExpertCommentary = useCallback((alertId: string, commentary: string) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
-        a.id === alertId
-          ? { ...a, expert_commentary: commentary, updated_at: new Date().toISOString() }
-          : a
-      )
-    );
-  }, []);
-
-  // Publish alert
-  const publishAlert = useCallback((alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
-        a.id === alert.id
-          ? { 
-              ...a, 
-              kanban_stage: "publicado" as const, 
-              status: "published" as const, 
-              client_id: clientIds[0] || null,
-              is_pinned_for_publication: false,
-              updated_at: new Date().toISOString() 
-            }
-          : a
-      )
-    );
-  }, []);
+    updateSharedCommentary(alertId, commentary);
+  }, [updateSharedCommentary]);
 
   // Batch publish pinned alerts
   const batchPublishPinned = useCallback((clientIds: string[]) => {
-    setAlerts((prev) =>
-      prev.map((a) => {
-        if (!a.is_pinned_for_publication) return a;
-        return {
-          ...a,
-          kanban_stage: "publicado" as const,
-          status: "published" as const,
-          client_id: clientIds[0] || null,
-          is_pinned_for_publication: false,
-          updated_at: new Date().toISOString()
-        };
-      })
-    );
-  }, []);
+    const pinned = getPinnedAlerts();
+    pinned.forEach(alert => {
+      publishAlert(alert, clientIds, clientIds.map(id => ({
+        clientId: id,
+        commentary: alert.expert_commentary || ""
+      })));
+    });
+  }, [getPinnedAlerts, publishAlert]);
 
-  // Move alert
+  // Move alert (stub - would need to add to context if needed)
   const moveAlert = useCallback((alertId: string, newStage: PeruAlert["kanban_stage"]) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
-        a.id === alertId
-          ? { ...a, kanban_stage: newStage, updated_at: new Date().toISOString() }
-          : a
-      )
-    );
+    // For now, moving is handled differently - could extend context
+    console.log("Move alert", alertId, newStage);
   }, []);
 
   return (

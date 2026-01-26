@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BusinessProfileProvider } from "@/contexts/BusinessProfileContext";
+import { AlertsProvider } from "@/contexts/AlertsContext";
 import LawMeterDashboard from "./pages/LawMeterDashboard";
 import Documentation from "./pages/Documentation";
 import BusinessIntelligence from "./pages/BusinessIntelligence";
@@ -76,13 +77,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <BusinessProfileProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
+        <AlertsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AlertsProvider>
       </BusinessProfileProvider>
     </AuthProvider>
   </QueryClientProvider>
