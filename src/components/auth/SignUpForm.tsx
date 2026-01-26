@@ -2,11 +2,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, Lock, User, Loader2, ArrowLeft, Building2, Users } from "lucide-react";
+import { Mail, Lock, User, Loader2, ArrowLeft, Building2, Users, Key } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MOCK_CLIENTS, PRIMARY_CLIENT_ID } from "@/data/peruAlertsMockData";
+
+// Invitation codes mapping (in production, this would be validated server-side)
+const INVITATION_CODES: Record<string, { clientId: string; clientName: string }> = {
+  'FARMA2024': { clientId: 'farmasalud-peru', clientName: 'FarmaSalud Perú S.A.C.' },
+  'BANCO2024': { clientId: 'banco-nacional', clientName: 'Banco Nacional' },
+  'MINERA2024': { clientId: 'minera-andina', clientName: 'Minera Andina S.A.' },
+};
 
 interface SignUpFormProps {
   onBack: () => void;
@@ -17,10 +22,19 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [accountType, setAccountType] = useState<'admin' | 'user'>('admin');
-  const [selectedClientId, setSelectedClientId] = useState<string>(PRIMARY_CLIENT_ID);
+  const [invitationCode, setInvitationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signUp } = useAuth();
+
+  const validateInvitationCode = (code: string): { valid: boolean; clientId?: string; clientName?: string } => {
+    const normalizedCode = code.trim().toUpperCase();
+    const mapping = INVITATION_CODES[normalizedCode];
+    if (mapping) {
+      return { valid: true, clientId: mapping.clientId, clientName: mapping.clientName };
+    }
+    return { valid: false };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,13 +50,23 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
       return;
     }
 
-    if (accountType === 'user' && !selectedClientId) {
-      setError("Please select a client organization.");
-      return;
+    let clientId: string | undefined;
+
+    if (accountType === 'user') {
+      if (!invitationCode.trim()) {
+        setError("Please enter your invitation code.");
+        return;
+      }
+      
+      const codeValidation = validateInvitationCode(invitationCode);
+      if (!codeValidation.valid) {
+        setError("Invalid invitation code. Please contact your administrator.");
+        return;
+      }
+      clientId = codeValidation.clientId;
     }
 
     setIsLoading(true);
-    const clientId = accountType === 'user' ? selectedClientId : undefined;
     const { error } = await signUp(email.trim(), password, fullName.trim(), accountType, clientId);
     setIsLoading(false);
 
@@ -98,22 +122,26 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
         </div>
       </div>
 
-      {/* Client Selection (only for Client account type) */}
+      {/* Invitation Code (only for Client account type) */}
       {accountType === 'user' && (
         <div className="space-y-2">
-          <Label>Organization</Label>
-          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your organization" />
-            </SelectTrigger>
-            <SelectContent>
-              {MOCK_CLIENTS.map(client => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="invitationCode">Invitation Code</Label>
+          <div className="relative">
+            <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="invitationCode"
+              type="text"
+              placeholder="Enter your invitation code"
+              value={invitationCode}
+              onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
+              className="pl-10 uppercase"
+              autoComplete="off"
+              disabled={isLoading}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Contact your administrator if you don't have an invitation code.
+          </p>
         </div>
       )}
 
