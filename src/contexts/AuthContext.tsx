@@ -19,11 +19,12 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, accountType: 'admin' | 'user') => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, accountType: 'admin' | 'user', clientId?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   shouldShowDailyPopup: boolean;
   dismissDailyPopup: () => Promise<void>;
+  updateProfileClientId: (clientId: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -114,10 +115,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, accountType: 'admin' | 'user') => {
+  const signUp = async (email: string, password: string, fullName: string, accountType: 'admin' | 'user', clientId?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -125,9 +126,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: fullName,
           account_type: accountType,
+          client_id: clientId || null,
         },
       },
     });
+
+    // If signup successful and we have a clientId, update the profile
+    if (!error && data.user && clientId) {
+      await supabase
+        .from('profiles')
+        .update({ client_id: clientId })
+        .eq('id', data.user.id);
+    }
+
+    return { error };
+  };
+
+  const updateProfileClientId = async (clientId: string) => {
+    if (!user) return { error: new Error('No user logged in') };
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ client_id: clientId })
+      .eq('id', user.id);
+    
+    if (!error) {
+      // Refresh profile
+      const profileData = await fetchProfile(user.id);
+      setProfile(profileData);
+    }
+    
     return { error };
   };
 
@@ -171,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         shouldShowDailyPopup,
         dismissDailyPopup,
+        updateProfileClientId,
       }}
     >
       {children}
