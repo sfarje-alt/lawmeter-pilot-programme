@@ -45,7 +45,7 @@ export function KanbanColumn({
           ) : (
             alerts.map((alert) => (
               <InboxAlertCard
-                key={alert.id}
+                key={`${alert.id}-${alert.status}-${alert.client_commentaries.length}`}
                 alert={alert}
                 onClick={() => onAlertClick(alert)}
                 onTogglePin={onTogglePin}
