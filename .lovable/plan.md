@@ -1,123 +1,109 @@
 
+# Plan: Fix Instant Client Tag Display After Publishing
 
-# Plan: Fix Instant Update of Client Tags and Cross-Portal Synchronization
+## Problem Analysis
 
-## Issues Identified
+After tracing through the code, I've identified the issue: When an alert is published, the state in `AlertsContext` is correctly updated, but the `InboxAlertCard` component may not be re-rendering properly to show the new client tag.
 
-### Issue 1: Admin Side - Client Badge Not Appearing Instantly
-After publishing an alert, the client badge should appear immediately on the alert card. Currently, the logic is correct but there might be a re-render issue or the card is not receiving the updated alert data correctly.
-
-### Issue 2: Client Portal - Not Filtering By `client_commentaries`
-The `getPublishedAlertsForClient` function only checks `client_id` and `primary_client_id`, but when publishing to multiple clients, only the first client ID is stored in `client_id`. The function should also check if the client exists in the `client_commentaries` array.
-
-## Root Cause Analysis
-
-**In `AlertsContext.tsx`:**
+The current compound key in `KanbanColumn.tsx` is:
 ```tsx
-// publishAlert stores only first client
-client_id: clientIds[0] || null,
-client_commentaries: commentaries, // All clients are here
-
-// getPublishedAlertsForClient doesn't check client_commentaries
-return alerts.filter(
-  (alert) =>
-    alert.status === "published" &&
-    (alert.client_id === clientId || alert.primary_client_id === clientId)
-  // Missing: || alert.client_commentaries.some(c => c.clientId === clientId)
-);
+key={`${alert.id}-${alert.status}-${alert.client_commentaries.length}`}
 ```
+
+This should work, but there appears to be a timing/reference issue where the component isn't picking up the new state immediately.
+
+## Root Causes Identified
+
+1. **Stale Reference in BillsInbox.handlePublish**: The `handlePublish` function loops through `clientIds` and calls `onPublish` multiple times, but `onPublish` comes from context and should still work correctly.
+
+2. **Missing Dependency or Closure Issue**: The functions in `BillsInbox` might be capturing stale references.
+
+3. **useMemo Caching**: The `alertsByStage` memo depends on `filteredAlerts`, which depends on `billAlerts`, which depends on `alerts`. This chain should update, but we need to verify the dependencies are complete.
 
 ## Solution
 
-### Fix 1: Update `getPublishedAlertsForClient` Filter Logic
+### Fix 1: Enhance Key with Published Clients Count
 
-Modify the function to also check `client_commentaries` array:
+Update the compound key to include more specific published client information:
 
-**File: `src/contexts/AlertsContext.tsx`**
-
-```tsx
-// Current (broken)
-const getPublishedAlertsForClient = useCallback((clientId: string): PeruAlert[] => {
-  return alerts.filter(
-    (alert) =>
-      alert.status === "published" &&
-      (alert.client_id === clientId || alert.primary_client_id === clientId)
-  );
-}, [alerts]);
-
-// Fixed
-const getPublishedAlertsForClient = useCallback((clientId: string): PeruAlert[] => {
-  return alerts.filter(
-    (alert) =>
-      alert.status === "published" &&
-      (
-        alert.client_id === clientId || 
-        alert.primary_client_id === clientId ||
-        alert.client_commentaries.some(c => c.clientId === clientId)
-      )
-  );
-}, [alerts]);
-```
-
-This ensures that an alert is visible to a client if:
-1. The alert's `client_id` matches (first client)
-2. The alert's `primary_client_id` matches (pre-assigned client)
-3. The client exists in `client_commentaries` (multi-client publishing)
-
-### Fix 2: Ensure `BillsInbox` Properly Passes Updated Alerts
-
-The current flow should work since `alerts` comes from context and flows through props. However, we should verify the `BillsInbox` is using the most current alert data from props, not from a stale local copy.
-
-The current implementation already receives `alerts` as a prop and uses it in `useMemo` with `alerts` as a dependency, so this should be correct.
-
-### Fix 3: Add Key Prop Refresh (Optional)
-
-If the issue persists, we might need to ensure React knows to re-render the specific card by using a compound key that includes status:
+**File: `src/components/inbox/KanbanColumn.tsx`**
 
 ```tsx
-// In KanbanColumn.tsx
-<InboxAlertCard
-  key={`${alert.id}-${alert.status}-${alert.client_commentaries.length}`}
-  alert={alert}
-  // ...
-/>
+// Current
+key={`${alert.id}-${alert.status}-${alert.client_commentaries.length}`}
+
+// Enhanced - include stringified client IDs for complete reactivity
+key={`${alert.id}-${alert.status}-${JSON.stringify(alert.client_commentaries.map(c => c.clientId))}`}
 ```
+
+### Fix 2: Add Force Update via updated_at Timestamp
+
+The `publishAlert` in context already sets `updated_at: new Date().toISOString()`. We should include this in the key:
+
+**File: `src/components/inbox/KanbanColumn.tsx`**
+
+```tsx
+key={`${alert.id}-${alert.status}-${alert.updated_at}`}
+```
+
+This is simpler and more effective - every state change updates the timestamp, forcing a re-render.
+
+### Fix 3: Fix BillsInbox handlePublish to Not Loop Unnecessarily
+
+The current implementation loops through clients and calls `onPublish` multiple times:
+
+**File: `src/components/inbox/BillsInbox.tsx`**
+
+```tsx
+// Current (potentially problematic)
+const handlePublish = (alert, clientIds, commentaries) => {
+  clientIds.forEach(clientId => {
+    onPublish(alert, [clientId], commentaries);
+  });
+  ...
+};
+
+// Fixed - call onPublish once with all clients
+const handlePublish = (alert, clientIds, commentaries) => {
+  onPublish(alert, clientIds, commentaries);
+  ...
+};
+```
+
+The context's `publishAlert` already handles multiple clients correctly.
+
+### Fix 4: Apply Same Fix to RegulationsInbox
+
+Apply the same fix to `RegulationsInbox.tsx` for consistency.
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/contexts/AlertsContext.tsx` | Update `getPublishedAlertsForClient` to check `client_commentaries` |
-| `src/components/inbox/KanbanColumn.tsx` | (Optional) Add compound key for force re-render |
+| `src/components/inbox/KanbanColumn.tsx` | Update key to use `updated_at` |
+| `src/components/inbox/BillsInbox.tsx` | Fix `handlePublish` to not loop |
+| `src/components/inbox/RegulationsInbox.tsx` | Fix `handlePublish` to not loop |
+
+## Implementation Summary
+
+1. Change the key in `KanbanColumn.tsx` to include `updated_at` timestamp
+2. Remove the unnecessary loop in `BillsInbox.handlePublish` 
+3. Remove the unnecessary loop in `RegulationsInbox.handlePublish`
 
 ## Expected Behavior After Fix
 
-1. **Admin publishes alert to FarmaSalud**
-   - Toast shows "Publicado a 1 cliente"
-   - Alert card IMMEDIATELY shows "FarmaSalud Perú S.A.C." badge
-   - No page refresh needed
-
-2. **Client logs in (FarmaSalud)**
-   - Alert appears in their inbox immediately
-   - Expert commentary is visible
-   - Read-only view shows all metadata
-
-3. **Multi-client publishing**
-   - If admin publishes to 2 clients, both badges appear on admin card
-   - Each client sees the alert in their respective portal
+1. Admin clicks "Publicar" for an alert
+2. Context state updates immediately with new `status`, `client_commentaries`, and `updated_at`
+3. The key change (`updated_at` is new) forces React to unmount/remount the card
+4. New card renders with client badge visible
+5. No page refresh needed
 
 ## Testing Steps
 
 1. Login as admin (sfarje@lawmeter.io)
-2. Open an unpublished alert (one without client badge)
-3. Add expert commentary
-4. Select "FarmaSalud Perú S.A.C." as client
+2. Open any unpublished alert (no client badge visible)
+3. Select FarmaSalud as client
+4. Add expert commentary
 5. Click "Publicar"
-6. **Verify**: Client badge appears instantly on the card
-7. Logout and login as client (farmasaludperu@test.com)
-8. **Verify**: Alert appears in client inbox with commentary
-
-## Technical Details
-
-The fix is minimal - only one line change in the filter function. The React state updates from `setAlerts` in `publishAlert` will automatically trigger re-renders in all components consuming the `alerts` array from context.
-
+6. **Verify**: Client badge "FarmaSalud Perú S.A.C." appears INSTANTLY on the card
+7. Verify the card stays in the same Kanban column (tramite_final for published bills)
