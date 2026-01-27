@@ -165,9 +165,8 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
   };
 
   const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
-    clientIds.forEach(clientId => {
-      onPublish(alert, [clientId], commentaries);
-    });
+    // Call onPublish once with all clients - context handles multi-client publishing
+    onPublish(alert, clientIds, commentaries);
     
     const clientNames = clientIds.map(id => 
       MOCK_CLIENTS.find(c => c.id === id)?.name || id
