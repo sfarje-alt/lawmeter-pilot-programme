@@ -1,417 +1,369 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Tags, FileText, Bell, Plus, X, RotateCcw, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useBusinessProfile } from '@/contexts/BusinessProfileContext';
-import { toast } from 'sonner';
-
-const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  'Radio Regulations': 'RF/wireless device compliance (FCC, CE RED, etc.)',
-  'Product Safety': 'Consumer protection and safety standards',
-  'Cybersecurity': 'IoT security and data protection requirements',
-  'Battery Regulations': 'Power storage and energy regulations',
-  'Food Contact Material': 'FDA/EU food-safe materials compliance'
-};
-
-const SUGGESTED_KEYWORDS_BY_INDUSTRY: Record<string, string[]> = {
-  'kitchen': ['cooking', 'temperature', 'food safety', 'heating element', 'thermostat'],
-  'electronics': ['circuit', 'PCB', 'semiconductor', 'voltage regulator', 'power supply'],
-  'IoT': ['firmware', 'OTA updates', 'cloud connectivity', 'API', 'encryption']
-};
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { 
+  User, Bell, FileText, Phone, Calendar, Mail, Users,
+  Building2, Shield, CheckCircle2, ArrowLeft, Settings as SettingsIcon
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { profile, updateProfile, resetToDefaults, defaultCategories, defaultKeywords, defaultJurisdictions } = useBusinessProfile();
-  
-  const [newProductType, setNewProductType] = useState('');
-  const [newKeyword, setNewKeyword] = useState('');
-  const [newCategory, setNewCategory] = useState('');
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [alertFrequency, setAlertFrequency] = useState('daily');
-  const [riskThreshold, setRiskThreshold] = useState('medium');
+  const { profile } = useAuth();
+  const [notifications, setNotifications] = useState({
+    newAlerts: true,
+    clientPublications: true,
+    reportGenerated: true,
+    weeklyDigest: true,
+    emailFrequency: "daily",
+  });
 
-  const handleAddProductType = () => {
-    if (newProductType.trim() && !profile.productTypes.includes(newProductType.trim())) {
-      updateProfile({ productTypes: [...profile.productTypes, newProductType.trim()] });
-      setNewProductType('');
-    }
-  };
-
-  const handleRemoveProductType = (type: string) => {
-    updateProfile({ productTypes: profile.productTypes.filter(t => t !== type) });
-  };
-
-  const handleAddKeyword = () => {
-    if (newKeyword.trim() && !profile.portfolioKeywords.includes(newKeyword.trim().toLowerCase())) {
-      updateProfile({ portfolioKeywords: [...profile.portfolioKeywords, newKeyword.trim().toLowerCase()] });
-      setNewKeyword('');
-    }
-  };
-
-  const handleRemoveKeyword = (keyword: string) => {
-    updateProfile({ portfolioKeywords: profile.portfolioKeywords.filter(k => k !== keyword) });
-  };
-
-  const handleToggleCategory = (category: string) => {
-    if (profile.regulatoryCategories.includes(category)) {
-      updateProfile({ regulatoryCategories: profile.regulatoryCategories.filter(c => c !== category) });
-    } else {
-      updateProfile({ regulatoryCategories: [...profile.regulatoryCategories, category] });
-    }
-  };
-
-  const handleAddCustomCategory = () => {
-    if (newCategory.trim() && !profile.regulatoryCategories.includes(newCategory.trim())) {
-      updateProfile({ regulatoryCategories: [...profile.regulatoryCategories, newCategory.trim()] });
-      setNewCategory('');
-    }
-  };
-
-  const handleToggleJurisdiction = (jurisdiction: string) => {
-    if (profile.monitoredJurisdictions.includes(jurisdiction)) {
-      updateProfile({ monitoredJurisdictions: profile.monitoredJurisdictions.filter(j => j !== jurisdiction) });
-    } else {
-      updateProfile({ monitoredJurisdictions: [...profile.monitoredJurisdictions, jurisdiction] });
-    }
-  };
-
-  const handleSave = () => {
-    toast.success('Settings saved successfully');
-  };
-
-  const handleReset = () => {
-    resetToDefaults();
-    toast.info('Settings reset to defaults');
+  const handleSaveNotifications = () => {
+    toast.success("Preferencias de notificación guardadas");
   };
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Settings</h1>
-              <p className="text-sm text-muted-foreground">Configure your business profile and alert preferences</p>
+              <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
+              <p className="text-sm text-muted-foreground">
+                Gestiona tu cuenta y preferencias de administrador
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Business Profile</span>
+        <Tabs defaultValue="account" className="space-y-6">
+          <TabsList className="bg-muted/30 grid grid-cols-4 w-full max-w-2xl">
+            <TabsTrigger value="account" className="gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Cuenta</span>
             </TabsTrigger>
-            <TabsTrigger value="categories" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Categories</span>
-            </TabsTrigger>
-            <TabsTrigger value="keywords" className="flex items-center gap-2">
-              <Tags className="h-4 w-4" />
-              <span className="hidden sm:inline">Keywords</span>
-            </TabsTrigger>
-            <TabsTrigger value="alerts" className="flex items-center gap-2">
+            <TabsTrigger value="notifications" className="gap-2">
               <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Alerts</span>
+              <span className="hidden sm:inline">Notificaciones</span>
+            </TabsTrigger>
+            <TabsTrigger value="organization" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Organización</span>
+            </TabsTrigger>
+            <TabsTrigger value="contact" className="gap-2">
+              <Phone className="h-4 w-4" />
+              <span className="hidden sm:inline">Contacto</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Business Profile Tab */}
-          <TabsContent value="profile">
+          {/* Account Settings */}
+          <TabsContent value="account" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Business Profile</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Información de la Cuenta
+                </CardTitle>
                 <CardDescription>
-                  Define your company information to personalize legislation monitoring and risk assessments
+                  Tu información personal y de acceso como administrador
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    value={profile.companyName}
-                    onChange={(e) => updateProfile({ companyName: e.target.value })}
-                    placeholder="Enter your company name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="industry">Industry Description</Label>
-                  <Textarea
-                    id="industry"
-                    value={profile.industryDescription}
-                    onChange={(e) => updateProfile({ industryDescription: e.target.value })}
-                    placeholder="Describe your industry and business focus"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Product Types</Label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {profile.productTypes.map((type) => (
-                      <Badge key={type} variant="secondary" className="flex items-center gap-1">
-                        {type}
-                        <button onClick={() => handleRemoveProductType(type)} className="ml-1 hover:text-destructive">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                  <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center">
+                    <User className="h-8 w-8 text-primary" />
                   </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newProductType}
-                      onChange={(e) => setNewProductType(e.target.value)}
-                      placeholder="Add product type"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddProductType()}
-                    />
-                    <Button onClick={handleAddProductType} size="icon">
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                  <div>
+                    <h3 className="font-semibold text-foreground">{profile?.full_name || "Administrador"}</h3>
+                    <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                    <Badge className="mt-1 bg-primary/20 text-primary border-primary/30">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Administrador
+                    </Badge>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Monitored Jurisdictions</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                    {defaultJurisdictions.map((jurisdiction) => (
-                      <div key={jurisdiction} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`jurisdiction-${jurisdiction}`}
-                          checked={profile.monitoredJurisdictions.includes(jurisdiction)}
-                          onCheckedChange={() => handleToggleJurisdiction(jurisdiction)}
-                        />
-                        <Label htmlFor={`jurisdiction-${jurisdiction}`} className="text-sm cursor-pointer">
-                          {jurisdiction}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                <Separator />
 
-          {/* Regulatory Categories Tab */}
-          <TabsContent value="categories">
-            <Card>
-              <CardHeader>
-                <CardTitle>Regulatory Categories</CardTitle>
-                <CardDescription>
-                  Select the regulatory areas relevant to your business for targeted monitoring
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
                 <div className="grid gap-4">
-                  {defaultCategories.map((category) => (
-                    <div
-                      key={category}
-                      className={`flex items-start space-x-3 p-4 rounded-lg border transition-colors ${
-                        profile.regulatoryCategories.includes(category)
-                          ? 'bg-primary/5 border-primary/20'
-                          : 'bg-muted/30 border-border'
-                      }`}
-                    >
-                      <Checkbox
-                        id={`category-${category}`}
-                        checked={profile.regulatoryCategories.includes(category)}
-                        onCheckedChange={() => handleToggleCategory(category)}
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor={`category-${category}`} className="font-medium cursor-pointer">
-                          {category}
-                        </Label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {CATEGORY_DESCRIPTIONS[category] || 'Custom regulatory category'}
-                        </p>
-                      </div>
+                  <div className="grid gap-2">
+                    <Label>Correo Electrónico</Label>
+                    <Input value={profile?.email || ""} disabled className="bg-muted/30" />
+                    <p className="text-xs text-muted-foreground">
+                      Para cambiar tu correo, contacta a soporte técnico
+                    </p>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>Nombre Completo</Label>
+                    <Input value={profile?.full_name || ""} placeholder="Tu nombre completo" />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>Tipo de Cuenta</Label>
+                    <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+                      <Shield className="h-4 w-4 text-primary" />
+                      <span>Administrador - Acceso Completo</span>
                     </div>
-                  ))}
+                    <p className="text-xs text-muted-foreground">
+                      Puedes revisar, comentar y publicar alertas a clientes
+                    </p>
+                  </div>
                 </div>
 
-                <div className="border-t pt-4">
-                  <Label className="mb-2 block">Add Custom Category</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      placeholder="Enter custom category name"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCategory()}
+                <Button className="w-full">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Guardar Cambios
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Notifications */}
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-primary" />
+                  Preferencias de Notificación
+                </CardTitle>
+                <CardDescription>
+                  Configura cómo y cuándo recibir notificaciones sobre alertas y clientes
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                    <div className="space-y-1">
+                      <Label className="font-medium">Nuevas Alertas Detectadas</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Recibe notificación cuando se detecten nuevas alertas legislativas
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={notifications.newAlerts}
+                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, newAlerts: checked }))}
                     />
-                    <Button onClick={handleAddCustomCategory}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                    <div className="space-y-1">
+                      <Label className="font-medium">Publicaciones a Clientes</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Confirmación cuando una alerta es publicada exitosamente
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={notifications.clientPublications}
+                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, clientPublications: checked }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                    <div className="space-y-1">
+                      <Label className="font-medium">Reportes Generados</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Recibe notificación cuando se generen reportes automáticos
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={notifications.reportGenerated}
+                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, reportGenerated: checked }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                    <div className="space-y-1">
+                      <Label className="font-medium">Resumen Semanal</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Recibe un resumen semanal de actividad de todos los clientes
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={notifications.weeklyDigest}
+                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, weeklyDigest: checked }))}
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          {/* Portfolio Keywords Tab */}
-          <TabsContent value="keywords">
-            <Card>
-              <CardHeader>
-                <CardTitle>Portfolio Keywords</CardTitle>
-                <CardDescription>
-                  Define keywords to identify relevant legislation and track regulatory trends
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
+                <Separator />
+
                 <div className="space-y-2">
-                  <Label>Active Keywords ({profile.portfolioKeywords.length})</Label>
-                  <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg min-h-[120px] max-h-[300px] overflow-y-auto">
-                    {profile.portfolioKeywords.map((keyword) => (
-                      <Badge key={keyword} variant="outline" className="flex items-center gap-1">
-                        {keyword}
-                        <button onClick={() => handleRemoveKeyword(keyword)} className="ml-1 hover:text-destructive">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
+                  <Label>Frecuencia de Correos</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: "immediate", label: "Inmediato" },
+                      { value: "daily", label: "Diario" },
+                      { value: "weekly", label: "Semanal" },
+                    ].map(option => (
+                      <Button
+                        key={option.value}
+                        variant={notifications.emailFrequency === option.value ? "default" : "outline"}
+                        className="w-full"
+                        onClick={() => setNotifications(prev => ({ ...prev, emailFrequency: option.value }))}
+                      >
+                        {option.label}
+                      </Button>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Input
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    placeholder="Add new keyword"
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
+                <Button onClick={handleSaveNotifications} className="w-full">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Guardar Preferencias
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Organization Settings */}
+          <TabsContent value="organization" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Información de la Organización
+                </CardTitle>
+                <CardDescription>
+                  Datos de tu organización y plan activo
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Current Plan */}
+                <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-foreground">Plan Profesional</h3>
+                      <p className="text-sm text-muted-foreground">LawMeter - Monitoreo Regulatorio</p>
+                    </div>
+                    <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Activo
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label>Nombre de la Organización</Label>
+                    <Input value="LawMeter Legal Services" placeholder="Nombre de la organización" />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>País Principal</Label>
+                    <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+                      <span className="text-lg">🇵🇪</span>
+                      <span>Perú</span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>Clientes Activos</Label>
+                    <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>6 clientes registrados</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Features */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-foreground">Características del Plan</h4>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      "Monitoreo legislativo ilimitado",
+                      "Publicación multi-cliente",
+                      "Reportes automatizados",
+                      "Calendario de sesiones",
+                      "Analytics avanzados",
+                      "Comentarios expertos",
+                    ].map((feature) => (
+                      <div key={feature} className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span className="text-muted-foreground">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Button className="w-full">
+                  <SettingsIcon className="h-4 w-4 mr-2" />
+                  Gestionar Plan
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Contact / Calendly */}
+          <TabsContent value="contact" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Soporte y Contacto
+                </CardTitle>
+                <CardDescription>
+                  Programa una llamada o contacta a nuestro equipo de soporte
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Calendly Embed */}
+                <div className="bg-muted/30 rounded-lg overflow-hidden">
+                  <iframe
+                    src="https://calendly.com/lawmeter-demo/30min"
+                    width="100%"
+                    height="630"
+                    frameBorder="0"
+                    title="Schedule a meeting"
+                    className="border-0"
                   />
-                  <Button onClick={handleAddKeyword}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
                 </div>
 
-                <div className="border-t pt-4">
-                  <Label className="mb-3 block">Suggested Keywords</Label>
-                  <div className="space-y-3">
-                    {Object.entries(SUGGESTED_KEYWORDS_BY_INDUSTRY).map(([industry, keywords]) => (
-                      <div key={industry}>
-                        <p className="text-sm text-muted-foreground mb-2 capitalize">{industry}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {keywords
-                            .filter((k) => !profile.portfolioKeywords.includes(k))
-                            .map((keyword) => (
-                              <Badge
-                                key={keyword}
-                                variant="secondary"
-                                className="cursor-pointer hover:bg-primary/20"
-                                onClick={() => updateProfile({ portfolioKeywords: [...profile.portfolioKeywords, keyword] })}
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                {keyword}
-                              </Badge>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <Separator />
 
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => updateProfile({ portfolioKeywords: defaultKeywords })}>
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Reset to Defaults
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Alert Preferences Tab */}
-          <TabsContent value="alerts">
-            <Card>
-              <CardHeader>
-                <CardTitle>Alert Preferences</CardTitle>
-                <CardDescription>
-                  Configure how and when you receive notifications about regulatory changes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive alerts via email</p>
-                  </div>
-                  <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Alert Frequency</Label>
-                  <Select value={alertFrequency} onValueChange={setAlertFrequency}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="instant">Instant</SelectItem>
-                      <SelectItem value="daily">Daily Digest</SelectItem>
-                      <SelectItem value="weekly">Weekly Summary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Minimum Risk Threshold</Label>
-                  <Select value={riskThreshold} onValueChange={setRiskThreshold}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low and above</SelectItem>
-                      <SelectItem value="medium">Medium and above</SelectItem>
-                      <SelectItem value="high">High and above</SelectItem>
-                      <SelectItem value="critical">Critical only</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Alternative Contact */}
+                <div className="text-center space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Only receive alerts for legislation meeting this risk level
+                    ¿Prefieres otro método de contacto?
                   </p>
-                </div>
-
-                <div className="border-t pt-4">
-                  <Label className="mb-3 block">Jurisdiction-Specific Alerts</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {profile.monitoredJurisdictions.map((jurisdiction) => (
-                      <div key={jurisdiction} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                        <span className="text-sm">{jurisdiction}</span>
-                        <Switch defaultChecked />
-                      </div>
-                    ))}
+                  
+                  <div className="flex items-center justify-center gap-4">
+                    <Button variant="outline" className="gap-2" asChild>
+                      <a href="mailto:soporte@lawmeter.io">
+                        <Mail className="h-4 w-4" />
+                        soporte@lawmeter.io
+                      </a>
+                    </Button>
+                    
+                    <Button variant="outline" className="gap-2" asChild>
+                      <a href="https://wa.me/51999999999" target="_blank" rel="noopener noreferrer">
+                        <Phone className="h-4 w-4" />
+                        WhatsApp
+                      </a>
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        <div className="flex justify-between mt-6 pt-6 border-t">
-          <Button variant="outline" onClick={handleReset}>
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset All to Defaults
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
       </div>
     </div>
   );
