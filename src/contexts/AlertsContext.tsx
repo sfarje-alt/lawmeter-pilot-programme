@@ -30,10 +30,11 @@ const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 // and is independent of publication status
 function initializeAlerts(): PeruAlert[] {
   return ALL_MOCK_ALERTS.map((alert, index) => {
-    // Pre-publish first 5 bills and 3 regulations to FarmaSalud for demo
+    // Pre-publish first 5 bills and first 3 regulations to FarmaSalud for demo
+    // Bills are indices 0-15 (16 total), Regulations start at index 16
     const shouldPublish = 
       (alert.legislation_type === "proyecto_de_ley" && index < 5) ||
-      (alert.legislation_type === "norma" && index >= 37 && index < 40);
+      (alert.legislation_type === "norma" && index >= 16 && index < 19);
     
     if (shouldPublish) {
       return {
