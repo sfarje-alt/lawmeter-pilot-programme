@@ -26,6 +26,8 @@ interface AlertsContextType {
 const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
 // Initialize with some alerts pre-published for demo purposes
+// Note: kanban_stage represents legislative stage (comision, pleno, tramite_final)
+// and is independent of publication status
 function initializeAlerts(): PeruAlert[] {
   return ALL_MOCK_ALERTS.map((alert, index) => {
     // Pre-publish first 5 bills and 3 regulations to FarmaSalud for demo
@@ -37,7 +39,7 @@ function initializeAlerts(): PeruAlert[] {
       return {
         ...alert,
         status: "published" as const,
-        kanban_stage: "publicado" as const,
+        // Keep original kanban_stage - publication doesn't change legislative stage
         client_id: PRIMARY_CLIENT_ID,
         client_commentaries: [{
           clientId: PRIMARY_CLIENT_ID,
@@ -53,6 +55,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   const [alerts, setAlerts] = useState<PeruAlert[]>(initializeAlerts);
 
   // Publish alert to specific clients
+  // Note: Publishing only changes status - kanban_stage (legislative stage) remains unchanged
   const publishAlert = useCallback((
     alert: PeruAlert, 
     clientIds: string[], 
@@ -64,7 +67,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
           ? {
               ...a,
               status: "published" as const,
-              kanban_stage: "publicado" as const,
+              // Keep original kanban_stage - publication doesn't change legislative stage
               client_id: clientIds[0] || null,
               is_pinned_for_publication: false,
               client_commentaries: commentaries,
@@ -76,6 +79,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Unpublish alert (return to reviewed status)
+  // Note: Unpublishing only changes status - kanban_stage (legislative stage) remains unchanged
   const unpublishAlert = useCallback((alertId: string) => {
     setAlerts((prev) =>
       prev.map((a) =>
@@ -83,7 +87,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
           ? {
               ...a,
               status: "reviewed" as const,
-              kanban_stage: "tramite_final" as const,
+              // Keep original kanban_stage - unpublishing doesn't change legislative stage
               client_id: null,
               updated_at: new Date().toISOString(),
             }

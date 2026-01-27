@@ -161,7 +161,8 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     });
   }, [billAlerts, filters]);
 
-  // Group alerts by kanban stage (excluding publicado for bills)
+  // Group alerts by kanban stage (legislative stage)
+  // Note: kanban_stage represents legislative progress and is independent of publication status
   const alertsByStage = useMemo(() => {
     const grouped: Record<BillKanbanStage, PeruAlert[]> = {
       comision: [],
@@ -170,11 +171,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     };
 
     filteredAlerts.forEach((alert) => {
-      // Map kanban_stage, excluding publicado (bills shouldn't be in publicado)
-      let stage = alert.kanban_stage as BillKanbanStage;
-      if (stage === "publicado" as any) {
-        stage = "tramite_final"; // Bills that reach publicado go to tramite_final
-      }
+      const stage = alert.kanban_stage as BillKanbanStage;
       if (grouped[stage]) {
         grouped[stage].push(alert);
       }
