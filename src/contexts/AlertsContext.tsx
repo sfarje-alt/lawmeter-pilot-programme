@@ -137,7 +137,11 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     return alerts.filter(
       (alert) =>
         alert.status === "published" &&
-        (alert.client_id === clientId || alert.primary_client_id === clientId)
+        (
+          alert.client_id === clientId || 
+          alert.primary_client_id === clientId ||
+          alert.client_commentaries.some(c => c.clientId === clientId)
+        )
     );
   }, [alerts]);
 
