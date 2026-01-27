@@ -29,10 +29,12 @@ export function InboxAlertCard({
     ? hasCommentaryForClient(alert, selectedClientId)
     : !!(alert.expert_commentary && alert.expert_commentary.trim());
 
-  // Get primary client name
-  const primaryClient = alert.primary_client_id 
-    ? MOCK_CLIENTS.find(c => c.id === alert.primary_client_id)
-    : null;
+  // Get published clients from client_commentaries (only for published alerts)
+  const publishedClients = alert.status === "published" && alert.client_commentaries.length > 0
+    ? alert.client_commentaries
+        .map(cc => MOCK_CLIENTS.find(c => c.id === cc.clientId))
+        .filter((client): client is typeof MOCK_CLIENTS[number] => Boolean(client))
+    : [];
 
   const handlePinClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -203,13 +205,19 @@ export function InboxAlertCard({
         )}
       </div>
 
-      {/* Client Tag */}
-      {primaryClient && (
-        <div className="flex items-center gap-1.5 mb-2">
+      {/* Published Client Tags - Only show when alert is published to clients */}
+      {publishedClients.length > 0 && (
+        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <Briefcase className="h-3 w-3 text-primary/70" />
-          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30 py-0">
-            {primaryClient.name}
-          </Badge>
+          {publishedClients.map(client => (
+            <Badge 
+              key={client.id}
+              variant="outline" 
+              className="text-xs bg-primary/10 text-primary border-primary/30 py-0"
+            >
+              {client.name}
+            </Badge>
+          ))}
         </div>
       )}
 
