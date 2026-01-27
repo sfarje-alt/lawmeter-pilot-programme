@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { ClientsList } from "./ClientsList";
 import { ClientWizard } from "./ClientWizard";
+import { ClientProfileDrawer } from "./ClientProfileDrawer";
 import { ClientProfile } from "./types";
 import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
 
 export function ClientsPage() {
   const [clients, setClients] = useState<ClientProfile[]>(MOCK_CLIENT_PROFILES);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientProfile | undefined>();
 
   const handleCreateClient = () => {
@@ -16,6 +18,11 @@ export function ClientsPage() {
 
   const handleSelectClient = (client: ClientProfile) => {
     setSelectedClient(client);
+    setDrawerOpen(true);
+  };
+
+  const handleEditClient = () => {
+    setDrawerOpen(false);
     setWizardOpen(true);
   };
 
@@ -27,12 +34,24 @@ export function ClientsPage() {
     }
   };
 
+  const handleUpdateClient = (updatedClient: ClientProfile) => {
+    setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
+    setSelectedClient(updatedClient);
+  };
+
   return (
     <>
       <ClientsList
         clients={clients}
         onCreateClient={handleCreateClient}
         onSelectClient={handleSelectClient}
+      />
+      <ClientProfileDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        client={selectedClient || null}
+        onEdit={handleEditClient}
+        onUpdateClient={handleUpdateClient}
       />
       <ClientWizard
         open={wizardOpen}
