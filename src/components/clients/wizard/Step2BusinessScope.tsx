@@ -40,8 +40,8 @@ const DISTRIBUTION_CHANNELS = [
   'Marketplace',
 ];
 
-const COUNTRIES = [
-  { code: 'PE', name: 'Perú' },
+// Cross-border countries (excludes Peru since that's the primary market)
+const CROSS_BORDER_COUNTRIES = [
   { code: 'CO', name: 'Colombia' },
   { code: 'MX', name: 'México' },
   { code: 'CL', name: 'Chile' },
@@ -284,7 +284,7 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
         <div className="space-y-2">
           <Label>Cross-border Countries</Label>
           <div className="flex flex-wrap gap-2">
-            {COUNTRIES.map((country) => (
+            {CROSS_BORDER_COUNTRIES.map((country) => (
               <Badge
                 key={country.code}
                 variant={data.crossBorderCountries.includes(country.code) ? "default" : "outline"}
