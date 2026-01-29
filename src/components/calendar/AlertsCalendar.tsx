@@ -303,18 +303,18 @@ export function AlertsCalendar() {
   };
 
   const handleEventToast = (event: AlertCalendarEvent) => {
-    toast.info(`${event.type === 'bill' ? 'Proyecto de Ley' : 'Norma'} Details`, {
+    toast.info(`Detalles de ${event.type === 'bill' ? 'Proyecto de Ley' : 'Norma'}`, {
       description: event.title.substring(0, 60) + '...',
       action: {
-        label: "View in Inbox",
+        label: "Ver en Bandeja",
         onClick: () => handleEventClick(event)
       }
     });
   };
 
   const handlePublishToClient = (event: AlertCalendarEvent) => {
-    toast.success("Published to client calendar", {
-      description: "Event added to client's external calendar"
+    toast.success("Publicado al calendario del cliente", {
+      description: "Evento agregado al calendario externo del cliente"
     });
   };
 
@@ -341,8 +341,8 @@ export function AlertsCalendar() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-          <p className="text-muted-foreground">Aggregation of all alerts and deadlines</p>
+          <h1 className="text-2xl font-bold text-foreground">Calendario</h1>
+          <p className="text-muted-foreground">Agregación de todas las alertas y fechas límite</p>
         </div>
         <div className="flex items-center gap-2">
           <Button 
@@ -352,7 +352,7 @@ export function AlertsCalendar() {
             className="gap-2"
           >
             <Info className="h-4 w-4" />
-            Legend
+            Leyenda
           </Button>
           <Button 
             variant="outline" 
@@ -361,7 +361,7 @@ export function AlertsCalendar() {
             className="gap-2"
           >
             <Settings className="h-4 w-4" />
-            Date Rules
+            Reglas de Fecha
           </Button>
           <Button 
             variant={showFilters ? "default" : "outline"} 
@@ -370,11 +370,11 @@ export function AlertsCalendar() {
             className="gap-2"
           >
             <Filter className="h-4 w-4" />
-            Filters
+            Filtros
           </Button>
           <Button variant="outline" size="sm" className="gap-2">
             <Share2 className="h-4 w-4" />
-            Connect Calendar
+            Conectar Calendario
           </Button>
         </div>
       </div>
@@ -386,7 +386,7 @@ export function AlertsCalendar() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium text-sm flex items-center gap-2">
                 <Info className="h-4 w-4" />
-                Calendar Legend
+                Leyenda del Calendario
               </h3>
               <Button variant="ghost" size="sm" onClick={() => setShowLegend(false)}>
                 <X className="h-4 w-4" />
@@ -396,40 +396,40 @@ export function AlertsCalendar() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Event Types */}
               <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Event Types</h4>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tipos de Evento</h4>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded bg-blue-500/20 border border-blue-500/50" />
                     <Scale className="h-3 w-3 text-blue-400" />
-                    <span className="text-sm">Proyectos de Ley (Bills)</span>
+                    <span className="text-sm">Proyectos de Ley</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded bg-emerald-500/20 border border-emerald-500/50" />
                     <Building2 className="h-3 w-3 text-emerald-400" />
-                    <span className="text-sm">Normas (Regulations)</span>
+                    <span className="text-sm">Normas</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded bg-amber-500/20 border border-amber-500/50" />
                     <FileText className="h-3 w-3 text-amber-400" />
-                    <span className="text-sm">Bills in Plenary Stage</span>
+                    <span className="text-sm">PLs en Etapa Plenaria</span>
                   </div>
                 </div>
               </div>
               
               {/* Date Meanings */}
               <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What Dates Mean</h4>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Significado de Fechas</h4>
                 <div className="space-y-1.5 text-sm">
                   <div className="flex items-start gap-2">
                     <Clock className="h-3 w-3 mt-1 text-muted-foreground flex-shrink-0" />
                     <div>
-                      <span className="font-medium">Bills:</span> Date when bill entered current stage
+                      <span className="font-medium">PLs:</span> Fecha de ingreso al estado actual
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <FileText className="h-3 w-3 mt-1 text-muted-foreground flex-shrink-0" />
                     <div>
-                      <span className="font-medium">Regulations:</span> Official publication date
+                      <span className="font-medium">Normas:</span> Fecha oficial de publicación
                     </div>
                   </div>
                 </div>
@@ -437,26 +437,26 @@ export function AlertsCalendar() {
               
               {/* Risk Levels */}
               <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Risk Levels</h4>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Niveles de Riesgo</h4>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-destructive/20 text-destructive text-[10px]">Alto</Badge>
-                    <span className="text-sm">High risk - Immediate attention needed</span>
+                    <span className="text-sm">Riesgo alto - Atención inmediata</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className="bg-amber-500/20 text-amber-400 text-[10px]">Medio</Badge>
-                    <span className="text-sm">Medium risk - Monitor closely</span>
+                    <span className="text-sm">Riesgo medio - Monitorear de cerca</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px]">Bajo</Badge>
-                    <span className="text-sm">Low risk - Standard tracking</span>
+                    <span className="text-sm">Riesgo bajo - Seguimiento estándar</span>
                   </div>
                 </div>
               </div>
             </div>
             
             <p className="text-xs text-muted-foreground mt-4 pt-3 border-t">
-              💡 <strong>Tip:</strong> Click on any event to view it in the Inbox. Use "Date Rules" to customize which date types appear on the calendar.
+              💡 <strong>Consejo:</strong> Haz clic en cualquier evento para verlo en la Bandeja. Usa "Reglas de Fecha" para personalizar qué tipos de fecha aparecen.
             </p>
           </CardContent>
         </Card>
@@ -467,7 +467,7 @@ export function AlertsCalendar() {
         <Card className="glass-card border-border/30">
           <CardContent className="pt-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium text-sm">Filter & Views</h3>
+              <h3 className="font-medium text-sm">Filtros y Vistas</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowFilters(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -475,10 +475,10 @@ export function AlertsCalendar() {
             <div className="grid grid-cols-4 lg:grid-cols-7 gap-3">
               <Select value={filterClient} onValueChange={setFilterClient}>
                 <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Client" />
+                  <SelectValue placeholder="Cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
+                  <SelectItem value="all">Todos los Clientes</SelectItem>
                   {MOCK_CLIENTS.map(client => (
                     <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                   ))}
@@ -490,7 +490,7 @@ export function AlertsCalendar() {
                   <SelectValue placeholder="Sector" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Sectors</SelectItem>
+                  <SelectItem value="all">Todos los Sectores</SelectItem>
                   <SelectItem value="banking">Banca</SelectItem>
                   <SelectItem value="healthcare">Salud</SelectItem>
                   <SelectItem value="energy">Energía</SelectItem>
@@ -499,10 +499,10 @@ export function AlertsCalendar() {
               
               <Select value={filterArea} onValueChange={setFilterArea}>
                 <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Area" />
+                  <SelectValue placeholder="Área" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Areas</SelectItem>
+                  <SelectItem value="all">Todas las Áreas</SelectItem>
                   {areas.map(area => (
                     <SelectItem key={area} value={area}>{area}</SelectItem>
                   ))}
@@ -511,10 +511,10 @@ export function AlertsCalendar() {
               
               <Select value={filterTopic} onValueChange={setFilterTopic}>
                 <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Topic" />
+                  <SelectValue placeholder="Tema" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Topics</SelectItem>
+                  <SelectItem value="all">Todos los Temas</SelectItem>
                   <SelectItem value="laboral">Derecho Laboral</SelectItem>
                   <SelectItem value="tributario">Derecho Tributario</SelectItem>
                   <SelectItem value="ambiental">Derecho Ambiental</SelectItem>
@@ -523,10 +523,10 @@ export function AlertsCalendar() {
               
               <Select value={filterInstrumentType} onValueChange={setFilterInstrumentType}>
                 <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="all">Todos los Tipos</SelectItem>
                   <SelectItem value="bill">Proyectos de Ley</SelectItem>
                   <SelectItem value="regulation">Normas</SelectItem>
                 </SelectContent>
@@ -534,10 +534,10 @@ export function AlertsCalendar() {
               
               <Select value={filterStage} onValueChange={setFilterStage}>
                 <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Stage" />
+                  <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Stages</SelectItem>
+                  <SelectItem value="all">Todos los Estados</SelectItem>
                   {stages.map(stage => (
                     <SelectItem key={stage} value={stage}>{stage}</SelectItem>
                   ))}
@@ -546,13 +546,13 @@ export function AlertsCalendar() {
               
               <Select value={filterRisk} onValueChange={setFilterRisk}>
                 <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Risk" />
+                  <SelectValue placeholder="Riesgo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Risks</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="all">Todos los Riesgos</SelectItem>
+                  <SelectItem value="high">Alto</SelectItem>
+                  <SelectItem value="medium">Medio</SelectItem>
+                  <SelectItem value="low">Bajo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -575,9 +575,9 @@ export function AlertsCalendar() {
         </div>
         <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
           <TabsList className="bg-background/50">
-            <TabsTrigger value="day">Day</TabsTrigger>
-            <TabsTrigger value="week">Week</TabsTrigger>
-            <TabsTrigger value="month">Month</TabsTrigger>
+            <TabsTrigger value="day">Día</TabsTrigger>
+            <TabsTrigger value="week">Semana</TabsTrigger>
+            <TabsTrigger value="month">Mes</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -642,7 +642,7 @@ export function AlertsCalendar() {
                         ))}
                         {dayEvents.length > 3 && (
                           <div className="text-[10px] text-muted-foreground text-center">
-                            +{dayEvents.length - 3} more
+                            +{dayEvents.length - 3} más
                           </div>
                         )}
                       </div>
@@ -752,11 +752,11 @@ export function AlertsCalendar() {
                             <div className="flex flex-col gap-1">
                               <Button size="sm" variant="outline" onClick={() => handleEventClick(event)}>
                                 <ExternalLink className="h-3 w-3 mr-1" />
-                                Go to Inbox
+                                Ir a Bandeja
                               </Button>
                               <Button size="sm" variant="ghost" onClick={() => handlePublishToClient(event)}>
                                 <Share2 className="h-3 w-3 mr-1" />
-                                Publish
+                                Publicar
                               </Button>
                             </div>
                           </div>
@@ -766,7 +766,7 @@ export function AlertsCalendar() {
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
                       <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No events on this day</p>
+                      <p>No hay eventos en este día</p>
                     </div>
                   )}
                 </div>
@@ -832,7 +832,7 @@ export function AlertsCalendar() {
                   ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground text-sm">
-                    No events on this date
+                    No hay eventos en esta fecha
                   </div>
                 )}
               </div>
@@ -847,10 +847,10 @@ export function AlertsCalendar() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Configure Date Rules
+              Configurar Reglas de Fecha
             </DialogTitle>
             <DialogDescription>
-              Choose which date types to display in the calendar
+              Elige qué tipos de fecha mostrar en el calendario
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
@@ -861,8 +861,8 @@ export function AlertsCalendar() {
                 onCheckedChange={(checked) => setDateRules({...dateRules, showStageEntry: !!checked})}
               />
               <Label htmlFor="stageEntry" className="flex-1">
-                <span className="font-medium">Stage Entry Date</span>
-                <p className="text-xs text-muted-foreground">When the alert entered its current stage</p>
+                <span className="font-medium">Fecha de Ingreso a Estado</span>
+                <p className="text-xs text-muted-foreground">Cuando la alerta ingresó a su estado actual</p>
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -872,8 +872,8 @@ export function AlertsCalendar() {
                 onCheckedChange={(checked) => setDateRules({...dateRules, showPublication: !!checked})}
               />
               <Label htmlFor="publication" className="flex-1">
-                <span className="font-medium">Publication Date</span>
-                <p className="text-xs text-muted-foreground">When the regulation was officially published</p>
+                <span className="font-medium">Fecha de Publicación</span>
+                <p className="text-xs text-muted-foreground">Cuando la norma fue publicada oficialmente</p>
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -883,8 +883,8 @@ export function AlertsCalendar() {
                 onCheckedChange={(checked) => setDateRules({...dateRules, showInForce: !!checked})}
               />
               <Label htmlFor="inForce" className="flex-1">
-                <span className="font-medium">In-Force Date</span>
-                <p className="text-xs text-muted-foreground">When the regulation becomes effective</p>
+                <span className="font-medium">Fecha de Vigencia</span>
+                <p className="text-xs text-muted-foreground">Cuando la norma entra en vigor</p>
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -894,8 +894,8 @@ export function AlertsCalendar() {
                 onCheckedChange={(checked) => setDateRules({...dateRules, showManual: !!checked})}
               />
               <Label htmlFor="manual" className="flex-1">
-                <span className="font-medium">Manual Dates</span>
-                <p className="text-xs text-muted-foreground">Custom dates added by the legal team</p>
+                <span className="font-medium">Fechas Manuales</span>
+                <p className="text-xs text-muted-foreground">Fechas personalizadas agregadas por el equipo legal</p>
               </Label>
             </div>
           </div>
