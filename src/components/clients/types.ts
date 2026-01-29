@@ -89,24 +89,14 @@ export interface ClientProfile {
   // Step 6: Client users
   clientUsers: ClientUser[];
 
-  // Step 7: Delivery settings
-  deliveryChannels: DeliveryChannels;
-  emailRecipients: EmailRecipients;
-  whatsappRecipients: string[];
-  dailyReportSchedule?: string; // HH:mm format
-  weeklyReportSchedule?: WeeklySchedule;
-  timezone: string;
-  sendOnlyIfAlerts: boolean;
-
-  // Step 8: Report defaults
+  // Step 7: Report defaults
   reportDefaultFilters?: ReportFilters;
   includeAnalytics: boolean;
   detailLevel: 'summary' | 'detailed' | 'comprehensive';
   includeExpertCommentary: boolean;
   pdfNamingConvention?: string;
 
-  // Step 9: Confirmations
-  whatsappConsent: boolean;
+  // Step 8: Confirmations
   sourceAcknowledgement: boolean;
   primaryContactId?: string;
   internalNotes?: string;
@@ -124,9 +114,8 @@ export const WIZARD_STEPS = [
   { id: 4, title: 'Monitoring scope', required: true },
   { id: 5, title: 'Priority logic', required: true },
   { id: 6, title: 'Client users', required: true },
-  { id: 7, title: 'Delivery settings', required: true },
-  { id: 8, title: 'Report defaults', required: false },
-  { id: 9, title: 'Confirmations', required: true },
+  { id: 7, title: 'Report defaults', required: false },
+  { id: 8, title: 'Confirmations', required: true },
 ] as const;
 
 export const COMPANY_TYPES = [
@@ -236,14 +225,8 @@ export const DEFAULT_CLIENT_PROFILE: ClientProfile = {
   instrumentTypes: [],
   stakeholdersAffected: [],
   clientUsers: [],
-  deliveryChannels: { email: true, whatsapp: false },
-  emailRecipients: { daily: [], weekly: [] },
-  whatsappRecipients: [],
-  timezone: 'America/Lima',
-  sendOnlyIfAlerts: true,
   includeAnalytics: true,
   detailLevel: 'detailed',
   includeExpertCommentary: true,
-  whatsappConsent: false,
   sourceAcknowledgement: false,
 };
