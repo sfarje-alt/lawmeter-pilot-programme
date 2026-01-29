@@ -57,6 +57,7 @@ interface AlertCalendarEvent {
   riskLevel?: 'high' | 'medium' | 'low';
   affectedAreas: string[];
   clients: string[];
+  clientNames: string[];
 }
 
 interface DateRuleConfig {
@@ -129,6 +130,12 @@ const convertToCalendarEvents = (alerts: PeruAlert[]): AlertCalendarEvent[] => {
       });
     }
     
+    // Get client names for display
+    const clientNames = clientIds.map(id => {
+      const client = MOCK_CLIENTS.find(c => c.id === id);
+      return client?.name || '';
+    }).filter(Boolean);
+    
     // For bills - use stage_date or project_date
     if (isBill) {
       const dateStr = alert.stage_date || alert.project_date;
@@ -144,7 +151,8 @@ const convertToCalendarEvents = (alerts: PeruAlert[]): AlertCalendarEvent[] => {
           stage: alert.current_stage,
           riskLevel,
           affectedAreas: alert.affected_areas,
-          clients: clientIds
+          clients: clientIds,
+          clientNames
         });
       }
     }
@@ -163,7 +171,8 @@ const convertToCalendarEvents = (alerts: PeruAlert[]): AlertCalendarEvent[] => {
           entity: alert.entity,
           riskLevel,
           affectedAreas: alert.affected_areas,
-          clients: clientIds
+          clients: clientIds,
+          clientNames
         });
       }
     }
@@ -199,7 +208,6 @@ export function AlertsCalendar() {
   const [view, setView] = useState<'day' | 'week' | 'month'>('month');
   const [showFilters, setShowFilters] = useState(false);
   const [showDateRules, setShowDateRules] = useState(false);
-  const [showLegend, setShowLegend] = useState(false);
   
   // Filters
   const [filterClient, setFilterClient] = useState<string>('all');
@@ -346,15 +354,6 @@ export function AlertsCalendar() {
         </div>
         <div className="flex items-center gap-2">
           <Button 
-            variant={showLegend ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => setShowLegend(!showLegend)}
-            className="gap-2"
-          >
-            <Info className="h-4 w-4" />
-            Leyenda
-          </Button>
-          <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setShowDateRules(true)}
@@ -379,21 +378,15 @@ export function AlertsCalendar() {
         </div>
       </div>
 
-      {/* Color Legend Panel */}
-      {showLegend && (
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-sm flex items-center gap-2">
-                <Info className="h-4 w-4" />
-                Leyenda del Calendario
-              </h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowLegend(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Permanent Color Legend Panel */}
+      <Card className="glass-card border-border/30">
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Info className="h-4 w-4 text-primary" />
+            <h3 className="font-medium text-sm">Leyenda del Calendario</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Event Types */}
               <div className="space-y-2">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tipos de Evento</h4>
@@ -453,14 +446,13 @@ export function AlertsCalendar() {
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <p className="text-xs text-muted-foreground mt-4 pt-3 border-t">
-              💡 <strong>Consejo:</strong> Haz clic en cualquier evento para verlo en la Bandeja. Usa "Reglas de Fecha" para personalizar qué tipos de fecha aparecen.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          
+          <p className="text-xs text-muted-foreground mt-4 pt-3 border-t">
+            💡 <strong>Consejo:</strong> Haz clic en cualquier evento para verlo en la Bandeja. Usa "Reglas de Fecha" para personalizar qué tipos de fecha aparecen.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Filters Panel */}
       {showFilters && (
@@ -628,16 +620,19 @@ export function AlertsCalendar() {
                           <div
                             key={event.id}
                             className={cn(
-                              "text-[10px] px-1 py-0.5 rounded border truncate cursor-pointer",
+                              "text-[10px] px-1 py-0.5 rounded border truncate cursor-pointer hover:opacity-80",
                               getEventColor(event)
                             )}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEventClick(event);
                             }}
-                            title={event.title}
+                            title={`${event.title}${event.clientNames.length > 0 ? ` | Cliente: ${event.clientNames.join(', ')}` : ''}`}
                           >
-                            {event.title.substring(0, 20)}...
+                            {event.clientNames.length > 0 && (
+                              <span className="font-semibold">{event.clientNames[0].split(' ')[0]}: </span>
+                            )}
+                            {event.title.substring(0, 15)}...
                           </div>
                         ))}
                         {dayEvents.length > 3 && (
@@ -691,6 +686,12 @@ export function AlertsCalendar() {
                               )}
                               {event.stage || event.entity}
                             </div>
+                            {event.clientNames.length > 0 && (
+                              <div className="flex items-center gap-1 mt-1 text-[10px] text-primary">
+                                <Building2 className="h-3 w-3" />
+                                {event.clientNames.join(', ')}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -746,6 +747,12 @@ export function AlertsCalendar() {
                                   {event.affectedAreas.slice(0, 3).map(area => (
                                     <Badge key={area} variant="secondary" className="text-[10px]">{area}</Badge>
                                   ))}
+                                </div>
+                              )}
+                              {event.clientNames.length > 0 && (
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Building2 className="h-4 w-4 text-primary" />
+                                  <span className="text-sm font-medium text-primary">{event.clientNames.join(', ')}</span>
                                 </div>
                               )}
                             </div>
@@ -820,6 +827,12 @@ export function AlertsCalendar() {
                           <p className="text-xs opacity-80 mt-1">
                             {event.stage || event.entity}
                           </p>
+                          {event.clientNames.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-primary">
+                              <Building2 className="h-3 w-3" />
+                              <span className="font-medium">{event.clientNames.join(', ')}</span>
+                            </div>
+                          )}
                         </div>
                         <Button size="sm" variant="ghost" onClick={(e) => {
                           e.stopPropagation();
