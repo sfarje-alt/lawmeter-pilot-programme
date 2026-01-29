@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, Plus } from "lucide-react";
-import { ClientProfile, LAW_BRANCHES, INSTRUMENT_TYPES } from "../types";
+import { ClientProfile, INSTRUMENT_TYPES } from "../types";
 
 interface Step4Props {
   data: ClientProfile;
@@ -31,14 +31,6 @@ const ENTITIES = [
 export function Step4MonitoringScope({ data, onChange }: Step4Props) {
   const [newKeyword, setNewKeyword] = useState("");
   const [newExclusion, setNewExclusion] = useState("");
-
-  const toggleLawBranch = (branch: string) => {
-    if (data.lawBranches.includes(branch)) {
-      onChange({ lawBranches: data.lawBranches.filter(b => b !== branch) });
-    } else {
-      onChange({ lawBranches: [...data.lawBranches, branch] });
-    }
-  };
 
   const toggleInstrumentType = (type: string) => {
     if (data.instrumentTypes.includes(type)) {
@@ -98,23 +90,6 @@ export function Step4MonitoringScope({ data, onChange }: Step4Props) {
           className="bg-background/50 resize-none"
           rows={3}
         />
-      </div>
-
-      {/* Law Branches (Temas) */}
-      <div className="space-y-2">
-        <Label>Law Branches (Temas)</Label>
-        <div className="flex flex-wrap gap-2">
-          {LAW_BRANCHES.map((branch) => (
-            <Badge
-              key={branch}
-              variant={data.lawBranches.includes(branch) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => toggleLawBranch(branch)}
-            >
-              {branch}
-            </Badge>
-          ))}
-        </div>
       </div>
 
       {/* Keywords */}
