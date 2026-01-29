@@ -175,66 +175,49 @@ export function Step1ClientBasics({ data, onChange }: Step1Props) {
         </Select>
       </div>
 
-      {/* Regulated Toggle */}
-      <div className="flex items-center justify-between p-4 rounded-lg bg-background/30 border border-border/30">
-        <div>
-          <Label htmlFor="isRegulated">Regulated Entity</Label>
-          <p className="text-sm text-muted-foreground">
-            Is this client subject to regulatory supervision?
-          </p>
-        </div>
-        <Switch
-          id="isRegulated"
-          checked={data.isRegulated}
-          onCheckedChange={(checked) => onChange({ isRegulated: checked })}
-        />
-      </div>
-
       {/* Supervising Authorities */}
-      {data.isRegulated && (
-        <div className="space-y-2">
-          <Label>Supervising Authorities</Label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {data.supervisingAuthorities.map((authority) => (
-              <Badge key={authority} variant="secondary" className="gap-1">
-                {authority}
-                <X
-                  className="h-3 w-3 cursor-pointer hover:text-destructive"
-                  onClick={() => removeAuthority(authority)}
-                />
-              </Badge>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Select onValueChange={addAuthority}>
-              <SelectTrigger className="bg-background/50 flex-1">
-                <SelectValue placeholder="Select authority..." />
-              </SelectTrigger>
-              <SelectContent>
-                {SUPERVISING_AUTHORITIES.filter(a => !data.supervisingAuthorities.includes(a)).map((auth) => (
-                  <SelectItem key={auth} value={auth}>{auth}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex gap-2">
-            <Input
-              value={newAuthority}
-              onChange={(e) => setNewAuthority(e.target.value)}
-              placeholder="Or add custom authority..."
-              className="bg-background/50"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => addAuthority(newAuthority)}
-              disabled={!newAuthority}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+      <div className="space-y-2">
+        <Label>Supervising Authorities</Label>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {data.supervisingAuthorities.map((authority) => (
+            <Badge key={authority} variant="secondary" className="gap-1">
+              {authority}
+              <X
+                className="h-3 w-3 cursor-pointer hover:text-destructive"
+                onClick={() => removeAuthority(authority)}
+              />
+            </Badge>
+          ))}
         </div>
-      )}
+        <div className="flex gap-2">
+          <Select onValueChange={addAuthority}>
+            <SelectTrigger className="bg-background/50 flex-1">
+              <SelectValue placeholder="Select authority..." />
+            </SelectTrigger>
+            <SelectContent>
+              {SUPERVISING_AUTHORITIES.filter(a => !data.supervisingAuthorities.includes(a)).map((auth) => (
+                <SelectItem key={auth} value={auth}>{auth}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={newAuthority}
+            onChange={(e) => setNewAuthority(e.target.value)}
+            placeholder="Or add custom authority..."
+            className="bg-background/50"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => addAuthority(newAuthority)}
+            disabled={!newAuthority}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
