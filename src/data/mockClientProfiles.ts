@@ -125,18 +125,7 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
     }
   ],
 
-  // Step 7: Report defaults
-  reportDefaultFilters: {
-    areas: ["Legal", "Compliance", "Asuntos Regulatorios"],
-    sectors: ["Farmacéutico", "Dispositivos Médicos", "Oncología"],
-    types: ["Proyecto de Ley", "Decreto Supremo", "Resolución Ministerial"]
-  },
-  includeAnalytics: true,
-  detailLevel: "detailed",
-  includeExpertCommentary: true,
-  pdfNamingConvention: "FARMASALUD_[FECHA]_[TIPO]_Reporte",
-
-  // Step 8: Confirmations
+  // Step 7: Confirmations
   sourceAcknowledgement: true,
   primaryContactId: "user-fs-001",
   internalNotes: "Cliente prioritario. Gerencia Legal requiere alertas sobre oncológicos y contrataciones públicas con máxima urgencia. Reunión de seguimiento quincenal los martes.",

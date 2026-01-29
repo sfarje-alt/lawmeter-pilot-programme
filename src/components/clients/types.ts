@@ -89,14 +89,7 @@ export interface ClientProfile {
   // Step 6: Client users
   clientUsers: ClientUser[];
 
-  // Step 7: Report defaults
-  reportDefaultFilters?: ReportFilters;
-  includeAnalytics: boolean;
-  detailLevel: 'summary' | 'detailed' | 'comprehensive';
-  includeExpertCommentary: boolean;
-  pdfNamingConvention?: string;
-
-  // Step 8: Confirmations
+  // Step 7: Confirmations
   sourceAcknowledgement: boolean;
   primaryContactId?: string;
   internalNotes?: string;
@@ -114,8 +107,7 @@ export const WIZARD_STEPS = [
   { id: 4, title: 'Monitoring scope', required: true },
   { id: 5, title: 'Priority logic', required: true },
   { id: 6, title: 'Client users', required: true },
-  { id: 7, title: 'Report defaults', required: false },
-  { id: 8, title: 'Confirmations', required: true },
+  { id: 7, title: 'Confirmations', required: true },
 ] as const;
 
 export const COMPANY_TYPES = [
@@ -225,8 +217,5 @@ export const DEFAULT_CLIENT_PROFILE: ClientProfile = {
   instrumentTypes: [],
   stakeholdersAffected: [],
   clientUsers: [],
-  includeAnalytics: true,
-  detailLevel: 'detailed',
-  includeExpertCommentary: true,
   sourceAcknowledgement: false,
 };
