@@ -75,16 +75,16 @@ export function Step3Tags({ data, onChange }: Step3Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Custom Tags</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-1">Etiquetas Personalizadas</h2>
         <p className="text-sm text-muted-foreground">
-          Create flexible tag categories to organize and filter alerts (e.g., Internal Areas, Topics of Interest)
+          Crea categorías de etiquetas flexibles para organizar y filtrar alertas (ej. Áreas Internas, Temas de Interés)
         </p>
       </div>
 
       {/* Quick Add Presets */}
       {data.tagCategories.length === 0 && (
         <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
-          <Label className="text-sm">Quick Start - Add a category:</Label>
+          <Label className="text-sm">Inicio Rápido - Agregar una categoría:</Label>
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -116,17 +116,17 @@ export function Step3Tags({ data, onChange }: Step3Props) {
 
       {/* Add New Category */}
       <div className="space-y-2">
-        <Label>Add New Category</Label>
+        <Label>Agregar Nueva Categoría</Label>
         <div className="flex gap-2">
           <Input
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
-            placeholder="Category name (e.g., Áreas Internas)"
+            placeholder="Nombre de categoría (ej. Áreas Internas)"
             className="bg-background/50"
             onKeyPress={(e) => e.key === 'Enter' && addCategory()}
           />
           <Button type="button" onClick={addCategory} disabled={!newCategoryName.trim()}>
-            <FolderPlus className="h-4 w-4 mr-1" /> Add
+            <FolderPlus className="h-4 w-4 mr-1" /> Agregar
           </Button>
         </div>
       </div>
@@ -141,7 +141,7 @@ export function Step3Tags({ data, onChange }: Step3Props) {
                   <Tag className="h-4 w-4 text-primary" />
                   <Label className="font-medium">{category.name}</Label>
                   <Badge variant="secondary" className="text-xs">
-                    {category.tags.length} tags
+                    {category.tags.length} etiquetas
                   </Badge>
                 </div>
                 <Button
@@ -173,7 +173,7 @@ export function Step3Tags({ data, onChange }: Step3Props) {
               {/* Suggested tags for Areas category */}
               {category.name.toLowerCase().includes('área') && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Quick add:</Label>
+                  <Label className="text-xs text-muted-foreground">Agregar rápido:</Label>
                   <div className="flex flex-wrap gap-1">
                     {SUGGESTED_AREA_TAGS.filter(t => !category.tags.includes(t)).slice(0, 6).map((tag) => (
                       <Badge
@@ -195,7 +195,7 @@ export function Step3Tags({ data, onChange }: Step3Props) {
                 <Input
                   value={newTags[category.id] || ''}
                   onChange={(e) => setNewTags(prev => ({ ...prev, [category.id]: e.target.value }))}
-                  placeholder="Add tag..."
+                  placeholder="Agregar etiqueta..."
                   className="bg-background/50 text-sm"
                   onKeyPress={(e) => e.key === 'Enter' && addTagToCategory(category.id)}
                 />
@@ -217,8 +217,8 @@ export function Step3Tags({ data, onChange }: Step3Props) {
       {data.tagCategories.length === 0 && (
         <div className="text-center py-8 text-muted-foreground border border-dashed border-border/30 rounded-lg">
           <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>No tag categories created yet.</p>
-          <p className="text-sm mt-1">Add categories above or use Quick Start presets.</p>
+          <p>No hay categorías de etiquetas creadas aún.</p>
+          <p className="text-sm mt-1">Agrega categorías arriba o usa los presets de Inicio Rápido.</p>
         </div>
       )}
     </div>

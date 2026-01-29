@@ -80,11 +80,11 @@ export interface ClientProfile {
 }
 
 export const WIZARD_STEPS = [
-  { id: 1, title: 'Basics', required: true },
-  { id: 2, title: 'Monitoring', required: true },
-  { id: 3, title: 'Tags', required: false },
-  { id: 4, title: 'Users', required: true },
-  { id: 5, title: 'Confirm', required: true },
+  { id: 1, title: 'Datos', required: true },
+  { id: 2, title: 'Monitoreo', required: true },
+  { id: 3, title: 'Etiquetas', required: false },
+  { id: 4, title: 'Usuarios', required: true },
+  { id: 5, title: 'Confirmar', required: true },
 ] as const;
 
 export const COMPANY_TYPES = [

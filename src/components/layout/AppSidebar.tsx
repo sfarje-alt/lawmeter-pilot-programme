@@ -27,12 +27,12 @@ interface AppSidebarProps {
 
 // Admin menu items
 const adminMenuItems = [
-  { id: "sessions", title: "Sessions", icon: Video },
-  { id: "inbox", title: "Inbox", icon: Inbox },
-  { id: "clients", title: "Clients", icon: Building2 },
-  { id: "reports", title: "Reports", icon: FileText },
-  { id: "analytics", title: "Analytics", icon: BarChart3 },
-  { id: "calendar", title: "Calendar", icon: Calendar },
+  { id: "sessions", title: "Sesiones", icon: Video },
+  { id: "inbox", title: "Bandeja", icon: Inbox },
+  { id: "clients", title: "Clientes", icon: Building2 },
+  { id: "reports", title: "Reportes", icon: FileText },
+  { id: "analytics", title: "Analíticas", icon: BarChart3 },
+  { id: "calendar", title: "Calendario", icon: Calendar },
 ];
 
 // Client (view-only) menu items
@@ -40,7 +40,7 @@ const clientMenuItems = [
   { id: "client-inbox", title: "Alertas", icon: Inbox },
   { id: "client-profile", title: "Mi Perfil", icon: User },
   { id: "client-reports", title: "Reportes", icon: FileText },
-  { id: "client-analytics", title: "Analytics", icon: BarChart3 },
+  { id: "client-analytics", title: "Analíticas", icon: BarChart3 },
   { id: "client-calendar", title: "Calendario", icon: Calendar },
 ];
 
@@ -55,8 +55,8 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
   const handleLogout = async () => {
     await signOut();
     toast({
-      title: "Signed out",
-      description: "You have been successfully signed out.",
+      title: "Sesión cerrada",
+      description: "Has cerrado sesión correctamente.",
     });
     navigate("/auth");
   };
@@ -83,7 +83,7 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
               className="w-full h-auto object-contain max-h-32" 
             />
             <h1 className="text-sm font-bold text-foreground leading-tight">
-              {isClientUser ? "Portal Cliente" : "Regulatory Intelligence Hub"}
+              {isClientUser ? "Portal Cliente" : "Centro de Inteligencia Regulatoria"}
             </h1>
             {isClientUser && clientName && (
               <Badge variant="outline" className="w-full justify-center bg-primary/10 border-primary/30 text-primary text-xs">
@@ -133,27 +133,27 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
       <div className="p-2 space-y-1">
         <SidebarMenuButton
           onClick={() => isClientUser ? onTabChange('client-settings') : navigate('/settings')}
-          tooltip="Settings"
+          tooltip="Configuración"
           className="text-sidebar-foreground hover:bg-white/10"
         >
           <Settings className="h-4 w-4" />
-          {!isCollapsed && <span>Settings</span>}
+          {!isCollapsed && <span>Configuración</span>}
         </SidebarMenuButton>
 
         <SidebarMenuButton
           onClick={handleLogout}
-          tooltip="Sign Out"
+          tooltip="Cerrar Sesión"
           className="text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />
-          {!isCollapsed && <span>Sign Out</span>}
+          {!isCollapsed && <span>Cerrar Sesión</span>}
         </SidebarMenuButton>
 
         {!isCollapsed && (
           <div className="px-2 py-2">
             <Badge variant="outline" className="bg-success/20 border-success/30 text-success-foreground text-xs">
               <Clock className="h-3 w-3 mr-1" />
-              Updated: Now
+              Actualizado: Ahora
             </Badge>
           </div>
         )}

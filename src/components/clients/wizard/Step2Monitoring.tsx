@@ -111,16 +111,16 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Monitoring Scope</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-1">Alcance del Monitoreo</h2>
         <p className="text-sm text-muted-foreground">
-          Define keywords, instrument types, and commissions to monitor
+          Define palabras clave, tipos de instrumentos y comisiones a monitorear
         </p>
       </div>
 
       {/* Keywords */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Keywords</Label>
+          <Label>Palabras Clave</Label>
           <Button
             type="button"
             variant="ghost"
@@ -134,7 +134,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
             ) : (
               <Sparkles className="h-3 w-3 mr-1" />
             )}
-            Get AI Suggestions
+            Obtener Sugerencias IA
           </Button>
         </div>
 
@@ -154,7 +154,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
         {suggestions.length > 0 && (
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> AI Suggestions (click to add)
+              <Sparkles className="h-3 w-3" /> Sugerencias IA (clic para agregar)
             </Label>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((suggestion) => (
@@ -177,7 +177,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
           <Input
             value={newKeyword}
             onChange={(e) => setNewKeyword(e.target.value)}
-            placeholder="Type a keyword..."
+            placeholder="Escribe una palabra clave..."
             className="bg-background/50"
             onKeyPress={(e) => e.key === 'Enter' && addKeyword()}
           />
@@ -190,13 +190,13 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
       {/* Instrument Types */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Instrument Types</Label>
+          <Label>Tipos de Instrumentos</Label>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={selectAllInstruments} className="text-xs">
-              Select All
+              Seleccionar Todos
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={clearAllInstruments} className="text-xs">
-              Clear
+              Limpiar
             </Button>
           </div>
         </div>
@@ -213,7 +213,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          {instrumentTypes.length} of {INSTRUMENT_TYPES.length} selected
+          {instrumentTypes.length} de {INSTRUMENT_TYPES.length} seleccionados
         </p>
       </div>
 
@@ -221,17 +221,17 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <Label>Congressional Commissions</Label>
+            <Label>Comisiones del Congreso</Label>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Select commissions to monitor for session alerts
+              Selecciona comisiones para recibir alertas de sesiones
             </p>
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={selectAllCommissions} className="text-xs">
-              Select All
+              Seleccionar Todas
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={clearAllCommissions} className="text-xs">
-              Clear
+              Limpiar
             </Button>
           </div>
         </div>
@@ -248,7 +248,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          {watchedCommissions.length} of {PERU_COMMISSIONS.length} commissions selected
+          {watchedCommissions.length} de {PERU_COMMISSIONS.length} comisiones seleccionadas
         </p>
       </div>
     </div>

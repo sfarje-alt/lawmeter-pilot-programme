@@ -51,15 +51,15 @@ export function Step4Users({ data, onChange }: Step4Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Client Users</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-1">Usuarios del Cliente</h2>
         <p className="text-sm text-muted-foreground">
-          Add users who will receive alerts and reports
+          Agrega usuarios que recibirán alertas y reportes
         </p>
       </div>
 
       {/* Stats */}
       <div className="p-3 rounded-lg bg-background/30 border border-border/30 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">Total Users</span>
+        <span className="text-sm text-muted-foreground">Total de Usuarios</span>
         <Badge variant="secondary">{data.clientUsers.length}</Badge>
       </div>
 
@@ -67,32 +67,32 @@ export function Step4Users({ data, onChange }: Step4Props) {
       <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/30">
         <div className="flex items-center justify-between">
           <Label className="font-medium">
-            {editingIndex !== null ? 'Edit User' : 'Add New User'}
+            {editingIndex !== null ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}
           </Label>
           {editingIndex !== null && (
-            <Button variant="ghost" size="sm" onClick={cancelEdit}>Cancel</Button>
+            <Button variant="ghost" size="sm" onClick={cancelEdit}>Cancelar</Button>
           )}
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="userName">Name *</Label>
+            <Label htmlFor="userName">Nombre *</Label>
             <Input
               id="userName"
               value={newUser.name}
               onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-              placeholder="Full name"
+              placeholder="Nombre completo"
               className="bg-background/50"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="userEmail">Email *</Label>
+            <Label htmlFor="userEmail">Correo *</Label>
             <Input
               id="userEmail"
               type="email"
               value={newUser.email}
               onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-              placeholder="email@example.com"
+              placeholder="correo@ejemplo.com"
               className="bg-background/50"
             />
           </div>
@@ -100,17 +100,17 @@ export function Step4Users({ data, onChange }: Step4Props) {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="userTitle">Title</Label>
+            <Label htmlFor="userTitle">Cargo</Label>
             <Input
               id="userTitle"
               value={newUser.title || ''}
               onChange={(e) => setNewUser({ ...newUser, title: e.target.value })}
-              placeholder="e.g., Legal Director"
+              placeholder="Ej., Director Legal"
               className="bg-background/50"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="userPhone">Phone</Label>
+            <Label htmlFor="userPhone">Teléfono</Label>
             <Input
               id="userPhone"
               type="tel"
@@ -128,7 +128,7 @@ export function Step4Users({ data, onChange }: Step4Props) {
           className="w-full"
         >
           <Plus className="h-4 w-4 mr-2" />
-          {editingIndex !== null ? 'Update User' : 'Add User'}
+          {editingIndex !== null ? 'Actualizar Usuario' : 'Agregar Usuario'}
         </Button>
       </div>
 
@@ -168,7 +168,7 @@ export function Step4Users({ data, onChange }: Step4Props) {
                     </Badge>
                   )}
                   <Button variant="ghost" size="sm" onClick={() => editUser(index)}>
-                    Edit
+                    Editar
                   </Button>
                   <Button 
                     variant="ghost" 
