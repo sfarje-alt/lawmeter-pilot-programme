@@ -5,13 +5,11 @@ import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { toast } from "sonner";
 import { ClientProfile, DEFAULT_CLIENT_PROFILE, WIZARD_STEPS } from "./types";
 import { WizardProgress } from "./wizard/WizardProgress";
-import { Step1ClientBasics } from "./wizard/Step1ClientBasics";
-import { Step2BusinessScope } from "./wizard/Step2BusinessScope";
-import { Step3ClientAreas } from "./wizard/Step3ClientAreas";
-import { Step4MonitoringScope } from "./wizard/Step4MonitoringScope";
-import { Step5PriorityLogic } from "./wizard/Step5PriorityLogic";
-import { Step6ClientUsers } from "./wizard/Step6ClientUsers";
-import { Step9Confirmations } from "./wizard/Step9Confirmations";
+import { Step1Basics } from "./wizard/Step1Basics";
+import { Step2Monitoring } from "./wizard/Step2Monitoring";
+import { Step3Tags } from "./wizard/Step3Tags";
+import { Step4Users } from "./wizard/Step4Users";
+import { Step5Confirm } from "./wizard/Step5Confirm";
 
 interface ClientWizardProps {
   open: boolean;
@@ -33,7 +31,7 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
     if (!completedSteps.includes(currentStep)) {
       setCompletedSteps([...completedSteps, currentStep]);
     }
-    if (currentStep < 7) setCurrentStep(currentStep + 1);
+    if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
 
   const handlePrev = () => {
@@ -41,7 +39,13 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
   };
 
   const handleSave = () => {
-    const clientToSave = { ...data, id: data.id || crypto.randomUUID(), status: 'active' as const, createdAt: new Date().toISOString() };
+    const clientToSave = { 
+      ...data, 
+      id: data.id || crypto.randomUUID(), 
+      status: 'active' as const, 
+      createdAt: data.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
     onSave(clientToSave);
     toast.success("Client profile saved successfully!");
     onOpenChange(false);
@@ -52,13 +56,11 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
 
   const renderStep = () => {
     switch (currentStep) {
-      case 1: return <Step1ClientBasics data={data} onChange={updateData} />;
-      case 2: return <Step2BusinessScope data={data} onChange={updateData} />;
-      case 3: return <Step3ClientAreas data={data} onChange={updateData} />;
-      case 4: return <Step4MonitoringScope data={data} onChange={updateData} />;
-      case 5: return <Step5PriorityLogic data={data} onChange={updateData} />;
-      case 6: return <Step6ClientUsers data={data} onChange={updateData} />;
-      case 7: return <Step9Confirmations data={data} onChange={updateData} />;
+      case 1: return <Step1Basics data={data} onChange={updateData} />;
+      case 2: return <Step2Monitoring data={data} onChange={updateData} />;
+      case 3: return <Step3Tags data={data} onChange={updateData} />;
+      case 4: return <Step4Users data={data} onChange={updateData} />;
+      case 5: return <Step5Confirm data={data} onChange={updateData} />;
       default: return null;
     }
   };
@@ -82,8 +84,8 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
           <Button variant="outline" onClick={handlePrev} disabled={currentStep === 1}>
             <ChevronLeft className="h-4 w-4 mr-1" /> Previous
           </Button>
-          <span className="text-sm text-muted-foreground">Step {currentStep} of 7</span>
-          {currentStep < 7 ? (
+          <span className="text-sm text-muted-foreground">Step {currentStep} of 5</span>
+          {currentStep < 5 ? (
             <Button onClick={handleNext}>
               Next <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
