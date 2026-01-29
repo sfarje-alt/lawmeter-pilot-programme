@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, Plus, Sparkles, Loader2 } from "lucide-react";
-import { ClientProfile, INSTRUMENT_TYPES } from "../types";
+import { ClientProfile, INSTRUMENT_TYPES, PERU_COMMISSIONS } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -66,6 +66,14 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
     }
   };
 
+  const toggleCommission = (commission: string) => {
+    if (data.watchedCommissions.includes(commission)) {
+      onChange({ watchedCommissions: data.watchedCommissions.filter(c => c !== commission) });
+    } else {
+      onChange({ watchedCommissions: [...data.watchedCommissions, commission] });
+    }
+  };
+
   const addKeyword = (keyword?: string) => {
     const kw = keyword || newKeyword.trim();
     if (kw && !data.keywords.includes(kw)) {
@@ -88,12 +96,20 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
     onChange({ instrumentTypes: [] });
   };
 
+  const selectAllCommissions = () => {
+    onChange({ watchedCommissions: [...PERU_COMMISSIONS] });
+  };
+
+  const clearAllCommissions = () => {
+    onChange({ watchedCommissions: [] });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-1">Monitoring Scope</h2>
         <p className="text-sm text-muted-foreground">
-          Define keywords and instrument types to monitor
+          Define keywords, instrument types, and commissions to monitor
         </p>
       </div>
 
@@ -194,6 +210,41 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
         </div>
         <p className="text-xs text-muted-foreground">
           {data.instrumentTypes.length} of {INSTRUMENT_TYPES.length} selected
+        </p>
+      </div>
+
+      {/* Congressional Commissions */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label>Congressional Commissions</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Select commissions to monitor for session alerts
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={selectAllCommissions} className="text-xs">
+              Select All
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={clearAllCommissions} className="text-xs">
+              Clear
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-background/30 border border-border/30 max-h-48 overflow-y-auto">
+          {PERU_COMMISSIONS.map((commission) => (
+            <Badge
+              key={commission}
+              variant={data.watchedCommissions.includes(commission) ? "default" : "outline"}
+              className="cursor-pointer text-xs"
+              onClick={() => toggleCommission(commission)}
+            >
+              {commission}
+            </Badge>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {data.watchedCommissions.length} of {PERU_COMMISSIONS.length} commissions selected
         </p>
       </div>
     </div>

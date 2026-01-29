@@ -7,14 +7,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Search, Calendar as CalendarIcon, X, RotateCcw } from 'lucide-react';
-import { format, subDays, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PeruSession } from '@/types/peruSessions';
 import { cn } from '@/lib/utils';
+import { MOCK_CLIENTS } from '@/data/peruAlertsMockData';
 
 export interface SessionsFilters {
   searchQuery: string;
   commissions: string[];
+  clientIds: string[];
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   quickDateRange: string;
@@ -64,6 +66,11 @@ export function SessionsFilterBar({
     return Array.from(statuses);
   }, [sessions]);
 
+  // Available clients
+  const availableClients = useMemo(() => {
+    return MOCK_CLIENTS.map(c => ({ id: c.id, name: c.name }));
+  }, []);
+
   const statusLabels: Record<string, string> = {
     scheduled: 'Programada',
     completed: 'Completada',
@@ -96,6 +103,7 @@ export function SessionsFilterBar({
     onFiltersChange({
       searchQuery: '',
       commissions: [],
+      clientIds: [],
       dateFrom: undefined,
       dateTo: undefined,
       quickDateRange: '',
@@ -109,6 +117,7 @@ export function SessionsFilterBar({
     let count = 0;
     if (filters.searchQuery) count++;
     if (filters.commissions.length > 0) count++;
+    if (filters.clientIds.length > 0) count++;
     if (filters.dateFrom || filters.dateTo) count++;
     if (filters.showOnlyRecommended) count++;
     if (filters.showOnlySelected) count++;
@@ -140,6 +149,15 @@ export function SessionsFilterBar({
           className="min-w-[180px]"
         />
 
+        {/* Client Multi-Select */}
+        <MultiSelect
+          options={availableClients.map(c => ({ label: c.name, value: c.id }))}
+          selected={filters.clientIds}
+          onChange={(selected) => updateFilter('clientIds', selected)}
+          placeholder="Cliente: Todos"
+          className="min-w-[170px]"
+        />
+
         {/* Status Multi-Select */}
         {availableStatuses.length > 0 && (
           <MultiSelect
@@ -168,7 +186,7 @@ export function SessionsFilterBar({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-4" align="start">
+          <PopoverContent className="w-auto p-4 bg-popover border border-border" align="start">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -180,7 +198,7 @@ export function SessionsFilterBar({
                       updateFilter('dateFrom', date);
                       updateFilter('quickDateRange', '');
                     }}
-                    className={cn("p-0 pointer-events-auto")}
+                    className={cn("p-0 pointer-events-auto bg-background")}
                   />
                 </div>
                 <div>
@@ -192,7 +210,7 @@ export function SessionsFilterBar({
                       updateFilter('dateTo', date);
                       updateFilter('quickDateRange', '');
                     }}
-                    className={cn("p-0 pointer-events-auto")}
+                    className={cn("p-0 pointer-events-auto bg-background")}
                   />
                 </div>
               </div>
@@ -251,7 +269,8 @@ export function SessionsFilterBar({
 // Helper function to apply filters to sessions
 export function applySessionFilters(
   sessions: PeruSession[],
-  filters: SessionsFilters
+  filters: SessionsFilters,
+  clientWatchedCommissions?: Map<string, string[]>
 ): PeruSession[] {
   return sessions.filter(session => {
     // Search query
@@ -266,6 +285,17 @@ export function applySessionFilters(
     // Commission filter
     if (filters.commissions.length > 0) {
       if (!filters.commissions.includes(session.commission_name)) {
+        return false;
+      }
+    }
+
+    // Client filter - show sessions for commissions that selected clients are watching
+    if (filters.clientIds.length > 0 && clientWatchedCommissions) {
+      const watchedBySelectedClients = filters.clientIds.some(clientId => {
+        const commissions = clientWatchedCommissions.get(clientId);
+        return commissions && commissions.includes(session.commission_name);
+      });
+      if (!watchedBySelectedClients) {
         return false;
       }
     }
