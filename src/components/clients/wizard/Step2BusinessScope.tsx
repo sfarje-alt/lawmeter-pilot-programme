@@ -20,25 +20,7 @@ interface Step2Props {
   onChange: (data: Partial<ClientProfile>) => void;
 }
 
-const CUSTOMER_SEGMENTS = [
-  'B2B',
-  'B2C',
-  'B2G (Gobierno)',
-  'Corporativo',
-  'PYME',
-  'Retail',
-  'Mayorista',
-];
-
-const DISTRIBUTION_CHANNELS = [
-  'Venta Directa',
-  'E-commerce',
-  'Retail',
-  'Distribuidores',
-  'Agentes',
-  'Franquicias',
-  'Marketplace',
-];
+// Cross-border countries (Peru is primary market, selected by default)
 
 // Cross-border countries (Peru is primary market, selected by default)
 const CROSS_BORDER_COUNTRIES = [
@@ -79,22 +61,6 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
 
   const removeProduct = (index: number) => {
     onChange({ productsServices: data.productsServices.filter((_, i) => i !== index) });
-  };
-
-  const toggleSegment = (segment: string) => {
-    if (data.customerSegments.includes(segment)) {
-      onChange({ customerSegments: data.customerSegments.filter(s => s !== segment) });
-    } else {
-      onChange({ customerSegments: [...data.customerSegments, segment] });
-    }
-  };
-
-  const toggleChannel = (channel: string) => {
-    if (data.distributionChannels.includes(channel)) {
-      onChange({ distributionChannels: data.distributionChannels.filter(c => c !== channel) });
-    } else {
-      onChange({ distributionChannels: [...data.distributionChannels, channel] });
-    }
   };
 
   const toggleCrossBorderCountry = (country: string) => {
@@ -228,40 +194,6 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
           <Button type="button" variant="outline" onClick={addProduct} disabled={!newProduct.name}>
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
-        </div>
-      </div>
-
-      {/* Customer Segments */}
-      <div className="space-y-2">
-        <Label>Customer Segments</Label>
-        <div className="flex flex-wrap gap-2">
-          {CUSTOMER_SEGMENTS.map((segment) => (
-            <Badge
-              key={segment}
-              variant={data.customerSegments.includes(segment) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => toggleSegment(segment)}
-            >
-              {segment}
-            </Badge>
-          ))}
-        </div>
-      </div>
-
-      {/* Distribution Channels */}
-      <div className="space-y-2">
-        <Label>Distribution Channels</Label>
-        <div className="flex flex-wrap gap-2">
-          {DISTRIBUTION_CHANNELS.map((channel) => (
-            <Badge
-              key={channel}
-              variant={data.distributionChannels.includes(channel) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => toggleChannel(channel)}
-            >
-              {channel}
-            </Badge>
-          ))}
         </div>
       </div>
 
