@@ -205,6 +205,7 @@ export function AlertsCalendar() {
   // Set initial date to November 2025 where most mock data exists
   const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [expandedDate, setExpandedDate] = useState<Date | null>(null);
   const [view, setView] = useState<'day' | 'week' | 'month'>('month');
   const [showFilters, setShowFilters] = useState(false);
   const [showDateRules, setShowDateRules] = useState(false);
@@ -637,7 +638,13 @@ export function AlertsCalendar() {
                           </div>
                         ))}
                         {dayEvents.length > 3 && (
-                          <div className="text-[10px] text-muted-foreground text-center">
+                          <div 
+                            className="text-[10px] text-primary font-medium text-center cursor-pointer hover:underline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedDate(day);
+                            }}
+                          >
                             +{dayEvents.length - 3} más
                           </div>
                         )}
@@ -913,6 +920,68 @@ export function AlertsCalendar() {
               </Label>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Expanded Date Dialog - shows all alerts for a specific date */}
+      <Dialog open={!!expandedDate} onOpenChange={(open) => !open && setExpandedDate(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              Alertas del {expandedDate && format(expandedDate, "d 'de' MMMM, yyyy", { locale: es })}
+            </DialogTitle>
+            <DialogDescription>
+              {expandedDate && `${getEventsForDate(expandedDate).length} alertas en esta fecha`}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="flex-1 max-h-[60vh]">
+            <div className="space-y-2 pr-4">
+              {expandedDate && getEventsForDate(expandedDate).map(event => (
+                <div
+                  key={event.id}
+                  className={cn(
+                    "p-3 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity",
+                    getEventColor(event)
+                  )}
+                  onClick={() => {
+                    setExpandedDate(null);
+                    handleEventClick(event);
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    {event.type === 'bill' ? (
+                      <Badge variant="outline" className="text-[10px]">Proyecto de Ley</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px]">Norma</Badge>
+                    )}
+                    {getRiskBadge(event.riskLevel)}
+                  </div>
+                  <h4 className="font-medium text-sm line-clamp-2">{event.title}</h4>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                    {event.stage && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {event.stage}
+                      </span>
+                    )}
+                    {event.entity && (
+                      <span className="flex items-center gap-1">
+                        <Building2 className="h-3 w-3" />
+                        {event.entity}
+                      </span>
+                    )}
+                  </div>
+                  {event.clientNames.length > 0 && (
+                    <div className="flex items-center gap-1 mt-2 text-xs text-primary">
+                      <Building2 className="h-3 w-3" />
+                      {event.clientNames.join(', ')}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
