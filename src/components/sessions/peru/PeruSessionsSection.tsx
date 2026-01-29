@@ -25,11 +25,13 @@ import { SessionDetailDrawer } from './SessionDetailDrawer';
 import { SessionPublicationPanel } from './SessionPublicationPanel';
 import { SessionsFilterBar, SessionsFilters, applySessionFilters } from './SessionsFilterBar';
 import { PERU_COMMISSIONS, PeruSession, SessionClientCommentary } from '@/types/peruSessions';
+import { MOCK_CLIENT_PROFILES } from '@/data/mockClientProfiles';
 import { toast } from 'sonner';
 
 const defaultFilters: SessionsFilters = {
   searchQuery: '',
   commissions: [],
+  clientIds: [],
   dateFrom: undefined,
   dateTo: undefined,
   quickDateRange: '',
@@ -69,17 +71,28 @@ export function PeruSessionsSection() {
     hasCommentaryForClient,
   } = usePeruSessions();
 
+  // Build client -> watched commissions mapping
+  const clientWatchedCommissions = useMemo(() => {
+    const map = new Map<string, string[]>();
+    MOCK_CLIENT_PROFILES.forEach(client => {
+      if (client.id && client.watchedCommissions) {
+        map.set(client.id, client.watchedCommissions);
+      }
+    });
+    return map;
+  }, []);
+
   // Apply filters to sessions
   const filteredSessions = useMemo(() => {
-    return applySessionFilters(allSessions, filters);
-  }, [allSessions, filters]);
+    return applySessionFilters(allSessions, filters, clientWatchedCommissions);
+  }, [allSessions, filters, clientWatchedCommissions]);
 
   // Get pinned sessions with filters
   const pinnedSessions = useMemo(() => {
     const pinned = allSessions.filter(s => s.is_pinned_for_publication);
     const filtersWithoutSelected = { ...filters, showOnlySelected: false };
-    return applySessionFilters(pinned, filtersWithoutSelected);
-  }, [allSessions, filters]);
+    return applySessionFilters(pinned, filtersWithoutSelected, clientWatchedCommissions);
+  }, [allSessions, filters, clientWatchedCommissions]);
 
   // Calculate analyzed count
   const analyzedCount = useMemo(() => {

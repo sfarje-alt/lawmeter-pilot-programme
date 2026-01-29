@@ -57,6 +57,11 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
     "Resolución",
     "Decreto de Urgencia",
   ],
+  watchedCommissions: [
+    "Comisión de Salud y Población",
+    "Comisión de Defensa del Consumidor y Organismos Reguladores de los Servicios Públicos",
+    "Comisión de Presupuesto y Cuenta General de la República",
+  ],
 
   // Step 3: Custom Tag Categories
   tagCategories: [

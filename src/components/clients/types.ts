@@ -49,6 +49,7 @@ export interface ClientProfile {
   keywords: string[];
   exclusions: string[];
   instrumentTypes: string[];
+  watchedCommissions: string[];  // Congressional commissions to monitor for sessions
 
   // Step 3: Custom Tag Categories (flexible, replaces rigid Areas)
   tagCategories: TagCategory[];
@@ -176,6 +177,7 @@ export const DEFAULT_CLIENT_PROFILE: ClientProfile = {
   keywords: [],
   exclusions: [],
   instrumentTypes: [],
+  watchedCommissions: [],
   tagCategories: [],
   clientUsers: [],
   sourceAcknowledgement: false,
@@ -187,3 +189,32 @@ export const DEFAULT_CLIENT_PROFILE: ClientProfile = {
   customerSegments: [],
   distributionChannels: [],
 };
+
+// Peru Congressional Commissions
+export const PERU_COMMISSIONS = [
+  "Comisión de Salud y Población",
+  "Comisión de Economía, Banca, Finanzas e Inteligencia Financiera",
+  "Comisión de Presupuesto y Cuenta General de la República",
+  "Comisión de Defensa del Consumidor y Organismos Reguladores de los Servicios Públicos",
+  "Comisión de Trabajo y Seguridad Social",
+  "Comisión de Educación, Juventud y Deporte",
+  "Comisión de Justicia y Derechos Humanos",
+  "Comisión de Constitución y Reglamento",
+  "Comisión de Fiscalización y Contraloría",
+  "Comisión de Comercio Exterior y Turismo",
+  "Comisión de Producción, Micro y Pequeña Empresa y Cooperativas",
+  "Comisión de Transportes y Comunicaciones",
+  "Comisión de Vivienda y Construcción",
+  "Comisión de Energía y Minas",
+  "Comisión de Agraria",
+  "Comisión de Ambiente",
+  "Comisión de Ciencia, Innovación y Tecnología",
+  "Comisión de Cultura y Patrimonio Cultural",
+  "Comisión de Defensa Nacional, Orden Interno, Desarrollo Alternativo y Lucha Contra las Drogas",
+  "Comisión de Descentralización, Regionalización, Gobiernos Locales y Modernización de la Gestión del Estado",
+  "Comisión de Inclusión Social y Personas con Discapacidad",
+  "Comisión de Inteligencia",
+  "Comisión de la Mujer y Familia",
+  "Comisión de Pueblos Andinos, Amazónicos y Afroperuanos, Ambiente y Ecología",
+  "Comisión de Relaciones Exteriores",
+];
