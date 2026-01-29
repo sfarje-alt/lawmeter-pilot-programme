@@ -69,12 +69,12 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-          <p className="text-muted-foreground">Manage client profiles and monitoring rules</p>
+          <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
+          <p className="text-muted-foreground">Gestiona perfiles de clientes y reglas de monitoreo</p>
         </div>
         <Button onClick={onCreateClient} className="gap-2">
           <Plus className="h-4 w-4" />
-          Create Client Profile
+          Crear Perfil de Cliente
         </Button>
       </div>
 
@@ -85,7 +85,7 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
             <div className="text-3xl font-bold text-foreground">
               {clients.filter(c => c.status === 'active').length}
             </div>
-            <div className="text-sm text-muted-foreground">Active Clients</div>
+            <div className="text-sm text-muted-foreground">Clientes Activos</div>
           </CardContent>
         </Card>
         <Card className="glass-card border-border/30">
@@ -93,7 +93,7 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
             <div className="text-3xl font-bold text-foreground">
               {clients.reduce((acc, c) => acc + c.clientUsers.length, 0)}
             </div>
-            <div className="text-sm text-muted-foreground">Client Users</div>
+            <div className="text-sm text-muted-foreground">Usuarios de Clientes</div>
           </CardContent>
         </Card>
         <Card className="glass-card border-border/30">
@@ -101,7 +101,7 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
             <div className="text-3xl font-bold text-foreground">
               {clients.reduce((acc, c) => acc + c.keywords.length, 0)}
             </div>
-            <div className="text-sm text-muted-foreground">Monitoring Keywords</div>
+            <div className="text-sm text-muted-foreground">Palabras Clave de Monitoreo</div>
           </CardContent>
         </Card>
       </div>
@@ -111,7 +111,7 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search clients..."
+            placeholder="Buscar clientes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 bg-background/50 border-border/30"
@@ -120,24 +120,24 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
           <SelectTrigger className="w-[180px] bg-background/50 border-border/30">
             <ArrowUpDown className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Sort by" />
+            <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="name">Alphabetical</SelectItem>
-            <SelectItem value="date">Date Created</SelectItem>
-            <SelectItem value="status">Status</SelectItem>
+            <SelectItem value="name">Alfabético</SelectItem>
+            <SelectItem value="date">Fecha de Creación</SelectItem>
+            <SelectItem value="status">Estado</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as typeof filterStatus)}>
           <SelectTrigger className="w-[150px] bg-background/50 border-border/30">
             <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Filter" />
+            <SelectValue placeholder="Filtrar" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="all">Todos los Estados</SelectItem>
+            <SelectItem value="active">Activo</SelectItem>
+            <SelectItem value="inactive">Inactivo</SelectItem>
+            <SelectItem value="pending">Pendiente</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -177,12 +177,12 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
                         )}
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {client.clientUsers.length} users
+                          {client.clientUsers.length} usuarios
                         </span>
                         {client.isCrossBorder && (
                           <span className="flex items-center gap-1">
                             <Globe className="h-3 w-3" />
-                            Cross-border
+                            Transfronterizo
                           </span>
                         )}
                       </div>
@@ -199,17 +199,17 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Client Profiles
+              Perfiles de Clientes
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center py-12 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No client profiles yet.</p>
-              <p className="text-sm mt-1">Create your first client profile to start monitoring legislation.</p>
+              <p>Aún no hay perfiles de clientes.</p>
+              <p className="text-sm mt-1">Crea tu primer perfil de cliente para comenzar a monitorear legislación.</p>
               <Button className="mt-4" onClick={onCreateClient}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Client Profile
+                Crear Perfil de Cliente
               </Button>
             </div>
           </CardContent>
@@ -219,8 +219,8 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
           <CardContent className="py-12">
             <div className="text-center text-muted-foreground">
               <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No clients match your search.</p>
-              <p className="text-sm mt-1">Try adjusting your filters or search query.</p>
+              <p>Ningún cliente coincide con tu búsqueda.</p>
+              <p className="text-sm mt-1">Intenta ajustar los filtros o el término de búsqueda.</p>
             </div>
           </CardContent>
         </Card>
