@@ -55,7 +55,7 @@ export default function Inbox() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Inbox</h1>
+          <h1 className="text-2xl font-bold text-foreground">Bandeja</h1>
           <p className="text-muted-foreground">
             Revisa y gestiona alertas legislativas para tus clientes
           </p>

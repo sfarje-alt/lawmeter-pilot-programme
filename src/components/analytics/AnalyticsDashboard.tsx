@@ -124,11 +124,11 @@ export function AnalyticsDashboard() {
           <TabsList className="bg-muted/30">
             <TabsTrigger value="overview" className="gap-2">
               <Target className="h-4 w-4" />
-              Impact & Risk Overview
+              Impacto y Riesgo
             </TabsTrigger>
             <TabsTrigger value="jurisdiction" className="gap-2">
               <BarChart3 className="h-4 w-4" />
-              Jurisdiction Behavior
+              Comportamiento por Jurisdicción
             </TabsTrigger>
           </TabsList>
           
