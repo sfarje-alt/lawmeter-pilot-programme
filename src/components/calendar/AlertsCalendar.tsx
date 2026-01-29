@@ -925,7 +925,7 @@ export function AlertsCalendar() {
 
       {/* Expanded Date Dialog - shows all alerts for a specific date */}
       <Dialog open={!!expandedDate} onOpenChange={(open) => !open && setExpandedDate(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-primary" />
@@ -935,8 +935,8 @@ export function AlertsCalendar() {
               {expandedDate && `${getEventsForDate(expandedDate).length} alertas en esta fecha`}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 max-h-[60vh]">
-            <div className="space-y-2 pr-4">
+          <div className="max-h-[60vh] overflow-y-auto pr-2">
+            <div className="space-y-2">
               {expandedDate && getEventsForDate(expandedDate).map(event => (
                 <div
                   key={event.id}
@@ -981,7 +981,7 @@ export function AlertsCalendar() {
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
