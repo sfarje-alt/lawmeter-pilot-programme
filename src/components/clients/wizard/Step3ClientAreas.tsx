@@ -43,9 +43,13 @@ export function Step3ClientAreas({ data, onChange, previouslyUsedAreas = [] }: S
 
   const addArea = (areaName: string) => {
     if (areaName.trim() && !data.affectedAreas.find(a => a.area === areaName.trim())) {
+      const newArea = { area: areaName.trim(), responsibilityNote: "" };
       onChange({
-        affectedAreas: [...data.affectedAreas, { area: areaName.trim(), responsibilityNote: "" }]
+        affectedAreas: [...data.affectedAreas, newArea]
       });
+      // Auto-select the newly added area so user can add a note immediately
+      setSelectedArea(areaName.trim());
+      setResponsibilityNote("");
     }
   };
 
@@ -91,7 +95,7 @@ export function Step3ClientAreas({ data, onChange, previouslyUsedAreas = [] }: S
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-1">Client Areas</h2>
         <p className="text-sm text-muted-foreground">
-          Add affected areas and include responsibility notes for each
+          Which departments within the client's company should be monitored for relevant legislation? Add responsibility notes to clarify monitoring scope.
         </p>
       </div>
 
