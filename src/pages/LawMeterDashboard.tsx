@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientUser } from "@/hooks/useClientUser";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
@@ -29,18 +29,31 @@ import {
 
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { shouldShowDailyPopup, profile } = useAuth();
   const { isClientUser, clientName } = useClientUser();
   const [activeTab, setActiveTab] = useState(""); 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showDailyPopup, setShowDailyPopup] = useState(false);
 
+  // Get URL parameters for navigation from calendar
+  const sectionParam = searchParams.get('section');
+  const tabParam = searchParams.get('tab');
+  const alertIdParam = searchParams.get('alertId');
+
+  // Handle URL parameters for deep linking from calendar
+  useEffect(() => {
+    if (sectionParam === 'inbox') {
+      setActiveTab('inbox');
+    }
+  }, [sectionParam]);
+
   // Set default tab based on user type
   useEffect(() => {
-    if (activeTab === "") {
+    if (activeTab === "" && !sectionParam) {
       setActiveTab(isClientUser ? "client-inbox" : "inbox");
     }
-  }, [isClientUser, activeTab]);
+  }, [isClientUser, activeTab, sectionParam]);
 
   // Show daily popup on first render if needed (only for admin users)
   useEffect(() => {
@@ -75,7 +88,7 @@ export default function LawMeterDashboard() {
       case "sessions":
         return <SessionsPage />;
       case "inbox":
-        return <Inbox />;
+        return <Inbox initialTab={tabParam} initialAlertId={alertIdParam} />;
       case "clients":
         return <ClientsPage />;
       case "reports":
@@ -89,7 +102,7 @@ export default function LawMeterDashboard() {
       case "contact":
         return <ContactForm />;
       default:
-        return <Inbox />;
+        return <Inbox initialTab={tabParam} initialAlertId={alertIdParam} />;
     }
   };
 

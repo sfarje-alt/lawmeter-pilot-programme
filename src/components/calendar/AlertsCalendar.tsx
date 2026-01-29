@@ -307,7 +307,8 @@ export function AlertsCalendar() {
 
   const handleEventClick = (event: AlertCalendarEvent) => {
     const tab = event.type === 'bill' ? 'bills' : 'regulations';
-    navigate(`/inbox?tab=${tab}&alertId=${event.id}`);
+    // Navigate to root with section=inbox and alert parameters
+    navigate(`/?section=inbox&tab=${tab}&alertId=${event.id}`);
   };
 
   const handleEventToast = (event: AlertCalendarEvent) => {

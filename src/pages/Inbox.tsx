@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scale, FileText } from "lucide-react";
@@ -8,7 +8,12 @@ import { PublicationPanel } from "@/components/inbox/PublicationPanel";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 
-export default function Inbox() {
+interface InboxProps {
+  initialTab?: string | null;
+  initialAlertId?: string | null;
+}
+
+export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
   const { 
     alerts, 
     publishAlert, 
@@ -18,6 +23,14 @@ export default function Inbox() {
     hasCommentaryForClient 
   } = useAlerts();
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(initialTab === 'regulations' ? 'regulations' : 'bills');
+
+  // Update tab when initialTab changes (from URL navigation)
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab === 'regulations' ? 'regulations' : 'bills');
+    }
+  }, [initialTab]);
 
   // Count by type
   const counts = useMemo(() => ({
@@ -76,7 +89,7 @@ export default function Inbox() {
       </div>
 
       {/* Tabs for Bills vs Regulations */}
-      <Tabs defaultValue="bills" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 bg-muted/30">
           <TabsTrigger value="bills" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
             <Scale className="h-4 w-4" />
@@ -102,6 +115,7 @@ export default function Inbox() {
             selectedClientId={selectedClientId}
             hasCommentaryForClient={hasCommentaryForClient}
             onUpdateExpertCommentary={updateExpertCommentary}
+            initialAlertId={activeTab === 'bills' ? initialAlertId : undefined}
           />
         </TabsContent>
 
@@ -114,6 +128,7 @@ export default function Inbox() {
             selectedClientId={selectedClientId}
             hasCommentaryForClient={hasCommentaryForClient}
             onUpdateExpertCommentary={updateExpertCommentary}
+            initialAlertId={activeTab === 'regulations' ? initialAlertId : undefined}
           />
         </TabsContent>
       </Tabs>
