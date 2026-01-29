@@ -274,16 +274,19 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
         </div>
       )}
 
-      {/* Description */}
+      {/* Regulatory Context - Business Model & Affected Areas */}
       <div className="space-y-2">
-        <Label htmlFor="shortDescription">Brief Description</Label>
+        <Label htmlFor="shortDescription">Regulatory Context & Business Model *</Label>
+        <p className="text-xs text-muted-foreground mb-2">
+          Describe the client's business model and which areas or parts of their business are subject to regulatory oversight.
+        </p>
         <Textarea
           id="shortDescription"
           value={data.shortDescription || ""}
           onChange={(e) => onChange({ shortDescription: e.target.value })}
-          placeholder="Brief description of regulatory exposure..."
-          className="bg-background/50 resize-none"
-          rows={2}
+          placeholder="E.g., FarmaSalud is a pharmaceutical distributor operating in Peru. Key regulatory areas include:&#10;&#10;• Drug import and distribution licenses (DIGEMID)&#10;• Cold chain logistics for temperature-sensitive products&#10;• Controlled substances handling and reporting&#10;• Healthcare facility supply contracts&#10;• Environmental compliance for pharmaceutical waste..."
+          className="bg-background/50 resize-none min-h-[140px]"
+          rows={6}
         />
       </div>
 
