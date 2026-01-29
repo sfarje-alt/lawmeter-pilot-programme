@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertTriangle, Clock, Target, Users } from "lucide-react";
 import { ClientProfile } from "../types";
 
 interface Step5Props {
@@ -23,6 +23,25 @@ const STAKEHOLDERS = [
   'Gerencia',
 ];
 
+// Criteria the system CAN actually evaluate
+const URGENCY_CRITERIA = [
+  { id: 'deadline_30', label: 'Plazos de cumplimiento menores a 30 días', description: 'Normas con fecha límite próxima' },
+  { id: 'deadline_60', label: 'Plazos de cumplimiento menores a 60 días', description: 'Normas con fecha límite cercana' },
+  { id: 'stage_pleno', label: 'Proyectos en etapa de Pleno', description: 'Alta probabilidad de aprobación inminente' },
+  { id: 'stage_final', label: 'Proyectos en Trámite Final', description: 'Última etapa antes de publicación' },
+  { id: 'immediate_effect', label: 'Normas con vigencia inmediata', description: 'Entran en vigor al día siguiente de publicación' },
+  { id: 'licitacion', label: 'Licitaciones en proceso', description: 'Convocatorias con plazos activos' },
+];
+
+const IMPACT_CRITERIA = [
+  { id: 'regulator_direct', label: 'Emitido por autoridad supervisora directa', description: 'Normas de DIGEMID, SBS, SUNAT, etc.' },
+  { id: 'core_sector', label: 'Afecta sector primario del cliente', description: 'Impacto directo en actividad principal' },
+  { id: 'multiple_areas', label: 'Afecta múltiples áreas internas', description: '3+ departamentos impactados' },
+  { id: 'compliance_required', label: 'Requiere cambios de compliance', description: 'Nuevas obligaciones regulatorias' },
+  { id: 'licensing', label: 'Afecta licencias o permisos', description: 'Cambios en requisitos de operación' },
+  { id: 'pricing', label: 'Impacta precios o tarifas reguladas', description: 'Cambios en estructura de costos' },
+];
+
 export function Step5PriorityLogic({ data, onChange }: Step5Props) {
   const toggleStakeholder = (stakeholder: string) => {
     if (data.stakeholdersAffected.includes(stakeholder)) {
@@ -32,27 +51,48 @@ export function Step5PriorityLogic({ data, onChange }: Step5Props) {
     }
   };
 
+  // Parse criteria from the definition strings (stored as comma-separated IDs)
+  const urgencyCriteria = data.highUrgencyDefinition?.split(',').filter(Boolean) || [];
+  const impactCriteria = data.highImpactDefinition?.split(',').filter(Boolean) || [];
+
+  const toggleUrgencyCriteria = (criteriaId: string) => {
+    const newCriteria = urgencyCriteria.includes(criteriaId)
+      ? urgencyCriteria.filter(c => c !== criteriaId)
+      : [...urgencyCriteria, criteriaId];
+    onChange({ highUrgencyDefinition: newCriteria.join(',') });
+  };
+
+  const toggleImpactCriteria = (criteriaId: string) => {
+    const newCriteria = impactCriteria.includes(criteriaId)
+      ? impactCriteria.filter(c => c !== criteriaId)
+      : [...impactCriteria, criteriaId];
+    onChange({ highImpactDefinition: newCriteria.join(',') });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-1">Priority Logic</h2>
         <p className="text-sm text-muted-foreground">
-          Define how to prioritize alerts based on stakeholders and business impact
+          Define how alerts are prioritized based on criteria we can automatically evaluate
         </p>
       </div>
 
       {/* Stakeholders Affected */}
       <div className="space-y-2">
-        <Label>Stakeholders Affected</Label>
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-primary" />
+          <Label>Stakeholders to Consider</Label>
+        </div>
         <p className="text-xs text-muted-foreground mb-2">
-          Select the stakeholders whose interests should be considered when prioritizing alerts
+          Alerts mentioning these groups will be flagged for review
         </p>
         <div className="flex flex-wrap gap-2">
           {STAKEHOLDERS.map((stakeholder) => (
             <Badge
               key={stakeholder}
               variant={data.stakeholdersAffected.includes(stakeholder) ? "default" : "outline"}
-              className="cursor-pointer"
+              className="cursor-pointer hover:bg-primary/80 transition-colors"
               onClick={() => toggleStakeholder(stakeholder)}
             >
               {stakeholder}
@@ -61,42 +101,73 @@ export function Step5PriorityLogic({ data, onChange }: Step5Props) {
         </div>
       </div>
 
-      {/* High Impact Definition */}
-      <div className="space-y-2">
-        <Label htmlFor="highImpact">High Impact Definition</Label>
-        <p className="text-xs text-muted-foreground mb-1">
-          Define what constitutes a "high impact" alert for this client
+      {/* High Urgency Criteria */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-orange-500" />
+          <Label>High Urgency Criteria</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Alerts matching these conditions will be marked as urgent
         </p>
-        <Textarea
-          id="highImpact"
-          value={data.highImpactDefinition || ""}
-          onChange={(e) => onChange({ highImpactDefinition: e.target.value })}
-          placeholder="e.g., Any legislation that affects core business operations, requires significant compliance investment, or impacts more than 20% of revenue..."
-          className="bg-background/50 resize-none"
-          rows={4}
-        />
+        <div className="grid gap-2">
+          {URGENCY_CRITERIA.map((criteria) => (
+            <div
+              key={criteria.id}
+              className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:border-orange-500/50 hover:bg-orange-500/5 transition-colors cursor-pointer"
+              onClick={() => toggleUrgencyCriteria(criteria.id)}
+            >
+              <Checkbox
+                checked={urgencyCriteria.includes(criteria.id)}
+                onCheckedChange={() => toggleUrgencyCriteria(criteria.id)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium">{criteria.label}</p>
+                <p className="text-xs text-muted-foreground">{criteria.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* High Urgency Definition */}
-      <div className="space-y-2">
-        <Label htmlFor="highUrgency">High Urgency Definition</Label>
-        <p className="text-xs text-muted-foreground mb-1">
-          Define what constitutes a "high urgency" alert for this client
+      {/* High Impact Criteria */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Target className="h-4 w-4 text-red-500" />
+          <Label>High Impact Criteria</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Alerts matching these conditions will be marked as high impact
         </p>
-        <Textarea
-          id="highUrgency"
-          value={data.highUrgencyDefinition || ""}
-          onChange={(e) => onChange({ highUrgencyDefinition: e.target.value })}
-          placeholder="e.g., Legislation with compliance deadline within 30 days, regulatory changes requiring immediate action, or bills in final voting stage..."
-          className="bg-background/50 resize-none"
-          rows={4}
-        />
+        <div className="grid gap-2">
+          {IMPACT_CRITERIA.map((criteria) => (
+            <div
+              key={criteria.id}
+              className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:border-red-500/50 hover:bg-red-500/5 transition-colors cursor-pointer"
+              onClick={() => toggleImpactCriteria(criteria.id)}
+            >
+              <Checkbox
+                checked={impactCriteria.includes(criteria.id)}
+                onCheckedChange={() => toggleImpactCriteria(criteria.id)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium">{criteria.label}</p>
+                <p className="text-xs text-muted-foreground">{criteria.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Summary Preview */}
-      {(data.stakeholdersAffected.length > 0 || data.highImpactDefinition || data.highUrgencyDefinition) && (
+      {(urgencyCriteria.length > 0 || impactCriteria.length > 0 || data.stakeholdersAffected.length > 0) && (
         <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-          <h3 className="text-sm font-medium text-foreground mb-2">Priority Logic Summary</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-medium text-foreground">Priority Configuration Summary</h3>
+          </div>
           <div className="space-y-2 text-sm text-muted-foreground">
             {data.stakeholdersAffected.length > 0 && (
               <p>
@@ -104,18 +175,16 @@ export function Step5PriorityLogic({ data, onChange }: Step5Props) {
                 {data.stakeholdersAffected.join(', ')}
               </p>
             )}
-            {data.highImpactDefinition && (
+            {urgencyCriteria.length > 0 && (
               <p>
-                <span className="font-medium text-foreground">High Impact: </span>
-                {data.highImpactDefinition.substring(0, 100)}
-                {data.highImpactDefinition.length > 100 && '...'}
+                <span className="font-medium text-foreground">Urgencia Alta: </span>
+                {urgencyCriteria.length} criterio{urgencyCriteria.length > 1 ? 's' : ''} seleccionado{urgencyCriteria.length > 1 ? 's' : ''}
               </p>
             )}
-            {data.highUrgencyDefinition && (
+            {impactCriteria.length > 0 && (
               <p>
-                <span className="font-medium text-foreground">High Urgency: </span>
-                {data.highUrgencyDefinition.substring(0, 100)}
-                {data.highUrgencyDefinition.length > 100 && '...'}
+                <span className="font-medium text-foreground">Impacto Alto: </span>
+                {impactCriteria.length} criterio{impactCriteria.length > 1 ? 's' : ''} seleccionado{impactCriteria.length > 1 ? 's' : ''}
               </p>
             )}
           </div>
