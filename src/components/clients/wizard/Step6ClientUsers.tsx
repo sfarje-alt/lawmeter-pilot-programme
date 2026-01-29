@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -26,7 +25,6 @@ export function Step6ClientUsers({ data, onChange }: Step6Props) {
     title: '',
     area: '',
     phone: '',
-    whatsappEnabled: false,
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
@@ -46,7 +44,6 @@ export function Step6ClientUsers({ data, onChange }: Step6Props) {
         title: '',
         area: '',
         phone: '',
-        whatsappEnabled: false,
       });
     }
   };
@@ -68,7 +65,6 @@ export function Step6ClientUsers({ data, onChange }: Step6Props) {
       title: '',
       area: '',
       phone: '',
-      whatsappEnabled: false,
     });
   };
 
@@ -153,29 +149,16 @@ export function Step6ClientUsers({ data, onChange }: Step6Props) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="userPhone">Phone</Label>
-            <Input
-              id="userPhone"
-              type="tel"
-              value={newUser.phone || ''}
-              onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
-              placeholder="+51 999 999 999"
-              className="bg-background/50"
-            />
-          </div>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-background/30 border border-border/30">
-            <div>
-              <Label htmlFor="whatsappEnabled">WhatsApp Enabled</Label>
-              <p className="text-xs text-muted-foreground">Receive alerts via WhatsApp</p>
-            </div>
-            <Switch
-              id="whatsappEnabled"
-              checked={newUser.whatsappEnabled}
-              onCheckedChange={(checked) => setNewUser({ ...newUser, whatsappEnabled: checked })}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="userPhone">Phone</Label>
+          <Input
+            id="userPhone"
+            type="tel"
+            value={newUser.phone || ''}
+            onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+            placeholder="+51 999 999 999"
+            className="bg-background/50"
+          />
         </div>
 
         <Button 
@@ -226,11 +209,6 @@ export function Step6ClientUsers({ data, onChange }: Step6Props) {
                         )}
                         {user.area && (
                           <Badge variant="secondary" className="text-xs">{user.area}</Badge>
-                        )}
-                        {user.whatsappEnabled && (
-                          <Badge className="text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                            WhatsApp
-                          </Badge>
                         )}
                       </div>
                     </div>

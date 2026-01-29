@@ -75,7 +75,7 @@ export function Step7DeliverySettings({ data, onChange }: Step7Props) {
   };
 
   const availableEmails = data.clientUsers.map(u => u.email);
-  const availablePhones = data.clientUsers.filter(u => u.whatsappEnabled && u.phone).map(u => u.phone!);
+  const availablePhones = data.clientUsers.filter(u => u.phone).map(u => u.phone!);
 
   return (
     <div className="space-y-6">

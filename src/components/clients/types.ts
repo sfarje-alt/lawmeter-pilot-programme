@@ -22,7 +22,6 @@ export interface ClientUser {
   title?: string;
   area?: string;
   phone?: string;
-  whatsappEnabled: boolean;
 }
 
 export interface WeeklySchedule {
