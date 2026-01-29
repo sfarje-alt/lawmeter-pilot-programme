@@ -58,26 +58,30 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
     }
   }, [newKeyword, fetchSuggestions]);
 
+  const instrumentTypes = data.instrumentTypes || [];
+  const watchedCommissions = data.watchedCommissions || [];
+  const keywords = data.keywords || [];
+
   const toggleInstrumentType = (type: string) => {
-    if (data.instrumentTypes.includes(type)) {
-      onChange({ instrumentTypes: data.instrumentTypes.filter(t => t !== type) });
+    if (instrumentTypes.includes(type)) {
+      onChange({ instrumentTypes: instrumentTypes.filter(t => t !== type) });
     } else {
-      onChange({ instrumentTypes: [...data.instrumentTypes, type] });
+      onChange({ instrumentTypes: [...instrumentTypes, type] });
     }
   };
 
   const toggleCommission = (commission: string) => {
-    if (data.watchedCommissions.includes(commission)) {
-      onChange({ watchedCommissions: data.watchedCommissions.filter(c => c !== commission) });
+    if (watchedCommissions.includes(commission)) {
+      onChange({ watchedCommissions: watchedCommissions.filter(c => c !== commission) });
     } else {
-      onChange({ watchedCommissions: [...data.watchedCommissions, commission] });
+      onChange({ watchedCommissions: [...watchedCommissions, commission] });
     }
   };
 
   const addKeyword = (keyword?: string) => {
     const kw = keyword || newKeyword.trim();
-    if (kw && !data.keywords.includes(kw)) {
-      onChange({ keywords: [...data.keywords, kw] });
+    if (kw && !keywords.includes(kw)) {
+      onChange({ keywords: [...keywords, kw] });
       setNewKeyword("");
       // Remove from suggestions
       setSuggestions(prev => prev.filter(s => s !== kw));
@@ -85,7 +89,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
   };
 
   const removeKeyword = (keyword: string) => {
-    onChange({ keywords: data.keywords.filter(k => k !== keyword) });
+    onChange({ keywords: keywords.filter(k => k !== keyword) });
   };
 
   const selectAllInstruments = () => {
@@ -135,9 +139,9 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
         </div>
 
         {/* Current Keywords */}
-        {data.keywords.length > 0 && (
+        {keywords.length > 0 && (
           <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-background/30 border border-border/30">
-            {data.keywords.map((keyword) => (
+            {keywords.map((keyword) => (
               <Badge key={keyword} variant="secondary" className="gap-1">
                 {keyword}
                 <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => removeKeyword(keyword)} />
@@ -200,7 +204,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
           {INSTRUMENT_TYPES.map((type) => (
             <Badge
               key={type}
-              variant={data.instrumentTypes.includes(type) ? "default" : "outline"}
+              variant={instrumentTypes.includes(type) ? "default" : "outline"}
               className="cursor-pointer text-xs"
               onClick={() => toggleInstrumentType(type)}
             >
@@ -209,7 +213,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          {data.instrumentTypes.length} of {INSTRUMENT_TYPES.length} selected
+          {instrumentTypes.length} of {INSTRUMENT_TYPES.length} selected
         </p>
       </div>
 
@@ -235,7 +239,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
           {PERU_COMMISSIONS.map((commission) => (
             <Badge
               key={commission}
-              variant={data.watchedCommissions.includes(commission) ? "default" : "outline"}
+              variant={watchedCommissions.includes(commission) ? "default" : "outline"}
               className="cursor-pointer text-xs"
               onClick={() => toggleCommission(commission)}
             >
@@ -244,7 +248,7 @@ export function Step2Monitoring({ data, onChange }: Step2Props) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          {data.watchedCommissions.length} of {PERU_COMMISSIONS.length} commissions selected
+          {watchedCommissions.length} of {PERU_COMMISSIONS.length} commissions selected
         </p>
       </div>
     </div>
