@@ -47,7 +47,7 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
       updatedAt: new Date().toISOString()
     };
     onSave(clientToSave);
-    toast.success("Client profile saved successfully!");
+    toast.success("¡Perfil de cliente guardado exitosamente!");
     onOpenChange(false);
     setData(DEFAULT_CLIENT_PROFILE);
     setCurrentStep(1);
@@ -69,7 +69,7 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>{initialData ? 'Edit Client Profile' : 'Create Client Profile'}</DialogTitle>
+          <DialogTitle>{initialData ? 'Editar Perfil de Cliente' : 'Crear Perfil de Cliente'}</DialogTitle>
         </DialogHeader>
         
         <div className="py-4">
@@ -82,16 +82,16 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
 
         <div className="flex items-center justify-between pt-4 border-t">
           <Button variant="outline" onClick={handlePrev} disabled={currentStep === 1}>
-            <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+            <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
           </Button>
-          <span className="text-sm text-muted-foreground">Step {currentStep} of 5</span>
+          <span className="text-sm text-muted-foreground">Paso {currentStep} de 5</span>
           {currentStep < 5 ? (
             <Button onClick={handleNext}>
-              Next <ChevronRight className="h-4 w-4 ml-1" />
+              Siguiente <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
             <Button onClick={handleSave} disabled={!data.legalName}>
-              <Save className="h-4 w-4 mr-1" /> Save Profile
+              <Save className="h-4 w-4 mr-1" /> Guardar Perfil
             </Button>
           )}
         </div>

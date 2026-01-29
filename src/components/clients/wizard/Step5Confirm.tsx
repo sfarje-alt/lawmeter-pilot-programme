@@ -20,11 +20,11 @@ export function Step5Confirm({ data, onChange }: Step5Props) {
   const availableContacts = data.clientUsers.filter(u => u.email);
 
   const validationItems = [
-    { label: 'Company Name', valid: !!data.legalName },
+    { label: 'Razón Social', valid: !!data.legalName },
     { label: 'Sector', valid: !!data.primarySector },
-    { label: 'Keywords', valid: data.keywords.length > 0 },
-    { label: 'Users', valid: data.clientUsers.length > 0 },
-    { label: 'Acknowledgement', valid: data.sourceAcknowledgement },
+    { label: 'Palabras Clave', valid: data.keywords.length > 0 },
+    { label: 'Usuarios', valid: data.clientUsers.length > 0 },
+    { label: 'Reconocimiento', valid: data.sourceAcknowledgement },
   ];
 
   const completionPercent = Math.round(
@@ -34,9 +34,9 @@ export function Step5Confirm({ data, onChange }: Step5Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Review & Confirm</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-1">Revisar y Confirmar</h2>
         <p className="text-sm text-muted-foreground">
-          Review the client profile before saving
+          Revisa el perfil del cliente antes de guardar
         </p>
       </div>
 
@@ -45,10 +45,10 @@ export function Step5Confirm({ data, onChange }: Step5Props) {
         <div className="flex-1">
           <Label htmlFor="sourceAcknowledgement" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-emerald-400" />
-            Official Source Acknowledgement
+            Reconocimiento de Fuentes Oficiales
           </Label>
           <p className="text-sm text-muted-foreground mt-1">
-            I acknowledge that legislative information is from official sources and analysis is for informational purposes.
+            Reconozco que la información legislativa proviene de fuentes oficiales y el análisis es solo con fines informativos.
           </p>
         </div>
         <Switch
@@ -63,14 +63,14 @@ export function Step5Confirm({ data, onChange }: Step5Props) {
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            Primary Contact
+            Contacto Principal
           </Label>
           <Select
             value={data.primaryContactId || ""}
             onValueChange={(value) => onChange({ primaryContactId: value })}
           >
             <SelectTrigger className="bg-background/50">
-              <SelectValue placeholder="Select primary contact..." />
+              <SelectValue placeholder="Seleccionar contacto principal..." />
             </SelectTrigger>
             <SelectContent>
               {availableContacts.map((user) => (
@@ -85,12 +85,12 @@ export function Step5Confirm({ data, onChange }: Step5Props) {
 
       {/* Internal Notes */}
       <div className="space-y-2">
-        <Label htmlFor="internalNotes">Internal Notes</Label>
+        <Label htmlFor="internalNotes">Notas Internas</Label>
         <Textarea
           id="internalNotes"
           value={data.internalNotes || ""}
           onChange={(e) => onChange({ internalNotes: e.target.value })}
-          placeholder="Add any internal notes..."
+          placeholder="Agregar notas internas..."
           className="bg-background/50 resize-none"
           rows={3}
         />
@@ -98,30 +98,30 @@ export function Step5Confirm({ data, onChange }: Step5Props) {
 
       {/* Summary */}
       <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
-        <h3 className="text-sm font-medium text-foreground">Profile Summary</h3>
+        <h3 className="text-sm font-medium text-foreground">Resumen del Perfil</h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-muted-foreground">Client:</span>
-            <span className="ml-2 font-medium">{data.legalName || 'Not set'}</span>
+            <span className="text-muted-foreground">Cliente:</span>
+            <span className="ml-2 font-medium">{data.legalName || 'No definido'}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Sector:</span>
-            <span className="ml-2">{data.primarySector || 'Not set'}</span>
+            <span className="ml-2">{data.primarySector || 'No definido'}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Keywords:</span>
+            <span className="text-muted-foreground">Palabras Clave:</span>
             <span className="ml-2">{data.keywords.length}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Users:</span>
+            <span className="text-muted-foreground">Usuarios:</span>
             <span className="ml-2">{data.clientUsers.length}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Tag Categories:</span>
+            <span className="text-muted-foreground">Categorías de Etiquetas:</span>
             <span className="ml-2">{data.tagCategories.length}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Instruments:</span>
+            <span className="text-muted-foreground">Instrumentos:</span>
             <span className="ml-2">{data.instrumentTypes.length}</span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function Step5Confirm({ data, onChange }: Step5Props) {
       {/* Validation Status */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Completion Status</Label>
+          <Label>Estado de Completitud</Label>
           <span className={`text-sm font-medium ${completionPercent === 100 ? 'text-emerald-400' : 'text-amber-400'}`}>
             {completionPercent}%
           </span>

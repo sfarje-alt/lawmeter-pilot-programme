@@ -111,7 +111,7 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
         onChange(suggestions);
         onAISuggestions?.(suggestions);
         
-        toast.success(`AI extrajo ${analysis.keywords?.length || 0} keywords y ${analysis.productsServices?.length || 0} productos/servicios`);
+        toast.success(`IA extrajo ${analysis.keywords?.length || 0} palabras clave y ${analysis.productsServices?.length || 0} productos/servicios`);
       }
     } catch (error) {
       console.error('Error analyzing document:', error);
@@ -166,9 +166,9 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Client Basics</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-1">Datos Básicos del Cliente</h2>
         <p className="text-sm text-muted-foreground">
-          Company information and business scope
+          Información de la empresa y alcance del negocio
         </p>
       </div>
 
@@ -176,23 +176,23 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
       <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <Label className="font-medium">AI-Assisted Setup</Label>
+          <Label className="font-medium">Configuración Asistida por IA</Label>
         </div>
         <p className="text-xs text-muted-foreground">
-          Upload or paste company documents (statutes, annual report) to auto-extract keywords and business info.
+          Sube o pega documentos de la empresa (estatutos, memoria anual) para extraer automáticamente palabras clave e información del negocio.
         </p>
         <div className="flex gap-2">
           <label className="flex-1">
             <input type="file" accept=".txt,.pdf" onChange={handleFileUpload} className="hidden" />
             <Button type="button" variant="outline" className="w-full" asChild>
-              <span><Upload className="h-4 w-4 mr-2" /> Upload Document</span>
+              <span><Upload className="h-4 w-4 mr-2" /> Subir Documento</span>
             </Button>
           </label>
         </div>
         <Textarea
           value={documentText}
           onChange={(e) => setDocumentText(e.target.value)}
-          placeholder="Or paste document content here..."
+          placeholder="O pega el contenido del documento aquí..."
           className="bg-background/50 resize-none text-xs"
           rows={3}
         />
@@ -202,9 +202,9 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
           className="w-full"
         >
           {isAnalyzing ? (
-            <>Analyzing...</>
+            <>Analizando...</>
           ) : (
-            <><Sparkles className="h-4 w-4 mr-2" /> Analyze with AI</>
+            <><Sparkles className="h-4 w-4 mr-2" /> Analizar con IA</>
           )}
         </Button>
       </div>
@@ -212,22 +212,22 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
       {/* Basic Info */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="legalName">Legal Name *</Label>
+          <Label htmlFor="legalName">Razón Social *</Label>
           <Input
             id="legalName"
             value={data.legalName}
             onChange={(e) => onChange({ legalName: e.target.value })}
-            placeholder="e.g., Empresa ABC S.A.C."
+            placeholder="Ej., Empresa ABC S.A.C."
             className="bg-background/50"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="tradeName">Trade Name</Label>
+          <Label htmlFor="tradeName">Nombre Comercial</Label>
           <Input
             id="tradeName"
             value={data.tradeName || ""}
             onChange={(e) => onChange({ tradeName: e.target.value })}
-            placeholder="e.g., ABC Corp"
+            placeholder="Ej., ABC Corp"
             className="bg-background/50"
           />
         </div>
@@ -235,10 +235,10 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Company Type</Label>
+          <Label>Tipo de Empresa</Label>
           <Select value={data.companyType || ""} onValueChange={(value) => onChange({ companyType: value })}>
             <SelectTrigger className="bg-background/50">
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
             <SelectContent>
               {COMPANY_TYPES.map((type) => (
@@ -248,10 +248,10 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Primary Sector</Label>
+          <Label>Sector Principal</Label>
           <Select value={data.primarySector || ""} onValueChange={(value) => onChange({ primarySector: value })}>
             <SelectTrigger className="bg-background/50">
-              <SelectValue placeholder="Select sector" />
+              <SelectValue placeholder="Seleccionar sector" />
             </SelectTrigger>
             <SelectContent>
               {SECTORS.map((sector) => (
@@ -276,15 +276,15 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
 
       {/* Regulatory Context - Business Model & Affected Areas */}
       <div className="space-y-2">
-        <Label htmlFor="shortDescription">Regulatory Context & Business Model *</Label>
+        <Label htmlFor="shortDescription">Contexto Regulatorio y Modelo de Negocio *</Label>
         <p className="text-xs text-muted-foreground mb-2">
-          Describe the client's business model and which areas or parts of their business are subject to regulatory oversight.
+          Describe el modelo de negocio del cliente y qué áreas o partes de su operación están sujetas a supervisión regulatoria.
         </p>
         <Textarea
           id="shortDescription"
           value={data.shortDescription || ""}
           onChange={(e) => onChange({ shortDescription: e.target.value })}
-          placeholder="E.g., FarmaSalud is a pharmaceutical distributor operating in Peru. Key regulatory areas include:&#10;&#10;• Drug import and distribution licenses (DIGEMID)&#10;• Cold chain logistics for temperature-sensitive products&#10;• Controlled substances handling and reporting&#10;• Healthcare facility supply contracts&#10;• Environmental compliance for pharmaceutical waste..."
+          placeholder="Ej., FarmaSalud es un distribuidor farmacéutico que opera en Perú. Las áreas regulatorias clave incluyen:&#10;&#10;• Licencias de importación y distribución de medicamentos (DIGEMID)&#10;• Logística de cadena de frío para productos termosensibles&#10;• Manejo y reporte de sustancias controladas&#10;• Contratos de suministro a establecimientos de salud&#10;• Cumplimiento ambiental para residuos farmacéuticos..."
           className="bg-background/50 resize-none min-h-[140px]"
           rows={6}
         />
@@ -292,7 +292,7 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
 
       {/* Locations */}
       <div className="space-y-2">
-        <Label>Locations</Label>
+        <Label>Ubicaciones</Label>
         <div className="flex flex-wrap gap-2 mb-2">
           {data.locations.map((loc) => (
             <Badge key={loc.country} variant="secondary" className="gap-1">
@@ -303,7 +303,7 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
         </div>
         <Select onValueChange={addLocation}>
           <SelectTrigger className="bg-background/50">
-            <SelectValue placeholder="Add location..." />
+            <SelectValue placeholder="Agregar ubicación..." />
           </SelectTrigger>
           <SelectContent>
             {COUNTRIES.filter(c => !data.locations.find(l => l.country === c.code)).map((country) => (
@@ -315,7 +315,7 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
 
       {/* Supervising Authorities */}
       <div className="space-y-2">
-        <Label>Supervising Authorities</Label>
+        <Label>Autoridades Supervisoras</Label>
         <div className="flex flex-wrap gap-1 mb-2">
           {SUPERVISING_AUTHORITIES.map((auth) => (
             <Badge
@@ -332,7 +332,7 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
 
       {/* Products/Services */}
       <div className="space-y-2">
-        <Label>Products/Services</Label>
+        <Label>Productos/Servicios</Label>
         {data.productsServices.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {data.productsServices.map((product, index) => (
@@ -347,7 +347,7 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
           <Input
             value={newProduct.name}
             onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-            placeholder="Product/Service name"
+            placeholder="Nombre del producto/servicio"
             className="bg-background/50"
             onKeyPress={(e) => e.key === 'Enter' && addProduct()}
           />
@@ -360,8 +360,8 @@ export function Step1Basics({ data, onChange, onAISuggestions }: Step1Props) {
       {/* Cross-border Toggle */}
       <div className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30">
         <div>
-          <Label htmlFor="isCrossBorder">Cross-border Operations</Label>
-          <p className="text-xs text-muted-foreground">Monitor legislation in multiple countries?</p>
+          <Label htmlFor="isCrossBorder">Operaciones Transfronterizas</Label>
+          <p className="text-xs text-muted-foreground">¿Monitorear legislación en múltiples países?</p>
         </div>
         <Switch
           id="isCrossBorder"
