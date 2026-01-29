@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,9 @@ import {
   Building2,
   FileText,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Scale,
+  Info
 } from "lucide-react";
 import { format, isSameDay, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -112,6 +115,20 @@ const convertToCalendarEvents = (alerts: PeruAlert[]): AlertCalendarEvent[] => {
     const isBill = alert.legislation_type === 'proyecto_de_ley';
     const riskLevel = getAlertRiskLevel(alert);
     
+    // Collect all client IDs associated with this alert
+    const clientIds: string[] = [];
+    if (alert.client_id) clientIds.push(alert.client_id);
+    if (alert.primary_client_id && !clientIds.includes(alert.primary_client_id)) {
+      clientIds.push(alert.primary_client_id);
+    }
+    if (alert.client_commentaries) {
+      alert.client_commentaries.forEach(cc => {
+        if (cc.clientId && !clientIds.includes(cc.clientId)) {
+          clientIds.push(cc.clientId);
+        }
+      });
+    }
+    
     // For bills - use stage_date or project_date
     if (isBill) {
       const dateStr = alert.stage_date || alert.project_date;
@@ -127,7 +144,7 @@ const convertToCalendarEvents = (alerts: PeruAlert[]): AlertCalendarEvent[] => {
           stage: alert.current_stage,
           riskLevel,
           affectedAreas: alert.affected_areas,
-          clients: []
+          clients: clientIds
         });
       }
     }
@@ -146,7 +163,7 @@ const convertToCalendarEvents = (alerts: PeruAlert[]): AlertCalendarEvent[] => {
           entity: alert.entity,
           riskLevel,
           affectedAreas: alert.affected_areas,
-          clients: []
+          clients: clientIds
         });
       }
     }
@@ -174,12 +191,15 @@ const getUniqueAreas = (alerts: PeruAlert[]): string[] => {
 };
 
 export function AlertsCalendar() {
+  const navigate = useNavigate();
+  
   // Set initial date to November 2025 where most mock data exists
   const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [view, setView] = useState<'day' | 'week' | 'month'>('month');
   const [showFilters, setShowFilters] = useState(false);
   const [showDateRules, setShowDateRules] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
   
   // Filters
   const [filterClient, setFilterClient] = useState<string>('all');
@@ -215,6 +235,9 @@ export function AlertsCalendar() {
       if (event.dateType === 'in_force' && !dateRules.showInForce) return false;
       if (event.dateType === 'manual' && !dateRules.showManual) return false;
       
+      // Client filter
+      if (filterClient !== 'all' && !event.clients.includes(filterClient)) return false;
+      
       // Type filter
       if (filterInstrumentType !== 'all') {
         if (filterInstrumentType === 'bill' && event.type !== 'bill') return false;
@@ -232,7 +255,7 @@ export function AlertsCalendar() {
       
       return true;
     });
-  }, [allEvents, dateRules, filterInstrumentType, filterStage, filterArea, filterRisk]);
+  }, [allEvents, dateRules, filterClient, filterInstrumentType, filterStage, filterArea, filterRisk]);
 
   // Get events for a specific date
   const getEventsForDate = (date: Date) => {
@@ -275,11 +298,16 @@ export function AlertsCalendar() {
   };
 
   const handleEventClick = (event: AlertCalendarEvent) => {
-    toast.info(`Navigating to ${event.type === 'bill' ? 'Proyecto de Ley' : 'Norma'} in Inbox`, {
-      description: event.title.substring(0, 50) + '...',
+    const tab = event.type === 'bill' ? 'bills' : 'regulations';
+    navigate(`/inbox?tab=${tab}&alertId=${event.id}`);
+  };
+
+  const handleEventToast = (event: AlertCalendarEvent) => {
+    toast.info(`${event.type === 'bill' ? 'Proyecto de Ley' : 'Norma'} Details`, {
+      description: event.title.substring(0, 60) + '...',
       action: {
-        label: "Go to Inbox",
-        onClick: () => console.log("Navigate to alert:", event.id)
+        label: "View in Inbox",
+        onClick: () => handleEventClick(event)
       }
     });
   };
@@ -318,6 +346,15 @@ export function AlertsCalendar() {
         </div>
         <div className="flex items-center gap-2">
           <Button 
+            variant={showLegend ? "default" : "outline"} 
+            size="sm" 
+            onClick={() => setShowLegend(!showLegend)}
+            className="gap-2"
+          >
+            <Info className="h-4 w-4" />
+            Legend
+          </Button>
+          <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setShowDateRules(true)}
@@ -341,6 +378,89 @@ export function AlertsCalendar() {
           </Button>
         </div>
       </div>
+
+      {/* Color Legend Panel */}
+      {showLegend && (
+        <Card className="glass-card border-border/30">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-sm flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Calendar Legend
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowLegend(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Event Types */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Event Types</h4>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-blue-500/20 border border-blue-500/50" />
+                    <Scale className="h-3 w-3 text-blue-400" />
+                    <span className="text-sm">Proyectos de Ley (Bills)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-emerald-500/20 border border-emerald-500/50" />
+                    <Building2 className="h-3 w-3 text-emerald-400" />
+                    <span className="text-sm">Normas (Regulations)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-amber-500/20 border border-amber-500/50" />
+                    <FileText className="h-3 w-3 text-amber-400" />
+                    <span className="text-sm">Bills in Plenary Stage</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Date Meanings */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What Dates Mean</h4>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Clock className="h-3 w-3 mt-1 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Bills:</span> Date when bill entered current stage
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <FileText className="h-3 w-3 mt-1 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Regulations:</span> Official publication date
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Risk Levels */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Risk Levels</h4>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-destructive/20 text-destructive text-[10px]">Alto</Badge>
+                    <span className="text-sm">High risk - Immediate attention needed</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-amber-500/20 text-amber-400 text-[10px]">Medio</Badge>
+                    <span className="text-sm">Medium risk - Monitor closely</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px]">Bajo</Badge>
+                    <span className="text-sm">Low risk - Standard tracking</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-xs text-muted-foreground mt-4 pt-3 border-t">
+              💡 <strong>Tip:</strong> Click on any event to view it in the Inbox. Use "Date Rules" to customize which date types appear on the calendar.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters Panel */}
       {showFilters && (
