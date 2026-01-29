@@ -158,15 +158,21 @@ export const LAW_BRANCHES = [
 ];
 
 export const INSTRUMENT_TYPES = [
-  'Ley',
+  'Decreto de Urgencia',
   'Decreto Legislativo',
+  'Decreto Ley',
   'Decreto Supremo',
-  'Resolución Ministerial',
-  'Resolución de Superintendencia',
-  'Proyecto de Ley',
-  'Dictamen',
-  'Circular',
-  'Norma Técnica',
+  'Directiva',
+  'Ley',
+  'Resolución',
+  'Resolución Administrativa',
+  'Resolución Casa de Gobierno',
+  'Resolución de Contraloría',
+  'Resolución de la Oficina de Administración',
+  'Resolución de Secretaría General',
+  'Resolución Oficina de Recursos Humanos',
+  'Resolución Subsecretaría General',
+  'Resolución Suprema',
 ];
 
 export const AREAS = [

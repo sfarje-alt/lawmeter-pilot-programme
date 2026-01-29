@@ -12,22 +12,6 @@ interface Step4Props {
   onChange: (data: Partial<ClientProfile>) => void;
 }
 
-const ENTITIES = [
-  'Congreso de la República',
-  'Poder Ejecutivo',
-  'Tribunal Constitucional',
-  'SBS',
-  'SMV',
-  'BCRP',
-  'INDECOPI',
-  'SUNAT',
-  'OSINERGMIN',
-  'OSIPTEL',
-  'MTPE',
-  'MINAM',
-  'MEF',
-];
-
 export function Step4MonitoringScope({ data, onChange }: Step4Props) {
   const [newKeyword, setNewKeyword] = useState("");
   const [newExclusion, setNewExclusion] = useState("");
@@ -37,14 +21,6 @@ export function Step4MonitoringScope({ data, onChange }: Step4Props) {
       onChange({ instrumentTypes: data.instrumentTypes.filter(t => t !== type) });
     } else {
       onChange({ instrumentTypes: [...data.instrumentTypes, type] });
-    }
-  };
-
-  const toggleEntity = (entity: string) => {
-    if (data.additionalEntities.includes(entity)) {
-      onChange({ additionalEntities: data.additionalEntities.filter(e => e !== entity) });
-    } else {
-      onChange({ additionalEntities: [...data.additionalEntities, entity] });
     }
   };
 
@@ -139,23 +115,6 @@ export function Step4MonitoringScope({ data, onChange }: Step4Props) {
           <Button type="button" variant="outline" onClick={addExclusion} disabled={!newExclusion}>
             <Plus className="h-4 w-4" />
           </Button>
-        </div>
-      </div>
-
-      {/* Additional Entities/Sources */}
-      <div className="space-y-2">
-        <Label>Additional Entities/Sources to Monitor</Label>
-        <div className="flex flex-wrap gap-2">
-          {ENTITIES.map((entity) => (
-            <Badge
-              key={entity}
-              variant={data.additionalEntities.includes(entity) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => toggleEntity(entity)}
-            >
-              {entity}
-            </Badge>
-          ))}
         </div>
       </div>
 
