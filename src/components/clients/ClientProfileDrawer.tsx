@@ -307,30 +307,6 @@ export function ClientProfileDrawer({
                 </CardContent>
               </Card>
 
-              <Card className="border-border/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary" />
-                    Configuración de Reportes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Nivel de Detalle</Label>
-                      <p className="font-medium capitalize">{client.detailLevel}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Incluye Analytics</Label>
-                      <p className="font-medium">{client.includeAnalytics ? 'Sí' : 'No'}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Comentario Experto</Label>
-                      <p className="font-medium">{client.includeExpertCommentary ? 'Sí' : 'No'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
 
               <div className="flex justify-end pb-4">
                 <Button onClick={onEdit} className="gap-2">

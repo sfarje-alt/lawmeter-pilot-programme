@@ -114,10 +114,6 @@ export function Step9Confirmations({ data, onChange }: Step9Props) {
             <span className="text-muted-foreground">Keywords:</span>
             <span className="ml-2 text-foreground">{data.keywords.length}</span>
           </div>
-          <div>
-            <span className="text-muted-foreground">Detail Level:</span>
-            <span className="ml-2 text-foreground capitalize">{data.detailLevel}</span>
-          </div>
         </div>
       </div>
 

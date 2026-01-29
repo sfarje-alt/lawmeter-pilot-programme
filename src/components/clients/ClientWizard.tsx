@@ -11,7 +11,6 @@ import { Step3ClientAreas } from "./wizard/Step3ClientAreas";
 import { Step4MonitoringScope } from "./wizard/Step4MonitoringScope";
 import { Step5PriorityLogic } from "./wizard/Step5PriorityLogic";
 import { Step6ClientUsers } from "./wizard/Step6ClientUsers";
-import { Step8ReportDefaults } from "./wizard/Step8ReportDefaults";
 import { Step9Confirmations } from "./wizard/Step9Confirmations";
 
 interface ClientWizardProps {
@@ -34,7 +33,7 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
     if (!completedSteps.includes(currentStep)) {
       setCompletedSteps([...completedSteps, currentStep]);
     }
-    if (currentStep < 8) setCurrentStep(currentStep + 1);
+    if (currentStep < 7) setCurrentStep(currentStep + 1);
   };
 
   const handlePrev = () => {
@@ -59,8 +58,7 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
       case 4: return <Step4MonitoringScope data={data} onChange={updateData} />;
       case 5: return <Step5PriorityLogic data={data} onChange={updateData} />;
       case 6: return <Step6ClientUsers data={data} onChange={updateData} />;
-      case 7: return <Step8ReportDefaults data={data} onChange={updateData} />;
-      case 8: return <Step9Confirmations data={data} onChange={updateData} />;
+      case 7: return <Step9Confirmations data={data} onChange={updateData} />;
       default: return null;
     }
   };
@@ -84,8 +82,8 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
           <Button variant="outline" onClick={handlePrev} disabled={currentStep === 1}>
             <ChevronLeft className="h-4 w-4 mr-1" /> Previous
           </Button>
-          <span className="text-sm text-muted-foreground">Step {currentStep} of 8</span>
-          {currentStep < 8 ? (
+          <span className="text-sm text-muted-foreground">Step {currentStep} of 7</span>
+          {currentStep < 7 ? (
             <Button onClick={handleNext}>
               Next <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
