@@ -88,7 +88,7 @@ export default function LawMeterDashboard() {
       case "sessions":
         return <SessionsPage />;
       case "inbox":
-        return <Inbox initialTab={tabParam} initialAlertId={alertIdParam} />;
+        return <Inbox key={`inbox-${alertIdParam}-${tabParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;
       case "clients":
         return <ClientsPage />;
       case "reports":
@@ -102,7 +102,7 @@ export default function LawMeterDashboard() {
       case "contact":
         return <ContactForm />;
       default:
-        return <Inbox initialTab={tabParam} initialAlertId={alertIdParam} />;
+        return <Inbox key={`inbox-default-${alertIdParam}-${tabParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;
     }
   };
 
