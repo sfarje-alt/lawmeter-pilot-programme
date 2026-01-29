@@ -29,27 +29,6 @@ export function Step9Confirmations({ data, onChange }: Step9Props) {
         </p>
       </div>
 
-      {/* WhatsApp Consent */}
-      {data.deliveryChannels.whatsapp && (
-        <div className="flex items-start gap-4 p-4 rounded-lg bg-background/30 border border-border/30">
-          <div className="flex-1">
-            <Label htmlFor="whatsappConsent" className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-400" />
-              WhatsApp Consent
-            </Label>
-            <p className="text-sm text-muted-foreground mt-1">
-              I confirm that all WhatsApp recipients have consented to receive messages via WhatsApp 
-              and understand the terms of service.
-            </p>
-          </div>
-          <Switch
-            id="whatsappConsent"
-            checked={data.whatsappConsent}
-            onCheckedChange={(checked) => onChange({ whatsappConsent: checked })}
-          />
-        </div>
-      )}
-
       {/* Source Acknowledgement */}
       <div className="flex items-start gap-4 p-4 rounded-lg bg-background/30 border border-border/30">
         <div className="flex-1">
@@ -136,11 +115,8 @@ export function Step9Confirmations({ data, onChange }: Step9Props) {
             <span className="ml-2 text-foreground">{data.keywords.length}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Channels:</span>
-            <div className="ml-2 inline-flex gap-1">
-              {data.deliveryChannels.email && <Badge variant="outline" className="text-xs">Email</Badge>}
-              {data.deliveryChannels.whatsapp && <Badge variant="outline" className="text-xs">WhatsApp</Badge>}
-            </div>
+            <span className="text-muted-foreground">Detail Level:</span>
+            <span className="ml-2 text-foreground capitalize">{data.detailLevel}</span>
           </div>
         </div>
       </div>
@@ -154,8 +130,8 @@ export function Step9Confirmations({ data, onChange }: Step9Props) {
             { label: 'Users', valid: data.clientUsers.length > 0 },
             { label: 'Areas', valid: data.affectedAreas.length > 0 },
             { label: 'Monitoring', valid: data.keywords.length > 0 || data.lawBranches.length > 0 },
-            { label: 'Delivery', valid: data.emailRecipients.daily.length > 0 || data.whatsappRecipients.length > 0 },
-            { label: 'Consent', valid: !data.deliveryChannels.whatsapp || data.whatsappConsent },
+            { label: 'Priority', valid: !!data.highImpactDefinition || !!data.highUrgencyDefinition },
+            { label: 'Acknowledgement', valid: data.sourceAcknowledgement },
           ].map((item) => (
             <div 
               key={item.label}

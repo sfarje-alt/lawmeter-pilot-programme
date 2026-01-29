@@ -125,19 +125,7 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
     }
   ],
 
-  // Step 7: Delivery settings
-  deliveryChannels: { email: true, whatsapp: true },
-  emailRecipients: {
-    daily: ["mquispe@farmasalud.com.pe", "cmendoza@farmasalud.com.pe"],
-    weekly: ["mquispe@farmasalud.com.pe", "cmendoza@farmasalud.com.pe", "pvargas@farmasalud.com.pe", "rsalazar@farmasalud.com.pe"]
-  },
-  whatsappRecipients: ["+51 999 123 456", "+51 999 234 567", "+51 999 456 789"],
-  dailyReportSchedule: "08:00",
-  weeklyReportSchedule: { dayOfWeek: 1, time: "09:00" },
-  timezone: "America/Lima",
-  sendOnlyIfAlerts: false,
-
-  // Step 8: Report defaults
+  // Step 7: Report defaults
   reportDefaultFilters: {
     areas: ["Legal", "Compliance", "Asuntos Regulatorios"],
     sectors: ["Farmacéutico", "Dispositivos Médicos", "Oncología"],
@@ -148,8 +136,7 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
   includeExpertCommentary: true,
   pdfNamingConvention: "FARMASALUD_[FECHA]_[TIPO]_Reporte",
 
-  // Step 9: Confirmations
-  whatsappConsent: true,
+  // Step 8: Confirmations
   sourceAcknowledgement: true,
   primaryContactId: "user-fs-001",
   internalNotes: "Cliente prioritario. Gerencia Legal requiere alertas sobre oncológicos y contrataciones públicas con máxima urgencia. Reunión de seguimiento quincenal los martes.",
