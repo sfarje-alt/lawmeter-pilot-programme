@@ -10,9 +10,12 @@ export interface ProductService {
   description?: string;
 }
 
-export interface ClientArea {
-  area: string;
-  responsibilityNote?: string;
+// Flexible tag category - replaces rigid ClientArea
+export interface TagCategory {
+  id: string;
+  name: string;
+  description?: string;
+  tags: string[];
 }
 
 export interface ClientUser {
@@ -24,33 +27,10 @@ export interface ClientUser {
   phone?: string;
 }
 
-export interface WeeklySchedule {
-  dayOfWeek: number; // 0-6 (Sunday-Saturday)
-  time: string; // HH:mm format
-}
-
-export interface DeliveryChannels {
-  email: boolean;
-  whatsapp: boolean;
-}
-
-export interface EmailRecipients {
-  daily: string[];
-  weekly: string[];
-}
-
-export interface ReportFilters {
-  areas?: string[];
-  themes?: string[];
-  sectors?: string[];
-  types?: string[];
-  stages?: string[];
-  entities?: string[];
-}
-
 export interface ClientProfile {
   id?: string;
-  // Step 1: Client basics
+  
+  // Step 1: Client basics + Business scope (combined)
   legalName: string;
   tradeName?: string;
   shortDescription?: string;
@@ -59,37 +39,24 @@ export interface ClientProfile {
   companyType?: string;
   isRegulated: boolean;
   supervisingAuthorities: string[];
-
-  // Step 2: Business scope
   primarySector?: string;
   secondarySectors: string[];
-  businessModelDescription?: string;
   productsServices: ProductService[];
-  customerSegments: string[];
-  distributionChannels: string[];
   isCrossBorder: boolean;
   crossBorderCountries: string[];
 
-  // Step 3: Client Areas
-  affectedAreas: ClientArea[];
-
-  // Step 4: Monitoring scope
-  monitoringObjective?: string;
-  lawBranches: string[];
+  // Step 2: Monitoring scope (AI-assisted keywords)
   keywords: string[];
   exclusions: string[];
-  additionalEntities: string[];
   instrumentTypes: string[];
 
-  // Step 5: Priority logic
-  stakeholdersAffected: string[];
-  highImpactDefinition?: string;
-  highUrgencyDefinition?: string;
+  // Step 3: Custom Tag Categories (flexible, replaces rigid Areas)
+  tagCategories: TagCategory[];
 
-  // Step 6: Client users
+  // Step 4: Client users
   clientUsers: ClientUser[];
 
-  // Step 7: Confirmations
+  // Step 5: Confirmations
   sourceAcknowledgement: boolean;
   primaryContactId?: string;
   internalNotes?: string;
@@ -98,16 +65,25 @@ export interface ClientProfile {
   status?: 'active' | 'inactive' | 'pending';
   createdAt?: string;
   updatedAt?: string;
+  
+  // Legacy fields kept for backward compatibility
+  affectedAreas?: { area: string; responsibilityNote?: string }[];
+  lawBranches?: string[];
+  additionalEntities?: string[];
+  stakeholdersAffected?: string[];
+  highImpactDefinition?: string;
+  highUrgencyDefinition?: string;
+  businessModelDescription?: string;
+  customerSegments?: string[];
+  distributionChannels?: string[];
 }
 
 export const WIZARD_STEPS = [
-  { id: 1, title: 'Client basics', required: true },
-  { id: 2, title: 'Business scope', required: true },
-  { id: 3, title: 'Client Areas', required: true },
-  { id: 4, title: 'Monitoring scope', required: true },
-  { id: 5, title: 'Priority logic', required: true },
-  { id: 6, title: 'Client users', required: true },
-  { id: 7, title: 'Confirmations', required: true },
+  { id: 1, title: 'Basics', required: true },
+  { id: 2, title: 'Monitoring', required: true },
+  { id: 3, title: 'Tags', required: false },
+  { id: 4, title: 'Users', required: true },
+  { id: 5, title: 'Confirm', required: true },
 ] as const;
 
 export const COMPANY_TYPES = [
@@ -129,6 +105,7 @@ export const SECTORS = [
   'Energía',
   'Minería',
   'Salud',
+  'Farmacéutico',
   'Educación',
   'Retail',
   'Tecnología',
@@ -138,23 +115,6 @@ export const SECTORS = [
   'Transporte',
   'Turismo',
   'Otro',
-];
-
-export const LAW_BRANCHES = [
-  'Derecho Corporativo',
-  'Derecho Tributario',
-  'Derecho Laboral',
-  'Derecho Ambiental',
-  'Derecho Bancario',
-  'Derecho de Seguros',
-  'Derecho de Telecomunicaciones',
-  'Derecho Energético',
-  'Derecho Minero',
-  'Derecho de la Competencia',
-  'Protección al Consumidor',
-  'Propiedad Intelectual',
-  'Derecho Penal Empresarial',
-  'Compliance',
 ];
 
 export const INSTRUMENT_TYPES = [
@@ -175,7 +135,23 @@ export const INSTRUMENT_TYPES = [
   'Resolución Suprema',
 ];
 
-export const AREAS = [
+// Default tag category templates
+export const DEFAULT_TAG_CATEGORIES: TagCategory[] = [
+  {
+    id: 'areas',
+    name: 'Áreas Internas',
+    description: 'Departamentos de la empresa que deben recibir alertas',
+    tags: []
+  },
+  {
+    id: 'themes',
+    name: 'Temas de Interés',
+    description: 'Temas regulatorios prioritarios',
+    tags: []
+  }
+];
+
+export const SUGGESTED_AREA_TAGS = [
   'Finanzas',
   'Operaciones',
   'Recursos Humanos',
@@ -186,22 +162,6 @@ export const AREAS = [
   'Ventas',
   'Producción',
   'Logística',
-  'Atención al Cliente',
-];
-
-export const TIMEZONES = [
-  { value: 'America/Lima', label: 'Lima (GMT-5)' },
-  { value: 'America/Bogota', label: 'Bogotá (GMT-5)' },
-  { value: 'America/Mexico_City', label: 'Ciudad de México (GMT-6)' },
-  { value: 'America/Santiago', label: 'Santiago (GMT-4)' },
-  { value: 'America/Buenos_Aires', label: 'Buenos Aires (GMT-3)' },
-  { value: 'America/Sao_Paulo', label: 'São Paulo (GMT-3)' },
-];
-
-export const DETAIL_LEVELS = [
-  { value: 'summary', label: 'Resumen' },
-  { value: 'detailed', label: 'Detallado' },
-  { value: 'comprehensive', label: 'Comprehensivo' },
 ];
 
 export const DEFAULT_CLIENT_PROFILE: ClientProfile = {
@@ -211,17 +171,19 @@ export const DEFAULT_CLIENT_PROFILE: ClientProfile = {
   supervisingAuthorities: [],
   secondarySectors: [],
   productsServices: [],
-  customerSegments: [],
-  distributionChannels: [],
   isCrossBorder: false,
   crossBorderCountries: [],
-  affectedAreas: [],
-  lawBranches: [],
   keywords: [],
   exclusions: [],
-  additionalEntities: [],
   instrumentTypes: [],
-  stakeholdersAffected: [],
+  tagCategories: [],
   clientUsers: [],
   sourceAcknowledgement: false,
+  // Legacy defaults
+  affectedAreas: [],
+  lawBranches: [],
+  additionalEntities: [],
+  stakeholdersAffected: [],
+  customerSegments: [],
+  distributionChannels: [],
 };

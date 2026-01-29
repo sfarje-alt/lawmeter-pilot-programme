@@ -12,47 +12,24 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
   shortDescription: "Empresa farmacéutica y de distribución de dispositivos médicos con operaciones en todo el Perú. Especializada en productos oncológicos, medicamentos genéricos y equipamiento hospitalario.",
   website: "https://www.farmasalud.com.pe",
   locations: [
-    { country: "Perú", regions: ["Lima", "Arequipa", "Trujillo", "Cusco", "Piura"] }
+    { country: "PE", regions: ["Lima", "Arequipa", "Trujillo", "Cusco", "Piura"] }
   ],
   companyType: "S.A.C.",
   isRegulated: true,
   supervisingAuthorities: ["DIGEMID", "SUNAT", "INDECOPI", "SUSALUD"],
 
-  // Step 2: Business scope
+  // Business scope
   primarySector: "Farmacéutico",
-  secondarySectors: ["Dispositivos Médicos", "Oncología", "Seguros"],
-  businessModelDescription: "FarmaSalud opera como una empresa farmacéutica integrada verticalmente, con actividades de importación, fabricación, distribución y comercialización de productos farmacéuticos y dispositivos médicos. Suministra a hospitales públicos (EsSalud, MINSA) y clínicas privadas a nivel nacional.",
+  secondarySectors: ["Salud"],
   productsServices: [
-    { name: "Medicamentos Oncológicos", description: "Línea completa de tratamientos oncológicos, incluyendo quimioterapias e inmunoterapias" },
-    { name: "Medicamentos Genéricos", description: "Portafolio de más de 500 medicamentos genéricos de alta calidad" },
+    { name: "Medicamentos Oncológicos", description: "Línea completa de tratamientos oncológicos" },
+    { name: "Medicamentos Genéricos", description: "Portafolio de más de 500 medicamentos genéricos" },
     { name: "Dispositivos Médicos", description: "Equipamiento hospitalario y dispositivos de diagnóstico" },
-    { name: "Distribución Hospitalaria", description: "Servicio de logística y distribución a instituciones de salud" }
   ],
-  customerSegments: ["Hospitales públicos", "Clínicas privadas", "Farmacias", "EPS", "Instituciones de Salud"],
-  distributionChannels: ["Venta directa", "Licitaciones públicas", "Distribuidores autorizados", "E-commerce B2B"],
   isCrossBorder: true,
-  crossBorderCountries: ["Colombia", "Ecuador", "Bolivia", "Chile"],
+  crossBorderCountries: ["CO", "EC", "BO", "CL"],
 
-  // Step 3: Client Areas
-  affectedAreas: [
-    { area: "Legal", responsibilityNote: "Monitoreo de cambios regulatorios, cumplimiento normativo, contratos con el Estado" },
-    { area: "Compliance", responsibilityNote: "Buenas prácticas de manufactura, farmacovigilancia, trazabilidad de productos" },
-    { area: "Operaciones", responsibilityNote: "Licencias de funcionamiento, permisos sanitarios, importaciones" },
-    { area: "Finanzas", responsibilityNote: "Tributación farmacéutica, exoneraciones, precios de transferencia" },
-    { area: "Comercial", responsibilityNote: "Licitaciones públicas, contratos marco, registro de productos" },
-    { area: "Asuntos Regulatorios", responsibilityNote: "Registro sanitario, estudios clínicos, bioequivalencia" }
-  ],
-
-  // Step 4: Monitoring scope
-  monitoringObjective: "Monitoreo integral del entorno regulatorio farmacéutico y de dispositivos médicos para anticipar cambios normativos, identificar oportunidades de negocio en contrataciones públicas, y garantizar el cumplimiento regulatorio continuo.",
-  lawBranches: [
-    "Derecho de Salud",
-    "Derecho Tributario",
-    "Derecho de Contrataciones Públicas",
-    "Derecho Administrativo",
-    "Derecho de Propiedad Intelectual",
-    "Derecho de la Competencia"
-  ],
+  // Step 2: Monitoring scope
   keywords: [
     "farmacéutico",
     "medicamentos",
@@ -74,29 +51,36 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
     "importación"
   ],
   exclusions: ["Veterinario", "Cosméticos", "Suplementos dietéticos"],
-  additionalEntities: ["DIGEMID", "SUSALUD", "EsSalud", "MINSA", "INEN", "SIS", "INS", "CENARES"],
   instrumentTypes: [
     "Ley",
     "Decreto Supremo",
-    "Resolución Ministerial",
-    "Resolución de Superintendencia",
-    "Proyecto de Ley",
-    "Dictamen"
+    "Resolución",
+    "Decreto de Urgencia",
   ],
 
-  // Step 5: Priority logic
-  stakeholdersAffected: ["Accionistas", "Clientes", "Reguladores", "Proveedores", "Directorio", "Gerencia"],
-  highImpactDefinition: "Legislación que afecte: (1) Precios o márgenes de medicamentos, (2) Requisitos de registro sanitario, (3) Procesos de licitación pública con entidades de salud, (4) Normativa de farmacovigilancia o trazabilidad, (5) Tratamientos oncológicos o enfermedades raras que representen >15% del portafolio.",
-  highUrgencyDefinition: "Alertas con: (1) Plazos de cumplimiento menores a 30 días, (2) Licitaciones públicas en proceso de convocatoria, (3) Proyectos de ley en etapa de Pleno o Trámite Final, (4) Normas publicadas con vigencia inmediata que afecten operaciones.",
+  // Step 3: Custom Tag Categories
+  tagCategories: [
+    {
+      id: "areas",
+      name: "Áreas Internas",
+      description: "Departamentos de la empresa",
+      tags: ["Legal", "Compliance", "Operaciones", "Finanzas", "Comercial", "Asuntos Regulatorios"]
+    },
+    {
+      id: "themes",
+      name: "Temas de Interés",
+      description: "Temas regulatorios prioritarios",
+      tags: ["Oncología", "Contrataciones Públicas", "Registro Sanitario", "Precios"]
+    }
+  ],
 
-  // Step 6: Client users
+  // Step 4: Client users
   clientUsers: [
     {
       id: "user-fs-001",
       name: "María Elena Quispe",
       email: "mquispe@farmasalud.com.pe",
       title: "Gerente Legal",
-      area: "Legal",
       phone: "+51 999 123 456"
     },
     {
@@ -104,7 +88,6 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
       name: "Carlos Mendoza Ruiz",
       email: "cmendoza@farmasalud.com.pe",
       title: "Director de Asuntos Regulatorios",
-      area: "Asuntos Regulatorios",
       phone: "+51 999 234 567"
     },
     {
@@ -112,28 +95,27 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
       name: "Patricia Vargas Torres",
       email: "pvargas@farmasalud.com.pe",
       title: "Jefe de Compliance",
-      area: "Compliance",
       phone: "+51 999 345 678"
     },
-    {
-      id: "user-fs-004",
-      name: "Roberto Salazar Díaz",
-      email: "rsalazar@farmasalud.com.pe",
-      title: "Gerente Comercial",
-      area: "Comercial",
-      phone: "+51 999 456 789"
-    }
   ],
 
-  // Step 7: Confirmations
+  // Step 5: Confirmations
   sourceAcknowledgement: true,
   primaryContactId: "user-fs-001",
-  internalNotes: "Cliente prioritario. Gerencia Legal requiere alertas sobre oncológicos y contrataciones públicas con máxima urgencia. Reunión de seguimiento quincenal los martes.",
+  internalNotes: "Cliente prioritario. Gerencia Legal requiere alertas sobre oncológicos y contrataciones públicas con máxima urgencia.",
 
   // Meta
   status: "active",
   createdAt: "2024-06-15T10:00:00Z",
-  updatedAt: "2025-01-20T14:30:00Z"
+  updatedAt: "2025-01-20T14:30:00Z",
+  
+  // Legacy fields for backward compatibility
+  affectedAreas: [],
+  lawBranches: [],
+  additionalEntities: [],
+  stakeholdersAffected: [],
+  customerSegments: [],
+  distributionChannels: [],
 };
 
 // Export all mock client profiles
