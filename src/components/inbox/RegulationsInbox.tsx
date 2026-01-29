@@ -51,6 +51,13 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     return alerts.filter(a => a.legislation_type === "norma");
   }, [alerts]);
 
+  // Reset processed flag when initialAlertId changes
+  useEffect(() => {
+    if (initialAlertId) {
+      setProcessedInitialAlert(false);
+    }
+  }, [initialAlertId]);
+
   // Open drawer automatically if initialAlertId is provided
   useEffect(() => {
     if (initialAlertId && !processedInitialAlert && regulationAlerts.length > 0) {

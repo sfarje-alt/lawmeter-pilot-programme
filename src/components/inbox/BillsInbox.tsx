@@ -55,6 +55,13 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     return alerts.filter(a => a.legislation_type === "proyecto_de_ley");
   }, [alerts]);
 
+  // Reset processed flag when initialAlertId changes
+  useEffect(() => {
+    if (initialAlertId) {
+      setProcessedInitialAlert(false);
+    }
+  }, [initialAlertId]);
+
   // Open drawer automatically if initialAlertId is provided
   useEffect(() => {
     if (initialAlertId && !processedInitialAlert && billAlerts.length > 0) {
