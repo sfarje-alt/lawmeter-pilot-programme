@@ -24,6 +24,7 @@ export interface BillsFilters {
   sectors: string[];
   parliamentaryGroups: string[];
   impactLevels: string[];
+  clientIds: string[];
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onlyPinned: boolean;
@@ -41,6 +42,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     sectors: [],
     parliamentaryGroups: [],
     impactLevels: [],
+    clientIds: [],
     dateFrom: undefined,
     dateTo: undefined,
     onlyPinned: false,
@@ -103,6 +105,11 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     return Array.from(areas).sort();
   }, [billAlerts]);
 
+  // Get available clients from data
+  const availableClients = useMemo(() => {
+    return MOCK_CLIENTS;
+  }, []);
+
   // Apply filters with multi-select support
   const filteredAlerts = useMemo(() => {
     return billAlerts.filter((alert) => {
@@ -143,6 +150,18 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
       // Impact Level filter (multi-select)
       if (filters.impactLevels.length > 0 && !filters.impactLevels.includes(alert.impact_level || "")) {
         return false;
+      }
+
+      // Client filter (multi-select)
+      if (filters.clientIds.length > 0) {
+        const alertClientIds = [
+          alert.client_id,
+          alert.primary_client_id,
+          ...alert.client_commentaries.map(c => c.clientId)
+        ].filter(Boolean);
+        if (!filters.clientIds.some(clientId => alertClientIds.includes(clientId))) {
+          return false;
+        }
       }
 
       // Date range filter (using project_date or stage_date)
@@ -310,6 +329,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
         availableStages={availableStages}
         availableImpactLevels={availableImpactLevels}
         availableAreas={availableAreas}
+        availableClients={availableClients}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}

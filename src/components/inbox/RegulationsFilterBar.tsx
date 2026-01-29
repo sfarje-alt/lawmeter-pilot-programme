@@ -19,6 +19,7 @@ interface RegulationsFilterBarProps {
   availableSectors: string[];
   availableImpactLevels: string[];
   availableAreas: string[];
+  availableClients: { id: string; name: string }[];
   totalCount: number;
   filteredCount: number;
   pinnedCount: number;
@@ -39,6 +40,7 @@ export function RegulationsFilterBar({
   availableSectors,
   availableImpactLevels,
   availableAreas,
+  availableClients,
   totalCount,
   filteredCount,
   pinnedCount
@@ -49,6 +51,7 @@ export function RegulationsFilterBar({
     filters.entities.length > 0 ||
     filters.sectors.length > 0 ||
     filters.impactLevels.length > 0 ||
+    filters.clientIds.length > 0 ||
     filters.dateFrom !== undefined ||
     filters.dateTo !== undefined ||
     filters.onlyPinned;
@@ -60,6 +63,7 @@ export function RegulationsFilterBar({
       entities: [],
       sectors: [],
       impactLevels: [],
+      clientIds: [],
       dateFrom: undefined,
       dateTo: undefined,
       onlyPinned: false,
@@ -102,6 +106,11 @@ export function RegulationsFilterBar({
   const areaOptions: MultiSelectOption[] = availableAreas.map(area => ({
     value: area,
     label: area,
+  }));
+
+  const clientOptions: MultiSelectOption[] = availableClients.map(client => ({
+    value: client.id,
+    label: client.name,
   }));
 
   return (
@@ -160,6 +169,15 @@ export function RegulationsFilterBar({
           onChange={(entities) => onFiltersChange({ ...filters, entities })}
           placeholder="Institución: Todas"
           className="w-[175px]"
+        />
+
+        {/* Client Filter - MultiSelect */}
+        <MultiSelect
+          options={clientOptions}
+          selected={filters.clientIds}
+          onChange={(clientIds) => onFiltersChange({ ...filters, clientIds })}
+          placeholder="Cliente: Todos"
+          className="w-[170px]"
         />
 
         {/* Date Range Filter with Quick Options */}
@@ -327,6 +345,17 @@ export function RegulationsFilterBar({
               </button>
             </Badge>
           ))}
+          {filters.clientIds.map(clientId => {
+            const client = availableClients.find(c => c.id === clientId);
+            return (
+              <Badge key={clientId} variant="secondary" className="gap-1 text-xs bg-blue-500/20 text-blue-300">
+                Cliente: {client?.name || clientId}
+                <button onClick={() => onFiltersChange({ ...filters, clientIds: filters.clientIds.filter(c => c !== clientId) })}>
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            );
+          })}
           {(filters.dateFrom || filters.dateTo) && (
             <Badge variant="secondary" className="gap-1 text-xs">
               {filters.dateFrom && filters.dateTo
