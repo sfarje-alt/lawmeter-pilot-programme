@@ -40,8 +40,9 @@ const DISTRIBUTION_CHANNELS = [
   'Marketplace',
 ];
 
-// Cross-border countries (excludes Peru since that's the primary market)
+// Cross-border countries (Peru is primary market, selected by default)
 const CROSS_BORDER_COUNTRIES = [
+  { code: 'PE', name: 'Perú' },
   { code: 'CO', name: 'Colombia' },
   { code: 'MX', name: 'México' },
   { code: 'CL', name: 'Chile' },
@@ -275,7 +276,13 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
         <Switch
           id="isCrossBorder"
           checked={data.isCrossBorder}
-          onCheckedChange={(checked) => onChange({ isCrossBorder: checked })}
+          onCheckedChange={(checked) => {
+            if (checked && !data.crossBorderCountries.includes('PE')) {
+              onChange({ isCrossBorder: checked, crossBorderCountries: ['PE', ...data.crossBorderCountries] });
+            } else {
+              onChange({ isCrossBorder: checked });
+            }
+          }}
         />
       </div>
 
