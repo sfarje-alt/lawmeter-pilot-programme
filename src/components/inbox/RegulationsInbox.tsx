@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Inbox as InboxIcon, FileText, Pin } from "lucide-react";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
@@ -15,6 +15,7 @@ interface RegulationsInboxProps {
   selectedClientId: string | null;
   hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
   onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
+  initialAlertId?: string | null;
 }
 
 export interface RegulationsFilters {
@@ -29,9 +30,10 @@ export interface RegulationsFilters {
   onlyPinned: boolean;
 }
 
-export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary }: RegulationsInboxProps) {
+export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: RegulationsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const [filters, setFilters] = useState<RegulationsFilters>({
     search: "",
     areas: [],
@@ -48,6 +50,18 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
   const regulationAlerts = useMemo(() => {
     return alerts.filter(a => a.legislation_type === "norma");
   }, [alerts]);
+
+  // Open drawer automatically if initialAlertId is provided
+  useEffect(() => {
+    if (initialAlertId && !processedInitialAlert && regulationAlerts.length > 0) {
+      const alertToOpen = regulationAlerts.find(a => a.id === initialAlertId);
+      if (alertToOpen) {
+        setSelectedAlert(alertToOpen);
+        setDrawerOpen(true);
+        setProcessedInitialAlert(true);
+      }
+    }
+  }, [initialAlertId, regulationAlerts, processedInitialAlert]);
 
   // Extract dynamic filter options from data
   const availableEntities = useMemo(() => {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Inbox as InboxIcon, Scale, Pin } from "lucide-react";
@@ -15,6 +15,7 @@ interface BillsInboxProps {
   selectedClientId: string | null;
   hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
   onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
+  initialAlertId?: string | null;
 }
 
 export interface BillsFilters {
@@ -32,9 +33,10 @@ export interface BillsFilters {
 
 type BillKanbanStage = "comision" | "pleno" | "tramite_final";
 
-export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary }: BillsInboxProps) {
+export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: BillsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const [filters, setFilters] = useState<BillsFilters>({
     search: "",
     areas: [],
@@ -52,6 +54,18 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
   const billAlerts = useMemo(() => {
     return alerts.filter(a => a.legislation_type === "proyecto_de_ley");
   }, [alerts]);
+
+  // Open drawer automatically if initialAlertId is provided
+  useEffect(() => {
+    if (initialAlertId && !processedInitialAlert && billAlerts.length > 0) {
+      const alertToOpen = billAlerts.find(a => a.id === initialAlertId);
+      if (alertToOpen) {
+        setSelectedAlert(alertToOpen);
+        setDrawerOpen(true);
+        setProcessedInitialAlert(true);
+      }
+    }
+  }, [initialAlertId, billAlerts, processedInitialAlert]);
 
   // Pinned count
   const pinnedCount = useMemo(() => {
