@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Toggle } from "@/components/ui/toggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, X, Pin, CalendarIcon } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Search, X, Pin, CalendarIcon, ChevronDown, Filter } from "lucide-react";
 import { BillsFilters } from "./BillsInbox";
 import { format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -47,6 +49,8 @@ export function BillsFilterBar({
   filteredCount,
   pinnedCount
 }: BillsFilterBarProps) {
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+
   const hasActiveFilters = 
     filters.search !== "" || 
     filters.areas.length > 0 || 
@@ -58,6 +62,14 @@ export function BillsFilterBar({
     filters.dateFrom !== undefined ||
     filters.dateTo !== undefined ||
     filters.onlyPinned;
+
+  const activeFilterCount = 
+    (filters.areas.length > 0 ? 1 : 0) +
+    (filters.stages.length > 0 ? 1 : 0) +
+    (filters.sectors.length > 0 ? 1 : 0) +
+    (filters.parliamentaryGroups.length > 0 ? 1 : 0) +
+    (filters.impactLevels.length > 0 ? 1 : 0) +
+    (filters.clientIds.length > 0 ? 1 : 0);
 
   const clearFilters = () => {
     onFiltersChange({
@@ -124,7 +136,7 @@ export function BillsFilterBar({
 
   return (
     <div className="space-y-3">
-      {/* Main Filter Row */}
+      {/* Main Row: Search + Action Buttons (Pineados, Fechas) */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Search */}
         <div className="relative flex-1 min-w-[180px] max-w-sm">
@@ -153,51 +165,6 @@ export function BillsFilterBar({
           )}
         </Toggle>
 
-        {/* Último Estado (Stage Filter) - MultiSelect */}
-        <MultiSelect
-          options={stageOptions}
-          selected={filters.stages}
-          onChange={(stages) => onFiltersChange({ ...filters, stages })}
-          placeholder="Estado: Todos"
-          className="w-[180px]"
-        />
-
-        {/* Impact Level Filter - MultiSelect */}
-        <MultiSelect
-          options={impactOptions}
-          selected={filters.impactLevels}
-          onChange={(impactLevels) => onFiltersChange({ ...filters, impactLevels })}
-          placeholder="Impacto: Todos"
-          className="w-[160px]"
-        />
-
-        {/* Parliamentary Group Filter - MultiSelect */}
-        <MultiSelect
-          options={groupOptions}
-          selected={filters.parliamentaryGroups}
-          onChange={(parliamentaryGroups) => onFiltersChange({ ...filters, parliamentaryGroups })}
-          placeholder="Grupo: Todos"
-          className="w-[170px]"
-        />
-
-        {/* Sector Filter - MultiSelect */}
-        <MultiSelect
-          options={sectorOptions}
-          selected={filters.sectors}
-          onChange={(sectors) => onFiltersChange({ ...filters, sectors })}
-          placeholder="Sector: Todos"
-          className="w-[160px]"
-        />
-
-        {/* Client Filter - MultiSelect */}
-        <MultiSelect
-          options={clientOptions}
-          selected={filters.clientIds}
-          onChange={(clientIds) => onFiltersChange({ ...filters, clientIds })}
-          placeholder="Cliente: Todos"
-          className="w-[170px]"
-        />
-
         {/* Date Range Filter with Quick Options */}
         <Popover>
           <PopoverTrigger asChild>
@@ -206,7 +173,7 @@ export function BillsFilterBar({
               size="sm"
               className={cn(
                 "h-9 gap-1.5 bg-muted/30 border-border/50 text-sm",
-                (filters.dateFrom || filters.dateTo) && "border-primary/50"
+                (filters.dateFrom || filters.dateTo) && "border-primary/50 bg-primary/10"
               )}
             >
               <CalendarIcon className="h-4 w-4" />
@@ -222,7 +189,7 @@ export function BillsFilterBar({
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-50" align="start">
+          <PopoverContent className="w-auto p-0 z-50 bg-popover border border-border" align="start">
             <div className="p-3 space-y-3">
               {/* Quick Date Options */}
               <div className="space-y-1">
@@ -252,7 +219,7 @@ export function BillsFilterBar({
                       selected={filters.dateFrom}
                       onSelect={(date) => onFiltersChange({ ...filters, dateFrom: date })}
                       locale={es}
-                      className="rounded-md border pointer-events-auto"
+                      className="rounded-md border pointer-events-auto bg-background"
                     />
                   </div>
                   <div className="space-y-1">
@@ -262,7 +229,7 @@ export function BillsFilterBar({
                       selected={filters.dateTo}
                       onSelect={(date) => onFiltersChange({ ...filters, dateTo: date })}
                       locale={es}
-                      className="rounded-md border pointer-events-auto"
+                      className="rounded-md border pointer-events-auto bg-background"
                     />
                   </div>
                 </div>
@@ -282,14 +249,28 @@ export function BillsFilterBar({
           </PopoverContent>
         </Popover>
 
-        {/* Area Filter - MultiSelect */}
-        <MultiSelect
-          options={areaOptions}
-          selected={filters.areas}
-          onChange={(areas) => onFiltersChange({ ...filters, areas })}
-          placeholder="Área: Todas"
-          className="w-[160px]"
-        />
+        {/* Expand Filters Button */}
+        <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={cn(
+                "h-9 gap-1.5 bg-muted/30 border-border/50 text-sm",
+                activeFilterCount > 0 && "border-primary/50 bg-primary/10"
+              )}
+            >
+              <Filter className="h-4 w-4" />
+              <span className="hidden sm:inline">Filtros</span>
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-primary/20 text-primary">
+                  {activeFilterCount}
+                </Badge>
+              )}
+              <ChevronDown className={cn("h-3 w-3 transition-transform", filtersExpanded && "rotate-180")} />
+            </Button>
+          </CollapsibleTrigger>
+        </Collapsible>
 
         {/* Clear Filters */}
         {hasActiveFilters && (
@@ -304,6 +285,67 @@ export function BillsFilterBar({
           </Button>
         )}
       </div>
+
+      {/* Expandable Filters Row */}
+      <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
+        <CollapsibleContent>
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-t border-border/30">
+            {/* Último Estado (Stage Filter) - MultiSelect */}
+            <MultiSelect
+              options={stageOptions}
+              selected={filters.stages}
+              onChange={(stages) => onFiltersChange({ ...filters, stages })}
+              placeholder="Estado: Todos"
+              className="w-[180px]"
+            />
+
+            {/* Impact Level Filter - MultiSelect */}
+            <MultiSelect
+              options={impactOptions}
+              selected={filters.impactLevels}
+              onChange={(impactLevels) => onFiltersChange({ ...filters, impactLevels })}
+              placeholder="Impacto: Todos"
+              className="w-[160px]"
+            />
+
+            {/* Parliamentary Group Filter - MultiSelect */}
+            <MultiSelect
+              options={groupOptions}
+              selected={filters.parliamentaryGroups}
+              onChange={(parliamentaryGroups) => onFiltersChange({ ...filters, parliamentaryGroups })}
+              placeholder="Grupo: Todos"
+              className="w-[170px]"
+            />
+
+            {/* Sector Filter - MultiSelect */}
+            <MultiSelect
+              options={sectorOptions}
+              selected={filters.sectors}
+              onChange={(sectors) => onFiltersChange({ ...filters, sectors })}
+              placeholder="Sector: Todos"
+              className="w-[160px]"
+            />
+
+            {/* Client Filter - MultiSelect */}
+            <MultiSelect
+              options={clientOptions}
+              selected={filters.clientIds}
+              onChange={(clientIds) => onFiltersChange({ ...filters, clientIds })}
+              placeholder="Cliente: Todos"
+              className="w-[170px]"
+            />
+
+            {/* Area Filter - MultiSelect */}
+            <MultiSelect
+              options={areaOptions}
+              selected={filters.areas}
+              onChange={(areas) => onFiltersChange({ ...filters, areas })}
+              placeholder="Área: Todas"
+              className="w-[160px]"
+            />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Active Filters Display */}
       {hasActiveFilters && (
@@ -374,7 +416,7 @@ export function BillsFilterBar({
           {filters.clientIds.map(clientId => {
             const client = availableClients.find(c => c.id === clientId);
             return (
-              <Badge key={clientId} variant="secondary" className="gap-1 text-xs bg-blue-500/20 text-blue-300">
+              <Badge key={clientId} variant="secondary" className="gap-1 text-xs bg-accent/50">
                 Cliente: {client?.name || clientId}
                 <button onClick={() => onFiltersChange({ ...filters, clientIds: filters.clientIds.filter(c => c !== clientId) })}>
                   <X className="h-3 w-3" />
