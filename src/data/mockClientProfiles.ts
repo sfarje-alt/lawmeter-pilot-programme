@@ -97,8 +97,7 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
       email: "mquispe@farmasalud.com.pe",
       title: "Gerente Legal",
       area: "Legal",
-      phone: "+51 999 123 456",
-      whatsappEnabled: true
+      phone: "+51 999 123 456"
     },
     {
       id: "user-fs-002",
@@ -106,8 +105,7 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
       email: "cmendoza@farmasalud.com.pe",
       title: "Director de Asuntos Regulatorios",
       area: "Asuntos Regulatorios",
-      phone: "+51 999 234 567",
-      whatsappEnabled: true
+      phone: "+51 999 234 567"
     },
     {
       id: "user-fs-003",
@@ -115,8 +113,7 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
       email: "pvargas@farmasalud.com.pe",
       title: "Jefe de Compliance",
       area: "Compliance",
-      phone: "+51 999 345 678",
-      whatsappEnabled: false
+      phone: "+51 999 345 678"
     },
     {
       id: "user-fs-004",
@@ -124,8 +121,7 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
       email: "rsalazar@farmasalud.com.pe",
       title: "Gerente Comercial",
       area: "Comercial",
-      phone: "+51 999 456 789",
-      whatsappEnabled: true
+      phone: "+51 999 456 789"
     }
   ],
 

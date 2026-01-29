@@ -394,12 +394,6 @@ export function ClientProfileDrawer({
                                 <Mail className="h-3 w-3" />
                                 {user.email}
                               </span>
-                              {user.whatsappEnabled && (
-                                <Badge variant="outline" className="text-xs h-5">
-                                  <Phone className="h-3 w-3 mr-1" />
-                                  WhatsApp
-                                </Badge>
-                              )}
                             </div>
                           </div>
                         </div>
