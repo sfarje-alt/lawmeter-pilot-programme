@@ -179,14 +179,17 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
         </div>
       </div>
 
-      {/* Business Model Description */}
+      {/* Regulatory Context */}
       <div className="space-y-2">
-        <Label htmlFor="businessModel">Business Model Description</Label>
+        <Label htmlFor="businessModel">Regulatory Context</Label>
+        <p className="text-xs text-muted-foreground">
+          Describe the client's operations that may be subject to regulatory oversight
+        </p>
         <Textarea
           id="businessModel"
           value={data.businessModelDescription || ""}
           onChange={(e) => onChange({ businessModelDescription: e.target.value })}
-          placeholder="Describe the client's business model..."
+          placeholder="E.g., Manufactures consumer electronics requiring CE/FCC certification, operates e-commerce with cross-border data flows..."
           className="bg-background/50 resize-none"
           rows={3}
         />
