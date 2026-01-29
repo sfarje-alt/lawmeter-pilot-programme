@@ -57,6 +57,7 @@ const COUNTRIES = [
 
 export function Step2BusinessScope({ data, onChange }: Step2Props) {
   const [newProduct, setNewProduct] = useState<ProductService>({ name: '', description: '' });
+  const [customPrimarySector, setCustomPrimarySector] = useState("");
 
   const addSecondarySector = (sector: string) => {
     if (!data.secondarySectors.includes(sector)) {
@@ -103,6 +104,20 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
     }
   };
 
+  const handlePrimarySectorChange = (value: string) => {
+    if (value === "Otro") {
+      setCustomPrimarySector("");
+    }
+    onChange({ primarySector: value });
+  };
+
+  const handleCustomPrimarySectorChange = (value: string) => {
+    setCustomPrimarySector(value);
+    if (value.trim()) {
+      onChange({ primarySector: value.trim() });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -113,12 +128,12 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
       </div>
 
       {/* Sectors */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 items-start">
         <div className="space-y-2">
           <Label>Primary Sector</Label>
           <Select
-            value={data.primarySector || ""}
-            onValueChange={(value) => onChange({ primarySector: value })}
+            value={SECTORS.includes(data.primarySector || "") ? data.primarySector : "Otro"}
+            onValueChange={handlePrimarySectorChange}
           >
             <SelectTrigger className="bg-background/50">
               <SelectValue placeholder="Select primary sector" />
@@ -129,17 +144,18 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
               ))}
             </SelectContent>
           </Select>
+          {/* Custom sector input when "Otro" is selected */}
+          {(data.primarySector === "Otro" || (data.primarySector && !SECTORS.includes(data.primarySector))) && (
+            <Input
+              value={SECTORS.includes(data.primarySector || "") ? customPrimarySector : data.primarySector}
+              onChange={(e) => handleCustomPrimarySectorChange(e.target.value)}
+              placeholder="Specify sector..."
+              className="bg-background/50 mt-2"
+            />
+          )}
         </div>
         <div className="space-y-2">
           <Label>Secondary Sectors</Label>
-          <div className="flex flex-wrap gap-1 mb-2 min-h-[32px]">
-            {data.secondarySectors.map((sector) => (
-              <Badge key={sector} variant="secondary" className="gap-1 text-xs">
-                {sector}
-                <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => removeSecondarySector(sector)} />
-              </Badge>
-            ))}
-          </div>
           <Select onValueChange={addSecondarySector}>
             <SelectTrigger className="bg-background/50">
               <SelectValue placeholder="Add secondary sector..." />
@@ -150,6 +166,16 @@ export function Step2BusinessScope({ data, onChange }: Step2Props) {
               ))}
             </SelectContent>
           </Select>
+          {data.secondarySectors.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {data.secondarySectors.map((sector) => (
+                <Badge key={sector} variant="secondary" className="gap-1 text-xs">
+                  {sector}
+                  <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => removeSecondarySector(sector)} />
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
