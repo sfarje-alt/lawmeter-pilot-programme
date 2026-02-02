@@ -133,12 +133,21 @@ export default function LawMeterDashboard() {
     return tabNames[activeTab] || activeTab;
   };
 
+  // Handle tab changes - clear URL params when manually switching tabs
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Clear deep-link parameters when switching tabs manually via sidebar
+    if (searchParams.has('alertId') || searchParams.has('sessionId') || searchParams.has('section') || searchParams.has('tab') || searchParams.has('t')) {
+      setSearchParams({});
+    }
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
         <AppSidebar 
           activeTab={activeTab} 
-          onTabChange={setActiveTab} 
+          onTabChange={handleTabChange} 
           onSettingsOpen={() => setSettingsOpen(true)} 
         />
         
