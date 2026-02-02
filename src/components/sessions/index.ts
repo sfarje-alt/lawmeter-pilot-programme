@@ -1,6 +1,7 @@
 // Sessions module exports
 
 export { SessionsPage } from './SessionsPage';
+export type { SessionsPageProps } from './SessionsPage';
 export { PeruSessionsSection } from './peru/PeruSessionsSection';
 export { PeruSessionCard } from './peru/PeruSessionCard';
 export { PeruWatchedCommissions } from './peru/PeruWatchedCommissions';

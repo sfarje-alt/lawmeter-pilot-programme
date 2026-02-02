@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -38,22 +38,26 @@ import {
   Clock,
   AlertTriangle,
   Scale,
-  Info
+  Info,
+  Video
 } from "lucide-react";
 import { format, isSameDay, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { MOCK_BILLS, MOCK_REGULATIONS, MOCK_CLIENTS, PeruAlert } from "@/data/peruAlertsMockData";
+import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AlertCalendarEvent {
   id: string;
   title: string;
   date: Date;
-  dateType: 'stage_entry' | 'publication' | 'in_force' | 'manual';
-  type: 'bill' | 'regulation';
+  dateType: 'stage_entry' | 'publication' | 'in_force' | 'manual' | 'session';
+  type: 'bill' | 'regulation' | 'session';
   stage?: string;
   entity?: string;
+  commission?: string;
   riskLevel?: 'high' | 'medium' | 'low';
   affectedAreas: string[];
   clients: string[];
@@ -65,6 +69,7 @@ interface DateRuleConfig {
   showPublication: boolean;
   showInForce: boolean;
   showManual: boolean;
+  showSessions: boolean;
 }
 
 // Helper to parse date strings (supports both ISO "YYYY-MM-DD" and "DD/MM/YYYY" formats)
@@ -210,6 +215,9 @@ export function AlertsCalendar() {
   const [showFilters, setShowFilters] = useState(false);
   const [showDateRules, setShowDateRules] = useState(false);
   
+  // Sessions data from Supabase
+  const [sessions, setSessions] = useState<any[]>([]);
+  
   // Filters
   const [filterClient, setFilterClient] = useState<string>('all');
   const [filterSector, setFilterSector] = useState<string>('all');
@@ -219,16 +227,73 @@ export function AlertsCalendar() {
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterRisk, setFilterRisk] = useState<string>('all');
   
-  // Date rules
+  // Date rules - now includes sessions
   const [dateRules, setDateRules] = useState<DateRuleConfig>({
     showStageEntry: true,
     showPublication: true,
     showInForce: true,
-    showManual: true
+    showManual: true,
+    showSessions: true,
   });
 
+  // Load sessions from Supabase
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('peru_sessions')
+          .select('*')
+          .order('scheduled_at', { ascending: false });
+        
+        if (!error && data) {
+          setSessions(data);
+        }
+      } catch (err) {
+        console.error('Error loading sessions:', err);
+      }
+    };
+    loadSessions();
+  }, []);
+
+  // Convert sessions to calendar events, linking to clients via watchedCommissions
+  const sessionEvents = useMemo((): AlertCalendarEvent[] => {
+    return sessions
+      .filter(session => session.scheduled_at)
+      .map(session => {
+        const sessionDate = new Date(session.scheduled_at);
+        
+        // Find clients who watch this commission
+        const matchingClients: { id: string; name: string }[] = [];
+        MOCK_CLIENT_PROFILES.forEach(client => {
+          if (client.watchedCommissions?.some(wc => 
+            session.commission_name.toLowerCase().includes(wc.toLowerCase()) ||
+            wc.toLowerCase().includes(session.commission_name.toLowerCase())
+          )) {
+            matchingClients.push({ id: client.id, name: client.tradeName || client.legalName });
+          }
+        });
+        
+        return {
+          id: session.id,
+          title: session.session_title || `Sesión: ${session.commission_name}`,
+          date: sessionDate,
+          dateType: 'session' as const,
+          type: 'session' as const,
+          commission: session.commission_name,
+          affectedAreas: [],
+          clients: matchingClients.map(c => c.id),
+          clientNames: matchingClients.map(c => c.name),
+        };
+      });
+  }, [sessions]);
+
   const allAlerts = [...MOCK_BILLS, ...MOCK_REGULATIONS];
-  const allEvents = useMemo(() => convertToCalendarEvents(allAlerts), []);
+  const alertEvents = useMemo(() => convertToCalendarEvents(allAlerts), []);
+  
+  // Combine alert events with session events
+  const allEvents = useMemo(() => {
+    return [...alertEvents, ...sessionEvents];
+  }, [alertEvents, sessionEvents]);
   
   // Get filter options
   const stages = getUniqueValues(MOCK_BILLS, 'current_stage');
@@ -243,6 +308,7 @@ export function AlertsCalendar() {
       if (event.dateType === 'publication' && !dateRules.showPublication) return false;
       if (event.dateType === 'in_force' && !dateRules.showInForce) return false;
       if (event.dateType === 'manual' && !dateRules.showManual) return false;
+      if (event.dateType === 'session' && !dateRules.showSessions) return false;
       
       // Client filter
       if (filterClient !== 'all' && !event.clients.includes(filterClient)) return false;
@@ -251,16 +317,17 @@ export function AlertsCalendar() {
       if (filterInstrumentType !== 'all') {
         if (filterInstrumentType === 'bill' && event.type !== 'bill') return false;
         if (filterInstrumentType === 'regulation' && event.type !== 'regulation') return false;
+        if (filterInstrumentType === 'session' && event.type !== 'session') return false;
       }
       
-      // Stage filter
-      if (filterStage !== 'all' && event.stage !== filterStage) return false;
+      // Stage filter (not applicable to sessions)
+      if (filterStage !== 'all' && event.type !== 'session' && event.stage !== filterStage) return false;
       
-      // Area filter
-      if (filterArea !== 'all' && !event.affectedAreas.includes(filterArea)) return false;
+      // Area filter (not applicable to sessions)
+      if (filterArea !== 'all' && event.type !== 'session' && !event.affectedAreas.includes(filterArea)) return false;
       
-      // Risk filter
-      if (filterRisk !== 'all' && event.riskLevel !== filterRisk) return false;
+      // Risk filter (not applicable to sessions)
+      if (filterRisk !== 'all' && event.type !== 'session' && event.riskLevel !== filterRisk) return false;
       
       return true;
     });
@@ -307,10 +374,17 @@ export function AlertsCalendar() {
   };
 
   const handleEventClick = (event: AlertCalendarEvent) => {
+    const timestamp = Date.now();
+    
+    // Handle session navigation separately
+    if (event.type === 'session') {
+      navigate(`/?section=sessions&sessionId=${event.id}&t=${timestamp}`);
+      return;
+    }
+    
     const tab = event.type === 'bill' ? 'bills' : 'regulations';
     // Navigate to root with section=inbox and alert parameters
     // Add timestamp to force re-render when navigating multiple times
-    const timestamp = Date.now();
     navigate(`/?section=inbox&tab=${tab}&alertId=${event.id}&t=${timestamp}`);
   };
 
@@ -331,6 +405,9 @@ export function AlertsCalendar() {
   };
 
   const getEventColor = (event: AlertCalendarEvent) => {
+    if (event.type === 'session') {
+      return 'bg-purple-500/20 border-purple-500/50 text-purple-300';
+    }
     if (event.type === 'bill') {
       if (event.stage?.includes('Pleno')) return 'bg-amber-500/20 border-amber-500/50 text-amber-300';
       if (event.stage?.includes('Comisión')) return 'bg-blue-500/20 border-blue-500/50 text-blue-300';
@@ -406,6 +483,11 @@ export function AlertsCalendar() {
                     <span className="text-sm">Normas</span>
                   </div>
                   <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-purple-500/20 border border-purple-500/50" />
+                    <Video className="h-3 w-3 text-purple-400" />
+                    <span className="text-sm">Sesiones del Congreso</span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded bg-amber-500/20 border border-amber-500/50" />
                     <FileText className="h-3 w-3 text-amber-400" />
                     <span className="text-sm">PLs en Etapa Plenaria</span>
@@ -427,6 +509,12 @@ export function AlertsCalendar() {
                     <FileText className="h-3 w-3 mt-1 text-muted-foreground flex-shrink-0" />
                     <div>
                       <span className="font-medium">Normas:</span> Fecha oficial de publicación
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Video className="h-3 w-3 mt-1 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Sesiones:</span> Fecha programada de la sesión
                     </div>
                   </div>
                 </div>
@@ -525,6 +613,7 @@ export function AlertsCalendar() {
                   <SelectItem value="all">Todos los Tipos</SelectItem>
                   <SelectItem value="bill">Proyectos de Ley</SelectItem>
                   <SelectItem value="regulation">Normas</SelectItem>
+                  <SelectItem value="session">Sesiones</SelectItem>
                 </SelectContent>
               </Select>
               
