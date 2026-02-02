@@ -145,75 +145,35 @@ export function PeruSessionsSection() {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
-          <CardContent className="pt-4">
+      {/* Stats Cards - Simplified to 3 key metrics */}
+      <div className="grid grid-cols-3 gap-4 max-w-2xl">
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-l-4 border-l-emerald-500 border-emerald-500/20">
+          <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-emerald-600" />
+              <Calendar className="h-4 w-4 text-emerald-500" />
               <span className="text-sm text-muted-foreground">Total</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-3xl font-bold text-foreground mt-1">{stats.total}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Star className="h-4 w-4 text-amber-600" />
-              <span className="text-sm text-muted-foreground">Recomendadas</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.recommended}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="pt-4">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-l-4 border-l-primary border-primary/20">
+          <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <Pin className="h-4 w-4 text-primary" />
               <span className="text-sm text-muted-foreground">Pineadas</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{pinnedCount}</p>
+            <p className="text-3xl font-bold text-foreground mt-1">{pinnedCount}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
-          <CardContent className="pt-4">
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-l-4 border-l-purple-500 border-purple-500/20">
+          <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
-              <Video className="h-4 w-4 text-purple-600" />
-              <span className="text-sm text-muted-foreground">Con Video</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.withVideo}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-muted-foreground">Próximas</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.upcoming}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-slate-500/10 to-slate-600/5 border-slate-500/20">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-slate-600" />
-              <span className="text-sm text-muted-foreground">Completadas</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Brain className="h-4 w-4 text-purple-600" />
+              <Brain className="h-4 w-4 text-purple-500" />
               <span className="text-sm text-muted-foreground">Analizadas</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{analyzedCount}</p>
+            <p className="text-3xl font-bold text-foreground mt-1">{analyzedCount}</p>
           </CardContent>
         </Card>
       </div>
