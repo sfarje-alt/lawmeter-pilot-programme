@@ -556,90 +556,111 @@ export function AlertsCalendar() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="grid grid-cols-4 lg:grid-cols-7 gap-3">
-              <Select value={filterClient} onValueChange={setFilterClient}>
-                <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los Clientes</SelectItem>
-                  {MOCK_CLIENTS.map(client => (
-                    <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Cliente</label>
+                <Select value={filterClient} onValueChange={setFilterClient}>
+                  <SelectTrigger className="bg-background/50 text-xs">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los Clientes</SelectItem>
+                    {MOCK_CLIENTS.map(client => (
+                      <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select value={filterSector} onValueChange={setFilterSector}>
-                <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Sector" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los Sectores</SelectItem>
-                  <SelectItem value="banking">Banca</SelectItem>
-                  <SelectItem value="healthcare">Salud</SelectItem>
-                  <SelectItem value="energy">Energía</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Sector</label>
+                <Select value={filterSector} onValueChange={setFilterSector}>
+                  <SelectTrigger className="bg-background/50 text-xs">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los Sectores</SelectItem>
+                    <SelectItem value="banking">Banca</SelectItem>
+                    <SelectItem value="healthcare">Salud</SelectItem>
+                    <SelectItem value="energy">Energía</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select value={filterArea} onValueChange={setFilterArea}>
-                <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Área" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las Áreas</SelectItem>
-                  {areas.map(area => (
-                    <SelectItem key={area} value={area}>{area}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Área</label>
+                <Select value={filterArea} onValueChange={setFilterArea}>
+                  <SelectTrigger className="bg-background/50 text-xs">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las Áreas</SelectItem>
+                    {areas.map(area => (
+                      <SelectItem key={area} value={area}>{area}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select value={filterTopic} onValueChange={setFilterTopic}>
-                <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Tema" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los Temas</SelectItem>
-                  <SelectItem value="laboral">Derecho Laboral</SelectItem>
-                  <SelectItem value="tributario">Derecho Tributario</SelectItem>
-                  <SelectItem value="ambiental">Derecho Ambiental</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Tema</label>
+                <Select value={filterTopic} onValueChange={setFilterTopic}>
+                  <SelectTrigger className="bg-background/50 text-xs">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los Temas</SelectItem>
+                    <SelectItem value="laboral">Derecho Laboral</SelectItem>
+                    <SelectItem value="tributario">Derecho Tributario</SelectItem>
+                    <SelectItem value="ambiental">Derecho Ambiental</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select value={filterInstrumentType} onValueChange={setFilterInstrumentType}>
-                <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los Tipos</SelectItem>
-                  <SelectItem value="bill">Proyectos de Ley</SelectItem>
-                  <SelectItem value="regulation">Normas</SelectItem>
-                  <SelectItem value="session">Sesiones</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+                <Select value={filterInstrumentType} onValueChange={setFilterInstrumentType}>
+                  <SelectTrigger className="bg-background/50 text-xs">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los Tipos</SelectItem>
+                    <SelectItem value="bill">Proyectos de Ley</SelectItem>
+                    <SelectItem value="regulation">Normas</SelectItem>
+                    <SelectItem value="session">Sesiones</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select value={filterStage} onValueChange={setFilterStage}>
-                <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los Estados</SelectItem>
-                  {stages.map(stage => (
-                    <SelectItem key={stage} value={stage}>{stage}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Estado</label>
+                <Select value={filterStage} onValueChange={setFilterStage}>
+                  <SelectTrigger className="bg-background/50 text-xs">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los Estados</SelectItem>
+                    {stages.map(stage => (
+                      <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select value={filterRisk} onValueChange={setFilterRisk}>
-                <SelectTrigger className="bg-background/50 text-xs">
-                  <SelectValue placeholder="Riesgo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los Riesgos</SelectItem>
-                  <SelectItem value="high">Alto</SelectItem>
-                  <SelectItem value="medium">Medio</SelectItem>
-                  <SelectItem value="low">Bajo</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Riesgo</label>
+                <Select value={filterRisk} onValueChange={setFilterRisk}>
+                  <SelectTrigger className="bg-background/50 text-xs">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los Riesgos</SelectItem>
+                    <SelectItem value="high">Alto</SelectItem>
+                    <SelectItem value="medium">Medio</SelectItem>
+                    <SelectItem value="low">Bajo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
