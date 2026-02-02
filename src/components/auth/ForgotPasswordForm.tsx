@@ -22,7 +22,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
     setError(null);
     
     if (!email.trim()) {
-      setError("Please enter your email address.");
+      setError("Por favor ingresa tu correo electrónico.");
       return;
     }
 
@@ -31,7 +31,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
     setIsLoading(false);
 
     if (error) {
-      setError("Unable to send reset email. Please try again.");
+      setError("No se pudo enviar el correo. Intenta de nuevo.");
     } else {
       setSuccess(true);
     }
@@ -46,14 +46,14 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           </div>
         </div>
         <div>
-          <h3 className="text-lg font-semibold">Check your email</h3>
+          <h3 className="text-lg font-semibold">Revisa tu correo</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            We've sent a password reset link to <strong>{email}</strong>
+            Hemos enviado un enlace para restablecer tu contraseña a <strong>{email}</strong>
           </p>
         </div>
         <Button variant="outline" onClick={onBack} className="w-full">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to login
+          Volver al inicio de sesión
         </Button>
       </div>
     );
@@ -63,7 +63,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="text-center mb-2">
         <p className="text-sm text-muted-foreground">
-          Enter your registered email and we'll send you a reset link.
+          Ingresa tu correo registrado y te enviaremos un enlace para restablecer tu contraseña.
         </p>
       </div>
 
@@ -74,13 +74,13 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Correo electrónico</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder="tu@empresa.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="pl-10"
@@ -94,16 +94,16 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending...
+            Enviando...
           </>
         ) : (
-          "Send Reset Link"
+          "Enviar Enlace"
         )}
       </Button>
 
       <Button type="button" variant="ghost" onClick={onBack} className="w-full">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to login
+        Volver al inicio de sesión
       </Button>
     </form>
   );
