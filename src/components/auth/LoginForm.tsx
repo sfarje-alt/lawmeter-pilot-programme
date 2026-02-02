@@ -24,7 +24,7 @@ export function LoginForm({ onForgotPassword, onSignUp }: LoginFormProps) {
     setError(null);
     
     if (!email.trim() || !password.trim()) {
-      setError("Please enter both email and password.");
+      setError("Por favor ingresa tu correo y contraseña.");
       return;
     }
 
@@ -34,7 +34,7 @@ export function LoginForm({ onForgotPassword, onSignUp }: LoginFormProps) {
 
     if (error) {
       setAttempts(prev => prev + 1);
-      setError("Invalid credentials, try again.");
+      setError("Credenciales inválidas, intenta de nuevo.");
     }
   };
 
@@ -47,13 +47,13 @@ export function LoginForm({ onForgotPassword, onSignUp }: LoginFormProps) {
             {error}
             {attempts >= 3 && (
               <span className="block mt-1 text-xs">
-                Having trouble? Try{" "}
+                ¿Tienes problemas? Intenta{" "}
                 <button
                   type="button"
                   onClick={onForgotPassword}
                   className="underline hover:no-underline"
                 >
-                  resetting your password
+                  restablecer tu contraseña
                 </button>
               </span>
             )}
@@ -62,13 +62,13 @@ export function LoginForm({ onForgotPassword, onSignUp }: LoginFormProps) {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Correo electrónico</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder="tu@empresa.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="pl-10"
@@ -79,7 +79,7 @@ export function LoginForm({ onForgotPassword, onSignUp }: LoginFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Contraseña</Label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -101,7 +101,7 @@ export function LoginForm({ onForgotPassword, onSignUp }: LoginFormProps) {
           onClick={onForgotPassword}
           className="text-sm text-primary hover:underline"
         >
-          Forgot password?
+          ¿Olvidaste tu contraseña?
         </button>
       </div>
 
@@ -109,21 +109,21 @@ export function LoginForm({ onForgotPassword, onSignUp }: LoginFormProps) {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            Iniciando sesión...
           </>
         ) : (
-          "Sign In"
+          "Iniciar Sesión"
         )}
       </Button>
 
       <div className="text-center text-sm text-muted-foreground">
-        Don't have an account?{" "}
+        ¿No tienes una cuenta?{" "}
         <button
           type="button"
           onClick={onSignUp}
           className="text-primary hover:underline font-medium"
         >
-          Sign up
+          Regístrate
         </button>
       </div>
     </form>

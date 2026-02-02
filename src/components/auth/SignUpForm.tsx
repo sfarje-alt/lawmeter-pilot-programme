@@ -42,12 +42,12 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
     setError(null);
     
     if (!email.trim() || !password.trim() || !fullName.trim()) {
-      setError("Please fill in all fields.");
+      setError("Por favor completa todos los campos.");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
@@ -55,13 +55,13 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
 
     if (accountType === 'user') {
       if (!invitationCode.trim()) {
-        setError("Please enter your invitation code.");
+        setError("Por favor ingresa tu código de invitación.");
         return;
       }
       
       const codeValidation = validateInvitationCode(invitationCode);
       if (!codeValidation.valid) {
-        setError("Invalid invitation code. Please contact your administrator.");
+        setError("Código de invitación inválido. Contacta a tu administrador.");
         return;
       }
       clientId = codeValidation.clientId;
@@ -73,9 +73,9 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
 
     if (error) {
       if (error.message.includes("already registered")) {
-        setError("This email is already registered. Please sign in instead.");
+        setError("Este correo ya está registrado. Inicia sesión en su lugar.");
       } else {
-        setError(error.message || "Unable to create account. Please try again.");
+        setError(error.message || "No se pudo crear la cuenta. Intenta de nuevo.");
       }
     }
   };
@@ -90,7 +90,7 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
 
       {/* Account Type Selection */}
       <div className="space-y-2">
-        <Label>Account Type</Label>
+        <Label>Tipo de Cuenta</Label>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -103,7 +103,7 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
           >
             <Building2 className={`h-5 w-5 mx-auto mb-1 ${accountType === 'admin' ? 'text-primary' : 'text-muted-foreground'}`} />
             <span className={`text-sm font-medium ${accountType === 'admin' ? 'text-primary' : 'text-muted-foreground'}`}>
-              Legal Team
+              Equipo Legal
             </span>
           </button>
           <button
@@ -117,7 +117,7 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
           >
             <Users className={`h-5 w-5 mx-auto mb-1 ${accountType === 'user' ? 'text-primary' : 'text-muted-foreground'}`} />
             <span className={`text-sm font-medium ${accountType === 'user' ? 'text-primary' : 'text-muted-foreground'}`}>
-              Client
+              Cliente
             </span>
           </button>
         </div>
@@ -126,13 +126,13 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
       {/* Invitation Code (only for Client account type) */}
       {accountType === 'user' && (
         <div className="space-y-2">
-          <Label htmlFor="invitationCode">Invitation Code</Label>
+          <Label htmlFor="invitationCode">Código de Invitación</Label>
           <div className="relative">
             <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="invitationCode"
               type="text"
-              placeholder="Enter your invitation code"
+              placeholder="Ingresa tu código de invitación"
               value={invitationCode}
               onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
               className="pl-10 uppercase"
@@ -144,31 +144,31 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
             <div className="flex items-center gap-2 p-2 bg-primary/10 border border-primary/30 rounded-md">
               <Building2 className="h-4 w-4 text-primary" />
               <span className="text-sm text-primary">
-                Organization: <strong>{validateInvitationCode(invitationCode).clientName}</strong>
+                Organización: <strong>{validateInvitationCode(invitationCode).clientName}</strong>
               </span>
             </div>
           )}
           {invitationCode.trim() && !validateInvitationCode(invitationCode).valid && (
             <p className="text-xs text-destructive">
-              Invalid code. Contact your administrator.
+              Código inválido. Contacta a tu administrador.
             </p>
           )}
           {!invitationCode.trim() && (
             <p className="text-xs text-muted-foreground">
-              Contact your administrator if you don't have an invitation code.
+              Contacta a tu administrador si no tienes un código de invitación.
             </p>
           )}
         </div>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
+        <Label htmlFor="fullName">Nombre Completo</Label>
         <div className="relative">
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="fullName"
             type="text"
-            placeholder="John Doe"
+            placeholder="Juan Pérez"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             className="pl-10"
@@ -179,13 +179,13 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Correo electrónico</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder="tu@empresa.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="pl-10"
@@ -196,7 +196,7 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Contraseña</Label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -210,23 +210,23 @@ export function SignUpForm({ onBack }: SignUpFormProps) {
             disabled={isLoading}
           />
         </div>
-        <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+        <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating account...
+            Creando cuenta...
           </>
         ) : (
-          "Create Account"
+          "Crear Cuenta"
         )}
       </Button>
 
       <Button type="button" variant="ghost" onClick={onBack} className="w-full">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to login
+        Volver al inicio de sesión
       </Button>
     </form>
   );

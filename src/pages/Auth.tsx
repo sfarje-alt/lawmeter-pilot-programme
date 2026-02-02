@@ -32,11 +32,11 @@ export default function Auth() {
   const getTitle = () => {
     switch (view) {
       case "forgot-password":
-        return "Reset Password";
+        return "Restablecer Contraseña";
       case "signup":
-        return "Create Account";
+        return "Crear Cuenta";
       default:
-        return "Welcome Back";
+        return "Bienvenido";
     }
   };
 
