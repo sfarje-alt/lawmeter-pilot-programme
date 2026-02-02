@@ -1,6 +1,6 @@
 // Peru Sessions Section - Main container for Peru Congress sessions (Unified with Inbox workflow)
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,10 @@ import { PERU_COMMISSIONS, PeruSession, SessionClientCommentary } from '@/types/
 import { MOCK_CLIENT_PROFILES } from '@/data/mockClientProfiles';
 import { toast } from 'sonner';
 
+interface PeruSessionsSectionProps {
+  initialSessionId?: string | null;
+}
+
 const defaultFilters: SessionsFilters = {
   searchQuery: '',
   commissions: [],
@@ -40,7 +44,7 @@ const defaultFilters: SessionsFilters = {
   status: [],
 };
 
-export function PeruSessionsSection() {
+export function PeruSessionsSection({ initialSessionId }: PeruSessionsSectionProps) {
   const [activeTab, setActiveTab] = useState<'pinned' | 'all' | 'settings'>('pinned');
   const [filters, setFilters] = useState<SessionsFilters>(defaultFilters);
   const [showImporter, setShowImporter] = useState(false);
@@ -70,6 +74,19 @@ export function PeruSessionsSection() {
     publishSession,
     hasCommentaryForClient,
   } = usePeruSessions();
+
+  // Handle navigation from calendar with initialSessionId
+  useEffect(() => {
+    if (initialSessionId && allSessions.length > 0) {
+      const session = allSessions.find(s => s.id === initialSessionId);
+      if (session) {
+        setSelectedSession(session);
+        setDrawerOpen(true);
+        // Switch to 'all' tab to ensure we can see the session
+        setActiveTab('all');
+      }
+    }
+  }, [initialSessionId, allSessions]);
 
   // Build client -> watched commissions mapping
   const clientWatchedCommissions = useMemo(() => {

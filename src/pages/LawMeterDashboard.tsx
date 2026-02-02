@@ -40,12 +40,15 @@ export default function LawMeterDashboard() {
   const sectionParam = searchParams.get('section');
   const tabParam = searchParams.get('tab');
   const alertIdParam = searchParams.get('alertId');
+  const sessionIdParam = searchParams.get('sessionId');
   const timestampParam = searchParams.get('t'); // Unique timestamp to force re-render
 
   // Handle URL parameters for deep linking from calendar
   useEffect(() => {
     if (sectionParam === 'inbox') {
       setActiveTab('inbox');
+    } else if (sectionParam === 'sessions') {
+      setActiveTab('sessions');
     }
   }, [sectionParam, timestampParam]); // Also react to timestamp changes
 
@@ -87,7 +90,8 @@ export default function LawMeterDashboard() {
     // Admin user views
     switch (activeTab) {
       case "sessions":
-        return <SessionsPage />;
+        // Include sessionId and timestamp in key to force re-mount when navigating from calendar
+        return <SessionsPage key={`sessions-${sessionIdParam}-${timestampParam}`} initialSessionId={sessionIdParam} />;
       case "inbox":
         // Include timestamp in key to force re-mount when navigating from calendar multiple times
         return <Inbox key={`inbox-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;

@@ -5,11 +5,12 @@ import { Video } from 'lucide-react';
 import { PeruSessionsSection } from './peru/PeruSessionsSection';
 import { CountryFlag } from '@/components/shared/CountryFlag';
 
-interface SessionsPageProps {
+export interface SessionsPageProps {
   className?: string;
+  initialSessionId?: string | null;
 }
 
-export function SessionsPage({ className }: SessionsPageProps) {
+export function SessionsPage({ className, initialSessionId }: SessionsPageProps) {
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
@@ -36,7 +37,7 @@ export function SessionsPage({ className }: SessionsPageProps) {
       </div>
 
       {/* Peru Sessions Content */}
-      <PeruSessionsSection />
+      <PeruSessionsSection initialSessionId={initialSessionId} />
     </div>
   );
 }
