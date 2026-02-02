@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, Briefcase } from "lucide-react";
 import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
@@ -136,10 +137,19 @@ export function InboxAlertCard({
         </div>
       </div>
 
-      {/* Title */}
-      <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-        {alert.legislation_title}
-      </h4>
+      {/* Title with Tooltip */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors cursor-default">
+              {alert.legislation_title}
+            </h4>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-sm">
+            <p className="text-sm">{alert.legislation_title}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       {/* Bill-specific: Author + Parliamentary Group */}
       {isBill && (
@@ -176,18 +186,36 @@ export function InboxAlertCard({
         </div>
       )}
 
-      {/* Norma-specific: Summary/Commentary (truncated) */}
+      {/* Norma-specific: Summary/Commentary (truncated) with Tooltip */}
       {!isBill && alert.legislation_summary && (
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2">
-          {alert.legislation_summary}
-        </p>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default">
+                {alert.legislation_summary}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-md">
+              <p className="text-xs">{alert.legislation_summary}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
 
-      {/* Bill-specific: Expert Commentary indicator or preview */}
+      {/* Bill-specific: Expert Commentary indicator or preview with Tooltip */}
       {isBill && alert.expert_commentary && (
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2">
-          {alert.expert_commentary}
-        </p>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default">
+                {alert.expert_commentary}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-md">
+              <p className="text-xs">{alert.expert_commentary}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
 
       {/* Area Tags */}
