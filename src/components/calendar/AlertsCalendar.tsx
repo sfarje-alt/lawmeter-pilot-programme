@@ -309,7 +309,9 @@ export function AlertsCalendar() {
   const handleEventClick = (event: AlertCalendarEvent) => {
     const tab = event.type === 'bill' ? 'bills' : 'regulations';
     // Navigate to root with section=inbox and alert parameters
-    navigate(`/?section=inbox&tab=${tab}&alertId=${event.id}`);
+    // Add timestamp to force re-render when navigating multiple times
+    const timestamp = Date.now();
+    navigate(`/?section=inbox&tab=${tab}&alertId=${event.id}&t=${timestamp}`);
   };
 
   const handleEventToast = (event: AlertCalendarEvent) => {
