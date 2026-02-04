@@ -1,9 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { logAIUsage, estimateTokens, calculateCost } from "../_shared/aiUsageLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const MODEL = "google/gemini-2.5-flash";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,7 +27,10 @@ serve(async (req) => {
       introducedDate,
       crsSummary,
       committees,
-      billStage
+      billStage,
+      // Usage tracking
+      clientId,
+      organizationId
     } = await req.json();
     
     if (!billTitle) {
@@ -212,6 +218,8 @@ Policy Area: ${policyArea || "Not specified"}`;
 
     console.log(`Analysis mode: ${confidenceLevel}, usedFullText: ${usedFullText}, usedCRSSummary: ${usedCRSSummary}`);
 
+    const inputTokens = estimateTokens(systemPrompt + userPrompt);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -219,7 +227,7 @@ Policy Area: ${policyArea || "Not specified"}`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -255,6 +263,28 @@ Policy Area: ${policyArea || "Not specified"}`;
     if (!content) {
       throw new Error("No content in AI response");
     }
+
+    const outputTokens = estimateTokens(content);
+    const estimatedCost = calculateCost(MODEL, inputTokens, outputTokens);
+
+    // Log AI usage
+    await logAIUsage({
+      clientId,
+      organizationId,
+      functionName: "analyze-bill",
+      modelUsed: MODEL,
+      inputTokens,
+      outputTokens,
+      estimatedCost,
+      metadata: {
+        billTitle,
+        policyArea,
+        textCharCount,
+        usedFullText,
+        usedCRSSummary,
+        confidenceLevel,
+      },
+    });
 
     // Parse the JSON response
     const jsonMatch = content.match(/\{[\s\S]*\}/);

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { logAIUsage, estimateTokens, calculateCost } from "../_shared/aiUsageLogger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,13 +13,15 @@ Be specific and cite relevant parts of the transcription when possible.
 If the information requested is not in the transcription, say so clearly.
 Keep responses concise but informative.`;
 
+const MODEL = "google/gemini-3-flash-preview";
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { question, transcription, commissionName, sessionTitle, sessionDate, previousMessages } = await req.json();
+    const { question, transcription, commissionName, sessionTitle, sessionDate, previousMessages, clientId, organizationId } = await req.json();
 
     if (!question || !transcription) {
       throw new Error('Question and transcription are required');
@@ -62,6 +65,10 @@ Por favor, responde las preguntas del usuario basándote únicamente en esta tra
     // Add current question
     messages.push({ role: 'user', content: question });
 
+    // Estimate input tokens from all messages
+    const inputText = messages.map(m => m.content).join(' ');
+    const inputTokens = estimateTokens(inputText);
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -69,7 +76,7 @@ Por favor, responde las preguntas del usuario basándote únicamente en esta tra
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: MODEL,
         messages,
       }),
     });
@@ -98,6 +105,25 @@ Por favor, responde las preguntas del usuario basándote únicamente en esta tra
     if (!answer) {
       throw new Error('No answer returned from AI');
     }
+
+    const outputTokens = estimateTokens(answer);
+    const estimatedCost = calculateCost(MODEL, inputTokens, outputTokens);
+
+    // Log AI usage
+    await logAIUsage({
+      clientId,
+      organizationId,
+      functionName: "session-qa",
+      modelUsed: MODEL,
+      inputTokens,
+      outputTokens,
+      estimatedCost,
+      metadata: {
+        commissionName,
+        questionLength: question.length,
+        previousMessagesCount: previousMessages?.length || 0,
+      },
+    });
 
     console.log(`Q&A answer received, length: ${answer.length}`);
 

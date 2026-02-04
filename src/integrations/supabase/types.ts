@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage_logs: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          estimated_cost: number | null
+          function_name: string
+          id: string
+          input_tokens: number | null
+          metadata: Json | null
+          model_used: string | null
+          organization_id: string | null
+          output_tokens: number | null
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          function_name: string
+          id?: string
+          input_tokens?: number | null
+          metadata?: Json | null
+          model_used?: string | null
+          organization_id?: string | null
+          output_tokens?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          function_name?: string
+          id?: string
+          input_tokens?: number | null
+          metadata?: Json | null
+          model_used?: string | null
+          organization_id?: string | null
+          output_tokens?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           affected_areas: string[] | null
@@ -887,7 +944,34 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ai_usage_monthly: {
+        Row: {
+          call_count: number | null
+          client_id: string | null
+          function_name: string | null
+          month: string | null
+          organization_id: string | null
+          total_cost: number | null
+          total_input_tokens: number | null
+          total_output_tokens: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
