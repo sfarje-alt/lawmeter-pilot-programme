@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { logAIUsage, estimateTokens, calculateCost } from "../_shared/aiUsageLogger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,13 +26,15 @@ Analyze the transcription and provide a structured JSON response with:
 - Recommended action items
 - Speaker sentiments on key issues`;
 
+const MODEL = "google/gemini-2.5-flash";
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { transcriptionText, commissionName, sessionTitle, sessionDate } = await req.json();
+    const { transcriptionText, commissionName, sessionTitle, sessionDate, clientId, organizationId } = await req.json();
 
     if (!transcriptionText) {
       throw new Error('Transcription text is required');
@@ -98,6 +101,8 @@ Provide your analysis in the following JSON format:
 
 Return ONLY valid JSON, no markdown or other text.`;
 
+    const inputTokens = estimateTokens(SYSTEM_PROMPT + userPrompt);
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -105,7 +110,7 @@ Return ONLY valid JSON, no markdown or other text.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: MODEL,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt }
@@ -125,6 +130,25 @@ Return ONLY valid JSON, no markdown or other text.`;
     if (!analysisText) {
       throw new Error('No analysis returned from AI');
     }
+
+    const outputTokens = estimateTokens(analysisText);
+    const estimatedCost = calculateCost(MODEL, inputTokens, outputTokens);
+
+    // Log AI usage
+    await logAIUsage({
+      clientId,
+      organizationId,
+      functionName: "analyze-session-transcript",
+      modelUsed: MODEL,
+      inputTokens,
+      outputTokens,
+      estimatedCost,
+      metadata: {
+        commissionName,
+        sessionTitle,
+        transcriptionLength: transcriptionText.length,
+      },
+    });
 
     // Parse the JSON response
     let analysis;

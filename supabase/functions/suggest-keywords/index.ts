@@ -1,9 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { logAIUsage, estimateTokens, calculateCost } from "../_shared/aiUsageLogger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+const MODEL = "google/gemini-2.5-flash-lite";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { currentKeywords, sector, description, partialInput } = await req.json();
+    const { currentKeywords, sector, description, partialInput, clientId, organizationId } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -38,6 +41,8 @@ ${partialInput ? `User is typing: "${partialInput}"` : ''}
 
 Suggest relevant regulatory keywords${partialInput ? ` related to "${partialInput}"` : ''}.`;
 
+    const inputTokens = estimateTokens(systemPrompt + userContext);
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -45,7 +50,7 @@ Suggest relevant regulatory keywords${partialInput ? ` related to "${partialInpu
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userContext }
@@ -66,6 +71,25 @@ Suggest relevant regulatory keywords${partialInput ? ` related to "${partialInpu
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content || '[]';
     
+    const outputTokens = estimateTokens(content);
+    const estimatedCost = calculateCost(MODEL, inputTokens, outputTokens);
+
+    // Log AI usage
+    await logAIUsage({
+      clientId,
+      organizationId,
+      functionName: "suggest-keywords",
+      modelUsed: MODEL,
+      inputTokens,
+      outputTokens,
+      estimatedCost,
+      metadata: {
+        sector,
+        currentKeywordsCount: currentKeywords?.length || 0,
+        hasPartialInput: !!partialInput,
+      },
+    });
+
     let suggestions: string[] = [];
     try {
       // Try to parse as JSON
