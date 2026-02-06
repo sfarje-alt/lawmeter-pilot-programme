@@ -1,29 +1,61 @@
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ReportConfig, ANALYTICS_SECTION_OPTIONS } from "../types";
-import { BarChart3, TrendingUp, PieChart, Grid3X3, Clock } from "lucide-react";
+import { ReportConfig } from "../types";
+import { ReportLayoutBuilder } from "../ReportLayoutBuilder";
+import { BarChart3 } from "lucide-react";
+import { CLIENT_ANALYTICS_BLOCKS, AnalyticsBlockConfig } from "@/types/analytics";
 
 interface Step10Props {
   config: ReportConfig;
   onUpdate: (updates: Partial<ReportConfig>) => void;
 }
 
-const sectionIcons: Record<string, React.ElementType> = {
-  volume_trends: TrendingUp,
-  stage_distribution: PieChart,
-  sector_breakdown: BarChart3,
-  impact_matrix: Grid3X3,
-  timeline: Clock,
-};
-
 export function Step10AnalyticsOptions({ config, onUpdate }: Step10Props) {
-  const toggleSection = (section: string) => {
-    const newSections = config.analyticsSections.includes(section)
-      ? config.analyticsSections.filter(s => s !== section)
-      : [...config.analyticsSections, section];
-    onUpdate({ analyticsSections: newSections });
+  // Initialize blocks from config or defaults
+  const initialBlocks = useMemo(() => {
+    if (config.analyticsBlocks && config.analyticsBlocks.length > 0) {
+      return config.analyticsBlocks;
+    }
+    // Default: enable blocks that have renderPDF = true
+    return CLIENT_ANALYTICS_BLOCKS.map((block, index) => ({
+      ...block,
+      order: index,
+      enabled: block.renderPDF,
+    }));
+  }, [config.analyticsBlocks]);
+
+  const handleBlocksChange = (newBlocks: AnalyticsBlockConfig[]) => {
+    onUpdate({ 
+      analyticsBlocks: newBlocks,
+      includeAnalytics: newBlocks.some(b => b.enabled),
+    });
+  };
+
+  const handleToggleAnalytics = (checked: boolean) => {
+    if (checked) {
+      // Enable with default blocks
+      const defaultBlocks = CLIENT_ANALYTICS_BLOCKS.map((block, index) => ({
+        ...block,
+        order: index,
+        enabled: block.renderPDF,
+      }));
+      onUpdate({ 
+        includeAnalytics: true,
+        analyticsBlocks: defaultBlocks,
+      });
+    } else {
+      // Disable all blocks
+      const disabledBlocks = (config.analyticsBlocks || initialBlocks).map(b => ({
+        ...b,
+        enabled: false,
+      }));
+      onUpdate({ 
+        includeAnalytics: false,
+        analyticsBlocks: disabledBlocks,
+      });
+    }
   };
 
   return (
@@ -31,10 +63,11 @@ export function Step10AnalyticsOptions({ config, onUpdate }: Step10Props) {
       <div>
         <h2 className="text-xl font-semibold text-foreground">Opciones de Analytics</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Incluya visualizaciones y estadísticas en el reporte
+          Configure qué visualizaciones incluir en el reporte y su orden
         </p>
       </div>
 
+      {/* Master Toggle */}
       <Card className="border-border/50">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
@@ -44,56 +77,42 @@ export function Step10AnalyticsOptions({ config, onUpdate }: Step10Props) {
               </div>
               <div>
                 <Label htmlFor="include-analytics" className="font-medium cursor-pointer">
-                  Incluir Sección de Analytics
+                  Incluir Página de Analytics
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Agregar gráficos y estadísticas al final del reporte
+                  Agregar una página de analíticas después de la portada
                 </p>
               </div>
             </div>
             <Switch
               id="include-analytics"
               checked={config.includeAnalytics}
-              onCheckedChange={(checked) => {
-                onUpdate({ 
-                  includeAnalytics: checked,
-                  analyticsSections: checked ? config.analyticsSections : []
-                });
-              }}
+              onCheckedChange={handleToggleAnalytics}
             />
           </div>
         </CardContent>
       </Card>
 
+      {/* Layout Builder (only when analytics enabled) */}
       {config.includeAnalytics && (
-        <Card className="border-border/50">
+        <ReportLayoutBuilder
+          blocks={config.analyticsBlocks || initialBlocks}
+          onChange={handleBlocksChange}
+          showInternalBlocks={false}
+        />
+      )}
+
+      {/* Info about structure */}
+      {config.includeAnalytics && (
+        <Card className="border-border/50 bg-muted/30">
           <CardContent className="p-4">
-            <div className="mb-4">
-              <span className="font-medium">Secciones a incluir</span>
-              <p className="text-sm text-muted-foreground">
-                Seleccione qué visualizaciones agregar
-              </p>
-            </div>
-            <div className="space-y-3">
-              {ANALYTICS_SECTION_OPTIONS.map(option => {
-                const Icon = sectionIcons[option.value] || BarChart3;
-                return (
-                  <Label
-                    key={option.value}
-                    htmlFor={`analytics-${option.value}`}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
-                  >
-                    <Checkbox
-                      id={`analytics-${option.value}`}
-                      checked={config.analyticsSections.includes(option.value)}
-                      onCheckedChange={() => toggleSection(option.value)}
-                    />
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span>{option.label}</span>
-                  </Label>
-                );
-              })}
-            </div>
+            <p className="text-sm text-muted-foreground">
+              <strong>Estructura del reporte:</strong> Portada → Analíticas (1 página) → Alertas
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Las analíticas se renderizan como tarjetas estáticas sin tooltips interactivos.
+              Cada tarjeta incluye el título, insight principal y los datos del período seleccionado.
+            </p>
           </CardContent>
         </Card>
       )}
