@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReportConfig, DATE_MODE_OPTIONS } from "./types";
 import { ALL_MOCK_ALERTS, MOCK_CLIENTS, PeruAlert } from "@/data/peruAlertsMockData";
+import { CLIENT_ANALYTICS_BLOCKS } from "@/types/analytics";
+import { AnalyticsPagePDF } from "./pdf/AnalyticsPagePDF";
 import { ArrowLeft, Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
