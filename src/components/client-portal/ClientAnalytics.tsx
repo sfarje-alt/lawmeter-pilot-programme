@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Calendar, Filter } from "lucide-react";
 import { useClientUser } from "@/hooks/useClientUser";
-import { ALL_MOCK_ALERTS, type PeruAlert } from "@/data/peruAlertsMockData";
+import { ALL_MOCK_ALERTS, MOCK_CLIENTS, type PeruAlert } from "@/data/peruAlertsMockData";
 import { 
   Select,
   SelectContent,
@@ -20,8 +20,10 @@ import {
   LegislativeFunnelBlock,
   PopularTopicsBlock,
   ServiceKPIsBlock,
+  IndustryBenchmarkBlock,
 } from "@/components/analytics/blocks";
-import { AnalyticsDrilldownSheet } from "@/components/analytics/shared";
+import { AnalyticsDrilldownSheet, DataFreshnessIndicator } from "@/components/analytics/shared";
+import { getDataFreshness } from "@/lib/analyticsRepository";
 import type { KPIMetric } from "@/types/analytics";
 
 type PeriodFilter = "7d" | "30d" | "90d" | "all";
