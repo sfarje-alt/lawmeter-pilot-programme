@@ -109,13 +109,9 @@ const ReportPDF = ({ config, alerts, clientName }: { config: ReportConfig; alert
           />
         </Page>
       )}
-        <View style={styles.summary}>
-          <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 8 }}>RESUMEN EJECUTIVO</Text>
-          <Text style={styles.summaryItem}>• {bills.length} Proyectos de Ley relevantes</Text>
-          <Text style={styles.summaryItem}>• {norms.length} Normas publicadas</Text>
-          <Text style={styles.summaryItem}>• {Object.keys(billsByStage).length} estados procesales distintos</Text>
-        </View>
 
+      {/* Alerts Page */}
+      <Page size="A4" style={styles.page}>
         {/* Bills Section */}
         {bills.length > 0 && (
           <View style={styles.section}>
