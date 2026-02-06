@@ -1,14 +1,17 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
-import { ANALYTICS_COLORS, getImpactColor } from "@/lib/analyticsColors";
+import { getImpactColor } from "@/lib/analyticsColors";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, AlertCircle, MinusCircle, CheckCircle } from "lucide-react";
-import type { MatrixCell, PeruAlert } from "@/types/analytics";
-import { type PeruAlert as MockPeruAlert } from "@/data/peruAlertsMockData";
+import { type PeruAlert } from "@/data/peruAlertsMockData";
 
 interface ImpactMatrixBlockProps {
-  alerts: MockPeruAlert[];
+  alerts: PeruAlert[];
+  timeframe: string;
+  source?: string;
+  onDrilldown?: (alertIds: string[]) => void;
+}
   timeframe: string;
   source?: string;
   onDrilldown?: (alertIds: string[]) => void;
