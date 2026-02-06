@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useClientUser } from "@/hooks/useClientUser";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataFreshnessIndicator } from "./shared/AnalyticsBlock";
@@ -17,42 +16,69 @@ import {
   OperationalQueueBlock,
 } from "./blocks";
 import {
-  getAggregatedMetrics,
   getEditorialMetrics,
   getOperationalQueueMetrics,
-  getClientMetrics,
   getDataFreshness,
 } from "@/lib/analyticsRepository";
-import type { AnalyticsFilters } from "@/types/analytics";
-import { MOCK_CLIENTS, PRIMARY_CLIENT_ID } from "@/data/peruAlertsMockData";
+import type { AnalyticsFilters, KPIMetric } from "@/types/analytics";
+import { ALL_MOCK_ALERTS, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 
 /**
  * Legal Team Analytics Dashboard
  * Full access to all analytics blocks (internal + client-visible)
  */
 export function LegalTeamAnalyticsDashboard() {
-  const { isAdmin } = useClientUser();
   const [period, setPeriod] = React.useState<AnalyticsFilters['period']>('last_30');
   const [selectedClientId, setSelectedClientId] = React.useState<string>('all');
 
   const filters: AnalyticsFilters = { period };
   const freshness = getDataFreshness();
 
-  // Get metrics
-  const aggregatedMetrics = React.useMemo(() => 
-    getAggregatedMetrics(filters, 'admin'), [period]);
-  
+  // Filter alerts based on period and client
+  const filteredAlerts = React.useMemo(() => {
+    let alerts = [...ALL_MOCK_ALERTS];
+
+    // Filter by client if selected
+    if (selectedClientId !== 'all') {
+      alerts = alerts.filter(a => 
+        a.client_id === selectedClientId || a.primary_client_id === selectedClientId
+      );
+    }
+
+    // Filter by period
+    const now = new Date();
+    const daysMap: Record<string, number> = { 
+      'last_7': 7, 'last_30': 30, 'last_60': 60, 'last_90': 90 
+    };
+    const days = daysMap[period] || 30;
+    const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    alerts = alerts.filter(a => new Date(a.created_at) >= cutoff);
+
+    return alerts;
+  }, [period, selectedClientId]);
+
+  // Published alerts for client-visible metrics
+  const publishedAlerts = React.useMemo(() => 
+    filteredAlerts.filter(a => a.status === 'published'),
+  [filteredAlerts]);
+
+  // Get editorial metrics
   const editorialMetrics = React.useMemo(() => 
     getEditorialMetrics(filters), [period]);
   
   const queueMetrics = React.useMemo(() => 
     getOperationalQueueMetrics(), []);
 
-  const clientMetrics = React.useMemo(() => {
-    if (selectedClientId === 'all') return null;
-    const client = MOCK_CLIENTS.find(c => c.id === selectedClientId);
-    return getClientMetrics(selectedClientId, client?.name || '', filters);
-  }, [selectedClientId, period]);
+  // Service KPIs
+  const serviceKPIs: KPIMetric[] = React.useMemo(() => {
+    const total = publishedAlerts.length;
+    const withCommentary = publishedAlerts.filter(a => a.expert_commentary).length;
+    return [
+      { label: "Alertas Publicadas", value: total, icon: "file-text" },
+      { label: "Tiempo Típico", value: "< 24h", icon: "clock" },
+      { label: "Con Comentario", value: withCommentary, icon: "check-circle" },
+    ];
+  }, [publishedAlerts]);
 
   const timeframeLabel = {
     'last_7': 'Últimos 7 días',
@@ -128,7 +154,7 @@ export function LegalTeamAnalyticsDashboard() {
           />
           
           <TopEntitiesBlock
-            data={aggregatedMetrics.topEntities}
+            alerts={filteredAlerts}
             timeframe={timeframeLabel}
             source="Todas las alertas"
             maxItems={5}
@@ -147,46 +173,38 @@ export function LegalTeamAnalyticsDashboard() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <RegulatoryPulseBlock
-            data={aggregatedMetrics.volumeTrend}
+            alerts={publishedAlerts}
             timeframe={timeframeLabel}
           />
           
           <AlertPriorityBlock
-            data={aggregatedMetrics.alertsByImpact}
+            alerts={publishedAlerts}
             timeframe={timeframeLabel}
           />
           
           <AlertDistributionBlock
-            byType={{
-              'Proyecto de Ley': aggregatedMetrics.totalBills,
-              'Norma': aggregatedMetrics.totalRegulations,
-            }}
-            byArea={aggregatedMetrics.alertsByArea}
+            alerts={publishedAlerts}
             timeframe={timeframeLabel}
             showByArea
           />
           
-          {clientMetrics && (
-            <>
-              <ImpactMatrixBlock
-                data={clientMetrics.impactMatrix}
-                timeframe={timeframeLabel}
-              />
-              
-              <LegislativeFunnelBlock
-                data={clientMetrics.legislativeFunnel}
-                timeframe={timeframeLabel}
-              />
-              
-              <ServiceKPIsBlock
-                data={clientMetrics.serviceKPIs}
-                timeframe={timeframeLabel}
-              />
-            </>
-          )}
+          <ImpactMatrixBlock
+            alerts={publishedAlerts}
+            timeframe={timeframeLabel}
+          />
+          
+          <LegislativeFunnelBlock
+            alerts={publishedAlerts}
+            timeframe={timeframeLabel}
+          />
+          
+          <ServiceKPIsBlock
+            data={serviceKPIs}
+            timeframe={timeframeLabel}
+          />
           
           <PopularTopicsBlock
-            data={aggregatedMetrics.topTopics}
+            alerts={publishedAlerts}
             timeframe={timeframeLabel}
             maxItems={5}
           />

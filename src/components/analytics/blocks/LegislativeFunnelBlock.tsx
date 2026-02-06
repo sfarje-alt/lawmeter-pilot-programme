@@ -1,43 +1,70 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
-import { ANALYTICS_COLORS, getStageColor } from "@/lib/analyticsColors";
+import { getStageColor } from "@/lib/analyticsColors";
 import { Filter } from "lucide-react";
-import type { FunnelStage } from "@/types/analytics";
 import { cn } from "@/lib/utils";
+import { type PeruAlert } from "@/data/peruAlertsMockData";
 
 interface LegislativeFunnelBlockProps {
-  data: FunnelStage[];
+  alerts: PeruAlert[];
   timeframe: string;
   source?: string;
-  onDrilldown?: () => void;
+  onDrilldown?: (alertIds: string[]) => void;
 }
+
+// Stage order for funnel display
+const STAGE_ORDER = ['EN COMISIÓN', 'DICTAMEN', 'EN AGENDA DEL PLENO', 'APROBADO', 'AUTÓGRAFA', 'PROMULGADA', 'AL ARCHIVO'];
 
 /**
  * Legislative Funnel Block - Shows distribution of bills by stage
  * Client-visible analytics block
  */
 export function LegislativeFunnelBlock({
-  data,
+  alerts,
   timeframe,
   source = "Proyectos de Ley publicados",
   onDrilldown,
 }: LegislativeFunnelBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
-  const [selectedStage, setSelectedStage] = React.useState<FunnelStage | null>(null);
+  const [selectedStageLabel, setSelectedStageLabel] = React.useState("");
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  const totalBills = data.reduce((sum, stage) => sum + stage.count, 0);
+  // Only include bills
+  const bills = React.useMemo(() => 
+    alerts.filter(a => a.legislation_type === 'proyecto_de_ley'),
+  [alerts]);
+
+  // Build stage data from bills
+  const stageData = React.useMemo(() => {
+    const stageGroups: Record<string, string[]> = {};
+    
+    bills.forEach(bill => {
+      const stage = bill.current_stage || 'EN COMISIÓN';
+      if (!stageGroups[stage]) stageGroups[stage] = [];
+      stageGroups[stage].push(bill.id);
+    });
+
+    const totalBills = bills.length;
+    
+    return STAGE_ORDER
+      .filter(stage => stageGroups[stage] && stageGroups[stage].length > 0)
+      .map(stage => ({
+        stage,
+        count: stageGroups[stage]?.length || 0,
+        percentage: totalBills > 0 ? ((stageGroups[stage]?.length || 0) / totalBills) * 100 : 0,
+        items: stageGroups[stage] || [],
+      }));
+  }, [bills]);
+
+  const totalBills = bills.length;
   const isEmpty = totalBills === 0;
 
   // Find where most bills are
-  const maxStage = data.reduce((max, stage) => 
+  const maxStage = stageData.reduce((max, stage) => 
     stage.count > max.count ? stage : max, 
-    { stage: '', count: 0, percentage: 0, items: [] }
+    { stage: '', count: 0, percentage: 0, items: [] as string[] }
   );
-
-  const advancedCount = data
-    .filter(s => ['APROBADO', 'AUTÓGRAFA', 'PROMULGADA'].some(adv => s.stage.includes(adv)))
-    .reduce((sum, s) => sum + s.count, 0);
 
   const takeaway = isEmpty 
     ? "No hay proyectos de ley en el período seleccionado"
@@ -45,15 +72,17 @@ export function LegislativeFunnelBlock({
     ? `${maxStage.count} proyectos (${Math.round(maxStage.percentage)}%) están en etapa "${formatStageName(maxStage.stage)}"`
     : "Distribución equilibrada entre etapas";
 
-  const handleStageClick = (stage: FunnelStage) => {
-    if (stage.count > 0) {
-      setSelectedStage(stage);
+  const handleStageClick = (stage: { stage: string; items: string[] }) => {
+    if (stage.items.length > 0) {
+      setSelectedStageLabel(formatStageName(stage.stage));
+      setSelectedIds(stage.items);
       setDrilldownOpen(true);
+      onDrilldown?.(stage.items);
     }
   };
 
   // Get max count for scaling
-  const maxCount = Math.max(...data.map(d => d.count), 1);
+  const maxCount = Math.max(...stageData.map(d => d.count), 1);
 
   return (
     <>
@@ -63,12 +92,11 @@ export function LegislativeFunnelBlock({
         infoTooltip="Distribución de proyectos de ley por etapa del proceso: Comisión, Pleno, Trámite Final, etc. Haga clic en una etapa para ver los proyectos."
         timeframe={timeframe}
         source={source}
-        onDrilldown={onDrilldown}
         isEmpty={isEmpty}
         icon={<Filter className="h-4 w-4 text-primary" />}
       >
         <div className="space-y-2">
-          {data.map((stage, index) => {
+          {stageData.map((stage) => {
             const stageColor = getStageColor(stage.stage);
             const widthPercent = (stage.count / maxCount) * 100;
             
@@ -116,9 +144,9 @@ export function LegislativeFunnelBlock({
       <AnalyticsDrilldownSheet
         open={drilldownOpen}
         onOpenChange={setDrilldownOpen}
-        title={selectedStage ? `Etapa: ${formatStageName(selectedStage.stage)}` : "Proyectos"}
-        description={selectedStage ? `${selectedStage.count} proyectos en esta etapa` : undefined}
-        alertIds={selectedStage?.items || []}
+        title={`Etapa: ${selectedStageLabel}`}
+        description={`${selectedIds.length} proyectos en esta etapa`}
+        alertIds={selectedIds}
       />
     </>
   );

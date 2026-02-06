@@ -1,26 +1,28 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
-import { ANALYTICS_COLORS, getImpactColor } from "@/lib/analyticsColors";
+import { getImpactColor } from "@/lib/analyticsColors";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, AlertCircle, MinusCircle, CheckCircle } from "lucide-react";
-import type { MatrixCell } from "@/types/analytics";
+import { type PeruAlert } from "@/data/peruAlertsMockData";
 
 interface ImpactMatrixBlockProps {
-  data: MatrixCell[];
+  alerts: PeruAlert[];
   timeframe: string;
   source?: string;
-  onDrilldown?: () => void;
+  onDrilldown?: (alertIds: string[]) => void;
 }
 
-const IMPACT_ROWS = ['Grave', 'Medio', 'Leve'];
-const URGENCY_COLS = ['Alta', 'Media', 'Baja'];
+const IMPACT_ROWS = ['grave', 'medio', 'leve'];
+const IMPACT_DISPLAY: Record<string, string> = { grave: 'Grave', medio: 'Medio', leve: 'Leve' };
+const URGENCY_COLS = ['alta', 'media', 'baja'];
+const URGENCY_DISPLAY: Record<string, string> = { alta: 'Alta', media: 'Media', baja: 'Baja' };
 
 const IMPACT_ICONS: Record<string, React.ElementType> = {
-  'Grave': AlertTriangle,
-  'Medio': AlertCircle,
-  'Leve': MinusCircle,
-  'Positivo': CheckCircle,
+  'grave': AlertTriangle,
+  'medio': AlertCircle,
+  'leve': MinusCircle,
+  'positivo': CheckCircle,
 };
 
 /**
@@ -28,29 +30,53 @@ const IMPACT_ICONS: Record<string, React.ElementType> = {
  * Client-visible analytics block
  */
 export function ImpactMatrixBlock({
-  data,
+  alerts,
   timeframe,
   source = "Alertas publicadas",
   onDrilldown,
 }: ImpactMatrixBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
-  const [selectedCell, setSelectedCell] = React.useState<MatrixCell | null>(null);
+  const [selectedAlertIds, setSelectedAlertIds] = React.useState<string[]>([]);
+  const [selectedLabel, setSelectedLabel] = React.useState("");
 
-  // Get value for a specific cell
-  const getCellValue = (impact: string, urgency: string): MatrixCell | undefined => {
-    return data.find(cell => cell.row === impact && cell.col === urgency);
-  };
+  // Build matrix data from alerts
+  const matrixData = React.useMemo(() => {
+    const matrix: Record<string, { value: number; items: string[] }> = {};
+    
+    IMPACT_ROWS.forEach(impact => {
+      URGENCY_COLS.forEach(urgency => {
+        matrix[`${impact}-${urgency}`] = { value: 0, items: [] };
+      });
+    });
 
-  // Calculate totals
-  const totalAlerts = data.reduce((sum, cell) => sum + cell.value, 0);
-  const highPriorityCount = data
-    .filter(cell => cell.row === 'Grave' || cell.col === 'Alta')
-    .reduce((sum, cell) => sum + cell.value, 0);
+    alerts.forEach(alert => {
+      const impact = (alert.impact_level || 'leve').toLowerCase();
+      // Use impact_level as urgency proxy since urgency_level doesn't exist in mock data
+      const urgency = impact === 'grave' ? 'alta' : impact === 'medio' ? 'media' : 'baja';
+      const key = `${impact}-${urgency}`;
+      if (matrix[key]) {
+        matrix[key].value++;
+        matrix[key].items.push(alert.id);
+      }
+    });
 
-  const handleCellClick = (cell: MatrixCell | undefined) => {
+    return matrix;
+  }, [alerts]);
+
+  // Calculate totals - use impact_level only since urgency_level doesn't exist
+  const totalAlerts = alerts.length;
+  const highPriorityCount = alerts.filter(a => 
+    a.impact_level === 'grave' || a.impact_level === 'medio'
+  ).length;
+
+  const handleCellClick = (impact: string, urgency: string) => {
+    const key = `${impact}-${urgency}`;
+    const cell = matrixData[key];
     if (cell && cell.value > 0) {
-      setSelectedCell(cell);
+      setSelectedLabel(`Impacto ${IMPACT_DISPLAY[impact]} / Urgencia ${URGENCY_DISPLAY[urgency]}`);
+      setSelectedAlertIds(cell.items);
       setDrilldownOpen(true);
+      onDrilldown?.(cell.items);
     }
   };
 
@@ -69,7 +95,6 @@ export function ImpactMatrixBlock({
         infoTooltip="Matriz 3x3 que cruza nivel de impacto (Grave/Medio/Leve) con urgencia (Alta/Media/Baja). Haga clic en una celda para ver las alertas."
         timeframe={timeframe}
         source={source}
-        onDrilldown={onDrilldown}
         isEmpty={isEmpty}
       >
         <div className="space-y-3">
@@ -82,7 +107,7 @@ export function ImpactMatrixBlock({
                 key={urgency}
                 className="text-center text-xs font-medium text-muted-foreground py-1"
               >
-                <span className="hidden sm:inline">Urgencia </span>{urgency}
+                <span className="hidden sm:inline">Urgencia </span>{URGENCY_DISPLAY[urgency]}
               </div>
             ))}
             
@@ -99,30 +124,31 @@ export function ImpactMatrixBlock({
                       className="h-3.5 w-3.5 flex-shrink-0" 
                       style={{ color: impactColor }}
                     />
-                    <span className="truncate">{impact}</span>
+                    <span className="truncate">{IMPACT_DISPLAY[impact]}</span>
                   </div>
                   
                   {/* Cells */}
                   {URGENCY_COLS.map(urgency => {
-                    const cell = getCellValue(impact, urgency);
+                    const key = `${impact}-${urgency}`;
+                    const cell = matrixData[key];
                     const value = cell?.value || 0;
-                    const isHighPriority = impact === 'Grave' || urgency === 'Alta';
+                    const isHighPriority = impact === 'grave' || urgency === 'alta';
                     
                     return (
                       <button
-                        key={`${impact}-${urgency}`}
+                        key={key}
                         className={cn(
                           "relative aspect-square rounded-lg flex items-center justify-center",
                           "text-sm font-semibold transition-all",
                           "hover:ring-2 hover:ring-primary/50 focus:outline-none focus:ring-2 focus:ring-primary",
                           value > 0 ? "cursor-pointer" : "cursor-default",
                           isHighPriority && value > 0
-                            ? "bg-red-500/20 text-red-400"
+                            ? "bg-destructive/20 text-destructive"
                             : value > 0
                             ? "bg-muted/80 text-foreground"
                             : "bg-muted/30 text-muted-foreground/50"
                         )}
-                        onClick={() => handleCellClick(cell)}
+                        onClick={() => handleCellClick(impact, urgency)}
                         disabled={value === 0}
                       >
                         {value}
@@ -137,7 +163,7 @@ export function ImpactMatrixBlock({
           {/* Legend */}
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-red-500/20" />
+              <div className="w-3 h-3 rounded bg-destructive/20" />
               <span>Alta prioridad</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -152,9 +178,9 @@ export function ImpactMatrixBlock({
       <AnalyticsDrilldownSheet
         open={drilldownOpen}
         onOpenChange={setDrilldownOpen}
-        title={selectedCell ? `Impacto ${selectedCell.row} / Urgencia ${selectedCell.col}` : "Alertas"}
-        description={selectedCell ? `${selectedCell.value} alertas en esta categoría` : undefined}
-        alertIds={selectedCell?.items || []}
+        title={selectedLabel}
+        description={`${selectedAlertIds.length} alertas en esta categoría`}
+        alertIds={selectedAlertIds}
       />
     </>
   );

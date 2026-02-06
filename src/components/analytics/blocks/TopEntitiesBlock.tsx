@@ -1,8 +1,8 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
-import { ANALYTICS_COLORS, getNeutralColor } from "@/lib/analyticsColors";
-import { Building2, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { getNeutralColor } from "@/lib/analyticsColors";
+import { Building2 } from "lucide-react";
 import { 
   BarChart, 
   Bar, 
@@ -13,15 +13,16 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import type { RankingItem, TrendData } from "@/types/analytics";
+import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
+import { type PeruAlert } from "@/data/peruAlertsMockData";
 
 interface TopEntitiesBlockProps {
-  data: RankingItem[];
+  alerts: PeruAlert[];
   timeframe: string;
   source?: string;
   maxItems?: number;
   showTrends?: boolean;
-  onDrilldown?: () => void;
+  onDrilldown?: (alertIds: string[]) => void;
 }
 
 /**
@@ -29,28 +30,57 @@ interface TopEntitiesBlockProps {
  * Shared between Internal (aggregated) and Client views
  */
 export function TopEntitiesBlock({
-  data,
+  alerts,
   timeframe,
   source = "Alertas publicadas",
   maxItems = 7,
-  showTrends = false,
   onDrilldown,
 }: TopEntitiesBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
-  const [selectedEntity, setSelectedEntity] = React.useState<RankingItem | null>(null);
+  const [selectedLabel, setSelectedLabel] = React.useState("");
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  const displayData = data.slice(0, maxItems);
+  // Build ranking from alerts
+  const { displayData, entityGroups, total } = React.useMemo(() => {
+    const groups: Record<string, string[]> = {};
+    
+    alerts.forEach(alert => {
+      // Use entity field for regulations, parliamentary_group for bills
+      const entity = alert.entity || alert.parliamentary_group || 'Sin entidad';
+      if (!groups[entity]) groups[entity] = [];
+      groups[entity].push(alert.id);
+    });
+
+    const data = Object.entries(groups)
+      .map(([label, ids]) => ({ 
+        id: label, 
+        label, 
+        value: ids.length,
+        ids,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, maxItems);
+
+    return { 
+      displayData: data, 
+      entityGroups: groups,
+      total: alerts.length,
+    };
+  }, [alerts, maxItems]);
+
   const isEmpty = displayData.length === 0;
-  const remaining = data.length - maxItems;
+  const remaining = Object.keys(entityGroups).length - maxItems;
 
   const topEntity = displayData[0];
   const takeaway = isEmpty 
     ? "No hay datos de entidades en el período seleccionado"
-    : `${topEntity.label} lidera con ${topEntity.value} alertas (${Math.round((topEntity.value / data.reduce((s, d) => s + d.value, 0)) * 100)}% del total)`;
+    : `${topEntity?.label || ''} lidera con ${topEntity?.value || 0} alertas (${Math.round(((topEntity?.value || 0) / total) * 100)}% del total)`;
 
-  const handleBarClick = (entry: RankingItem) => {
-    setSelectedEntity(entry);
+  const handleBarClick = (entry: { label: string; ids: string[] }) => {
+    setSelectedLabel(entry.label);
+    setSelectedIds(entry.ids);
     setDrilldownOpen(true);
+    onDrilldown?.(entry.ids);
   };
 
   return (
@@ -61,7 +91,6 @@ export function TopEntitiesBlock({
         infoTooltip="Ranking de entidades emisoras (reguladores, partidos políticos) con mayor número de alertas publicadas. Haga clic en una barra para ver las alertas."
         timeframe={timeframe}
         source={source}
-        onDrilldown={onDrilldown}
         isEmpty={isEmpty}
         icon={<Building2 className="h-4 w-4 text-primary" />}
       >
@@ -106,8 +135,8 @@ export function TopEntitiesBlock({
               <Bar 
                 dataKey="value" 
                 radius={[0, 4, 4, 0]}
-                onClick={(data) => handleBarClick(data as unknown as RankingItem)}
-                style={{ cursor: 'pointer' }}
+                onClick={(data) => handleBarClick(data)}
+                cursor="pointer"
               >
                 {displayData.map((entry, index) => (
                   <Cell 
@@ -131,9 +160,9 @@ export function TopEntitiesBlock({
       <AnalyticsDrilldownSheet
         open={drilldownOpen}
         onOpenChange={setDrilldownOpen}
-        title={selectedEntity ? `Entidad: ${selectedEntity.label}` : "Alertas"}
-        description={selectedEntity ? `${selectedEntity.value} alertas de esta entidad` : undefined}
-        alertIds={[]} // Would need to pass actual alert IDs
+        title={`Entidad: ${selectedLabel}`}
+        description={`${selectedIds.length} alertas de esta entidad`}
+        alertIds={selectedIds}
       />
     </>
   );
@@ -143,21 +172,4 @@ export function TopEntitiesBlock({
 function truncateLabel(label: string, maxLength: number): string {
   if (label.length <= maxLength) return label;
   return label.slice(0, maxLength - 1) + '…';
-}
-
-// Trend indicator component
-function TrendIndicator({ trend }: { trend: TrendData }) {
-  const Icon = trend.direction === 'up' ? TrendingUp : trend.direction === 'down' ? TrendingDown : Minus;
-  const color = trend.direction === 'up' 
-    ? ANALYTICS_COLORS.trend.up 
-    : trend.direction === 'down' 
-    ? ANALYTICS_COLORS.trend.down 
-    : ANALYTICS_COLORS.trend.stable;
-  
-  return (
-    <span className="inline-flex items-center gap-0.5 text-xs" style={{ color }}>
-      <Icon className="h-3 w-3" />
-      {trend.change !== 0 && <span>{Math.abs(trend.change)}%</span>}
-    </span>
-  );
 }

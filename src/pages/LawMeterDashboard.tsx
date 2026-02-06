@@ -12,6 +12,7 @@ import { ContactForm } from "@/components/ContactForm";
 import { AlertSettingsDialog } from "@/components/alerts/AlertSettingsDialog";
 import { ClientsPage } from "@/components/clients/ClientsPage";
 import { ClientAnalyticsDashboard } from "@/components/analytics/ClientAnalyticsDashboard";
+import { LegalTeamAnalyticsDashboard } from "@/components/analytics/LegalTeamAnalyticsDashboard";
 import { ReportsPage } from "@/components/reports/ReportsPage";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
@@ -100,7 +101,7 @@ export default function LawMeterDashboard() {
       case "reports":
         return <ReportsPage />;
       case "analytics":
-        return <ClientAnalyticsDashboard />;
+        return <LegalTeamAnalyticsDashboard />;
       case "calendar":
         return <AlertsCalendar />;
       case "social":
