@@ -51,7 +51,8 @@ export function ImpactMatrixBlock({
 
     alerts.forEach(alert => {
       const impact = (alert.impact_level || 'leve').toLowerCase();
-      const urgency = (alert.urgency_level || 'baja').toLowerCase();
+      // Use impact_level as urgency proxy since urgency_level doesn't exist in mock data
+      const urgency = impact === 'grave' ? 'alta' : impact === 'medio' ? 'media' : 'baja';
       const key = `${impact}-${urgency}`;
       if (matrix[key]) {
         matrix[key].value++;
