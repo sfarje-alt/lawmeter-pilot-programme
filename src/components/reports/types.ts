@@ -104,6 +104,8 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   includeExpertCommentary: true,
   includeAnalytics: false,
   analyticsSections: [],
+  analyticsBlocks: [], // NEW: empty by default, will use client's default template
+  analyticsTemplateId: undefined, // NEW: no template selected
   outputFormat: 'pdf',
   frequency: 'weekly',
   weeklyDay: 1,
