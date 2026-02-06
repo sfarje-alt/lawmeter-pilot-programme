@@ -382,3 +382,28 @@ export function getDefaultAnalyticsTemplate(): AnalyticsBlockConfig[] {
       order: index,
     }));
 }
+
+// Extended config type for the Layout Builder (includes metadata for UI display)
+export interface AnalyticsBlockConfigExtended extends AnalyticsBlockConfig {
+  title: string;
+  takeaway: string;
+  infoTooltip: string;
+  visibility: AnalyticsVisibility;
+  renderPDF: boolean;
+  renderDashboard: boolean;
+}
+
+// Client analytics blocks with full metadata for Layout Builder
+export const CLIENT_ANALYTICS_BLOCKS: AnalyticsBlockConfigExtended[] = ANALYTICS_BLOCK_REGISTRY
+  .filter(block => block.visibility === 'client' || block.visibility === 'both')
+  .map((block, index) => ({
+    key: block.key,
+    enabled: block.defaultEnabled,
+    order: index,
+    title: block.title,
+    takeaway: block.takeaway,
+    infoTooltip: block.infoTooltip,
+    visibility: block.visibility,
+    renderPDF: block.defaultEnabled,
+    renderDashboard: true,
+  }));

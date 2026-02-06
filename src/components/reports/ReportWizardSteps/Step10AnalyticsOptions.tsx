@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ReportConfig } from "../types";
 import { ReportLayoutBuilder } from "../ReportLayoutBuilder";
 import { BarChart3 } from "lucide-react";
-import { CLIENT_ANALYTICS_BLOCKS, AnalyticsBlockConfig } from "@/types/analytics";
+import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
 
 interface Step10Props {
   config: ReportConfig;
@@ -14,9 +14,20 @@ interface Step10Props {
 
 export function Step10AnalyticsOptions({ config, onUpdate }: Step10Props) {
   // Initialize blocks from config or defaults
-  const initialBlocks = useMemo(() => {
+  const initialBlocks = useMemo((): AnalyticsBlockConfigExtended[] => {
     if (config.analyticsBlocks && config.analyticsBlocks.length > 0) {
-      return config.analyticsBlocks;
+      // Merge saved config with full block definitions
+      return config.analyticsBlocks.map(savedBlock => {
+        const definition = CLIENT_ANALYTICS_BLOCKS.find(b => b.key === savedBlock.key);
+        if (definition) {
+          return {
+            ...definition,
+            enabled: savedBlock.enabled,
+            order: savedBlock.order,
+          };
+        }
+        return savedBlock as AnalyticsBlockConfigExtended;
+      });
     }
     // Default: enable blocks that have renderPDF = true
     return CLIENT_ANALYTICS_BLOCKS.map((block, index) => ({
@@ -26,7 +37,7 @@ export function Step10AnalyticsOptions({ config, onUpdate }: Step10Props) {
     }));
   }, [config.analyticsBlocks]);
 
-  const handleBlocksChange = (newBlocks: AnalyticsBlockConfig[]) => {
+  const handleBlocksChange = (newBlocks: AnalyticsBlockConfigExtended[]) => {
     onUpdate({ 
       analyticsBlocks: newBlocks,
       includeAnalytics: newBlocks.some(b => b.enabled),
@@ -47,7 +58,7 @@ export function Step10AnalyticsOptions({ config, onUpdate }: Step10Props) {
       });
     } else {
       // Disable all blocks
-      const disabledBlocks = (config.analyticsBlocks || initialBlocks).map(b => ({
+      const disabledBlocks = initialBlocks.map(b => ({
         ...b,
         enabled: false,
       }));
@@ -96,7 +107,7 @@ export function Step10AnalyticsOptions({ config, onUpdate }: Step10Props) {
       {/* Layout Builder (only when analytics enabled) */}
       {config.includeAnalytics && (
         <ReportLayoutBuilder
-          blocks={config.analyticsBlocks || initialBlocks}
+          blocks={initialBlocks}
           onChange={handleBlocksChange}
           showInternalBlocks={false}
         />

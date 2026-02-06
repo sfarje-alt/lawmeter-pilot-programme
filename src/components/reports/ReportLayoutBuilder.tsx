@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -41,7 +40,7 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
-import { AnalyticsBlockConfig, CLIENT_ANALYTICS_BLOCKS } from "@/types/analytics";
+import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
 import {
   Tooltip,
   TooltipContent,
@@ -66,7 +65,7 @@ const blockIcons: Record<string, React.ElementType> = {
 };
 
 interface SortableBlockItemProps {
-  block: AnalyticsBlockConfig;
+  block: AnalyticsBlockConfigExtended;
   onToggle: (key: string) => void;
 }
 
@@ -118,7 +117,7 @@ function SortableBlockItem({ block, onToggle }: SortableBlockItemProps) {
             {block.title}
           </span>
           {block.visibility === "internal" && (
-            <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-500">
+            <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400">
               Interno
             </Badge>
           )}
@@ -153,8 +152,8 @@ function SortableBlockItem({ block, onToggle }: SortableBlockItemProps) {
 }
 
 interface ReportLayoutBuilderProps {
-  blocks: AnalyticsBlockConfig[];
-  onChange: (blocks: AnalyticsBlockConfig[]) => void;
+  blocks: AnalyticsBlockConfigExtended[];
+  onChange: (blocks: AnalyticsBlockConfigExtended[]) => void;
   onSaveTemplate?: (name: string) => void;
   showInternalBlocks?: boolean;
 }

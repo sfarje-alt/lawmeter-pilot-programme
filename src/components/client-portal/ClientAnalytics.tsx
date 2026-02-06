@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Calendar, Filter } from "lucide-react";
 import { useClientUser } from "@/hooks/useClientUser";
-import { ALL_MOCK_ALERTS } from "@/data/peruAlertsMockData";
+import { ALL_MOCK_ALERTS, type PeruAlert } from "@/data/peruAlertsMockData";
 import { 
   Select,
   SelectContent,
@@ -22,7 +22,7 @@ import {
   ServiceKPIsBlock,
 } from "@/components/analytics/blocks";
 import { AnalyticsDrilldownSheet } from "@/components/analytics/shared";
-import { PeruAlert } from "@/data/peruAlertsMockData";
+import type { KPIMetric } from "@/types/analytics";
 
 type PeriodFilter = "7d" | "30d" | "90d" | "all";
 type TypeFilter = "all" | "proyecto_de_ley" | "norma";
@@ -35,7 +35,7 @@ export function ClientAnalytics() {
   // Drilldown state
   const [drilldownOpen, setDrilldownOpen] = useState(false);
   const [drilldownTitle, setDrilldownTitle] = useState("");
-  const [drilldownAlerts, setDrilldownAlerts] = useState<PeruAlert[]>([]);
+  const [drilldownAlertIds, setDrilldownAlertIds] = useState<string[]>([]);
 
   // Filter only published alerts for this client
   const clientAlerts = useMemo(() => {
@@ -72,10 +72,10 @@ export function ClientAnalytics() {
     return labels[period];
   };
 
-  // Handle drilldown
-  const handleDrilldown = (title: string, alerts: PeruAlert[]) => {
+  // Handle drilldown - collect alert IDs
+  const handleDrilldown = (title: string, alertIds: string[]) => {
     setDrilldownTitle(title);
-    setDrilldownAlerts(alerts);
+    setDrilldownAlertIds(alertIds);
     setDrilldownOpen(true);
   };
 
@@ -87,6 +87,21 @@ export function ClientAnalytics() {
 
   const hasActiveFilters = period !== "30d" || typeFilter !== "all";
 
+  // Calculate service KPIs from alerts
+  const serviceKPIs: KPIMetric[] = useMemo(() => {
+    const totalAlerts = clientAlerts.length;
+    const alertsWithCommentary = clientAlerts.filter(a => a.expert_commentary).length;
+    
+    // Mock response time (in real app, calculate from timestamps)
+    const avgResponseTime = alertsWithCommentary > 0 ? "< 24h" : "N/A";
+    
+    return [
+      { label: "Alertas Publicadas", value: totalAlerts, icon: "file-text" },
+      { label: "Tiempo Típico", value: avgResponseTime, icon: "clock" },
+      { label: "Comentarios", value: alertsWithCommentary, icon: "check-circle" },
+    ];
+  }, [clientAlerts]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -97,7 +112,7 @@ export function ClientAnalytics() {
             Métricas y análisis de alertas publicadas para {clientName || "tu organización"}
           </p>
         </div>
-        <Badge variant="outline" className="bg-green-500/10 border-green-500/30 text-green-500 w-fit">
+        <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-500 w-fit">
           <Eye className="h-3 w-3 mr-1" />
           Solo Lectura
         </Badge>
@@ -147,7 +162,7 @@ export function ClientAnalytics() {
 
       {/* Service KPIs Row */}
       <ServiceKPIsBlock 
-        alerts={clientAlerts}
+        data={serviceKPIs}
         timeframe={getTimeframeLabel()}
       />
 
@@ -157,35 +172,35 @@ export function ClientAnalytics() {
         <ImpactMatrixBlock
           alerts={clientAlerts}
           timeframe={getTimeframeLabel()}
-          onDrilldown={handleDrilldown}
+          onDrilldown={(ids) => handleDrilldown("Matriz de Impacto - Alertas", ids)}
         />
 
         {/* Regulatory Pulse */}
         <RegulatoryPulseBlock
           alerts={clientAlerts}
           timeframe={getTimeframeLabel()}
-          onDrilldown={handleDrilldown}
+          onDrilldown={(ids) => handleDrilldown("Pulso Regulatorio - Alertas", ids)}
         />
 
         {/* Alert Priority */}
         <AlertPriorityBlock
           alerts={clientAlerts}
           timeframe={getTimeframeLabel()}
-          onDrilldown={handleDrilldown}
+          onDrilldown={(ids) => handleDrilldown("Prioridad de Alertas", ids)}
         />
 
         {/* Alert Distribution */}
         <AlertDistributionBlock
           alerts={clientAlerts}
           timeframe={getTimeframeLabel()}
-          onDrilldown={handleDrilldown}
+          onDrilldown={(ids) => handleDrilldown("Distribución de Alertas", ids)}
         />
 
         {/* Top Entities */}
         <TopEntitiesBlock
           alerts={clientAlerts}
           timeframe={getTimeframeLabel()}
-          onDrilldown={handleDrilldown}
+          onDrilldown={(ids) => handleDrilldown("Principales Entidades - Alertas", ids)}
           maxItems={5}
         />
 
@@ -193,7 +208,7 @@ export function ClientAnalytics() {
         <LegislativeFunnelBlock
           alerts={clientAlerts}
           timeframe={getTimeframeLabel()}
-          onDrilldown={handleDrilldown}
+          onDrilldown={(ids) => handleDrilldown("Embudo Legislativo - Alertas", ids)}
         />
 
         {/* Popular Topics - Full width */}
@@ -201,7 +216,7 @@ export function ClientAnalytics() {
           <PopularTopicsBlock
             alerts={clientAlerts}
             timeframe={getTimeframeLabel()}
-            onDrilldown={handleDrilldown}
+            onDrilldown={(ids) => handleDrilldown("Temas Populares - Alertas", ids)}
             maxItems={7}
           />
         </div>
@@ -212,7 +227,7 @@ export function ClientAnalytics() {
         open={drilldownOpen}
         onOpenChange={setDrilldownOpen}
         title={drilldownTitle}
-        alerts={drilldownAlerts}
+        alertIds={drilldownAlertIds}
       />
     </div>
   );
