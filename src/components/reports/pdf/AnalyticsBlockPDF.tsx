@@ -257,8 +257,9 @@ function RegulatoryPulseBlockPDF({ alerts, timeframe }: { alerts: PeruAlert[]; t
 // Alert Priority Block
 function AlertPriorityBlockPDF({ alerts, timeframe }: { alerts: PeruAlert[]; timeframe: string }) {
   const priorityCounts = alerts.reduce((acc, alert) => {
-    const impact = alert.risk_level || 'Leve';
-    acc[impact] = (acc[impact] || 0) + 1;
+    const impact = alert.impact_level || 'leve';
+    const label = impact.charAt(0).toUpperCase() + impact.slice(1);
+    acc[label] = (acc[label] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
