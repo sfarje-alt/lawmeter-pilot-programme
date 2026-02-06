@@ -112,6 +112,16 @@ export function AnalyticsDrilldownSheet({
             className="pl-9"
           />
         </div>
+
+        {/* Security notice for client users */}
+        {isClientUser && (
+          <div className="flex items-start gap-2 p-2 mb-4 rounded-lg bg-muted/30 border border-border/30">
+            <Shield className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Solo se muestran alertas publicadas para su organización.
+            </p>
+          </div>
+        )}
         
         {/* Count */}
         <div className="text-sm text-muted-foreground mb-4">
