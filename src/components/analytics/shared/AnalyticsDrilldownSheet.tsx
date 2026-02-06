@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, ExternalLink, FileText, Scale } from "lucide-react";
+import { ArrowLeft, Search, ExternalLink, FileText, Scale, Shield } from "lucide-react";
 import { ALL_MOCK_ALERTS, type PeruAlert } from "@/data/peruAlertsMockData";
 import { getImpactColor, getLegislationTypeColor } from "@/lib/analyticsColors";
+import { useClientUser } from "@/hooks/useClientUser";
 
 interface DrilldownItem {
   id: string;
@@ -30,6 +31,8 @@ interface AnalyticsDrilldownSheetProps {
 /**
  * Drill-down sheet that shows the list of alerts that generated a chart/metric.
  * Opens from any clickable analytics element.
+ * 
+ * SECURITY: For client users, only published alerts are shown.
  */
 export function AnalyticsDrilldownSheet({
   open,
@@ -40,12 +43,23 @@ export function AnalyticsDrilldownSheet({
   onAlertClick,
 }: AnalyticsDrilldownSheetProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const { isClientUser, clientId } = useClientUser();
   
-  // Get alerts from IDs
+  // Get alerts from IDs with security filtering
   const alerts = React.useMemo(() => {
     return alertIds
       .map(id => ALL_MOCK_ALERTS.find(a => a.id === id))
-      .filter((a): a is PeruAlert => a !== undefined)
+      .filter((a): a is PeruAlert => {
+        if (!a) return false;
+        
+        // SECURITY: Client users can only see published alerts for their client
+        if (isClientUser) {
+          if (a.status !== 'published') return false;
+          if (clientId && a.client_id !== clientId && a.primary_client_id !== clientId) return false;
+        }
+        
+        return true;
+      })
       .map(alert => ({
         id: alert.id,
         title: alert.legislation_title,
@@ -55,7 +69,7 @@ export function AnalyticsDrilldownSheet({
         stage: alert.current_stage,
         sourceUrl: alert.source_url,
       }));
-  }, [alertIds]);
+  }, [alertIds, isClientUser, clientId]);
   
   // Filter by search
   const filteredAlerts = React.useMemo(() => {
