@@ -228,15 +228,21 @@ export function ClientAnalytics() {
           onDrilldown={(ids) => handleDrilldown("Embudo Legislativo - Alertas", ids)}
         />
 
-        {/* Popular Topics - Full width */}
-        <div className="lg:col-span-2">
-          <PopularTopicsBlock
-            alerts={clientAlerts}
-            timeframe={getTimeframeLabel()}
-            onDrilldown={(ids) => handleDrilldown("Temas Populares - Alertas", ids)}
-            maxItems={7}
-          />
-        </div>
+        {/* Popular Topics */}
+        <PopularTopicsBlock
+          alerts={clientAlerts}
+          timeframe={getTimeframeLabel()}
+          onDrilldown={(ids) => handleDrilldown("Temas Populares - Alertas", ids)}
+          maxItems={7}
+        />
+
+        {/* Industry Benchmark */}
+        <IndustryBenchmarkBlock
+          alerts={clientAlerts}
+          clientName={clientName || "Su empresa"}
+          clientSector={clientSector}
+          timeframe={getTimeframeLabel()}
+        />
       </div>
 
       {/* Drilldown Sheet */}
