@@ -1,7 +1,7 @@
 // Analytics Repository - Unified Data Layer
 // Centralizes all analytics calculations combining public data, temporal evolution, and editorial layer
 
-import { MOCK_ALERTS } from '@/data/peruAlertsMockData';
+import { ALL_MOCK_ALERTS as MOCK_ALERTS } from '@/data/peruAlertsMockData';
 import type {
   AnalyticsFilters,
   AggregatedMetrics,
