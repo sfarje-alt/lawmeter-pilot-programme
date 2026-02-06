@@ -104,6 +104,15 @@ export function ClientAnalytics() {
     ];
   }, [clientAlerts]);
 
+  // Get data freshness
+  const freshness = getDataFreshness();
+  
+  // Get client sector for benchmark
+  const clientSector = useMemo(() => {
+    const client = MOCK_CLIENTS.find(c => c.id === clientId);
+    return client?.sector || 'Salud';
+  }, [clientId]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -114,10 +123,16 @@ export function ClientAnalytics() {
             Métricas y análisis de alertas publicadas para {clientName || "tu organización"}
           </p>
         </div>
-        <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-500 w-fit">
-          <Eye className="h-3 w-3 mr-1" />
-          Solo Lectura
-        </Badge>
+        <div className="flex items-center gap-3">
+          <DataFreshnessIndicator 
+            lastUpdate={freshness.lastUpdate}
+            dataThrough={freshness.dataThrough}
+          />
+          <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-500 w-fit">
+            <Eye className="h-3 w-3 mr-1" />
+            Solo Lectura
+          </Badge>
+        </div>
       </div>
 
       {/* Filters Bar */}
