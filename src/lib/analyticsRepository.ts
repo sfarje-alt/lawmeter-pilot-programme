@@ -1,7 +1,7 @@
 // Analytics Repository - Unified Data Layer
 // Centralizes all analytics calculations combining public data, temporal evolution, and editorial layer
 
-import { ALL_MOCK_ALERTS as MOCK_ALERTS } from '@/data/peruAlertsMockData';
+import { ALL_MOCK_ALERTS, type PeruAlert } from '@/data/peruAlertsMockData';
 import type {
   AnalyticsFilters,
   AggregatedMetrics,
@@ -18,7 +18,7 @@ import type {
 } from '@/types/analytics';
 
 // Helper to parse date strings (DD/MM/YYYY format)
-function parseDate(dateStr: string | undefined): Date | null {
+function parseDate(dateStr: string | undefined | null): Date | null {
   if (!dateStr) return null;
   const parts = dateStr.split('/');
   if (parts.length !== 3) return null;
@@ -57,50 +57,71 @@ function getDateRange(filters: AnalyticsFilters): { start: Date; end: Date } {
   return { start, end };
 }
 
+// Get date from alert (handles both bills and regulations)
+function getAlertDate(alert: PeruAlert): string | undefined {
+  return alert.project_date || alert.publication_date || alert.stage_date;
+}
+
+// Get type label
+function getAlertType(alert: PeruAlert): string {
+  return alert.legislation_type === 'proyecto_de_ley' ? 'Proyecto de Ley' : 'Norma';
+}
+
+// Get impact level normalized
+function getImpactLevel(alert: PeruAlert): string {
+  const level = alert.impact_level;
+  if (!level) return 'Leve';
+  return level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+}
+
 // Filter alerts based on criteria
 function filterAlerts(
-  alerts: typeof MOCK_ALERTS,
+  alerts: PeruAlert[],
   filters: AnalyticsFilters,
   options: { onlyPublished?: boolean; clientId?: string } = {}
-) {
+): PeruAlert[] {
   const { start, end } = getDateRange(filters);
   
   return alerts.filter(alert => {
     // Date filter
-    const alertDate = parseDate(alert.date);
+    const alertDateStr = getAlertDate(alert);
+    const alertDate = parseDate(alertDateStr);
     if (alertDate && (alertDate < start || alertDate > end)) return false;
     
     // Published filter
     if (options.onlyPublished && alert.status !== 'published') return false;
     
     // Client filter
-    if (options.clientId && alert.clientId !== options.clientId) return false;
-    if (filters.clientIds?.length && !filters.clientIds.includes(alert.clientId || '')) return false;
+    if (options.clientId && alert.client_id !== options.clientId && alert.primary_client_id !== options.clientId) return false;
+    if (filters.clientIds?.length && !filters.clientIds.includes(alert.client_id || '') && !filters.clientIds.includes(alert.primary_client_id || '')) return false;
     
     // Legislation type filter
     if (filters.legislationType && filters.legislationType !== 'all') {
-      const isBill = alert.type === 'Proyecto de Ley';
+      const isBill = alert.legislation_type === 'proyecto_de_ley';
       if (filters.legislationType === 'bills' && !isBill) return false;
       if (filters.legislationType === 'regulations' && isBill) return false;
     }
     
     // Impact filter
-    if (filters.impactLevels?.length && !filters.impactLevels.includes(alert.impactLevel || '')) return false;
+    if (filters.impactLevels?.length) {
+      const impactLevel = getImpactLevel(alert);
+      if (!filters.impactLevels.includes(impactLevel)) return false;
+    }
     
     // Area filter
     if (filters.areas?.length) {
-      const alertAreas = alert.areas || [];
+      const alertAreas = alert.affected_areas || [];
       if (!alertAreas.some(a => filters.areas!.includes(a))) return false;
     }
     
     // Sector filter
-    if (filters.sectors?.length && !filters.sectors.includes(alert.sector || '')) return false;
+    if (filters.sectors?.length && alert.sector && !filters.sectors.includes(alert.sector)) return false;
     
     // Stage filter
-    if (filters.stages?.length && !filters.stages.includes(alert.stage || '')) return false;
+    if (filters.stages?.length && alert.current_stage && !filters.stages.includes(alert.current_stage)) return false;
     
     // Entity filter
-    if (filters.entities?.length && !filters.entities.includes(alert.institution || '')) return false;
+    if (filters.entities?.length && alert.entity && !filters.entities.includes(alert.entity)) return false;
     
     return true;
   });
@@ -127,11 +148,12 @@ function calculateTrend(current: number, previous: number): TrendData {
 }
 
 // Generate time series data grouped by week
-function generateWeeklyTimeSeries(alerts: typeof MOCK_ALERTS): TimeSeriesDataPoint[] {
+function generateWeeklyTimeSeries(alerts: PeruAlert[]): TimeSeriesDataPoint[] {
   const weekMap = new Map<string, number>();
   
   alerts.forEach(alert => {
-    const date = parseDate(alert.date);
+    const dateStr = getAlertDate(alert);
+    const date = parseDate(dateStr);
     if (!date) return;
     
     // Get start of week
@@ -152,12 +174,12 @@ export function getAggregatedMetrics(
   filters: AnalyticsFilters,
   userType: 'admin' | 'client' = 'admin'
 ): AggregatedMetrics {
-  const filtered = filterAlerts(MOCK_ALERTS, filters, {
+  const filtered = filterAlerts(ALL_MOCK_ALERTS, filters, {
     onlyPublished: userType === 'client',
   });
   
-  const bills = filtered.filter(a => a.type === 'Proyecto de Ley');
-  const regulations = filtered.filter(a => a.type !== 'Proyecto de Ley');
+  const bills = filtered.filter(a => a.legislation_type === 'proyecto_de_ley');
+  const regulations = filtered.filter(a => a.legislation_type === 'norma');
   
   // Count by different dimensions
   const alertsByImpact: Record<string, number> = {};
@@ -170,19 +192,19 @@ export function getAggregatedMetrics(
   
   filtered.forEach(alert => {
     // Impact
-    const impact = alert.impactLevel || 'Leve';
+    const impact = getImpactLevel(alert);
     alertsByImpact[impact] = (alertsByImpact[impact] || 0) + 1;
     
-    // Urgency
-    const urgency = alert.urgencyLevel || 'Media';
+    // Urgency (derive from impact for now)
+    const urgency = impact === 'Grave' ? 'Alta' : impact === 'Medio' ? 'Media' : 'Baja';
     alertsByUrgency[urgency] = (alertsByUrgency[urgency] || 0) + 1;
     
     // Stage
-    const stage = alert.stage || 'Sin Estado';
+    const stage = alert.current_stage || 'Sin Estado';
     alertsByStage[stage] = (alertsByStage[stage] || 0) + 1;
     
     // Areas
-    (alert.areas || []).forEach(area => {
+    (alert.affected_areas || []).forEach(area => {
       alertsByArea[area] = (alertsByArea[area] || 0) + 1;
       topicCounts[area] = (topicCounts[area] || 0) + 1;
     });
@@ -193,8 +215,9 @@ export function getAggregatedMetrics(
     }
     
     // Entity
-    if (alert.institution) {
-      entityCounts[alert.institution] = (entityCounts[alert.institution] || 0) + 1;
+    const entity = alert.entity || alert.parliamentary_group;
+    if (entity) {
+      entityCounts[entity] = (entityCounts[entity] || 0) + 1;
     }
   });
   
@@ -235,14 +258,12 @@ export function getAggregatedMetrics(
 
 // Get editorial metrics (for Legal Team only)
 export function getEditorialMetrics(filters: AnalyticsFilters): EditorialMetrics {
-  const { start, end } = getDateRange(filters);
-  
-  const allAlerts = filterAlerts(MOCK_ALERTS, filters);
+  const allAlerts = filterAlerts(ALL_MOCK_ALERTS, filters);
   const publishedAlerts = allAlerts.filter(a => a.status === 'published');
   
   // Calculate response times (mock calculation)
   const responseTimes = publishedAlerts
-    .filter(a => a.expertCommentary)
+    .filter(a => a.expert_commentary)
     .map(() => Math.random() * 48 + 2); // Random 2-50 hours for demo
   
   const avgResponseTime = responseTimes.length > 0
@@ -266,7 +287,8 @@ export function getEditorialMetrics(filters: AnalyticsFilters): EditorialMetrics
   const weekMap = new Map<string, { captured: number; published: number; responseSum: number; responseCount: number }>();
   
   allAlerts.forEach(alert => {
-    const date = parseDate(alert.date);
+    const dateStr = getAlertDate(alert);
+    const date = parseDate(dateStr);
     if (!date) return;
     
     const weekStart = new Date(date);
@@ -278,7 +300,7 @@ export function getEditorialMetrics(filters: AnalyticsFilters): EditorialMetrics
     
     if (alert.status === 'published') {
       week.published++;
-      if (alert.expertCommentary) {
+      if (alert.expert_commentary) {
         week.responseSum += Math.random() * 24 + 4;
         week.responseCount++;
       }
@@ -315,17 +337,17 @@ export function getEditorialMetrics(filters: AnalyticsFilters): EditorialMetrics
 
 // Get operational queue metrics (for Legal Team only)
 export function getOperationalQueueMetrics(): OperationalQueueMetrics {
-  const pendingReview = MOCK_ALERTS.filter(a => a.status === 'inbox').length;
-  const reviewed = MOCK_ALERTS.filter(a => a.status === 'reviewed').length;
+  const pendingReview = ALL_MOCK_ALERTS.filter(a => a.status === 'inbox').length;
+  const reviewed = ALL_MOCK_ALERTS.filter(a => a.status === 'reviewed').length;
   const pendingPublish = reviewed;
   
   // Count by stage
   const stageCounts: Record<string, { count: number; totalDays: number }> = {};
   
-  MOCK_ALERTS
-    .filter(a => a.status !== 'archived' && a.status !== 'published')
+  ALL_MOCK_ALERTS
+    .filter(a => a.status !== 'declined' && a.status !== 'published')
     .forEach(alert => {
-      const stage = alert.stage || 'Sin Estado';
+      const stage = alert.current_stage || 'Sin Estado';
       if (!stageCounts[stage]) {
         stageCounts[stage] = { count: 0, totalDays: 0 };
       }
@@ -341,10 +363,11 @@ export function getOperationalQueueMetrics(): OperationalQueueMetrics {
   
   // Count by priority
   const priorityCounts: Record<string, number> = { Alta: 0, Media: 0, Baja: 0 };
-  MOCK_ALERTS
-    .filter(a => a.status !== 'archived' && a.status !== 'published')
+  ALL_MOCK_ALERTS
+    .filter(a => a.status !== 'declined' && a.status !== 'published')
     .forEach(alert => {
-      const priority = alert.impactLevel === 'Grave' ? 'Alta' : alert.impactLevel === 'Medio' ? 'Media' : 'Baja';
+      const impact = getImpactLevel(alert);
+      const priority = impact === 'Grave' ? 'Alta' : impact === 'Medio' ? 'Media' : 'Baja';
       priorityCounts[priority]++;
     });
   
@@ -369,7 +392,7 @@ export function getClientMetrics(
   filters: AnalyticsFilters
 ): ClientMetrics {
   const aggregated = getAggregatedMetrics(filters, 'client');
-  const clientAlerts = filterAlerts(MOCK_ALERTS, filters, {
+  const clientAlerts = filterAlerts(ALL_MOCK_ALERTS, filters, {
     onlyPublished: true,
     clientId,
   });
@@ -382,8 +405,8 @@ export function getClientMetrics(
   };
   
   clientAlerts.forEach(alert => {
-    const impact = alert.impactLevel || 'Leve';
-    const urgency = alert.urgencyLevel || 'Media';
+    const impact = getImpactLevel(alert);
+    const urgency = impact === 'Grave' ? 'Alta' : impact === 'Medio' ? 'Media' : 'Baja';
     if (matrixData[impact] && matrixData[impact][urgency]) {
       matrixData[impact][urgency].push(alert.id);
     }
@@ -406,14 +429,14 @@ export function getClientMetrics(
   const stageCounts: Record<string, string[]> = {};
   
   clientAlerts
-    .filter(a => a.type === 'Proyecto de Ley')
+    .filter(a => a.legislation_type === 'proyecto_de_ley')
     .forEach(alert => {
-      const stage = alert.stage || 'EN COMISIÓN';
+      const stage = alert.current_stage || 'EN COMISIÓN';
       if (!stageCounts[stage]) stageCounts[stage] = [];
       stageCounts[stage].push(alert.id);
     });
   
-  const totalBills = clientAlerts.filter(a => a.type === 'Proyecto de Ley').length;
+  const totalBills = clientAlerts.filter(a => a.legislation_type === 'proyecto_de_ley').length;
   const legislativeFunnel: FunnelStage[] = funnelStages.map(stage => ({
     stage,
     count: stageCounts[stage]?.length || 0,
@@ -427,8 +450,8 @@ export function getClientMetrics(
     .map(a => ({
       id: a.id,
       type: 'new' as const,
-      title: a.title,
-      date: a.date || '',
+      title: a.legislation_title,
+      date: getAlertDate(a) || '',
     }));
   
   const keyMovements = {
@@ -441,7 +464,7 @@ export function getClientMetrics(
   // Emerging Topics (compare with previous period)
   const emergingTopics: RankingItem[] = aggregated.topTopics
     .slice(0, 5)
-    .map((topic, index) => ({
+    .map((topic) => ({
       ...topic,
       change: calculateTrend(topic.value, topic.value - Math.floor(Math.random() * 3)),
     }));
