@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReportConfig, DATE_MODE_OPTIONS } from "./types";
 import { ALL_MOCK_ALERTS, MOCK_CLIENTS, PeruAlert } from "@/data/peruAlertsMockData";
+import { CLIENT_ANALYTICS_BLOCKS } from "@/types/analytics";
+import { AnalyticsPagePDF } from "./pdf/AnalyticsPagePDF";
 import { ArrowLeft, Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -55,9 +57,20 @@ const ReportPDF = ({ config, alerts, clientName }: { config: ReportConfig; alert
   }, {} as Record<string, PeruAlert[]>);
 
   const dateLabel = DATE_MODE_OPTIONS.find(d => d.value === config.dateMode)?.label || config.dateMode;
+  const generatedAt = format(new Date(), "d 'de' MMMM yyyy, HH:mm", { locale: es });
+
+  // Prepare analytics blocks from config
+  const analyticsBlocks = config.analyticsBlocks?.length 
+    ? config.analyticsBlocks 
+    : CLIENT_ANALYTICS_BLOCKS.map((block, index) => ({
+        key: block.key,
+        enabled: block.renderPDF,
+        order: index,
+      }));
 
   return (
     <Document>
+      {/* Cover Page */}
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
@@ -73,8 +86,32 @@ const ReportPDF = ({ config, alerts, clientName }: { config: ReportConfig; alert
           <Text style={styles.summaryItem}>• {bills.length} Proyectos de Ley relevantes</Text>
           <Text style={styles.summaryItem}>• {norms.length} Normas publicadas</Text>
           <Text style={styles.summaryItem}>• {Object.keys(billsByStage).length} estados procesales distintos</Text>
+          {config.includeAnalytics && (
+            <Text style={styles.summaryItem}>• Incluye página de analíticas</Text>
+          )}
         </View>
 
+        {/* Footer */}
+        <Text style={styles.footer}>
+          Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
+        </Text>
+      </Page>
+
+      {/* Analytics Page (after cover, before alerts) */}
+      {config.includeAnalytics && (
+        <Page size="A4">
+          <AnalyticsPagePDF
+            alerts={alerts}
+            clientName={clientName}
+            timeframe={dateLabel}
+            generatedAt={generatedAt}
+            analyticsBlocks={analyticsBlocks}
+          />
+        </Page>
+      )}
+
+      {/* Alerts Page */}
+      <Page size="A4" style={styles.page}>
         {/* Bills Section */}
         {bills.length > 0 && (
           <View style={styles.section}>
