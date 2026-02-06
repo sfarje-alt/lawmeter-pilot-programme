@@ -85,9 +85,17 @@ export function AnalyticsPagePDF({
   analyticsBlocks,
 }: AnalyticsPagePDFProps) {
   // Get enabled blocks, sorted by order
-  const enabledBlocks = (analyticsBlocks || CLIENT_ANALYTICS_BLOCKS)
-    .filter(block => block.enabled && block.renderPDF)
-    .sort((a, b) => a.order - b.order)
+  // Use full definitions from CLIENT_ANALYTICS_BLOCKS if available
+  const blocksToUse = analyticsBlocks 
+    ? analyticsBlocks.map(b => {
+        const def = CLIENT_ANALYTICS_BLOCKS.find(d => d.key === b.key);
+        return def ? { ...def, enabled: b.enabled, order: b.order } : null;
+      }).filter(Boolean)
+    : CLIENT_ANALYTICS_BLOCKS;
+  
+  const enabledBlocks = blocksToUse
+    .filter(block => block && block.enabled && block.renderPDF)
+    .sort((a, b) => (a?.order || 0) - (b?.order || 0))
     .slice(0, 5); // Max 5 blocks per page
 
   // If no blocks enabled, show empty state

@@ -453,7 +453,7 @@ function PopularTopicsBlockPDF({ alerts, timeframe }: { alerts: PeruAlert[]; tim
 function ServiceKPIsBlockPDF({ alerts, timeframe }: { alerts: PeruAlert[]; timeframe: string }) {
   const total = alerts.length;
   const withCommentary = alerts.filter(a => a.expert_commentary).length;
-  const highImpact = alerts.filter(a => a.risk_level === 'Grave' || a.risk_level === 'Medio').length;
+  const highImpact = alerts.filter(a => a.impact_level === 'grave' || a.impact_level === 'medio').length;
 
   return (
     <View style={styles.block}>
