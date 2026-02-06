@@ -63,10 +63,10 @@ export function ImpactMatrixBlock({
     return matrix;
   }, [alerts]);
 
-  // Calculate totals
+  // Calculate totals - use impact_level only since urgency_level doesn't exist
   const totalAlerts = alerts.length;
   const highPriorityCount = alerts.filter(a => 
-    a.impact_level === 'grave' || a.urgency_level === 'alta'
+    a.impact_level === 'grave' || a.impact_level === 'medio'
   ).length;
 
   const handleCellClick = (impact: string, urgency: string) => {

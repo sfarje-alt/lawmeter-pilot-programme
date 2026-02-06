@@ -45,7 +45,8 @@ export function TopEntitiesBlock({
     const groups: Record<string, string[]> = {};
     
     alerts.forEach(alert => {
-      const entity = alert.issuing_entity || 'Sin entidad';
+      // Use entity field for regulations, parliamentary_group for bills
+      const entity = alert.entity || alert.parliamentary_group || 'Sin entidad';
       if (!groups[entity]) groups[entity] = [];
       groups[entity].push(alert.id);
     });
