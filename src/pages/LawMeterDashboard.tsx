@@ -101,7 +101,7 @@ export default function LawMeterDashboard() {
       case "reports":
         return <ReportsPage />;
       case "analytics":
-        return <ClientAnalyticsDashboard />;
+        return <LegalTeamAnalyticsDashboard />;
       case "calendar":
         return <AlertsCalendar />;
       case "social":
