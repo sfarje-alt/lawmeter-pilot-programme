@@ -1,10 +1,19 @@
 // Report Generator Types
 
+import type { AnalyticsBlockKey } from '@/types/analytics';
+
 export type ReportType = 'daily' | 'weekly' | 'custom';
 export type ReportAction = 'generate_now' | 'schedule' | 'view_history';
 export type OutputFormat = 'pdf' | 'docx';
 export type DateMode = 'today' | 'last_7' | 'last_15' | 'last_30' | 'last_60' | 'last_90' | 'custom';
 export type LegislationStage = 'only_bills' | 'bills_and_enacted' | 'only_enacted';
+
+// Analytics block configuration for reports
+export interface AnalyticsBlockConfig {
+  key: AnalyticsBlockKey;
+  enabled: boolean;
+  order: number;
+}
 
 export interface ReportConfig {
   // Step 1: Type of Report
@@ -44,6 +53,8 @@ export interface ReportConfig {
   // Step 10: Analytics Options
   includeAnalytics: boolean;
   analyticsSections: string[];
+  analyticsBlocks: AnalyticsBlockConfig[]; // NEW: Detailed block config with drag-drop order
+  analyticsTemplateId?: string; // NEW: Optional saved template ID
   
   // Step 11: Output & Delivery
   outputFormat: OutputFormat;
@@ -93,6 +104,8 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   includeExpertCommentary: true,
   includeAnalytics: false,
   analyticsSections: [],
+  analyticsBlocks: [], // NEW: empty by default, will use client's default template
+  analyticsTemplateId: undefined, // NEW: no template selected
   outputFormat: 'pdf',
   frequency: 'weekly',
   weeklyDay: 1,
