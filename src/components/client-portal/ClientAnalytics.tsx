@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Calendar, Filter } from "lucide-react";
 import { useClientUser } from "@/hooks/useClientUser";
-import { ALL_MOCK_ALERTS, type PeruAlert } from "@/data/peruAlertsMockData";
+import { ALL_MOCK_ALERTS, MOCK_CLIENTS, type PeruAlert } from "@/data/peruAlertsMockData";
 import { 
   Select,
   SelectContent,
@@ -20,8 +20,10 @@ import {
   LegislativeFunnelBlock,
   PopularTopicsBlock,
   ServiceKPIsBlock,
+  IndustryBenchmarkBlock,
 } from "@/components/analytics/blocks";
-import { AnalyticsDrilldownSheet } from "@/components/analytics/shared";
+import { AnalyticsDrilldownSheet, DataFreshnessIndicator } from "@/components/analytics/shared";
+import { getDataFreshness } from "@/lib/analyticsRepository";
 import type { KPIMetric } from "@/types/analytics";
 
 type PeriodFilter = "7d" | "30d" | "90d" | "all";
@@ -102,6 +104,15 @@ export function ClientAnalytics() {
     ];
   }, [clientAlerts]);
 
+  // Get data freshness
+  const freshness = getDataFreshness();
+  
+  // Get client sector for benchmark
+  const clientSector = useMemo(() => {
+    const client = MOCK_CLIENTS.find(c => c.id === clientId);
+    return client?.sector || 'Salud';
+  }, [clientId]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -112,10 +123,16 @@ export function ClientAnalytics() {
             Métricas y análisis de alertas publicadas para {clientName || "tu organización"}
           </p>
         </div>
-        <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-500 w-fit">
-          <Eye className="h-3 w-3 mr-1" />
-          Solo Lectura
-        </Badge>
+        <div className="flex items-center gap-3">
+          <DataFreshnessIndicator 
+            lastUpdate={freshness.lastUpdate}
+            dataThrough={freshness.dataThrough}
+          />
+          <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-500 w-fit">
+            <Eye className="h-3 w-3 mr-1" />
+            Solo Lectura
+          </Badge>
+        </div>
       </div>
 
       {/* Filters Bar */}
@@ -211,15 +228,21 @@ export function ClientAnalytics() {
           onDrilldown={(ids) => handleDrilldown("Embudo Legislativo - Alertas", ids)}
         />
 
-        {/* Popular Topics - Full width */}
-        <div className="lg:col-span-2">
-          <PopularTopicsBlock
-            alerts={clientAlerts}
-            timeframe={getTimeframeLabel()}
-            onDrilldown={(ids) => handleDrilldown("Temas Populares - Alertas", ids)}
-            maxItems={7}
-          />
-        </div>
+        {/* Popular Topics */}
+        <PopularTopicsBlock
+          alerts={clientAlerts}
+          timeframe={getTimeframeLabel()}
+          onDrilldown={(ids) => handleDrilldown("Temas Populares - Alertas", ids)}
+          maxItems={7}
+        />
+
+        {/* Industry Benchmark */}
+        <IndustryBenchmarkBlock
+          alerts={clientAlerts}
+          clientName={clientName || "Su empresa"}
+          clientSector={clientSector}
+          timeframe={getTimeframeLabel()}
+        />
       </div>
 
       {/* Drilldown Sheet */}

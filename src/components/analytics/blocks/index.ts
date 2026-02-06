@@ -9,3 +9,4 @@ export { ServiceKPIsBlock } from './ServiceKPIsBlock';
 export { PopularTopicsBlock } from './PopularTopicsBlock';
 export { EditorialCoverageBlock } from './EditorialCoverageBlock';
 export { OperationalQueueBlock } from './OperationalQueueBlock';
+export { IndustryBenchmarkBlock } from './IndustryBenchmarkBlock';
