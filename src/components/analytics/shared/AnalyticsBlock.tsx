@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Info, ChevronRight, AlertCircle } from "lucide-react";
@@ -70,23 +71,23 @@ export function AnalyticsBlock({
             </div>
           </div>
           
-          {/* Info Tooltip - Uses global TooltipProvider from App.tsx */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                type="button"
-              >
-                <Info className="h-4 w-4" />
-                <span className="sr-only">Información</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="max-w-xs z-50">
-              <p className="text-sm">{infoTooltip}</p>
-            </TooltipContent>
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                >
+                  <Info className="h-4 w-4" />
+                  <span className="sr-only">Información</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p className="text-sm">{infoTooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Takeaway */}

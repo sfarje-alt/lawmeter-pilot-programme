@@ -847,31 +847,10 @@ export const MOCK_BILLS: PeruAlert[] = MOCK_BILLS_RAW.map((bill, i) => addAlertD
 export const MOCK_REGULATIONS: PeruAlert[] = MOCK_REGULATIONS_RAW.map((reg, i) => addAlertDefaults(reg, i + 100));
 
 // All alerts combined with defaults
-// Import pharmaceutical demo alerts
-import { PHARMACEUTICAL_MOCK_ALERTS } from './mockPharmaceuticalAlerts';
-
-// Use pharmaceutical demo alerts as primary source for demo (recent dates)
-// Falls back to original mock data for backwards compatibility
 export const ALL_MOCK_ALERTS: PeruAlert[] = [
-  ...PHARMACEUTICAL_MOCK_ALERTS, // Recent pharmaceutical demo data (last 30 days)
   ...MOCK_BILLS,
   ...MOCK_REGULATIONS,
 ];
-
-// Get only recent alerts (last 30 days) for demo purposes
-export function getRecentAlerts(days: number = 30): PeruAlert[] {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
-  
-  return ALL_MOCK_ALERTS.filter(alert => {
-    const dateStr = alert.created_at || alert.project_date || alert.publication_date;
-    if (!dateStr) return false;
-    
-    // Handle ISO format dates
-    const alertDate = new Date(dateStr);
-    return alertDate >= cutoffDate;
-  });
-}
 
 // Helper functions for filtering and display
 export function getAlertsByKanbanStage(stage: PeruAlert["kanban_stage"]): PeruAlert[] {

@@ -44,6 +44,7 @@ import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/ty
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -121,16 +122,18 @@ function SortableBlockItem({ block, onToggle }: SortableBlockItemProps) {
             </Badge>
           )}
         </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <p className="text-xs text-muted-foreground truncate cursor-help">
-              {block.takeaway}
-            </p>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-xs z-50">
-            <p className="text-xs">{block.infoTooltip}</p>
-          </TooltipContent>
-        </Tooltip>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-xs text-muted-foreground truncate cursor-help">
+                {block.takeaway}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="text-xs">{block.infoTooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Toggle */}
