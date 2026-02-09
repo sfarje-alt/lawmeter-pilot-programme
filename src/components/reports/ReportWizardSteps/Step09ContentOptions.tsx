@@ -70,12 +70,37 @@ export function Step09ContentOptions({ config, onUpdate }: Step09Props) {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 opacity-50">
+        <Card className="border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-500/10">
-                  <FileText className="h-4 w-4 text-blue-400" />
+                  <BarChart3 className="h-4 w-4 text-blue-400" />
+                </div>
+                <div>
+                  <Label htmlFor="include-analytics" className="font-medium cursor-pointer">
+                    Incluir Página de Analíticas
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Agregar gráficos y métricas del período al reporte
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="include-analytics"
+                checked={config.includeAnalytics}
+                onCheckedChange={(checked) => onUpdate({ includeAnalytics: checked })}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 opacity-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-500/10">
+                  <FileText className="h-4 w-4 text-purple-400" />
                 </div>
                 <div>
                   <Label className="font-medium">
