@@ -156,6 +156,7 @@ interface ReportLayoutBuilderProps {
   onChange: (blocks: AnalyticsBlockConfigExtended[]) => void;
   onSaveTemplate?: (name: string) => void;
   showInternalBlocks?: boolean;
+  mode?: 'report' | 'dashboard';
 }
 
 export function ReportLayoutBuilder({
