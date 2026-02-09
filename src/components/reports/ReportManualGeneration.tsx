@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
 import { ALL_MOCK_ALERTS, MOCK_CLIENTS, PeruAlert } from "@/data/peruAlertsMockData";
+import { CLIENT_ANALYTICS_BLOCKS } from "@/types/analytics";
+import { AnalyticsPagePDF } from "./pdf/AnalyticsPagePDF";
 import { DATE_MODE_OPTIONS } from "./types";
 import { 
   FileDown, 
@@ -14,7 +17,8 @@ import {
   FileText,
   Scale,
   Download,
-  Loader2
+  Loader2,
+  BarChart3,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -40,7 +44,7 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const ManualReportPDF = ({ alerts, clientName, dateLabel }: { alerts: PeruAlert[]; clientName: string; dateLabel: string }) => {
+const ManualReportPDF = ({ alerts, clientName, dateLabel, includeAnalytics }: { alerts: PeruAlert[]; clientName: string; dateLabel: string; includeAnalytics: boolean }) => {
   const bills = alerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = alerts.filter(a => a.legislation_type === 'norma');
   
@@ -58,6 +62,13 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel }: { alerts: PeruAlert[
     return acc;
   }, {} as Record<string, PeruAlert[]>);
 
+  const generatedAt = format(new Date(), "d 'de' MMMM yyyy, HH:mm", { locale: es });
+  const analyticsBlocks = CLIENT_ANALYTICS_BLOCKS.map((block, index) => ({
+    key: block.key,
+    enabled: block.renderPDF,
+    order: index,
+  }));
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -72,6 +83,9 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel }: { alerts: PeruAlert[
           <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 8 }}>RESUMEN EJECUTIVO</Text>
           <Text style={styles.summaryItem}>• {bills.length} Proyectos de Ley relevantes</Text>
           <Text style={styles.summaryItem}>• {norms.length} Normas publicadas</Text>
+          {includeAnalytics && (
+            <Text style={styles.summaryItem}>• Incluye página de analíticas</Text>
+          )}
         </View>
 
         {bills.length > 0 && (
@@ -131,6 +145,19 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel }: { alerts: PeruAlert[
           Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
         </Text>
       </Page>
+
+      {/* Analytics Page */}
+      {includeAnalytics && (
+        <Page size="A4">
+          <AnalyticsPagePDF
+            alerts={alerts}
+            clientName={clientName}
+            timeframe={dateLabel}
+            generatedAt={generatedAt}
+            analyticsBlocks={analyticsBlocks}
+          />
+        </Page>
+      )}
     </Document>
   );
 };
@@ -140,6 +167,7 @@ export function ReportManualGeneration() {
   const [dateMode, setDateMode] = useState('last_7');
   const [includeBills, setIncludeBills] = useState(true);
   const [includeNorms, setIncludeNorms] = useState(true);
+  const [includeAnalytics, setIncludeAnalytics] = useState(true);
 
   const toggleClient = (clientId: string) => {
     setSelectedClientIds(prev => 
@@ -213,7 +241,7 @@ export function ReportManualGeneration() {
           {/* Content Options */}
           <div className="space-y-3">
             <Label className="font-medium">Contenido a Incluir</Label>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox checked={includeBills} onCheckedChange={(c) => setIncludeBills(!!c)} />
                 <FileText className="h-4 w-4 text-muted-foreground" />
@@ -223,6 +251,11 @@ export function ReportManualGeneration() {
                 <Checkbox checked={includeNorms} onCheckedChange={(c) => setIncludeNorms(!!c)} />
                 <Scale className="h-4 w-4 text-muted-foreground" />
                 Normas
+              </Label>
+              <Label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={includeAnalytics} onCheckedChange={(c) => setIncludeAnalytics(!!c)} />
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                Analíticas
               </Label>
             </div>
           </div>
@@ -251,6 +284,7 @@ export function ReportManualGeneration() {
                   alerts={filteredAlerts} 
                   clientName={clientNames} 
                   dateLabel={dateLabel}
+                  includeAnalytics={includeAnalytics}
                 />
               }
               fileName={`reporte-legislativo-manual-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
