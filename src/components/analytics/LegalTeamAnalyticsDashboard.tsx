@@ -170,16 +170,16 @@ export function LegalTeamAnalyticsDashboard() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('alert_priority') && (
-            <AlertPriorityBlock alerts={[]} timeframe={timeframeLabel} />
+            <AlertPriorityBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_ALERT_PRIORITY} />
           )}
           {isEnabled('alert_distribution') && (
-            <AlertDistributionBlock alerts={[]} timeframe={timeframeLabel} showByArea />
+            <AlertDistributionBlock alerts={[]} timeframe={timeframeLabel} showByArea demoData={DEMO_ALERT_DISTRIBUTION} />
           )}
           {isEnabled('top_entities') && (
-            <TopEntitiesBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} />
+            <TopEntitiesBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_TOP_ENTITIES} />
           )}
           {isEnabled('popular_topics') && (
-            <PopularTopicsBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} />
+            <PopularTopicsBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
           )}
         </div>
       </section>
