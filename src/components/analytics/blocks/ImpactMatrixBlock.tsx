@@ -11,6 +11,7 @@ interface ImpactMatrixBlockProps {
   timeframe: string;
   source?: string;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: Record<string, { value: number; items: string[] }>;
 }
 
 const IMPACT_ROWS = ['grave', 'medio', 'leve'];
