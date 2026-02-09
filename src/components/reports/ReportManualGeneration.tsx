@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
 import { ALL_MOCK_ALERTS, MOCK_CLIENTS, PeruAlert } from "@/data/peruAlertsMockData";
+import { CLIENT_ANALYTICS_BLOCKS } from "@/types/analytics";
+import { AnalyticsPagePDF } from "./pdf/AnalyticsPagePDF";
 import { DATE_MODE_OPTIONS } from "./types";
 import { 
   FileDown, 
@@ -14,7 +17,8 @@ import {
   FileText,
   Scale,
   Download,
-  Loader2
+  Loader2,
+  BarChart3,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
