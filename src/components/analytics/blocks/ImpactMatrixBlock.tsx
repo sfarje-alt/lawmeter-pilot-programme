@@ -186,12 +186,20 @@ export function ImpactMatrixBlock({
           {/* Legend */}
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-destructive/20" />
-              <span>Alta prioridad</span>
+              <div className="w-3 h-3 rounded bg-red-500/30" />
+              <span>Crítico</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-muted/80" />
-              <span>Prioridad normal</span>
+              <div className="w-3 h-3 rounded bg-orange-500/25" />
+              <span>Alto</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-amber-500/20" />
+              <span>Medio</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-emerald-500/20" />
+              <span>Bajo</span>
             </div>
           </div>
         </div>
