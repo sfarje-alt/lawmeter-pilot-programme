@@ -1,51 +1,47 @@
 
-# Fix: Analytics en Reportes PDF
 
-## Problemas Identificados
+# Fix: Tendencias/Movimientos en PDF + Colores en Matriz de Impacto
 
-Hay 3 problemas que impiden que las analiticas aparezcan en los PDFs:
+## Problema 1: Bloques no visibles en el PDF
 
-1. **`includeAnalytics` esta en `false` por defecto** -- El usuario tiene que ir al paso 10 del wizard y activarlo manualmente. Deberia estar siempre visible como opcion de contenido en el paso 9.
+Los 10 bloques de analiticas se renderizan, pero todos van dentro de un solo `<View>` en una sola `<Page>`. Con 10 bloques en 2 columnas, el contenido se desborda fuera del area visible de la pagina A4 y los bloques de abajo (Movimientos Clave, Temas Emergentes, Exposicion, etc.) simplemente no se ven.
 
-2. **Los bloques PDF calculan desde el array `alerts`** -- Si las alertas filtradas son pocas o vacias, los bloques muestran datos vacios. Los bloques PDF no usan los datos demo estaticos que ya existen en `analyticsMockData.ts`.
+**Solucion**: Distribuir los bloques en multiples paginas PDF. En lugar de meter todo en un solo `<View>`, agrupar los bloques en lotes de 4 por pagina (2x2 grid). Cada lote va en su propia `<Page>`.
 
-3. **`AnalyticsPagePDF` linea 119: si `alerts.length === 0` muestra estado vacio** -- Esto bloquea la pagina completa de analiticas incluso cuando hay datos demo disponibles.
+### Cambios en `src/components/reports/pdf/AnalyticsPagePDF.tsx`:
+- Dividir `enabledBlocks` en chunks de 4
+- Renderizar cada chunk en una `<Page size="A4">` separada
+- La primera pagina incluye el header "Analiticas del Periodo"
+- Las paginas siguientes incluyen un header mas compacto "Analiticas (cont.)"
+- Mover el footer a la ultima pagina
 
-## Solucion
+### Cambios en `src/components/reports/ReportManualGeneration.tsx`:
+- Cambiar de envolver `AnalyticsPagePDF` en un solo `<Page>` a dejar que `AnalyticsPagePDF` genere sus propias paginas internamente
+- Importar `Page` de react-pdf en AnalyticsPagePDF si no esta ya
 
-### Cambio 1: Agregar toggle de Analytics en Step09ContentOptions
+## Problema 2: Matriz de Impacto sin colores diferenciados
 
-Mover el toggle "Incluir Pagina de Analytics" al paso 9 (Opciones de Contenido) junto con las demas opciones. Esto hace que el usuario siempre lo vea cuando configura contenido. El paso 10 seguira existiendo para la personalizacion detallada de bloques.
+Actualmente cada celda de la matriz tiene el mismo fondo gris (`#e2e8f0`). Deberia usar colores que reflejen la severidad de la combinacion impacto/urgencia, similar a la version interactiva del dashboard.
 
-**Archivo**: `src/components/reports/ReportWizardSteps/Step09ContentOptions.tsx`
-- Agregar un tercer toggle card: "Incluir Pagina de Analytics" con icono BarChart3
-- Al activarlo, setea `includeAnalytics: true` y inicializa `analyticsBlocks` con los defaults
+### Cambios en `src/components/reports/pdf/AnalyticsBlockPDF.tsx` (funcion `ImpactMatrixBlockPDF`):
+- Agregar un mapa de colores por celda:
+  - `grave-alta`: rojo (#fecaca / borde #dc2626) - Critico
+  - `grave-media`: naranja (#fed7aa / borde #f97316)
+  - `grave-baja`: amarillo (#fef08a / borde #eab308)
+  - `medio-alta`: naranja (#fed7aa / borde #f97316)
+  - `medio-media`: amarillo (#fef9c4 / borde #eab308)
+  - `medio-baja`: verde claro (#d1fae5 / borde #22c55e)
+  - `leve-alta`: amarillo (#fef08a / borde #eab308)
+  - `leve-media`: verde claro (#d1fae5 / borde #22c55e)
+  - `leve-baja`: verde (#bbf7d0 / borde #16a34a)
+- Agregar etiquetas de fila (Grave/Medio/Leve) y columna (Alta/Media/Baja) para que la matriz sea legible sin interactividad
+- Agregar una mini-leyenda de colores debajo de la matriz
 
-### Cambio 2: Cambiar default de `includeAnalytics` a `true`
-
-**Archivo**: `src/components/reports/types.ts`
-- Cambiar `includeAnalytics: false` a `includeAnalytics: true` en `DEFAULT_REPORT_CONFIG`
-- Inicializar `analyticsBlocks` con los bloques default del registro
-
-### Cambio 3: Hacer que AnalyticsPagePDF use datos demo
-
-**Archivo**: `src/components/reports/pdf/AnalyticsPagePDF.tsx`
-- Eliminar el check de `alerts.length === 0` que muestra estado vacio
-- Las analiticas deben renderizarse siempre que esten habilitadas
-
-### Cambio 4: Hacer que AnalyticsBlockPDF use datos demo estaticos
-
-**Archivo**: `src/components/reports/pdf/AnalyticsBlockPDF.tsx`
-- Importar los datasets de `src/lib/analyticsMockData.ts`
-- Cada sub-componente PDF (ImpactMatrixBlockPDF, RegulatoryPulseBlockPDF, etc.) usara datos demo en lugar de calcular desde `alerts`
-- Agregar renders PDF para los 5 bloques que faltan: `key_movements`, `emerging_topics`, `exposure`, `editorial_response_time`, `aggregated_entity_monitoring`
-- Agregar renders para `editorial_coverage`, `operational_queue`, `industry_benchmark`
-
-## Archivos a Modificar (4)
+## Archivos a modificar (3)
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/reports/types.ts` | Default `includeAnalytics: true`, inicializar `analyticsBlocks` |
-| `src/components/reports/ReportWizardSteps/Step09ContentOptions.tsx` | Agregar toggle de Analytics |
-| `src/components/reports/pdf/AnalyticsPagePDF.tsx` | Eliminar check de alerts vacias |
-| `src/components/reports/pdf/AnalyticsBlockPDF.tsx` | Usar datos demo, agregar 8 bloques PDF faltantes |
+| `src/components/reports/pdf/AnalyticsPagePDF.tsx` | Multi-pagina: dividir bloques en chunks de 4, cada chunk en su propia Page |
+| `src/components/reports/pdf/AnalyticsBlockPDF.tsx` | Colores diferenciados por celda en ImpactMatrixBlockPDF |
+| `src/components/reports/ReportManualGeneration.tsx` | Ajustar para que AnalyticsPagePDF genere sus propias Pages |
+
