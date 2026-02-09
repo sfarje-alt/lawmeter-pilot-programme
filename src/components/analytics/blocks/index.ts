@@ -10,3 +10,8 @@ export { PopularTopicsBlock } from './PopularTopicsBlock';
 export { EditorialCoverageBlock } from './EditorialCoverageBlock';
 export { OperationalQueueBlock } from './OperationalQueueBlock';
 export { IndustryBenchmarkBlock } from './IndustryBenchmarkBlock';
+export { KeyMovementsBlock } from './KeyMovementsBlock';
+export { EmergingTopicsBlock } from './EmergingTopicsBlock';
+export { ExposureBlock } from './ExposureBlock';
+export { EditorialResponseTimeBlock } from './EditorialResponseTimeBlock';
+export { AggregatedEntityMonitoringBlock } from './AggregatedEntityMonitoringBlock';
