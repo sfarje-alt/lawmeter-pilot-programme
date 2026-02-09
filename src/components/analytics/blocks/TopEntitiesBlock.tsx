@@ -23,7 +23,10 @@ interface TopEntitiesBlockProps {
   maxItems?: number;
   showTrends?: boolean;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: RankingItem[];
 }
+
+type RankingItem = { id: string; label: string; value: number };
 
 /**
  * Top Entities Block - Bar chart ranking of most active entities
