@@ -203,6 +203,7 @@ export function ClientAnalytics() {
               clientName={clientName || "Su empresa"}
               clientSector={clientSector}
               timeframe={getTimeframeLabel()}
+              demoData={DEMO_INDUSTRY_BENCHMARK}
             />
           )}
         </div>

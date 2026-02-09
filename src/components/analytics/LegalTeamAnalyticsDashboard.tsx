@@ -199,7 +199,7 @@ export function LegalTeamAnalyticsDashboard() {
             <EmergingTopicsBlock timeframe={timeframeLabel} />
           )}
           {isEnabled('legislative_funnel') && (
-            <LegislativeFunnelBlock alerts={[]} timeframe={timeframeLabel} />
+            <LegislativeFunnelBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_LEGISLATIVE_FUNNEL} />
           )}
           {isEnabled('exposure') && (
             <ExposureBlock timeframe={timeframeLabel} />
