@@ -156,16 +156,16 @@ export function ClientAnalytics() {
         <h2 className="text-lg font-semibold text-foreground mb-5">Desglose y Rankings</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('alert_priority') && (
-            <AlertPriorityBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <AlertPriorityBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_ALERT_PRIORITY} />
           )}
           {isEnabled('alert_distribution') && (
-            <AlertDistributionBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <AlertDistributionBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_ALERT_DISTRIBUTION} />
           )}
           {isEnabled('top_entities') && (
-            <TopEntitiesBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={5} />
+            <TopEntitiesBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={5} demoData={DEMO_TOP_ENTITIES} />
           )}
           {isEnabled('popular_topics') && (
-            <PopularTopicsBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={7} />
+            <PopularTopicsBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
           )}
         </div>
       </section>
