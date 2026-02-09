@@ -28,6 +28,7 @@ export function PopularTopicsBlock({
   maxItems = 7,
   showTrends = false,
   onDrilldown,
+  demoData,
 }: PopularTopicsBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedLabel, setSelectedLabel] = React.useState("");
