@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import { View, Text, StyleSheet, Page } from "@react-pdf/renderer";
 import type { PeruAlert } from "@/data/peruAlertsMockData";
 import type { AnalyticsBlockConfig } from "@/types/analytics";
 import { CLIENT_ANALYTICS_BLOCKS } from "@/types/analytics";
@@ -15,11 +15,22 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     borderBottom: '1 solid #e2e8f0',
   },
+  headerCompact: {
+    marginBottom: 16,
+    paddingBottom: 8,
+    borderBottom: '1 solid #e2e8f0',
+  },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e293b',
     marginBottom: 4,
+  },
+  titleCompact: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 2,
   },
   subtitle: {
     fontSize: 10,
@@ -74,8 +85,16 @@ interface AnalyticsPagePDFProps {
   analyticsBlocks?: AnalyticsBlockConfig[];
 }
 
-// Blocks that should span full width
 const FULL_WIDTH_BLOCKS = ['impact_matrix', 'regulatory_pulse'];
+const BLOCKS_PER_PAGE = 4;
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
 
 export function AnalyticsPagePDF({ 
   alerts, 
@@ -84,8 +103,6 @@ export function AnalyticsPagePDF({
   generatedAt,
   analyticsBlocks,
 }: AnalyticsPagePDFProps) {
-  // Get enabled blocks, sorted by order
-  // Use full definitions from CLIENT_ANALYTICS_BLOCKS if available
   const blocksToUse = analyticsBlocks 
     ? analyticsBlocks.map(b => {
         const def = CLIENT_ANALYTICS_BLOCKS.find(d => d.key === b.key);
@@ -96,12 +113,11 @@ export function AnalyticsPagePDF({
   const enabledBlocks = blocksToUse
     .filter(block => block && block.enabled && block.renderPDF)
     .sort((a, b) => (a?.order || 0) - (b?.order || 0))
-    .slice(0, 12); // Allow more blocks across pages
+    .slice(0, 16);
 
-  // If no blocks enabled, show empty state
   if (enabledBlocks.length === 0) {
     return (
-      <View style={styles.page}>
+      <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.title}>Analíticas del Período</Text>
           <Text style={styles.subtitle}>{clientName} • {timeframe}</Text>
@@ -111,55 +127,67 @@ export function AnalyticsPagePDF({
             No hay analíticas configuradas para este reporte.
           </Text>
         </View>
-      </View>
+      </Page>
     );
   }
 
-  // Analytics now use demo data, so we render regardless of alerts count
+  const chunks = chunkArray(enabledBlocks, BLOCKS_PER_PAGE);
 
   return (
-    <View style={styles.page}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Analíticas del Período</Text>
-        <Text style={styles.subtitle}>
-          {clientName} • {timeframe} • {alerts.length} alertas publicadas
-        </Text>
-      </View>
-
-      {/* Analytics Grid */}
-      <View style={styles.grid}>
-        {enabledBlocks.map((block) => {
-          // Get full block definition
-          const blockDef = CLIENT_ANALYTICS_BLOCKS.find(b => b.key === block.key);
-          const isFullWidth = FULL_WIDTH_BLOCKS.includes(block.key);
-          
-          return (
-            <View 
-              key={block.key} 
-              style={isFullWidth ? styles.blockWrapperFull : styles.blockWrapper}
-            >
-              <AnalyticsBlockPDF
-                blockKey={block.key}
-                title={blockDef?.title || block.key}
-                takeaway={blockDef?.takeaway || ''}
-                alerts={alerts}
-                timeframe={timeframe}
-              />
+    <>
+      {chunks.map((chunk, pageIndex) => (
+        <Page key={pageIndex} size="A4" style={styles.page}>
+          {/* Header */}
+          {pageIndex === 0 ? (
+            <View style={styles.header}>
+              <Text style={styles.title}>Analíticas del Período</Text>
+              <Text style={styles.subtitle}>
+                {clientName} • {timeframe} • {alerts.length} alertas publicadas
+              </Text>
             </View>
-          );
-        })}
-      </View>
+          ) : (
+            <View style={styles.headerCompact}>
+              <Text style={styles.titleCompact}>Analíticas (cont.)</Text>
+              <Text style={styles.subtitle}>{clientName} • {timeframe}</Text>
+            </View>
+          )}
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Datos hasta: {generatedAt}
-        </Text>
-        <Text style={styles.footerText}>
-          Fuente: Alertas publicadas al cliente
-        </Text>
-      </View>
-    </View>
+          {/* Blocks Grid */}
+          <View style={styles.grid}>
+            {chunk.map((block) => {
+              const blockDef = CLIENT_ANALYTICS_BLOCKS.find(b => b.key === block.key);
+              const isFullWidth = FULL_WIDTH_BLOCKS.includes(block.key);
+              
+              return (
+                <View 
+                  key={block.key} 
+                  style={isFullWidth ? styles.blockWrapperFull : styles.blockWrapper}
+                >
+                  <AnalyticsBlockPDF
+                    blockKey={block.key}
+                    title={blockDef?.title || block.key}
+                    takeaway={blockDef?.takeaway || ''}
+                    alerts={alerts}
+                    timeframe={timeframe}
+                  />
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Footer on last page */}
+          {pageIndex === chunks.length - 1 && (
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>
+                Datos hasta: {generatedAt}
+              </Text>
+              <Text style={styles.footerText}>
+                Fuente: Alertas publicadas al cliente
+              </Text>
+            </View>
+          )}
+        </Page>
+      ))}
+    </>
   );
 }
