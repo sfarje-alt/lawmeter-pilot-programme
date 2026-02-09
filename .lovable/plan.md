@@ -1,116 +1,51 @@
 
-# Plan: Datos Mock para TODAS las Analiticas + Mejoras a Exposicion y Benchmark
+# Fix: Analytics en Reportes PDF
 
-## Problema
-8 de 16 bloques de analiticas reciben `alerts={[]}` y calculan metricas a partir de ese array vacio, mostrando estados vacios ("No hay datos"). Los bloques afectados son:
+## Problemas Identificados
 
-1. **ImpactMatrixBlock** - calcula desde `alerts`
-2. **RegulatoryPulseBlock** - calcula desde `alerts`
-3. **AlertPriorityBlock** - calcula desde `alerts`
-4. **AlertDistributionBlock** - calcula desde `alerts`
-5. **TopEntitiesBlock** - calcula desde `alerts`
-6. **PopularTopicsBlock** - calcula desde `alerts`
-7. **LegislativeFunnelBlock** - calcula desde `alerts`
-8. **IndustryBenchmarkBlock** - calcula desde `alerts`
+Hay 3 problemas que impiden que las analiticas aparezcan en los PDFs:
 
-Los otros 8 bloques (KeyMovements, EmergingTopics, Exposure, EditorialResponseTime, AggregatedEntityMonitoring, ServiceKPIs, EditorialCoverage, OperationalQueue) ya funcionan con datos demo.
+1. **`includeAnalytics` esta en `false` por defecto** -- El usuario tiene que ir al paso 10 del wizard y activarlo manualmente. Deberia estar siempre visible como opcion de contenido en el paso 9.
 
----
+2. **Los bloques PDF calculan desde el array `alerts`** -- Si las alertas filtradas son pocas o vacias, los bloques muestran datos vacios. Los bloques PDF no usan los datos demo estaticos que ya existen en `analyticsMockData.ts`.
+
+3. **`AnalyticsPagePDF` linea 119: si `alerts.length === 0` muestra estado vacio** -- Esto bloquea la pagina completa de analiticas incluso cuando hay datos demo disponibles.
 
 ## Solucion
 
-### Paso 1: Agregar `demoData` prop a cada bloque afectado
+### Cambio 1: Agregar toggle de Analytics en Step09ContentOptions
 
-Cada bloque recibira un prop `demoData?` con el tipo correspondiente. Si existe, se usa directamente sin calcular desde `alerts`.
+Mover el toggle "Incluir Pagina de Analytics" al paso 9 (Opciones de Contenido) junto con las demas opciones. Esto hace que el usuario siempre lo vea cuando configura contenido. El paso 10 seguira existiendo para la personalizacion detallada de bloques.
 
-| Bloque | Prop nuevo | Dato mock |
-|--------|-----------|-----------|
-| ImpactMatrixBlock | `demoData?: Record<string, {value, items}>` | `DEMO_IMPACT_MATRIX` |
-| RegulatoryPulseBlock | `demoData?: {chartData, billsTotal, ...}` | `DEMO_REGULATORY_PULSE` |
-| AlertPriorityBlock | `demoData?: {chartData, total, highPriorityCount}` | `DEMO_ALERT_PRIORITY` |
-| AlertDistributionBlock | `demoData?: {typeData, areaData}` | `DEMO_ALERT_DISTRIBUTION` |
-| TopEntitiesBlock | `demoData?: RankingItem[]` | `DEMO_TOP_ENTITIES` |
-| PopularTopicsBlock | `demoData?: RankingItem[]` | `DEMO_POPULAR_TOPICS` |
-| LegislativeFunnelBlock | `demoData?: FunnelStage[]` | `DEMO_LEGISLATIVE_FUNNEL` |
-| IndustryBenchmarkBlock | `demoData?: {chartData, cohortSize, ...}` | `DEMO_INDUSTRY_BENCHMARK` |
+**Archivo**: `src/components/reports/ReportWizardSteps/Step09ContentOptions.tsx`
+- Agregar un tercer toggle card: "Incluir Pagina de Analytics" con icono BarChart3
+- Al activarlo, setea `includeAnalytics: true` y inicializa `analyticsBlocks` con los defaults
 
-### Paso 2: Pasar datos mock desde los dashboards
+### Cambio 2: Cambiar default de `includeAnalytics` a `true`
 
-Actualizar `LegalTeamAnalyticsDashboard.tsx` y `ClientAnalytics.tsx` para pasar los `demoData` correspondientes a cada bloque.
+**Archivo**: `src/components/reports/types.ts`
+- Cambiar `includeAnalytics: false` a `includeAnalytics: true` en `DEFAULT_REPORT_CONFIG`
+- Inicializar `analyticsBlocks` con los bloques default del registro
 
-### Paso 3: Mejorar ExposureBlock (segun especificacion)
+### Cambio 3: Hacer que AnalyticsPagePDF use datos demo
 
-El bloque ya existe y usa datos mock, pero la especificacion pide:
-- Combinar perfil del cliente (industria/modelo de negocio), autoridades relevantes y clasificacion de impacto
-- Mostrar que partes del negocio estan mas expuestas y por que
-- En dashboard: interactivo, filtrar por area de impacto y abrir alertas publicadas
-- En PDF: estatico
+**Archivo**: `src/components/reports/pdf/AnalyticsPagePDF.tsx`
+- Eliminar el check de `alerts.length === 0` que muestra estado vacio
+- Las analiticas deben renderizarse siempre que esten habilitadas
 
-Agregar:
-- Tooltip por area mostrando las autoridades relevantes
-- Boton de drill-down para ver alertas de cada area
-- Indicador visual de severidad predominante por area
+### Cambio 4: Hacer que AnalyticsBlockPDF use datos demo estaticos
 
-### Paso 4: Mejorar IndustryBenchmarkBlock (segun especificacion)
+**Archivo**: `src/components/reports/pdf/AnalyticsBlockPDF.tsx`
+- Importar los datasets de `src/lib/analyticsMockData.ts`
+- Cada sub-componente PDF (ImpactMatrixBlockPDF, RegulatoryPulseBlockPDF, etc.) usara datos demo en lugar de calcular desde `alerts`
+- Agregar renders PDF para los 5 bloques que faltan: `key_movements`, `emerging_topics`, `exposure`, `editorial_response_time`, `aggregated_entity_monitoring`
+- Agregar renders para `editorial_coverage`, `operational_queue`, `industry_benchmark`
 
-El bloque ya existe pero calcula desde alerts vacias. La especificacion pide:
-- Comparacion "Cliente vs Promedio del sector" en barra horizontal
-- Metricas: volumen publicado, entidades dominantes, temas dominantes
-- Sin identificar a ningun tercero
-- Aviso de privacidad
-
-Cambios:
-- Aceptar `demoData` para funcionar con datos mock
-- Mantener la comparacion horizontal bar chart existente
-- El aviso de privacidad ya esta implementado
-
----
-
-## Archivos a Modificar (10)
+## Archivos a Modificar (4)
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/analytics/blocks/ImpactMatrixBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/blocks/RegulatoryPulseBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/blocks/AlertPriorityBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/blocks/AlertDistributionBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/blocks/TopEntitiesBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/blocks/PopularTopicsBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/blocks/LegislativeFunnelBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/blocks/IndustryBenchmarkBlock.tsx` | Agregar `demoData?` prop, usar si existe |
-| `src/components/analytics/LegalTeamAnalyticsDashboard.tsx` | Pasar `demoData` a los 7 bloques |
-| `src/components/client-portal/ClientAnalytics.tsx` | Pasar `demoData` a los 8 bloques (incluye Benchmark) |
-
-## Archivos sin cambios
-- `src/lib/analyticsMockData.ts` - Ya contiene todos los datasets necesarios
-- Bloques que ya funcionan (KeyMovements, EmergingTopics, Exposure, etc.)
-
----
-
-## Patron de Implementacion (repetido en cada bloque)
-
-Ejemplo para `AlertPriorityBlock`:
-
-```text
-// Agregar al interface:
-demoData?: typeof DEMO_ALERT_PRIORITY;
-
-// En el componente:
-const { chartData, total, highPriorityCount } = React.useMemo(() => {
-  if (demoData) return {
-    chartData: demoData.chartData,
-    total: demoData.total,
-    highPriorityCount: demoData.highPriorityCount,
-  };
-  // ... calculo existente desde alerts ...
-}, [alerts, demoData]);
-```
-
-En el dashboard:
-```text
-<AlertPriorityBlock
-  alerts={[]}
-  demoData={DEMO_ALERT_PRIORITY}
-  timeframe={timeframeLabel}
-/>
-```
+| `src/components/reports/types.ts` | Default `includeAnalytics: true`, inicializar `analyticsBlocks` |
+| `src/components/reports/ReportWizardSteps/Step09ContentOptions.tsx` | Agregar toggle de Analytics |
+| `src/components/reports/pdf/AnalyticsPagePDF.tsx` | Eliminar check de alerts vacias |
+| `src/components/reports/pdf/AnalyticsBlockPDF.tsx` | Usar datos demo, agregar 8 bloques PDF faltantes |
