@@ -102,9 +102,9 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   themes: [],
   includeSessions: true,
   includeExpertCommentary: true,
-  includeAnalytics: false,
+  includeAnalytics: true,
   analyticsSections: [],
-  analyticsBlocks: [], // NEW: empty by default, will use client's default template
+  analyticsBlocks: [], // Will use CLIENT_ANALYTICS_BLOCKS defaults when empty
   analyticsTemplateId: undefined, // NEW: no template selected
   outputFormat: 'pdf',
   frequency: 'weekly',
