@@ -225,14 +225,33 @@ interface AnalyticsBlockPDFProps {
   timeframe: string;
 }
 
+// Color map for impact matrix cells
+const MATRIX_CELL_COLORS: Record<string, { bg: string; border: string }> = {
+  'grave-alta':   { bg: '#fecaca', border: '#dc2626' },
+  'grave-media':  { bg: '#fed7aa', border: '#f97316' },
+  'grave-baja':   { bg: '#fef08a', border: '#eab308' },
+  'medio-alta':   { bg: '#fed7aa', border: '#f97316' },
+  'medio-media':  { bg: '#fef9c4', border: '#eab308' },
+  'medio-baja':   { bg: '#d1fae5', border: '#22c55e' },
+  'leve-alta':    { bg: '#fef08a', border: '#eab308' },
+  'leve-media':   { bg: '#d1fae5', border: '#22c55e' },
+  'leve-baja':    { bg: '#bbf7d0', border: '#16a34a' },
+};
+
+const MATRIX_LEGEND = [
+  { label: 'Crítico', color: '#fecaca', border: '#dc2626' },
+  { label: 'Alto', color: '#fed7aa', border: '#f97316' },
+  { label: 'Medio', color: '#fef9c4', border: '#eab308' },
+  { label: 'Bajo', color: '#d1fae5', border: '#22c55e' },
+  { label: 'Mínimo', color: '#bbf7d0', border: '#16a34a' },
+];
+
 // Impact Matrix Block - uses demo data
 function ImpactMatrixBlockPDF({ timeframe }: { timeframe: string }) {
   const data = DEMO_IMPACT_MATRIX;
-  const levels = [
-    { label: 'Grave', keys: ['grave-alta', 'grave-media', 'grave-baja'] },
-    { label: 'Medio', keys: ['medio-alta', 'medio-media', 'medio-baja'] },
-    { label: 'Leve', keys: ['leve-alta', 'leve-media', 'leve-baja'] },
-  ];
+  const impactLevels = ['Grave', 'Medio', 'Leve'];
+  const urgencyLevels = ['alta', 'media', 'baja'];
+  const urgencyLabels = ['Alta', 'Media', 'Baja'];
 
   return (
     <View style={styles.block}>
@@ -243,15 +262,48 @@ function ImpactMatrixBlockPDF({ timeframe }: { timeframe: string }) {
         </Text>
       </View>
       <View style={styles.blockContent}>
-        <View style={styles.matrixGrid}>
-          {levels.map(level =>
-            level.keys.map(key => (
-              <View key={key} style={[styles.matrixCell, { borderLeft: `3 solid ${IMPACT_COLORS[level.label] || '#6b7280'}` }]}>
-                <Text style={styles.matrixCellLabel}>{key.replace('-', ' / ')}</Text>
-                <Text style={styles.matrixCellValue}>{(data as any)[key]?.value || 0}</Text>
-              </View>
-            ))
-          )}
+        {/* Column headers */}
+        <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+          <View style={{ width: 45 }} />
+          {urgencyLabels.map(label => (
+            <View key={label} style={{ width: '28%', alignItems: 'center' }}>
+              <Text style={{ fontSize: 7, fontWeight: 'bold', color: '#475569' }}>Urg. {label}</Text>
+            </View>
+          ))}
+        </View>
+        {/* Rows */}
+        {impactLevels.map(impact => (
+          <View key={impact} style={{ flexDirection: 'row', marginBottom: 4, alignItems: 'center' }}>
+            <View style={{ width: 45 }}>
+              <Text style={{ fontSize: 7, fontWeight: 'bold', color: '#475569' }}>{impact}</Text>
+            </View>
+            {urgencyLevels.map(urgency => {
+              const key = `${impact.toLowerCase()}-${urgency}`;
+              const colors = MATRIX_CELL_COLORS[key] || { bg: '#e2e8f0', border: '#94a3b8' };
+              return (
+                <View key={key} style={{
+                  width: '28%',
+                  padding: 6,
+                  backgroundColor: colors.bg,
+                  borderRadius: 3,
+                  borderLeft: `3 solid ${colors.border}`,
+                  alignItems: 'center',
+                  marginRight: 4,
+                }}>
+                  <Text style={styles.matrixCellValue}>{(data as any)[key]?.value || 0}</Text>
+                </View>
+              );
+            })}
+          </View>
+        ))}
+        {/* Legend */}
+        <View style={{ flexDirection: 'row', marginTop: 8, gap: 6, flexWrap: 'wrap' }}>
+          {MATRIX_LEGEND.map(item => (
+            <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 4 }}>
+              <View style={{ width: 8, height: 8, backgroundColor: item.color, borderRadius: 1, borderLeft: `2 solid ${item.border}`, marginRight: 3 }} />
+              <Text style={{ fontSize: 6, color: '#64748b' }}>{item.label}</Text>
+            </View>
+          ))}
         </View>
       </View>
       <View style={styles.blockFooter}>

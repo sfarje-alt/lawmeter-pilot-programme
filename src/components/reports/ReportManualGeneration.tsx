@@ -146,17 +146,15 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel, includeAnalytics }: { 
         </Text>
       </Page>
 
-      {/* Analytics Page */}
+      {/* Analytics Pages (self-paginating) */}
       {includeAnalytics && (
-        <Page size="A4">
-          <AnalyticsPagePDF
-            alerts={alerts}
-            clientName={clientName}
-            timeframe={dateLabel}
-            generatedAt={generatedAt}
-            analyticsBlocks={analyticsBlocks}
-          />
-        </Page>
+        <AnalyticsPagePDF
+          alerts={alerts}
+          clientName={clientName}
+          timeframe={dateLabel}
+          generatedAt={generatedAt}
+          analyticsBlocks={analyticsBlocks}
+        />
       )}
     </Document>
   );
