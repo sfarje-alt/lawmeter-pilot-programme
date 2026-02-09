@@ -40,17 +40,17 @@ export function RegulatoryPulseBlock({
   source = "Alertas publicadas",
   showTypeBreakdown = false,
   onDrilldown,
+  demoData,
 }: RegulatoryPulseBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   
-  // Build time series data from alerts
   const { chartData, billsTotal, regulationsTotal, trendDirection, trendPercent } = React.useMemo(() => {
-    // Group alerts by week
+    if (demoData) return demoData;
+
     const weekMap = new Map<string, { date: string; total: number; bills: number; regulations: number; ids: string[] }>();
     
     alerts.forEach(alert => {
       const date = new Date(alert.created_at || alert.project_date || alert.publication_date);
-      // Get start of week
       const dayOfWeek = date.getDay();
       const startOfWeek = new Date(date);
       startOfWeek.setDate(date.getDate() - dayOfWeek);
@@ -72,15 +72,12 @@ export function RegulatoryPulseBlock({
     });
     
     const sortedData = Array.from(weekMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-    
-    // Calculate trend
     const recentWeeks = sortedData.slice(-4);
     const previousWeeks = sortedData.slice(-8, -4);
     const currentTotal = recentWeeks.reduce((sum, w) => sum + w.total, 0);
     const previousTotal = previousWeeks.reduce((sum, w) => sum + w.total, 0);
     const trendPct = previousTotal > 0 ? Math.round(((currentTotal - previousTotal) / previousTotal) * 100) : 0;
     const direction = trendPct > 5 ? 'up' : trendPct < -5 ? 'down' : 'stable';
-    
     const billsCount = alerts.filter(a => a.legislation_type === 'proyecto_de_ley').length;
     const regsCount = alerts.filter(a => a.legislation_type !== 'proyecto_de_ley').length;
     
@@ -88,10 +85,10 @@ export function RegulatoryPulseBlock({
       chartData: sortedData,
       billsTotal: billsCount,
       regulationsTotal: regsCount,
-      trendDirection: direction,
+      trendDirection: direction as 'up' | 'down' | 'stable',
       trendPercent: trendPct,
     };
-  }, [alerts]);
+  }, [alerts, demoData]);
 
   const isEmpty = alerts.length === 0;
   const TrendIcon = trendDirection === 'up' ? TrendingUp : trendDirection === 'down' ? TrendingDown : Minus;
