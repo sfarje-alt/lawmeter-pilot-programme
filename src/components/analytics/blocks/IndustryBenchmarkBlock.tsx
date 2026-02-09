@@ -22,6 +22,11 @@ interface IndustryBenchmarkBlockProps {
   clientSector: string;
   timeframe: string;
   source?: string;
+  demoData?: {
+    chartData: { metric: string; client: number; cohort: number }[];
+    cohortSize: number;
+    clientAboveAverage: boolean;
+  };
 }
 
 // Minimum number of items in cohort for benchmark to be valid
