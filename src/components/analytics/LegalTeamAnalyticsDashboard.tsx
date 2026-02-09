@@ -41,6 +41,7 @@ import {
   DEMO_EXPOSURE,
   DEMO_EDITORIAL_RESPONSE_TIME,
   DEMO_AGGREGATED_ENTITIES,
+  DEMO_INDUSTRY_BENCHMARK,
 } from "@/lib/analyticsMockData";
 import type { AnalyticsFilters } from "@/types/analytics";
 import { MOCK_CLIENTS } from "@/data/peruAlertsMockData";
