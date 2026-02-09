@@ -164,6 +164,7 @@ export function ReportLayoutBuilder({
   onChange,
   onSaveTemplate,
   showInternalBlocks = false,
+  mode = 'report',
 }: ReportLayoutBuilderProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
