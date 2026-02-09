@@ -183,6 +183,15 @@ export function LegalTeamAnalyticsDashboard() {
           {isEnabled('popular_topics') && (
             <PopularTopicsBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
           )}
+          {isEnabled('industry_benchmark') && (
+            <IndustryBenchmarkBlock
+              alerts={[]}
+              clientName={selectedClientId !== 'all' ? (MOCK_CLIENTS.find(c => c.id === selectedClientId)?.name || 'Cliente') : 'Promedio Clientes'}
+              clientSector="Regulado"
+              timeframe={timeframeLabel}
+              demoData={DEMO_INDUSTRY_BENCHMARK}
+            />
+          )}
         </div>
       </section>
 
