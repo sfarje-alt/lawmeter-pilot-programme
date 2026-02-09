@@ -153,10 +153,10 @@ export function LegalTeamAnalyticsDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {isEnabled('impact_matrix') && (
-            <ImpactMatrixBlock alerts={[]} timeframe={timeframeLabel} />
+            <ImpactMatrixBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_IMPACT_MATRIX} />
           )}
           {isEnabled('regulatory_pulse') && (
-            <RegulatoryPulseBlock alerts={[]} timeframe={timeframeLabel} />
+            <RegulatoryPulseBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_REGULATORY_PULSE} />
           )}
         </div>
       </section>
