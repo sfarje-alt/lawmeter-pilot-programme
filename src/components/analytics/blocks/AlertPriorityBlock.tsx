@@ -20,6 +20,11 @@ interface AlertPriorityBlockProps {
   timeframe: string;
   source?: string;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: {
+    chartData: { name: string; value: number; color: string; key: string }[];
+    total: number;
+    highPriorityCount: number;
+  };
 }
 
 const IMPACT_ORDER = ['grave', 'medio', 'leve', 'positivo'];
