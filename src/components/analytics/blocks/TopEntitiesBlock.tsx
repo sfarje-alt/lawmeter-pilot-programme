@@ -38,6 +38,7 @@ export function TopEntitiesBlock({
   source = "Alertas publicadas",
   maxItems = 7,
   onDrilldown,
+  demoData,
 }: TopEntitiesBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedLabel, setSelectedLabel] = React.useState("");
