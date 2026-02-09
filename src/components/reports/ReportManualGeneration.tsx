@@ -241,7 +241,7 @@ export function ReportManualGeneration() {
           {/* Content Options */}
           <div className="space-y-3">
             <Label className="font-medium">Contenido a Incluir</Label>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox checked={includeBills} onCheckedChange={(c) => setIncludeBills(!!c)} />
                 <FileText className="h-4 w-4 text-muted-foreground" />
@@ -251,6 +251,11 @@ export function ReportManualGeneration() {
                 <Checkbox checked={includeNorms} onCheckedChange={(c) => setIncludeNorms(!!c)} />
                 <Scale className="h-4 w-4 text-muted-foreground" />
                 Normas
+              </Label>
+              <Label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={includeAnalytics} onCheckedChange={(c) => setIncludeAnalytics(!!c)} />
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                Analíticas
               </Label>
             </div>
           </div>
