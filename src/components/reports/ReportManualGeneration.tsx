@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const ManualReportPDF = ({ alerts, clientName, dateLabel }: { alerts: PeruAlert[]; clientName: string; dateLabel: string }) => {
+const ManualReportPDF = ({ alerts, clientName, dateLabel, includeAnalytics }: { alerts: PeruAlert[]; clientName: string; dateLabel: string; includeAnalytics: boolean }) => {
   const bills = alerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = alerts.filter(a => a.legislation_type === 'norma');
   
