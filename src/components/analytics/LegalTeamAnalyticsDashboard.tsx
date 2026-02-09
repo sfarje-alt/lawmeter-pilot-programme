@@ -22,6 +22,7 @@ import {
   ExposureBlock,
   EditorialResponseTimeBlock,
   AggregatedEntityMonitoringBlock,
+  IndustryBenchmarkBlock,
 } from "./blocks";
 import {
   DEMO_EDITORIAL_COVERAGE,
@@ -40,6 +41,7 @@ import {
   DEMO_EXPOSURE,
   DEMO_EDITORIAL_RESPONSE_TIME,
   DEMO_AGGREGATED_ENTITIES,
+  DEMO_INDUSTRY_BENCHMARK,
 } from "@/lib/analyticsMockData";
 import type { AnalyticsFilters } from "@/types/analytics";
 import { MOCK_CLIENTS } from "@/data/peruAlertsMockData";
@@ -180,6 +182,15 @@ export function LegalTeamAnalyticsDashboard() {
           )}
           {isEnabled('popular_topics') && (
             <PopularTopicsBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
+          )}
+          {isEnabled('industry_benchmark') && (
+            <IndustryBenchmarkBlock
+              alerts={[]}
+              clientName={selectedClientId !== 'all' ? (MOCK_CLIENTS.find(c => c.id === selectedClientId)?.name || 'Cliente') : 'Promedio Clientes'}
+              clientSector="Regulado"
+              timeframe={timeframeLabel}
+              demoData={DEMO_INDUSTRY_BENCHMARK}
+            />
           )}
         </div>
       </section>
