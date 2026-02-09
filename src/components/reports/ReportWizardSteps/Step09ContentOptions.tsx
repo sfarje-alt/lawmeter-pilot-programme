@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ReportConfig } from "../types";
-import { Video, MessageSquare, FileText, Users } from "lucide-react";
+import { Video, MessageSquare, FileText, Users, BarChart3 } from "lucide-react";
 
 interface Step09Props {
   config: ReportConfig;
