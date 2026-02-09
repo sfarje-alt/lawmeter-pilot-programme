@@ -137,7 +137,9 @@ export function ImpactMatrixBlock({
                     const key = `${impact}-${urgency}`;
                     const cell = matrixData[key];
                     const value = cell?.value || 0;
-                    const isHighPriority = impact === 'grave' || urgency === 'alta';
+                    
+                    // Severity-based color mapping
+                    const cellColorClass = getCellColorClass(impact, urgency, value);
                     
                     return (
                       <button
@@ -147,11 +149,7 @@ export function ImpactMatrixBlock({
                           "text-sm font-semibold transition-all",
                           "hover:ring-2 hover:ring-primary/50 focus:outline-none focus:ring-2 focus:ring-primary",
                           value > 0 ? "cursor-pointer" : "cursor-default",
-                          isHighPriority && value > 0
-                            ? "bg-destructive/20 text-destructive"
-                            : value > 0
-                            ? "bg-muted/80 text-foreground"
-                            : "bg-muted/30 text-muted-foreground/50"
+                          cellColorClass
                         )}
                         onClick={() => handleCellClick(impact, urgency)}
                         disabled={value === 0}
