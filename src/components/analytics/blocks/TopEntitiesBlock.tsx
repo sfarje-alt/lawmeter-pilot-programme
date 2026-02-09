@@ -23,7 +23,10 @@ interface TopEntitiesBlockProps {
   maxItems?: number;
   showTrends?: boolean;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: RankingItem[];
 }
+
+type RankingItem = { id: string; label: string; value: number };
 
 /**
  * Top Entities Block - Bar chart ranking of most active entities
@@ -35,38 +38,30 @@ export function TopEntitiesBlock({
   source = "Alertas publicadas",
   maxItems = 7,
   onDrilldown,
+  demoData,
 }: TopEntitiesBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedLabel, setSelectedLabel] = React.useState("");
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  // Build ranking from alerts
   const { displayData, entityGroups, total } = React.useMemo(() => {
+    if (demoData) {
+      const data = demoData.slice(0, maxItems).map(d => ({ ...d, ids: [] as string[] }));
+      return { displayData: data, entityGroups: {} as Record<string, string[]>, total: demoData.reduce((s, d) => s + d.value, 0) };
+    }
+
     const groups: Record<string, string[]> = {};
-    
     alerts.forEach(alert => {
-      // Use entity field for regulations, parliamentary_group for bills
       const entity = alert.entity || alert.parliamentary_group || 'Sin entidad';
       if (!groups[entity]) groups[entity] = [];
       groups[entity].push(alert.id);
     });
-
     const data = Object.entries(groups)
-      .map(([label, ids]) => ({ 
-        id: label, 
-        label, 
-        value: ids.length,
-        ids,
-      }))
+      .map(([label, ids]) => ({ id: label, label, value: ids.length, ids }))
       .sort((a, b) => b.value - a.value)
       .slice(0, maxItems);
-
-    return { 
-      displayData: data, 
-      entityGroups: groups,
-      total: alerts.length,
-    };
-  }, [alerts, maxItems]);
+    return { displayData: data, entityGroups: groups, total: alerts.length };
+  }, [alerts, maxItems, demoData]);
 
   const isEmpty = displayData.length === 0;
   const remaining = Object.keys(entityGroups).length - maxItems;

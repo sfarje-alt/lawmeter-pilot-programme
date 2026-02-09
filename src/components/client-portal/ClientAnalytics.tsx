@@ -28,6 +28,14 @@ import { ReportLayoutBuilder } from "@/components/reports/ReportLayoutBuilder";
 import {
   DEMO_SERVICE_KPIS,
   DEMO_DATA_FRESHNESS,
+  DEMO_IMPACT_MATRIX,
+  DEMO_REGULATORY_PULSE,
+  DEMO_ALERT_PRIORITY,
+  DEMO_ALERT_DISTRIBUTION,
+  DEMO_TOP_ENTITIES,
+  DEMO_POPULAR_TOPICS,
+  DEMO_LEGISLATIVE_FUNNEL,
+  DEMO_INDUSTRY_BENCHMARK,
 } from "@/lib/analyticsMockData";
 import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
 
@@ -133,10 +141,10 @@ export function ClientAnalytics() {
         )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {isEnabled('impact_matrix') && (
-            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_IMPACT_MATRIX} />
           )}
           {isEnabled('regulatory_pulse') && (
-            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_REGULATORY_PULSE} />
           )}
         </div>
       </section>
@@ -148,16 +156,16 @@ export function ClientAnalytics() {
         <h2 className="text-lg font-semibold text-foreground mb-5">Desglose y Rankings</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('alert_priority') && (
-            <AlertPriorityBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <AlertPriorityBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_ALERT_PRIORITY} />
           )}
           {isEnabled('alert_distribution') && (
-            <AlertDistributionBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <AlertDistributionBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_ALERT_DISTRIBUTION} />
           )}
           {isEnabled('top_entities') && (
-            <TopEntitiesBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={5} />
+            <TopEntitiesBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={5} demoData={DEMO_TOP_ENTITIES} />
           )}
           {isEnabled('popular_topics') && (
-            <PopularTopicsBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={7} />
+            <PopularTopicsBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
           )}
         </div>
       </section>
@@ -175,7 +183,7 @@ export function ClientAnalytics() {
             <EmergingTopicsBlock timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('legislative_funnel') && (
-            <LegislativeFunnelBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <LegislativeFunnelBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_LEGISLATIVE_FUNNEL} />
           )}
           {isEnabled('exposure') && (
             <ExposureBlock timeframe={getTimeframeLabel()} />
@@ -195,6 +203,7 @@ export function ClientAnalytics() {
               clientName={clientName || "Su empresa"}
               clientSector={clientSector}
               timeframe={getTimeframeLabel()}
+              demoData={DEMO_INDUSTRY_BENCHMARK}
             />
           )}
         </div>

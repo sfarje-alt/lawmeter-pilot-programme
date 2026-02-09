@@ -5,6 +5,8 @@ import { getNeutralColor, getTrendColor } from "@/lib/analyticsColors";
 import { Hash, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { type PeruAlert } from "@/data/peruAlertsMockData";
 
+type RankingItemWithIds = { id: string; label: string; value: number; ids: string[] };
+
 interface PopularTopicsBlockProps {
   alerts: PeruAlert[];
   timeframe: string;
@@ -12,6 +14,7 @@ interface PopularTopicsBlockProps {
   maxItems?: number;
   showTrends?: boolean;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: { id: string; label: string; value: number }[];
 }
 
 /**
@@ -25,37 +28,34 @@ export function PopularTopicsBlock({
   maxItems = 7,
   showTrends = false,
   onDrilldown,
+  demoData,
 }: PopularTopicsBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedLabel, setSelectedLabel] = React.useState("");
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  // Build topic data from alerts
   const { displayData, total, remaining } = React.useMemo(() => {
+    if (demoData) {
+      const data = demoData.slice(0, maxItems).map(d => ({ ...d, ids: [] as string[] }));
+      return { displayData: data, total: demoData.reduce((s, d) => s + d.value, 0), remaining: Math.max(demoData.length - maxItems, 0) };
+    }
+
     const topicGroups: Record<string, string[]> = {};
-    
     alerts.forEach(alert => {
       alert.affected_areas?.forEach(area => {
         if (!topicGroups[area]) topicGroups[area] = [];
         topicGroups[area].push(alert.id);
       });
     });
-
     const allData = Object.entries(topicGroups)
-      .map(([label, ids]) => ({ 
-        id: label, 
-        label, 
-        value: ids.length,
-        ids,
-      }))
+      .map(([label, ids]) => ({ id: label, label, value: ids.length, ids }))
       .sort((a, b) => b.value - a.value);
-
     return {
       displayData: allData.slice(0, maxItems),
       total: alerts.length,
       remaining: Math.max(allData.length - maxItems, 0),
     };
-  }, [alerts, maxItems]);
+  }, [alerts, maxItems, demoData]);
 
   const isEmpty = displayData.length === 0;
 

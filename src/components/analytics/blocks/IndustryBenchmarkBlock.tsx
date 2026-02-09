@@ -22,6 +22,11 @@ interface IndustryBenchmarkBlockProps {
   clientSector: string;
   timeframe: string;
   source?: string;
+  demoData?: {
+    chartData: { metric: string; client: number; cohort: number }[];
+    cohortSize: number;
+    clientAboveAverage: boolean;
+  };
 }
 
 // Minimum number of items in cohort for benchmark to be valid
@@ -37,58 +42,39 @@ export function IndustryBenchmarkBlock({
   clientSector,
   timeframe,
   source = "Alertas publicadas",
+  demoData,
 }: IndustryBenchmarkBlockProps) {
-  // Calculate client metrics
+  const hasDemo = !!demoData;
+
   const clientMetrics = React.useMemo(() => {
+    if (hasDemo) return { alertVolume: 0, highImpactRate: 0, diversityScore: 0 };
     const total = alerts.length;
-    const highImpact = alerts.filter(a => 
-      a.impact_level === 'grave' || a.impact_level === 'medio'
-    ).length;
-    
+    const highImpact = alerts.filter(a => a.impact_level === 'grave' || a.impact_level === 'medio').length;
     const uniqueAreas = new Set<string>();
     alerts.forEach(a => a.affected_areas?.forEach(area => uniqueAreas.add(area)));
-    
-    return {
-      alertVolume: total,
-      highImpactRate: total > 0 ? Math.round((highImpact / total) * 100) : 0,
-      diversityScore: uniqueAreas.size,
-    };
-  }, [alerts]);
+    return { alertVolume: total, highImpactRate: total > 0 ? Math.round((highImpact / total) * 100) : 0, diversityScore: uniqueAreas.size };
+  }, [alerts, hasDemo]);
 
-  // Simulated cohort metrics (in production, this would come from aggregated data)
   const cohortMetrics = React.useMemo(() => {
-    // Simulate sector average with some variance
+    if (hasDemo) return { alertVolume: 0, highImpactRate: 0, diversityScore: 0, cohortSize: demoData!.cohortSize };
     return {
       alertVolume: Math.round(alerts.length * 0.85),
       highImpactRate: Math.min(Math.round(clientMetrics.highImpactRate * 0.9), 100),
       diversityScore: Math.max(1, Math.round(clientMetrics.diversityScore * 0.8)),
-      cohortSize: 12, // Number of companies in cohort (simulated)
+      cohortSize: 12,
     };
-  }, [alerts.length, clientMetrics]);
+  }, [alerts.length, clientMetrics, hasDemo, demoData]);
 
-  const hasEnoughData = cohortMetrics.cohortSize >= MIN_COHORT_SIZE && alerts.length >= 3;
-  const isEmpty = alerts.length === 0;
+  const hasEnoughData = hasDemo || (cohortMetrics.cohortSize >= MIN_COHORT_SIZE && alerts.length >= 3);
+  const isEmpty = !hasDemo && alerts.length === 0;
 
-  // Build comparison data
-  const chartData = React.useMemo(() => [
-    {
-      metric: 'Volumen de Alertas',
-      client: clientMetrics.alertVolume,
-      cohort: cohortMetrics.alertVolume,
-    },
-    {
-      metric: 'Tasa Alto Impacto (%)',
-      client: clientMetrics.highImpactRate,
-      cohort: cohortMetrics.highImpactRate,
-    },
-    {
-      metric: 'Diversidad de Temas',
-      client: clientMetrics.diversityScore,
-      cohort: cohortMetrics.diversityScore,
-    },
-  ], [clientMetrics, cohortMetrics]);
+  const chartData = hasDemo ? demoData!.chartData : [
+    { metric: 'Volumen de Alertas', client: clientMetrics.alertVolume, cohort: cohortMetrics.alertVolume },
+    { metric: 'Tasa Alto Impacto (%)', client: clientMetrics.highImpactRate, cohort: cohortMetrics.highImpactRate },
+    { metric: 'Diversidad de Temas', client: clientMetrics.diversityScore, cohort: cohortMetrics.diversityScore },
+  ];
 
-  const clientAboveAverage = clientMetrics.alertVolume > cohortMetrics.alertVolume;
+  const clientAboveAverage = hasDemo ? demoData!.clientAboveAverage : clientMetrics.alertVolume > cohortMetrics.alertVolume;
   const takeaway = isEmpty 
     ? "No hay datos suficientes para comparar"
     : !hasEnoughData
@@ -97,7 +83,6 @@ export function IndustryBenchmarkBlock({
     ? `Su exposición regulatoria está por encima del promedio del sector (${cohortMetrics.cohortSize} empresas comparadas)`
     : `Su exposición regulatoria está en línea o por debajo del promedio del sector`;
 
-  // If not enough cohort data, show empty state
   if (!hasEnoughData && !isEmpty) {
     return (
       <AnalyticsEmptyState

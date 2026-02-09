@@ -11,6 +11,7 @@ interface ImpactMatrixBlockProps {
   timeframe: string;
   source?: string;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: Record<string, { value: number; items: string[] }>;
 }
 
 const IMPACT_ROWS = ['grave', 'medio', 'leve'];
@@ -34,13 +35,16 @@ export function ImpactMatrixBlock({
   timeframe,
   source = "Alertas publicadas",
   onDrilldown,
+  demoData,
 }: ImpactMatrixBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedAlertIds, setSelectedAlertIds] = React.useState<string[]>([]);
   const [selectedLabel, setSelectedLabel] = React.useState("");
 
-  // Build matrix data from alerts
+  // Build matrix data from alerts or use demo data
   const matrixData = React.useMemo(() => {
+    if (demoData) return demoData;
+
     const matrix: Record<string, { value: number; items: string[] }> = {};
     
     IMPACT_ROWS.forEach(impact => {
@@ -51,7 +55,6 @@ export function ImpactMatrixBlock({
 
     alerts.forEach(alert => {
       const impact = (alert.impact_level || 'leve').toLowerCase();
-      // Use impact_level as urgency proxy since urgency_level doesn't exist in mock data
       const urgency = impact === 'grave' ? 'alta' : impact === 'medio' ? 'media' : 'baja';
       const key = `${impact}-${urgency}`;
       if (matrix[key]) {
@@ -61,13 +64,15 @@ export function ImpactMatrixBlock({
     });
 
     return matrix;
-  }, [alerts]);
+  }, [alerts, demoData]);
 
-  // Calculate totals - use impact_level only since urgency_level doesn't exist
-  const totalAlerts = alerts.length;
-  const highPriorityCount = alerts.filter(a => 
-    a.impact_level === 'grave' || a.impact_level === 'medio'
-  ).length;
+  // Calculate totals
+  const totalAlerts = demoData
+    ? Object.values(matrixData).reduce((sum, cell) => sum + cell.value, 0)
+    : alerts.length;
+  const highPriorityCount = demoData
+    ? (matrixData['grave-alta']?.value || 0) + (matrixData['grave-media']?.value || 0) + (matrixData['grave-baja']?.value || 0) + (matrixData['medio-alta']?.value || 0)
+    : alerts.filter(a => a.impact_level === 'grave' || a.impact_level === 'medio').length;
 
   const handleCellClick = (impact: string, urgency: string) => {
     const key = `${impact}-${urgency}`;
