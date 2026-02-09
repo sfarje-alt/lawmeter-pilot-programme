@@ -46,6 +46,7 @@ function getCellColorClass(impact: string, urgency: string, value: number): stri
   return value > 0 ? colors.filled : colors.empty;
 }
 
+/**
  * Impact Matrix Block - 3x3 grid showing impact vs urgency
  * Client-visible analytics block
  */
