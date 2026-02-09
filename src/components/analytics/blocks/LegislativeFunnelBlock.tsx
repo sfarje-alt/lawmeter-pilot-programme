@@ -26,6 +26,7 @@ export function LegislativeFunnelBlock({
   timeframe,
   source = "Proyectos de Ley publicados",
   onDrilldown,
+  demoData,
 }: LegislativeFunnelBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedStageLabel, setSelectedStageLabel] = React.useState("");
