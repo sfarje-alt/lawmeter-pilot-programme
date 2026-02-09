@@ -115,22 +115,7 @@ export function AnalyticsPagePDF({
     );
   }
 
-  // If no alerts, show message
-  if (alerts.length === 0) {
-    return (
-      <View style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Analíticas del Período</Text>
-          <Text style={styles.subtitle}>{clientName} • {timeframe}</Text>
-        </View>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>
-            No hay suficientes alertas publicadas en este período para generar analíticas.
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  // Analytics now use demo data, so we render regardless of alerts count
 
   return (
     <View style={styles.page}>

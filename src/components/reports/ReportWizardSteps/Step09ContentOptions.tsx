@@ -120,8 +120,8 @@ export function Step09ContentOptions({ config, onUpdate }: Step09Props) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/10">
-                  <Users className="h-4 w-4 text-purple-400" />
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <Users className="h-4 w-4 text-amber-400" />
                 </div>
                 <div>
                   <Label className="font-medium">
