@@ -26,7 +26,26 @@ const IMPACT_ICONS: Record<string, React.ElementType> = {
   'positivo': CheckCircle,
 };
 
-/**
+// Severity-based color classes for each cell
+const CELL_COLORS: Record<string, { filled: string; empty: string }> = {
+  'grave-alta':   { filled: 'bg-red-500/30 text-red-400', empty: 'bg-red-500/10 text-muted-foreground/50' },
+  'grave-media':  { filled: 'bg-orange-500/25 text-orange-400', empty: 'bg-orange-500/10 text-muted-foreground/50' },
+  'grave-baja':   { filled: 'bg-amber-500/20 text-amber-400', empty: 'bg-amber-500/10 text-muted-foreground/50' },
+  'medio-alta':   { filled: 'bg-orange-500/25 text-orange-400', empty: 'bg-orange-500/10 text-muted-foreground/50' },
+  'medio-media':  { filled: 'bg-amber-500/15 text-foreground', empty: 'bg-muted/30 text-muted-foreground/50' },
+  'medio-baja':   { filled: 'bg-emerald-500/15 text-foreground', empty: 'bg-muted/30 text-muted-foreground/50' },
+  'leve-alta':    { filled: 'bg-amber-500/20 text-amber-400', empty: 'bg-amber-500/10 text-muted-foreground/50' },
+  'leve-media':   { filled: 'bg-emerald-500/15 text-foreground', empty: 'bg-muted/30 text-muted-foreground/50' },
+  'leve-baja':    { filled: 'bg-emerald-500/20 text-emerald-400', empty: 'bg-muted/30 text-muted-foreground/50' },
+};
+
+function getCellColorClass(impact: string, urgency: string, value: number): string {
+  const key = `${impact}-${urgency}`;
+  const colors = CELL_COLORS[key];
+  if (!colors) return value > 0 ? 'bg-muted/80 text-foreground' : 'bg-muted/30 text-muted-foreground/50';
+  return value > 0 ? colors.filled : colors.empty;
+}
+
  * Impact Matrix Block - 3x3 grid showing impact vs urgency
  * Client-visible analytics block
  */
