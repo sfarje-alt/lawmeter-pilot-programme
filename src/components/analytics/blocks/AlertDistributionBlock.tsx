@@ -19,6 +19,10 @@ interface AlertDistributionBlockProps {
   source?: string;
   showByArea?: boolean;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: {
+    typeData: { name: string; value: number; ids: string[] }[];
+    areaData: { name: string; value: number; ids: string[] }[];
+  };
 }
 
 /**
