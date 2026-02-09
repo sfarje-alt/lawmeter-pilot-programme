@@ -62,6 +62,13 @@ const blockIcons: Record<string, React.ElementType> = {
   exposure: Shield,
   service_kpis: Gauge,
   industry_benchmark: Target,
+  editorial_coverage: Layers,
+  editorial_response_time: Activity,
+  operational_queue: BarChart3,
+  aggregated_entity_monitoring: Users,
+  aggregated_regulatory_pulse: Activity,
+  aggregated_alert_priority: TrendingUp,
+  aggregated_alert_distribution: PieChart,
 };
 
 interface SortableBlockItemProps {
