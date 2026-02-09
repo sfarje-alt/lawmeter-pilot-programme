@@ -21,6 +21,13 @@ interface RegulatoryPulseBlockProps {
   source?: string;
   showTypeBreakdown?: boolean;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: {
+    chartData: { date: string; total: number; bills: number; regulations: number; ids: string[] }[];
+    billsTotal: number;
+    regulationsTotal: number;
+    trendDirection: 'up' | 'down' | 'stable';
+    trendPercent: number;
+  };
 }
 
 /**
