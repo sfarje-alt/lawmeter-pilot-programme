@@ -96,7 +96,7 @@ export function AnalyticsPagePDF({
   const enabledBlocks = blocksToUse
     .filter(block => block && block.enabled && block.renderPDF)
     .sort((a, b) => (a?.order || 0) - (b?.order || 0))
-    .slice(0, 5); // Max 5 blocks per page
+    .slice(0, 12); // Allow more blocks across pages
 
   // If no blocks enabled, show empty state
   if (enabledBlocks.length === 0) {
