@@ -5,6 +5,8 @@ import { getNeutralColor, getTrendColor } from "@/lib/analyticsColors";
 import { Hash, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { type PeruAlert } from "@/data/peruAlertsMockData";
 
+type RankingItemWithIds = { id: string; label: string; value: number; ids: string[] };
+
 interface PopularTopicsBlockProps {
   alerts: PeruAlert[];
   timeframe: string;
@@ -12,6 +14,7 @@ interface PopularTopicsBlockProps {
   maxItems?: number;
   showTrends?: boolean;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: { id: string; label: string; value: number }[];
 }
 
 /**
