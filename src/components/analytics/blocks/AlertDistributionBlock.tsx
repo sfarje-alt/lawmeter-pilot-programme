@@ -35,40 +35,43 @@ export function AlertDistributionBlock({
   source = "Alertas publicadas",
   showByArea = false,
   onDrilldown,
+  demoData,
 }: AlertDistributionBlockProps) {
   const [view, setView] = React.useState<'type' | 'area'>(showByArea ? 'area' : 'type');
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [selectedLabel, setSelectedLabel] = React.useState("");
 
-  // Build data from alerts
   const { chartData, groups } = React.useMemo(() => {
+    if (demoData) {
+      const data = view === 'type' ? demoData.typeData : demoData.areaData;
+      const currentGroups: Record<string, string[]> = {};
+      data.forEach(d => { currentGroups[d.name] = d.ids; });
+      return { chartData: data, groups: currentGroups };
+    }
+
     const typeGroups: Record<string, string[]> = {};
     const areaGroups: Record<string, string[]> = {};
-
     alerts.forEach(alert => {
-      // By type
       const type = alert.legislation_type === 'proyecto_de_ley' ? 'Proyectos de Ley' : 'Normas';
       if (!typeGroups[type]) typeGroups[type] = [];
       typeGroups[type].push(alert.id);
-
-      // By area
       alert.affected_areas?.forEach(area => {
         if (!areaGroups[area]) areaGroups[area] = [];
         areaGroups[area].push(alert.id);
       });
     });
-
     const currentGroups = view === 'type' ? typeGroups : areaGroups;
     const data = Object.entries(currentGroups)
       .map(([name, ids]) => ({ name, value: ids.length, ids }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 6);
-
     return { chartData: data, groups: currentGroups };
-  }, [alerts, view]);
+  }, [alerts, view, demoData]);
   
-  const total = alerts.length;
+  const total = demoData
+    ? chartData.reduce((sum, d) => sum + d.value, 0)
+    : alerts.length;
   const isEmpty = total === 0;
   
   const topItem = chartData[0];

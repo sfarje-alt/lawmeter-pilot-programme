@@ -46,21 +46,25 @@ export function AlertPriorityBlock({
   timeframe,
   source = "Alertas publicadas",
   onDrilldown,
+  demoData,
 }: AlertPriorityBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedLevel, setSelectedLevel] = React.useState<string | null>(null);
   const [selectedAlertIds, setSelectedAlertIds] = React.useState<string[]>([]);
 
-  // Group alerts by impact level
   const { chartData, impactGroups } = React.useMemo(() => {
+    if (demoData) {
+      const groups: Record<string, string[]> = {};
+      demoData.chartData.forEach(d => { groups[d.key] = []; });
+      return { chartData: demoData.chartData, impactGroups: groups };
+    }
+
     const groups: Record<string, string[]> = {};
-    
     alerts.forEach(alert => {
       const impact = (alert.impact_level || 'leve').toLowerCase();
       if (!groups[impact]) groups[impact] = [];
       groups[impact].push(alert.id);
     });
-
     const data = IMPACT_ORDER
       .filter(level => groups[level] && groups[level].length > 0)
       .map(level => ({
@@ -69,16 +73,12 @@ export function AlertPriorityBlock({
         color: getImpactColor(level),
         key: level,
       }));
-
     return { chartData: data, impactGroups: groups };
-  }, [alerts]);
+  }, [alerts, demoData]);
   
-  const total = alerts.length;
+  const total = demoData ? demoData.total : alerts.length;
   const isEmpty = total === 0;
-  
-  const graveCount = impactGroups['grave']?.length || 0;
-  const medioCount = impactGroups['medio']?.length || 0;
-  const highPriorityCount = graveCount + medioCount;
+  const highPriorityCount = demoData ? demoData.highPriorityCount : (impactGroups['grave']?.length || 0) + (impactGroups['medio']?.length || 0);
   
   const takeaway = isEmpty 
     ? "No hay datos de impacto en el período seleccionado"

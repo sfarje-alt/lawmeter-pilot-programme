@@ -90,7 +90,7 @@ export function RegulatoryPulseBlock({
     };
   }, [alerts, demoData]);
 
-  const isEmpty = alerts.length === 0;
+  const isEmpty = chartData.length === 0;
   const TrendIcon = trendDirection === 'up' ? TrendingUp : trendDirection === 'down' ? TrendingDown : Minus;
 
   const takeaway = isEmpty 

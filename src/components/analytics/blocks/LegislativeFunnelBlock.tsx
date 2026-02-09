@@ -32,23 +32,20 @@ export function LegislativeFunnelBlock({
   const [selectedStageLabel, setSelectedStageLabel] = React.useState("");
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  // Only include bills
   const bills = React.useMemo(() => 
     alerts.filter(a => a.legislation_type === 'proyecto_de_ley'),
   [alerts]);
 
-  // Build stage data from bills
   const stageData = React.useMemo(() => {
+    if (demoData) return demoData;
+
     const stageGroups: Record<string, string[]> = {};
-    
     bills.forEach(bill => {
       const stage = bill.current_stage || 'EN COMISIÓN';
       if (!stageGroups[stage]) stageGroups[stage] = [];
       stageGroups[stage].push(bill.id);
     });
-
     const totalBills = bills.length;
-    
     return STAGE_ORDER
       .filter(stage => stageGroups[stage] && stageGroups[stage].length > 0)
       .map(stage => ({
@@ -57,9 +54,9 @@ export function LegislativeFunnelBlock({
         percentage: totalBills > 0 ? ((stageGroups[stage]?.length || 0) / totalBills) * 100 : 0,
         items: stageGroups[stage] || [],
       }));
-  }, [bills]);
+  }, [bills, demoData]);
 
-  const totalBills = bills.length;
+  const totalBills = demoData ? demoData.reduce((s, d) => s + d.count, 0) : bills.length;
   const isEmpty = totalBills === 0;
 
   // Find where most bills are
