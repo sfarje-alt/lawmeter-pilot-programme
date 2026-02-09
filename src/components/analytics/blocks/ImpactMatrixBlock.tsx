@@ -26,6 +26,26 @@ const IMPACT_ICONS: Record<string, React.ElementType> = {
   'positivo': CheckCircle,
 };
 
+// Severity-based color classes for each cell
+const CELL_COLORS: Record<string, { filled: string; empty: string }> = {
+  'grave-alta':   { filled: 'bg-red-500/30 text-red-400', empty: 'bg-red-500/10 text-muted-foreground/50' },
+  'grave-media':  { filled: 'bg-orange-500/25 text-orange-400', empty: 'bg-orange-500/10 text-muted-foreground/50' },
+  'grave-baja':   { filled: 'bg-amber-500/20 text-amber-400', empty: 'bg-amber-500/10 text-muted-foreground/50' },
+  'medio-alta':   { filled: 'bg-orange-500/25 text-orange-400', empty: 'bg-orange-500/10 text-muted-foreground/50' },
+  'medio-media':  { filled: 'bg-amber-500/15 text-foreground', empty: 'bg-muted/30 text-muted-foreground/50' },
+  'medio-baja':   { filled: 'bg-emerald-500/15 text-foreground', empty: 'bg-muted/30 text-muted-foreground/50' },
+  'leve-alta':    { filled: 'bg-amber-500/20 text-amber-400', empty: 'bg-amber-500/10 text-muted-foreground/50' },
+  'leve-media':   { filled: 'bg-emerald-500/15 text-foreground', empty: 'bg-muted/30 text-muted-foreground/50' },
+  'leve-baja':    { filled: 'bg-emerald-500/20 text-emerald-400', empty: 'bg-muted/30 text-muted-foreground/50' },
+};
+
+function getCellColorClass(impact: string, urgency: string, value: number): string {
+  const key = `${impact}-${urgency}`;
+  const colors = CELL_COLORS[key];
+  if (!colors) return value > 0 ? 'bg-muted/80 text-foreground' : 'bg-muted/30 text-muted-foreground/50';
+  return value > 0 ? colors.filled : colors.empty;
+}
+
 /**
  * Impact Matrix Block - 3x3 grid showing impact vs urgency
  * Client-visible analytics block
@@ -137,7 +157,9 @@ export function ImpactMatrixBlock({
                     const key = `${impact}-${urgency}`;
                     const cell = matrixData[key];
                     const value = cell?.value || 0;
-                    const isHighPriority = impact === 'grave' || urgency === 'alta';
+                    
+                    // Severity-based color mapping
+                    const cellColorClass = getCellColorClass(impact, urgency, value);
                     
                     return (
                       <button
@@ -147,11 +169,7 @@ export function ImpactMatrixBlock({
                           "text-sm font-semibold transition-all",
                           "hover:ring-2 hover:ring-primary/50 focus:outline-none focus:ring-2 focus:ring-primary",
                           value > 0 ? "cursor-pointer" : "cursor-default",
-                          isHighPriority && value > 0
-                            ? "bg-destructive/20 text-destructive"
-                            : value > 0
-                            ? "bg-muted/80 text-foreground"
-                            : "bg-muted/30 text-muted-foreground/50"
+                          cellColorClass
                         )}
                         onClick={() => handleCellClick(impact, urgency)}
                         disabled={value === 0}
@@ -168,12 +186,20 @@ export function ImpactMatrixBlock({
           {/* Legend */}
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-destructive/20" />
-              <span>Alta prioridad</span>
+              <div className="w-3 h-3 rounded bg-red-500/30" />
+              <span>Crítico</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-muted/80" />
-              <span>Prioridad normal</span>
+              <div className="w-3 h-3 rounded bg-orange-500/25" />
+              <span>Alto</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-amber-500/20" />
+              <span>Medio</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-emerald-500/20" />
+              <span>Bajo</span>
             </div>
           </div>
         </div>
