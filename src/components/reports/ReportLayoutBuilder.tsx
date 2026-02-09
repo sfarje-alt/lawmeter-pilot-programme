@@ -233,14 +233,18 @@ export function ReportLayoutBuilder({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LayoutTemplate className="h-5 w-5 text-primary" />
-            <CardTitle className="text-base">Configurar Analíticas del Reporte</CardTitle>
+            <CardTitle className="text-base">
+              {mode === 'dashboard' ? 'Configurar Dashboard' : 'Configurar Analíticas del Reporte'}
+            </CardTitle>
           </div>
           <Badge variant="secondary" className="text-xs">
             {enabledCount} de {visibleBlocks.length} activas
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          Arrastra para reordenar. Máximo 3-5 bloques recomendados para el PDF.
+          {mode === 'dashboard'
+            ? 'Arrastra para reordenar. Activa o desactiva bloques del dashboard.'
+            : 'Arrastra para reordenar. Máximo 3-5 bloques recomendados para el PDF.'}
         </p>
       </CardHeader>
 
