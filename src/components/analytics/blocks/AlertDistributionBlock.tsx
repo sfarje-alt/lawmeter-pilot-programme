@@ -109,7 +109,7 @@ export function AlertDistributionBlock({
         isEmpty={isEmpty}
         icon={<PieChartIcon className="h-4 w-4 text-primary" />}
       >
-        <div className="h-[180px] w-full">
+        <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -117,14 +117,11 @@ export function AlertDistributionBlock({
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
-                cy="50%"
-                innerRadius={40}
-                outerRadius={70}
+                cy="45%"
+                innerRadius={45}
+                outerRadius={75}
                 paddingAngle={2}
-                label={({ percent }) => 
-                  percent > 0.1 ? `${Math.round(percent * 100)}%` : ''
-                }
-                labelLine={false}
+                label={false}
                 onClick={(data) => handleSliceClick(data)}
                 cursor="pointer"
               >
@@ -146,13 +143,22 @@ export function AlertDistributionBlock({
                 }}
                 formatter={(value: number) => [`${value} alertas`, 'Cantidad']}
               />
-              <Legend 
-                wrapperStyle={{ fontSize: '11px' }}
-                iconType="circle"
-                formatter={(value) => truncateLegend(value, 20)}
-              />
             </PieChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* Custom legend below chart */}
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-1 px-2">
+          {chartData.map((entry, index) => (
+            <div key={entry.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span
+                className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: getColor(entry.name, index) }}
+              />
+              <span className="truncate max-w-[120px]">{entry.name}</span>
+              <span className="font-medium text-foreground">{Math.round((entry.value / total) * 100)}%</span>
+            </div>
+          ))}
         </div>
         
         {/* View toggle for area view */}
