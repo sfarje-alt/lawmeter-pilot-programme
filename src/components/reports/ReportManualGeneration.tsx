@@ -284,6 +284,7 @@ export function ReportManualGeneration() {
                   alerts={filteredAlerts} 
                   clientName={clientNames} 
                   dateLabel={dateLabel}
+                  includeAnalytics={includeAnalytics}
                 />
               }
               fileName={`reporte-legislativo-manual-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
