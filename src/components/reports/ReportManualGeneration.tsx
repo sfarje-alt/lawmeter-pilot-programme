@@ -167,6 +167,7 @@ export function ReportManualGeneration() {
   const [dateMode, setDateMode] = useState('last_7');
   const [includeBills, setIncludeBills] = useState(true);
   const [includeNorms, setIncludeNorms] = useState(true);
+  const [includeAnalytics, setIncludeAnalytics] = useState(true);
 
   const toggleClient = (clientId: string) => {
     setSelectedClientIds(prev => 
