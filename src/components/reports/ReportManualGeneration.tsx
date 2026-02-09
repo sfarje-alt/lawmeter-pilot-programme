@@ -62,6 +62,13 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel, includeAnalytics }: { 
     return acc;
   }, {} as Record<string, PeruAlert[]>);
 
+  const generatedAt = format(new Date(), "d 'de' MMMM yyyy, HH:mm", { locale: es });
+  const analyticsBlocks = CLIENT_ANALYTICS_BLOCKS.map((block, index) => ({
+    key: block.key,
+    enabled: block.renderPDF,
+    order: index,
+  }));
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -76,6 +83,9 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel, includeAnalytics }: { 
           <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 8 }}>RESUMEN EJECUTIVO</Text>
           <Text style={styles.summaryItem}>• {bills.length} Proyectos de Ley relevantes</Text>
           <Text style={styles.summaryItem}>• {norms.length} Normas publicadas</Text>
+          {includeAnalytics && (
+            <Text style={styles.summaryItem}>• Incluye página de analíticas</Text>
+          )}
         </View>
 
         {bills.length > 0 && (
@@ -135,6 +145,19 @@ const ManualReportPDF = ({ alerts, clientName, dateLabel, includeAnalytics }: { 
           Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
         </Text>
       </Page>
+
+      {/* Analytics Page */}
+      {includeAnalytics && (
+        <Page size="A4">
+          <AnalyticsPagePDF
+            alerts={alerts}
+            clientName={clientName}
+            timeframe={dateLabel}
+            generatedAt={generatedAt}
+            analyticsBlocks={analyticsBlocks}
+          />
+        </Page>
+      )}
     </Document>
   );
 };
