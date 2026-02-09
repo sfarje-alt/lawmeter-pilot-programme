@@ -141,10 +141,10 @@ export function ClientAnalytics() {
         )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {isEnabled('impact_matrix') && (
-            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_IMPACT_MATRIX} />
           )}
           {isEnabled('regulatory_pulse') && (
-            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} />
+            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_REGULATORY_PULSE} />
           )}
         </div>
       </section>
