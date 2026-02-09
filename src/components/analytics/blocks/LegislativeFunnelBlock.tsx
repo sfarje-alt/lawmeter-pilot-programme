@@ -11,6 +11,7 @@ interface LegislativeFunnelBlockProps {
   timeframe: string;
   source?: string;
   onDrilldown?: (alertIds: string[]) => void;
+  demoData?: { stage: string; count: number; percentage: number; items: string[] }[];
 }
 
 // Stage order for funnel display
