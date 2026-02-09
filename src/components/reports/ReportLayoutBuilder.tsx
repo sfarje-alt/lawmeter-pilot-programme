@@ -62,6 +62,13 @@ const blockIcons: Record<string, React.ElementType> = {
   exposure: Shield,
   service_kpis: Gauge,
   industry_benchmark: Target,
+  editorial_coverage: Layers,
+  editorial_response_time: Activity,
+  operational_queue: BarChart3,
+  aggregated_entity_monitoring: Users,
+  aggregated_regulatory_pulse: Activity,
+  aggregated_alert_priority: TrendingUp,
+  aggregated_alert_distribution: PieChart,
 };
 
 interface SortableBlockItemProps {
@@ -156,6 +163,7 @@ interface ReportLayoutBuilderProps {
   onChange: (blocks: AnalyticsBlockConfigExtended[]) => void;
   onSaveTemplate?: (name: string) => void;
   showInternalBlocks?: boolean;
+  mode?: 'report' | 'dashboard';
 }
 
 export function ReportLayoutBuilder({
@@ -163,6 +171,7 @@ export function ReportLayoutBuilder({
   onChange,
   onSaveTemplate,
   showInternalBlocks = false,
+  mode = 'report',
 }: ReportLayoutBuilderProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -231,14 +240,18 @@ export function ReportLayoutBuilder({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LayoutTemplate className="h-5 w-5 text-primary" />
-            <CardTitle className="text-base">Configurar Analíticas del Reporte</CardTitle>
+            <CardTitle className="text-base">
+              {mode === 'dashboard' ? 'Configurar Dashboard' : 'Configurar Analíticas del Reporte'}
+            </CardTitle>
           </div>
           <Badge variant="secondary" className="text-xs">
             {enabledCount} de {visibleBlocks.length} activas
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          Arrastra para reordenar. Máximo 3-5 bloques recomendados para el PDF.
+          {mode === 'dashboard'
+            ? 'Arrastra para reordenar. Activa o desactiva bloques del dashboard.'
+            : 'Arrastra para reordenar. Máximo 3-5 bloques recomendados para el PDF.'}
         </p>
       </CardHeader>
 
