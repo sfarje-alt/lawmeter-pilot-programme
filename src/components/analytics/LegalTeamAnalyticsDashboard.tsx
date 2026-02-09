@@ -22,6 +22,7 @@ import {
   ExposureBlock,
   EditorialResponseTimeBlock,
   AggregatedEntityMonitoringBlock,
+  IndustryBenchmarkBlock,
 } from "./blocks";
 import {
   DEMO_EDITORIAL_COVERAGE,
