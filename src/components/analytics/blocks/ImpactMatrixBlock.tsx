@@ -35,6 +35,7 @@ export function ImpactMatrixBlock({
   timeframe,
   source = "Alertas publicadas",
   onDrilldown,
+  demoData,
 }: ImpactMatrixBlockProps) {
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedAlertIds, setSelectedAlertIds] = React.useState<string[]>([]);
