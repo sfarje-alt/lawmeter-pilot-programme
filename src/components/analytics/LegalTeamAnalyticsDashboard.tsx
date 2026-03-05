@@ -44,120 +44,19 @@ import {
   DEMO_INDUSTRY_BENCHMARK,
 } from "@/lib/analyticsMockData";
 import type { AnalyticsFilters } from "@/types/analytics";
-import { MOCK_CLIENTS, type PeruAlert } from "@/data/peruAlertsMockData";
-import { useAlerts } from "@/contexts/AlertsContext";
+import { MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 import { ReportLayoutBuilder } from "@/components/reports/ReportLayoutBuilder";
 import { CLIENT_ANALYTICS_BLOCKS, ANALYTICS_BLOCK_REGISTRY, type AnalyticsBlockConfigExtended } from "@/types/analytics";
-
-// Helper to compute metrics from filtered alerts
-function computeServiceKPIs(alerts: PeruAlert[]): import("@/types/analytics").KPIMetric[] {
-  const published = alerts.filter(a => a.status === 'published');
-  const withCommentary = published.filter(a => 
-    a.expert_commentary || a.client_commentaries.some(c => c.commentary?.trim())
-  );
-  return [
-    { label: "Alertas Publicadas", value: published.length, unit: "items" as const, icon: "file-text" as const },
-    { label: "Tiempo Típico", value: "< 24h", icon: "clock" as const },
-    { label: "Con Comentario", value: withCommentary.length, unit: "items" as const, icon: "check-circle" as const },
-  ];
-}
-
-function computeImpactMatrix(alerts: PeruAlert[]) {
-  const matrix: Record<string, { value: number; items: string[] }> = {
-    "grave-alta": { value: 0, items: [] }, "grave-media": { value: 0, items: [] }, "grave-baja": { value: 0, items: [] },
-    "medio-alta": { value: 0, items: [] }, "medio-media": { value: 0, items: [] }, "medio-baja": { value: 0, items: [] },
-    "leve-alta": { value: 0, items: [] }, "leve-media": { value: 0, items: [] }, "leve-baja": { value: 0, items: [] },
-  };
-  
-  alerts.forEach((alert, i) => {
-    const impact = alert.impact_level || 'leve';
-    // Derive urgency from a hash of the index for consistency
-    const urgencies = ['alta', 'media', 'baja'];
-    const urgency = urgencies[i % 3];
-    const key = `${impact}-${urgency}`;
-    if (matrix[key]) {
-      matrix[key].value++;
-      matrix[key].items.push(alert.id);
-    }
-  });
-  
-  return matrix;
-}
-
-function computeAlertPriority(alerts: PeruAlert[]) {
-  const counts: Record<string, number> = { grave: 0, medio: 0, leve: 0, positivo: 0 };
-  alerts.forEach(a => { counts[a.impact_level || 'leve']++; });
-  return {
-    chartData: [
-      { name: "Grave", value: counts.grave, color: "hsl(0, 65%, 50%)", key: "grave" },
-      { name: "Medio", value: counts.medio, color: "hsl(40, 75%, 50%)", key: "medio" },
-      { name: "Leve", value: counts.leve, color: "hsl(0, 0%, 55%)", key: "leve" },
-      { name: "Positivo", value: counts.positivo, color: "hsl(140, 55%, 45%)", key: "positivo" },
-    ],
-    total: alerts.length,
-    highPriorityCount: counts.grave + counts.medio,
-  };
-}
-
-function computeAlertDistribution(alerts: PeruAlert[]) {
-  const bills = alerts.filter(a => a.legislation_type === 'proyecto_de_ley').length;
-  const regs = alerts.filter(a => a.legislation_type === 'norma').length;
-  const areaCounts: Record<string, number> = {};
-  alerts.forEach(a => (a.affected_areas || []).forEach(area => { areaCounts[area] = (areaCounts[area] || 0) + 1; }));
-  return {
-    typeData: [
-      { name: "Proyectos de Ley", value: bills, ids: [] },
-      { name: "Normas", value: regs, ids: [] },
-    ],
-    areaData: Object.entries(areaCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([name, value]) => ({ name, value, ids: [] })),
-  };
-}
-
-function computeTopEntities(alerts: PeruAlert[]): { id: string; label: string; value: number }[] {
-  const counts: Record<string, number> = {};
-  alerts.forEach(a => {
-    const entity = a.entity || a.parliamentary_group;
-    if (entity) counts[entity] = (counts[entity] || 0) + 1;
-  });
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 7)
-    .map(([name, count], i) => ({ id: `entity-${i}`, label: name, value: count }));
-}
-
-function computePopularTopics(alerts: PeruAlert[]): { id: string; label: string; value: number }[] {
-  const counts: Record<string, number> = {};
-  alerts.forEach(a => (a.affected_areas || []).forEach(area => { counts[area] = (counts[area] || 0) + 1; }));
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 7)
-    .map(([name, count], i) => ({ id: `topic-${i}`, label: name, value: count }));
-}
-
-function computeEditorialCoverage(alerts: PeruAlert[]) {
-  const published = alerts.filter(a => a.status === 'published').length;
-  const rate = alerts.length > 0 ? (published / alerts.length) * 100 : 0;
-  return {
-    totalCaptured: alerts.length,
-    totalPublished: published,
-    coverageRate: Math.round(rate * 10) / 10,
-    coverageTrend: DEMO_EDITORIAL_COVERAGE.coverageTrend,
-  };
-}
 
 /**
  * Legal Team Analytics Dashboard
  * Full access to all analytics blocks (internal + client-visible)
- * Filters data by selected client
+ * Uses static demo data for Nov 2025 - Jan 2026
  */
 export function LegalTeamAnalyticsDashboard() {
   const [period, setPeriod] = React.useState<AnalyticsFilters['period']>('last_30');
   const [selectedClientId, setSelectedClientId] = React.useState<string>('all');
   const [customizeOpen, setCustomizeOpen] = React.useState(false);
-  const { alerts } = useAlerts();
 
   // Load saved block order from localStorage
   const [blockOrder, setBlockOrder] = React.useState<AnalyticsBlockConfigExtended[]>(() => {
@@ -179,25 +78,6 @@ export function LegalTeamAnalyticsDashboard() {
     localStorage.setItem('analytics-dashboard-layout', JSON.stringify(newBlocks));
   };
 
-  // Filter alerts by selected client
-  const filteredAlerts = React.useMemo(() => {
-    if (selectedClientId === 'all') return alerts;
-    return alerts.filter(a => 
-      a.client_id === selectedClientId || 
-      a.primary_client_id === selectedClientId ||
-      a.client_commentaries.some(c => c.clientId === selectedClientId)
-    );
-  }, [alerts, selectedClientId]);
-
-  // Compute metrics from filtered alerts
-  const serviceKPIs = React.useMemo(() => computeServiceKPIs(filteredAlerts), [filteredAlerts]);
-  const impactMatrix = React.useMemo(() => computeImpactMatrix(filteredAlerts), [filteredAlerts]);
-  const alertPriority = React.useMemo(() => computeAlertPriority(filteredAlerts), [filteredAlerts]);
-  const alertDistribution = React.useMemo(() => computeAlertDistribution(filteredAlerts), [filteredAlerts]);
-  const topEntities = React.useMemo(() => computeTopEntities(filteredAlerts), [filteredAlerts]);
-  const popularTopics = React.useMemo(() => computePopularTopics(filteredAlerts), [filteredAlerts]);
-  const editorialCoverage = React.useMemo(() => computeEditorialCoverage(filteredAlerts), [filteredAlerts]);
-
   const timeframeLabel = {
     'last_7': 'Últimos 7 días',
     'last_30': 'Últimos 30 días',
@@ -212,10 +92,6 @@ export function LegalTeamAnalyticsDashboard() {
     const block = blockOrder.find(b => b.key === key);
     return block ? block.enabled : true;
   };
-
-  const selectedClientName = selectedClientId !== 'all' 
-    ? (MOCK_CLIENTS.find(c => c.id === selectedClientId)?.name || 'Cliente') 
-    : 'Todos los clientes';
 
   return (
     <div className="space-y-8">
@@ -274,15 +150,15 @@ export function LegalTeamAnalyticsDashboard() {
         </div>
         
         {isEnabled('service_kpis') && (
-          <ServiceKPIsBlock data={serviceKPIs} timeframe={timeframeLabel} />
+          <ServiceKPIsBlock data={DEMO_SERVICE_KPIS} timeframe={timeframeLabel} />
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {isEnabled('impact_matrix') && (
-            <ImpactMatrixBlock alerts={filteredAlerts} timeframe={timeframeLabel} demoData={impactMatrix} />
+            <ImpactMatrixBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_IMPACT_MATRIX} />
           )}
           {isEnabled('regulatory_pulse') && (
-            <RegulatoryPulseBlock alerts={filteredAlerts} timeframe={timeframeLabel} demoData={DEMO_REGULATORY_PULSE} />
+            <RegulatoryPulseBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_REGULATORY_PULSE} />
           )}
         </div>
       </section>
@@ -296,21 +172,21 @@ export function LegalTeamAnalyticsDashboard() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('alert_priority') && (
-            <AlertPriorityBlock alerts={filteredAlerts} timeframe={timeframeLabel} demoData={alertPriority} />
+            <AlertPriorityBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_ALERT_PRIORITY} />
           )}
           {isEnabled('alert_distribution') && (
-            <AlertDistributionBlock alerts={filteredAlerts} timeframe={timeframeLabel} showByArea demoData={alertDistribution} />
+            <AlertDistributionBlock alerts={[]} timeframe={timeframeLabel} showByArea demoData={DEMO_ALERT_DISTRIBUTION} />
           )}
           {isEnabled('top_entities') && (
-            <TopEntitiesBlock alerts={filteredAlerts} timeframe={timeframeLabel} maxItems={7} demoData={topEntities} />
+            <TopEntitiesBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_TOP_ENTITIES} />
           )}
           {isEnabled('popular_topics') && (
-            <PopularTopicsBlock alerts={filteredAlerts} timeframe={timeframeLabel} maxItems={7} demoData={popularTopics} />
+            <PopularTopicsBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
           )}
           {isEnabled('industry_benchmark') && (
             <IndustryBenchmarkBlock
-              alerts={filteredAlerts}
-              clientName={selectedClientName}
+              alerts={[]}
+              clientName={selectedClientId !== 'all' ? (MOCK_CLIENTS.find(c => c.id === selectedClientId)?.name || 'Cliente') : 'Promedio Clientes'}
               clientSector="Regulado"
               timeframe={timeframeLabel}
               demoData={DEMO_INDUSTRY_BENCHMARK}
@@ -334,7 +210,7 @@ export function LegalTeamAnalyticsDashboard() {
             <EmergingTopicsBlock timeframe={timeframeLabel} />
           )}
           {isEnabled('legislative_funnel') && (
-            <LegislativeFunnelBlock alerts={filteredAlerts} timeframe={timeframeLabel} demoData={DEMO_LEGISLATIVE_FUNNEL} />
+            <LegislativeFunnelBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_LEGISLATIVE_FUNNEL} />
           )}
           {isEnabled('exposure') && (
             <ExposureBlock timeframe={timeframeLabel} />
@@ -353,10 +229,10 @@ export function LegalTeamAnalyticsDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('editorial_coverage') && (
             <EditorialCoverageBlock
-              captured={editorialCoverage.totalCaptured}
-              published={editorialCoverage.totalPublished}
-              coverageRate={editorialCoverage.coverageRate}
-              coverageTrend={editorialCoverage.coverageTrend}
+              captured={DEMO_EDITORIAL_COVERAGE.totalCaptured}
+              published={DEMO_EDITORIAL_COVERAGE.totalPublished}
+              coverageRate={DEMO_EDITORIAL_COVERAGE.coverageRate}
+              coverageTrend={DEMO_EDITORIAL_COVERAGE.coverageTrend}
               timeframe={timeframeLabel}
             />
           )}
