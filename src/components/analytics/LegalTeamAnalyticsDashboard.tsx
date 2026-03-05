@@ -43,7 +43,7 @@ import { CLIENT_ANALYTICS_BLOCKS, ANALYTICS_BLOCK_REGISTRY, type AnalyticsBlockC
  * Uses static demo data for Nov 2025 - Jan 2026
  */
 export function LegalTeamAnalyticsDashboard() {
-  const [period, setPeriod] = React.useState<AnalyticsFilters['period']>('last_30');
+  const [period, setPeriod] = React.useState<AnalyticsFilters['period']>('all_time');
   const [selectedClientId, setSelectedClientId] = React.useState<string>('all');
   const [customizeOpen, setCustomizeOpen] = React.useState(false);
 
@@ -73,6 +73,7 @@ export function LegalTeamAnalyticsDashboard() {
   const demoData = React.useMemo(() => getDemoDataForClient(selectedClientId), [selectedClientId]);
 
   const timeframeLabel = {
+    'all_time': 'Todo el período',
     'last_7': 'Últimos 7 días',
     'last_30': 'Últimos 30 días',
     'last_60': 'Últimos 60 días',
@@ -102,6 +103,7 @@ export function LegalTeamAnalyticsDashboard() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all_time">Todo el período</SelectItem>
               <SelectItem value="last_7">Últimos 7 días</SelectItem>
               <SelectItem value="last_30">Últimos 30 días</SelectItem>
               <SelectItem value="last_60">Últimos 60 días</SelectItem>
