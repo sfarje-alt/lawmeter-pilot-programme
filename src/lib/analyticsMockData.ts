@@ -230,3 +230,143 @@ export const DEMO_DATA_FRESHNESS = {
   lastUpdate: "2026-01-20T09:00:00Z",
   dataThrough: "2026-01-19",
 };
+
+// =============================================
+// BACKUS-SPECIFIC DEMO DATA
+// =============================================
+
+export const DEMO_BACKUS_REGULATORY_PULSE = {
+  chartData: [
+    { date: "2025-11-03", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-11-10", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-11-17", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-11-24", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-12-01", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-12-08", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-12-15", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-12-22", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2025-12-29", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2026-01-05", total: 0, bills: 0, regulations: 0, ids: [] },
+    { date: "2026-01-12", total: 1, bills: 0, regulations: 1, ids: ["reg-backus-001"] },
+    { date: "2026-01-19", total: 1, bills: 0, regulations: 1, ids: ["reg-backus-002"] },
+  ],
+  billsTotal: 0,
+  regulationsTotal: 2,
+  trendDirection: "up" as const,
+  trendPercent: 100,
+};
+
+export const DEMO_BACKUS_ALERT_PRIORITY = {
+  chartData: [
+    { name: "Grave", value: 1, color: "hsl(0, 65%, 50%)", key: "grave" },
+    { name: "Medio", value: 1, color: "hsl(40, 75%, 50%)", key: "medio" },
+    { name: "Leve", value: 0, color: "hsl(0, 0%, 55%)", key: "leve" },
+    { name: "Positivo", value: 0, color: "hsl(140, 55%, 45%)", key: "positivo" },
+  ],
+  total: 2,
+  highPriorityCount: 1,
+};
+
+export const DEMO_BACKUS_ALERT_DISTRIBUTION = {
+  typeData: [
+    { name: "Proyectos de Ley", value: 0, ids: [] },
+    { name: "Normas", value: 2, ids: ["reg-backus-001", "reg-backus-002"] },
+  ],
+  areaData: [
+    { name: "Protección de Datos", value: 2, ids: ["reg-backus-001", "reg-backus-002"] },
+    { name: "Ciberseguridad", value: 1, ids: ["reg-backus-001"] },
+    { name: "Privacidad", value: 1, ids: ["reg-backus-002"] },
+  ],
+};
+
+export const DEMO_BACKUS_IMPACT_MATRIX = {
+  "grave-alta": { value: 1, items: ["reg-backus-001"] },
+  "grave-media": { value: 0, items: [] },
+  "grave-baja": { value: 0, items: [] },
+  "medio-alta": { value: 1, items: ["reg-backus-002"] },
+  "medio-media": { value: 0, items: [] },
+  "medio-baja": { value: 0, items: [] },
+  "leve-alta": { value: 0, items: [] },
+  "leve-media": { value: 0, items: [] },
+  "leve-baja": { value: 0, items: [] },
+};
+
+export const DEMO_BACKUS_LEGISLATIVE_FUNNEL = [
+  { stage: "PUBLICADA", count: 2, percentage: 100, items: ["reg-backus-001", "reg-backus-002"] },
+];
+
+export const DEMO_BACKUS_TOP_ENTITIES: RankingItem[] = [
+  { id: "be1", label: "Ministerio de Justicia y DDHH", value: 1 },
+  { id: "be2", label: "Congreso de la República", value: 1 },
+];
+
+export const DEMO_BACKUS_POPULAR_TOPICS: RankingItem[] = [
+  { id: "bt1", label: "Protección de Datos", value: 2 },
+  { id: "bt2", label: "Ciberseguridad", value: 1 },
+  { id: "bt3", label: "Privacidad", value: 1 },
+];
+
+export const DEMO_BACKUS_KEY_MOVEMENTS = {
+  newItems: 2,
+  stageChanges: 0,
+  upcomingDeadlines: 1,
+  items: [
+    { id: "bkm1", type: "new" as const, title: "DS 016-2024-JUS - Reglamento Ley 29733", date: "2025-03-29", detail: "Reglamento de protección de datos con obligación de DPO" },
+    { id: "bkm2", type: "new" as const, title: "Ley 29733 - Protección de Datos Personales", date: "2011-07-03", detail: "Marco general LPDP: derechos ARCO, ANPD, consentimiento" },
+  ],
+};
+
+export const DEMO_BACKUS_EXPOSURE: RankingItem[] = [
+  { id: "bex1", label: "Compliance", value: 2 },
+  { id: "bex2", label: "Tecnología / IT", value: 1 },
+  { id: "bex3", label: "Legal", value: 1 },
+];
+
+export const DEMO_BACKUS_SERVICE_KPIS: KPIMetric[] = [
+  { label: "Alertas Publicadas", value: 2, icon: "file-text" },
+  { label: "Tiempo Típico", value: "< 12h", icon: "clock" },
+  { label: "Con Comentario", value: 2, icon: "check-circle" },
+];
+
+export const DEMO_BACKUS_INDUSTRY_BENCHMARK = {
+  chartData: [
+    { metric: "Volumen de Alertas", client: 2, cohort: 38 },
+    { metric: "Tasa Alto Impacto (%)", client: 50, cohort: 35 },
+    { metric: "Diversidad de Temas", client: 3, cohort: 5 },
+  ],
+  cohortSize: 12,
+  clientAboveAverage: false,
+};
+
+// Helper: get demo data by client ID
+export function getDemoDataForClient(clientId: string) {
+  if (clientId === "client-backus") {
+    return {
+      regulatoryPulse: DEMO_BACKUS_REGULATORY_PULSE,
+      alertPriority: DEMO_BACKUS_ALERT_PRIORITY,
+      alertDistribution: DEMO_BACKUS_ALERT_DISTRIBUTION,
+      impactMatrix: DEMO_BACKUS_IMPACT_MATRIX,
+      legislativeFunnel: DEMO_BACKUS_LEGISLATIVE_FUNNEL,
+      topEntities: DEMO_BACKUS_TOP_ENTITIES,
+      popularTopics: DEMO_BACKUS_POPULAR_TOPICS,
+      keyMovements: DEMO_BACKUS_KEY_MOVEMENTS,
+      exposure: DEMO_BACKUS_EXPOSURE,
+      serviceKpis: DEMO_BACKUS_SERVICE_KPIS,
+      industryBenchmark: DEMO_BACKUS_INDUSTRY_BENCHMARK,
+    };
+  }
+  // Default: aggregated / FarmaSalud data
+  return {
+    regulatoryPulse: DEMO_REGULATORY_PULSE,
+    alertPriority: DEMO_ALERT_PRIORITY,
+    alertDistribution: DEMO_ALERT_DISTRIBUTION,
+    impactMatrix: DEMO_IMPACT_MATRIX,
+    legislativeFunnel: DEMO_LEGISLATIVE_FUNNEL,
+    topEntities: DEMO_TOP_ENTITIES,
+    popularTopics: DEMO_POPULAR_TOPICS,
+    keyMovements: DEMO_KEY_MOVEMENTS,
+    exposure: DEMO_EXPOSURE,
+    serviceKpis: DEMO_SERVICE_KPIS,
+    industryBenchmark: DEMO_INDUSTRY_BENCHMARK,
+  };
+}
