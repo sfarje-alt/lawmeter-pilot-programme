@@ -27,6 +27,8 @@ export const SECTORS = [
   "Tecnología Médica",
   "Financiamiento",
   "Seguros",
+  "Protección de Datos",
+  "Bebidas / Consumo masivo",
 ];
 
 // Complete list of legislative stages from source data
@@ -100,6 +102,7 @@ export interface AffectedClient {
 
 // Primary client - receives all alerts by default
 export const PRIMARY_CLIENT_ID = "client-farmasalud";
+export const BACKUS_CLIENT_ID = "client-backus";
 
 export const MOCK_CLIENTS: AffectedClient[] = [
   { 
@@ -108,6 +111,13 @@ export const MOCK_CLIENTS: AffectedClient[] = [
     sector: "Farmacéutico", 
     areas: ["General", "Oncológico", "Dispositivos Médicos", "Financiamiento y Presupuesto", "Raras y huérfanas", "Contrataciones Públicas"], 
     matchScore: 100 
+  },
+  {
+    id: BACKUS_CLIENT_ID,
+    name: "Backus (AB InBev)",
+    sector: "Bebidas / Consumo masivo",
+    areas: ["Protección de Datos", "Ciberseguridad", "Compliance", "Privacidad"],
+    matchScore: 100
   },
   { id: "client-001", name: "Clínica Ricardo Palma", sector: "Salud Privada", areas: ["General", "Oncológico"], matchScore: 85 },
   { id: "client-002", name: "Laboratorios Bagó", sector: "Farmacéutico", areas: ["General", "Dispositivos Médicos"], matchScore: 70 },
@@ -127,6 +137,8 @@ export const ENTITIES = [
   "INEN",
   "RENETSA",
   "FISSAL",
+  "Ministerio de Justicia y Derechos Humanos",
+  "Congreso de la República",
 ];
 
 // Stage mapping for bills
@@ -806,6 +818,43 @@ const MOCK_REGULATIONS_RAW: BasePeruAlert[] = [
     client_id: null,
     created_at: "2025-11-11T00:00:00Z",
     updated_at: "2025-11-11T00:00:00Z",
+  },
+  // ===== BACKUS - Protección de Datos =====
+  {
+    id: "reg-backus-001",
+    legislation_type: "norma",
+    legislation_title: "Decreto Supremo N.° 016-2024-JUS – Reglamento de la Ley N.° 29733, Ley de Protección de Datos Personales",
+    entity: "Ministerio de Justicia y Derechos Humanos",
+    publication_date: "2025-03-29",
+    affected_areas: ["Protección de Datos", "Ciberseguridad"],
+    legislation_summary: "Nuevo reglamento de la Ley 29733: obligación de notificar brechas de seguridad en 72 horas a la ANPD y a los titulares; designación obligatoria de un DPO para entidades que traten datos sensibles o a gran escala; régimen sancionador con multas de hasta 100 UIT; evaluaciones de impacto en protección de datos (EIPD) obligatorias para tratamientos de alto riesgo; estándares reforzados para transferencias internacionales de datos personales.",
+    expert_commentary: "Este reglamento transforma el panorama de protección de datos en Perú. Para Backus/AB InBev, las implicaciones principales son: (1) Designar un DPO formal dado el volumen de datos de consumidores y empleados, (2) Implementar un protocolo de notificación de brechas en 72h que cubra todas las operaciones incluyendo programas de fidelización, (3) Realizar EIPD para campañas de marketing digital y bases de datos de clientes, (4) Revisar transferencias internacionales de datos al grupo AB InBev. Las sanciones de hasta 100 UIT hacen urgente una auditoría de cumplimiento integral.",
+    source_url: "https://busquedas.elperuano.pe/dispositivo/NL/2024-016-JUS",
+    status: "inbox",
+    kanban_stage: "publicado",
+    client_id: null,
+    sector: "Protección de Datos",
+    impact_level: "grave",
+    created_at: "2025-03-29T00:00:00Z",
+    updated_at: "2025-03-29T00:00:00Z",
+  },
+  {
+    id: "reg-backus-002",
+    legislation_type: "norma",
+    legislation_title: "Ley N.° 29733 – Ley de Protección de Datos Personales",
+    entity: "Congreso de la República",
+    publication_date: "2011-07-03",
+    affected_areas: ["Protección de Datos", "Privacidad"],
+    legislation_summary: "Marco general de la Ley de Protección de Datos Personales (LPDP): establece los derechos ARCO (Acceso, Rectificación, Cancelación y Oposición) de los titulares; crea la Autoridad Nacional de Protección de Datos Personales (ANPD); define principios de consentimiento, finalidad, proporcionalidad y seguridad; regula bancos de datos personales de administración pública y privada; establece obligaciones de inscripción de bases de datos ante la ANPD.",
+    expert_commentary: "Ley base del sistema de protección de datos personales en Perú. Para Backus, esta norma es el fundamento legal que rige el tratamiento de datos de consumidores (programas de lealtad, sorteos, marketing directo), datos de empleados y proveedores. Es esencial mantener actualizados los registros de bancos de datos ante la ANPD y asegurar que todos los consentimientos cumplan con los estándares de la ley, especialmente en canales digitales y puntos de venta.",
+    source_url: "https://www.leyes.congreso.gob.pe/Documentos/Leyes/29733.pdf",
+    status: "inbox",
+    kanban_stage: "publicado",
+    client_id: null,
+    sector: "Protección de Datos",
+    impact_level: "medio",
+    created_at: "2011-07-03T00:00:00Z",
+    updated_at: "2011-07-03T00:00:00Z",
   },
 ];
 

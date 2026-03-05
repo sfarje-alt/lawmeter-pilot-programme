@@ -3,7 +3,8 @@ import {
   ALL_MOCK_ALERTS, 
   PeruAlert, 
   ClientCommentary,
-  PRIMARY_CLIENT_ID 
+  PRIMARY_CLIENT_ID,
+  BACKUS_CLIENT_ID
 } from "@/data/peruAlertsMockData";
 
 interface AlertsContextType {
@@ -31,16 +32,29 @@ const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 function initializeAlerts(): PeruAlert[] {
   return ALL_MOCK_ALERTS.map((alert, index) => {
     // Pre-publish first 5 bills and first 3 regulations to FarmaSalud for demo
-    // Bills are indices 0-15 (16 total), Regulations start at index 16
-    const shouldPublish = 
+    const shouldPublishFarmasalud = 
       (alert.legislation_type === "proyecto_de_ley" && index < 5) ||
-      (alert.legislation_type === "norma" && index >= 16 && index < 19);
+      (alert.legislation_type === "norma" && alert.id.startsWith("reg-") && !alert.id.startsWith("reg-backus") && index >= 16 && index < 19);
     
-    if (shouldPublish) {
+    // Pre-publish Backus regulations
+    const shouldPublishBackus = alert.id.startsWith("reg-backus-");
+
+    if (shouldPublishBackus) {
       return {
         ...alert,
         status: "published" as const,
-        // Keep original kanban_stage - publication doesn't change legislative stage
+        client_id: BACKUS_CLIENT_ID,
+        client_commentaries: [{
+          clientId: BACKUS_CLIENT_ID,
+          commentary: alert.expert_commentary || "Norma relevante para las operaciones de protección de datos de Backus."
+        }]
+      };
+    }
+    
+    if (shouldPublishFarmasalud) {
+      return {
+        ...alert,
+        status: "published" as const,
         client_id: PRIMARY_CLIENT_ID,
         client_commentaries: [{
           clientId: PRIMARY_CLIENT_ID,
