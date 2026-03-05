@@ -28,20 +28,9 @@ import {
   DEMO_EDITORIAL_COVERAGE,
   DEMO_OPERATIONAL_QUEUE,
   DEMO_DATA_FRESHNESS,
-  DEMO_SERVICE_KPIS,
-  DEMO_REGULATORY_PULSE,
-  DEMO_ALERT_PRIORITY,
-  DEMO_IMPACT_MATRIX,
-  DEMO_LEGISLATIVE_FUNNEL,
-  DEMO_ALERT_DISTRIBUTION,
-  DEMO_TOP_ENTITIES,
-  DEMO_POPULAR_TOPICS,
-  DEMO_EMERGING_TOPICS,
-  DEMO_KEY_MOVEMENTS,
-  DEMO_EXPOSURE,
   DEMO_EDITORIAL_RESPONSE_TIME,
   DEMO_AGGREGATED_ENTITIES,
-  DEMO_INDUSTRY_BENCHMARK,
+  getDemoDataForClient,
 } from "@/lib/analyticsMockData";
 import type { AnalyticsFilters } from "@/types/analytics";
 import { MOCK_CLIENTS } from "@/data/peruAlertsMockData";
@@ -78,14 +67,17 @@ export function LegalTeamAnalyticsDashboard() {
     localStorage.setItem('analytics-dashboard-layout', JSON.stringify(newBlocks));
   };
 
+  const freshness = DEMO_DATA_FRESHNESS;
+
+  // Get client-specific demo data
+  const demoData = React.useMemo(() => getDemoDataForClient(selectedClientId), [selectedClientId]);
+
   const timeframeLabel = {
     'last_7': 'Últimos 7 días',
     'last_30': 'Últimos 30 días',
     'last_60': 'Últimos 60 días',
     'last_90': 'Últimos 90 días',
   }[period] || period;
-
-  const freshness = DEMO_DATA_FRESHNESS;
 
   // Check if a block is enabled
   const isEnabled = (key: string) => {
@@ -150,15 +142,15 @@ export function LegalTeamAnalyticsDashboard() {
         </div>
         
         {isEnabled('service_kpis') && (
-          <ServiceKPIsBlock data={DEMO_SERVICE_KPIS} timeframe={timeframeLabel} />
+          <ServiceKPIsBlock data={demoData.serviceKpis} timeframe={timeframeLabel} />
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {isEnabled('impact_matrix') && (
-            <ImpactMatrixBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_IMPACT_MATRIX} />
+            <ImpactMatrixBlock alerts={[]} timeframe={timeframeLabel} demoData={demoData.impactMatrix} />
           )}
           {isEnabled('regulatory_pulse') && (
-            <RegulatoryPulseBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_REGULATORY_PULSE} />
+            <RegulatoryPulseBlock alerts={[]} timeframe={timeframeLabel} demoData={demoData.regulatoryPulse} />
           )}
         </div>
       </section>
@@ -172,16 +164,16 @@ export function LegalTeamAnalyticsDashboard() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('alert_priority') && (
-            <AlertPriorityBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_ALERT_PRIORITY} />
+            <AlertPriorityBlock alerts={[]} timeframe={timeframeLabel} demoData={demoData.alertPriority} />
           )}
           {isEnabled('alert_distribution') && (
-            <AlertDistributionBlock alerts={[]} timeframe={timeframeLabel} showByArea demoData={DEMO_ALERT_DISTRIBUTION} />
+            <AlertDistributionBlock alerts={[]} timeframe={timeframeLabel} showByArea demoData={demoData.alertDistribution} />
           )}
           {isEnabled('top_entities') && (
-            <TopEntitiesBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_TOP_ENTITIES} />
+            <TopEntitiesBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={demoData.topEntities} />
           )}
           {isEnabled('popular_topics') && (
-            <PopularTopicsBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
+            <PopularTopicsBlock alerts={[]} timeframe={timeframeLabel} maxItems={7} demoData={demoData.popularTopics} />
           )}
           {isEnabled('industry_benchmark') && (
             <IndustryBenchmarkBlock
@@ -189,7 +181,7 @@ export function LegalTeamAnalyticsDashboard() {
               clientName={selectedClientId !== 'all' ? (MOCK_CLIENTS.find(c => c.id === selectedClientId)?.name || 'Cliente') : 'Promedio Clientes'}
               clientSector="Regulado"
               timeframe={timeframeLabel}
-              demoData={DEMO_INDUSTRY_BENCHMARK}
+              demoData={demoData.industryBenchmark}
             />
           )}
         </div>
@@ -204,16 +196,16 @@ export function LegalTeamAnalyticsDashboard() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('key_movements') && (
-            <KeyMovementsBlock timeframe={timeframeLabel} />
+            <KeyMovementsBlock timeframe={timeframeLabel} demoData={demoData.keyMovements} />
           )}
           {isEnabled('emerging_topics') && (
             <EmergingTopicsBlock timeframe={timeframeLabel} />
           )}
           {isEnabled('legislative_funnel') && (
-            <LegislativeFunnelBlock alerts={[]} timeframe={timeframeLabel} demoData={DEMO_LEGISLATIVE_FUNNEL} />
+            <LegislativeFunnelBlock alerts={[]} timeframe={timeframeLabel} demoData={demoData.legislativeFunnel} />
           )}
           {isEnabled('exposure') && (
-            <ExposureBlock timeframe={timeframeLabel} />
+            <ExposureBlock timeframe={timeframeLabel} demoData={demoData.exposure} />
           )}
         </div>
       </section>
