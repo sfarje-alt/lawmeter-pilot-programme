@@ -1,47 +1,45 @@
 
 
-# Fix: Tendencias/Movimientos en PDF + Colores en Matriz de Impacto
+# Plan: Agregar alertas de Backus y perfil de cliente
 
-## Problema 1: Bloques no visibles en el PDF
+## Resumen
 
-Los 10 bloques de analiticas se renderizan, pero todos van dentro de un solo `<View>` en una sola `<Page>`. Con 10 bloques en 2 columnas, el contenido se desborda fuera del area visible de la pagina A4 y los bloques de abajo (Movimientos Clave, Temas Emergentes, Exposicion, etc.) simplemente no se ven.
+Se extraen 2 normas del Excel (sección "PRIVACIDAD DE DATOS - BACKUS") y se crean como nuevas alertas en el mock data. Se crea un perfil de cliente para **Unión de Cervecerías Peruanas Backus y Johnston S.A.A.** (Backus/AB InBev). Las alertas se pre-publican para este cliente.
 
-**Solucion**: Distribuir los bloques en multiples paginas PDF. En lugar de meter todo en un solo `<View>`, agrupar los bloques en lotes de 4 por pagina (2x2 grid). Cada lote va en su propia `<Page>`.
+## Datos extraídos del Excel
 
-### Cambios en `src/components/reports/pdf/AnalyticsPagePDF.tsx`:
-- Dividir `enabledBlocks` en chunks de 4
-- Renderizar cada chunk en una `<Page size="A4">` separada
-- La primera pagina incluye el header "Analiticas del Periodo"
-- Las paginas siguientes incluyen un header mas compacto "Analiticas (cont.)"
-- Mover el footer a la ultima pagina
-
-### Cambios en `src/components/reports/ReportManualGeneration.tsx`:
-- Cambiar de envolver `AnalyticsPagePDF` en un solo `<Page>` a dejar que `AnalyticsPagePDF` genere sus propias paginas internamente
-- Importar `Page` de react-pdf en AnalyticsPagePDF si no esta ya
-
-## Problema 2: Matriz de Impacto sin colores diferenciados
-
-Actualmente cada celda de la matriz tiene el mismo fondo gris (`#e2e8f0`). Deberia usar colores que reflejen la severidad de la combinacion impacto/urgencia, similar a la version interactiva del dashboard.
-
-### Cambios en `src/components/reports/pdf/AnalyticsBlockPDF.tsx` (funcion `ImpactMatrixBlockPDF`):
-- Agregar un mapa de colores por celda:
-  - `grave-alta`: rojo (#fecaca / borde #dc2626) - Critico
-  - `grave-media`: naranja (#fed7aa / borde #f97316)
-  - `grave-baja`: amarillo (#fef08a / borde #eab308)
-  - `medio-alta`: naranja (#fed7aa / borde #f97316)
-  - `medio-media`: amarillo (#fef9c4 / borde #eab308)
-  - `medio-baja`: verde claro (#d1fae5 / borde #22c55e)
-  - `leve-alta`: amarillo (#fef08a / borde #eab308)
-  - `leve-media`: verde claro (#d1fae5 / borde #22c55e)
-  - `leve-baja`: verde (#bbf7d0 / borde #16a34a)
-- Agregar etiquetas de fila (Grave/Medio/Leve) y columna (Alta/Media/Baja) para que la matriz sea legible sin interactividad
-- Agregar una mini-leyenda de colores debajo de la matriz
+| # | Tipo | Título | Entidad | Fecha | Área | Comentario Experto |
+|---|------|--------|---------|-------|------|--------------------|
+| 1 | Norma | Decreto Supremo N.° 016-2024-JUS. Reglamento de la Ley N.° 29733 | Min. Justicia y DDHH | 29 marzo 2025 | Protección datos, ciberseguridad | Reglamento Ley 29733: brechas 72h, DPO obligatorio, sanciones 100 UIT... |
+| 2 | Norma | LEY DE PROTECCIÓN DE DATOS PERSONALES LEY Nº 29733 | Congreso | 3 julio 2011 | Protección de datos, privacidad | Marco general LPDP: ARCO, ANPD, consentimiento... |
 
 ## Archivos a modificar (3)
 
-| Archivo | Cambio |
-|---------|--------|
-| `src/components/reports/pdf/AnalyticsPagePDF.tsx` | Multi-pagina: dividir bloques en chunks de 4, cada chunk en su propia Page |
-| `src/components/reports/pdf/AnalyticsBlockPDF.tsx` | Colores diferenciados por celda en ImpactMatrixBlockPDF |
-| `src/components/reports/ReportManualGeneration.tsx` | Ajustar para que AnalyticsPagePDF genere sus propias Pages |
+### 1. `src/data/peruAlertsMockData.ts`
+- Agregar `BACKUS_CLIENT_ID = "client-backus"` como constante
+- Agregar Backus a `MOCK_CLIENTS` array con sector "Bebidas / Consumo masivo", áreas relevantes (Protección de datos, Ciberseguridad, Compliance)
+- Agregar 2 normas al array `MOCK_REGULATIONS_RAW` con IDs `reg-backus-001` y `reg-backus-002`, con sus datos completos del Excel
+- Agregar nuevas entidades al array `ENTITIES` si no existen ("Ministerio de Justicia y Derechos Humanos")
+- Agregar nuevos sectores relevantes
+
+### 2. `src/data/mockClientProfiles.ts`
+- Crear perfil completo `BACKUS_CLIENT_PROFILE` con:
+  - Razón social: "Unión de Cervecerías Peruanas Backus y Johnston S.A.A."
+  - Nombre comercial: "Backus"
+  - Sector primario: "Bebidas / Consumo masivo"
+  - Sectores secundarios: "Manufactura", "Logística"
+  - Autoridades supervisoras: ANPD, SUNAT, INDECOPI, PRODUCE
+  - Keywords: protección de datos, privacidad, ciberseguridad, DPO, datos personales, consentimiento, LPDP, ANPD, etc.
+  - Comisiones vigiladas relevantes
+  - Usuarios ficticios (Director Legal, Jefe de Compliance, DPO)
+- Agregar al array `MOCK_CLIENT_PROFILES`
+
+### 3. `src/contexts/AlertsContext.tsx`
+- Importar `BACKUS_CLIENT_ID`
+- En `initializeAlerts()`, pre-publicar las 2 normas de Backus (IDs `reg-backus-*`) asignándolas a `BACKUS_CLIENT_ID` con sus commentaries
+
+## Resultado esperado
+- En el Inbox admin: aparecen 2 normas nuevas (protección de datos) con badge de Backus
+- En Clientes: aparece Backus como segundo cliente junto a FarmaSalud
+- Filtros dinámicos: se actualizan automáticamente al detectar nuevas áreas/entidades en los datos
 
