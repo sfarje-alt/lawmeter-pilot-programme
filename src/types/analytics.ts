@@ -99,7 +99,7 @@ export interface KPIMetric {
 
 // Filters
 export interface AnalyticsFilters {
-  period: 'last_7' | 'last_30' | 'last_60' | 'last_90' | 'custom';
+  period: 'all_time' | 'last_7' | 'last_30' | 'last_60' | 'last_90' | 'custom';
   customDateFrom?: Date;
   customDateTo?: Date;
   clientIds?: string[];
