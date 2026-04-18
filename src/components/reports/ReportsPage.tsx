@@ -228,6 +228,7 @@ export function ReportsPage() {
   const [daysBack, setDaysBack] = useState(7);
   const [includeBills, setIncludeBills] = useState(true);
   const [includeNorms, setIncludeNorms] = useState(true);
+  const [includeAnalytics, setIncludeAnalytics] = useState(true);
 
   // Schedules (in-memory)
   const [schedules, setSchedules] = useState<ScheduledReport[]>([]);
