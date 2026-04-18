@@ -1,5 +1,6 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
+import { ChartTooltip } from "../shared/ChartTooltip";
 import { getNeutralColor, ANALYTICS_COLORS } from "@/lib/analyticsColors";
 import { Building } from "lucide-react";
 import {

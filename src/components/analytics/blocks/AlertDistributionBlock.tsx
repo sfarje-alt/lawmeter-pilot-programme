@@ -1,5 +1,6 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
+import { ChartTooltip } from "../shared/ChartTooltip";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
 import { ANALYTICS_COLORS, getLegislationTypeColor, getNeutralColor } from "@/lib/analyticsColors";
 import { PieChart as PieChartIcon } from "lucide-react";

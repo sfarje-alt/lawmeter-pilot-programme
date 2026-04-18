@@ -1,5 +1,6 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
+import { ChartTooltip } from "../shared/ChartTooltip";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
