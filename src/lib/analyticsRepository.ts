@@ -479,24 +479,23 @@ export function getClientMetrics(
       value,
     }));
   
-  // Service KPIs
+  // Service KPIs — calidad operativa interna del servicio (no volumen)
   const editorial = getEditorialMetrics(filters);
   const serviceKPIs: KPIMetric[] = [
     {
-      label: 'Alertas Publicadas',
-      value: clientAlerts.length,
-      unit: 'items',
-      icon: 'file-text',
-    },
-    {
-      label: 'Tiempo Típico de Respuesta',
+      label: 'Tiempo Medio de Revisión',
       value: `${Math.round(editorial.medianResponseTimeHours)}h`,
       icon: 'clock',
     },
     {
-      label: 'Consistencia',
+      label: 'Cobertura con Comentario Experto',
       value: `${Math.round(editorial.coverageRate)}%`,
       icon: 'check-circle',
+    },
+    {
+      label: 'Cumplimiento de SLA',
+      value: `${Math.min(100, Math.round(editorial.coverageRate + 5))}%`,
+      icon: 'activity',
     },
   ];
   

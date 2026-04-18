@@ -207,11 +207,11 @@ export const DEMO_AGGREGATED_ENTITIES: RankingItem[] = [
   { id: "ae10", label: "Acción Popular", value: 5 },
 ];
 
-// Service KPIs
+// Service KPIs — calidad operativa del servicio (NO volumen de publicación)
 export const DEMO_SERVICE_KPIS: KPIMetric[] = [
-  { label: "Alertas Publicadas", value: 52, icon: "file-text" },
-  { label: "Tiempo Típico", value: "< 24h", icon: "clock" },
-  { label: "Con Comentario", value: 48, icon: "check-circle" },
+  { label: "Tiempo Medio de Revisión", value: "< 24h", icon: "clock" },
+  { label: "Cobertura con Comentario Experto", value: "92%", icon: "check-circle" },
+  { label: "Cumplimiento de SLA", value: "98%", icon: "activity" },
 ];
 
 // Industry Benchmark
@@ -323,9 +323,9 @@ export const DEMO_BACKUS_EXPOSURE: RankingItem[] = [
 ];
 
 export const DEMO_BACKUS_SERVICE_KPIS: KPIMetric[] = [
-  { label: "Alertas Publicadas", value: 2, icon: "file-text" },
-  { label: "Tiempo Típico", value: "< 12h", icon: "clock" },
-  { label: "Con Comentario", value: 2, icon: "check-circle" },
+  { label: "Tiempo Medio de Revisión", value: "< 12h", icon: "clock" },
+  { label: "Cobertura con Comentario Experto", value: "100%", icon: "check-circle" },
+  { label: "Cumplimiento de SLA", value: "100%", icon: "activity" },
 ];
 
 export const DEMO_BACKUS_INDUSTRY_BENCHMARK = {

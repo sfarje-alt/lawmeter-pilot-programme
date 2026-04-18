@@ -22,6 +22,7 @@ import {
   Pin,
   Filter,
   Clock,
+  BarChart3,
 } from "lucide-react";
 import { format, subDays, parseISO, isAfter, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
@@ -47,7 +48,17 @@ const styles = StyleSheet.create({
   sourceLink: { fontSize: 8, color: '#2b6cb0', textDecoration: 'underline', marginTop: 4 },
 });
 
-const ReportPDF = ({ alerts, profileName, dateLabel }: { alerts: PeruAlert[]; profileName: string; dateLabel: string }) => {
+const ReportPDF = ({
+  alerts,
+  profileName,
+  dateLabel,
+  includeAnalytics,
+}: {
+  alerts: PeruAlert[];
+  profileName: string;
+  dateLabel: string;
+  includeAnalytics: boolean;
+}) => {
   const bills = alerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = alerts.filter(a => a.legislation_type === 'norma');
 
@@ -57,6 +68,26 @@ const ReportPDF = ({ alerts, profileName, dateLabel }: { alerts: PeruAlert[]; pr
     acc[stage].push(bill);
     return acc;
   }, {} as Record<string, PeruAlert[]>);
+
+  // Analytics aggregations (simple, derived from filtered alerts)
+  const totalAlerts = alerts.length;
+  const withCommentary = alerts.filter(a => a.expert_commentary && a.expert_commentary.trim().length > 0).length;
+  const pinned = alerts.filter(a => a.is_pinned_for_publication).length;
+  const impactCount = alerts.reduce((acc, a) => {
+    const k = (a as any).impact_level || 'sin_clasificar';
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const urgencyCount = alerts.reduce((acc, a) => {
+    const k = (a as any).urgency_level || 'sin_clasificar';
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const stagesCount = bills.reduce((acc, b) => {
+    const k = b.current_stage || 'SIN ESTADO';
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <Document>
@@ -116,6 +147,61 @@ const ReportPDF = ({ alerts, profileName, dateLabel }: { alerts: PeruAlert[]; pr
           Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
         </Text>
       </Page>
+
+      {includeAnalytics && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.header}>
+            <Text style={styles.title}>ANALÍTICAS</Text>
+            <Text style={styles.subtitle}>Métricas del rango: {dateLabel}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>INDICADORES GENERALES</Text>
+            <View style={styles.summary}>
+              <Text style={styles.summaryItem}>• Total de alertas: {totalAlerts}</Text>
+              <Text style={styles.summaryItem}>• Proyectos de Ley: {bills.length}</Text>
+              <Text style={styles.summaryItem}>• Normas: {norms.length}</Text>
+              <Text style={styles.summaryItem}>• Con comentario experto: {withCommentary} ({totalAlerts > 0 ? Math.round((withCommentary / totalAlerts) * 100) : 0}%)</Text>
+              <Text style={styles.summaryItem}>• Fijadas para publicación: {pinned}</Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>DISTRIBUCIÓN POR IMPACTO</Text>
+            {Object.entries(impactCount).length === 0 ? (
+              <Text style={{ fontSize: 9, color: '#718096' }}>Sin datos clasificados.</Text>
+            ) : (
+              Object.entries(impactCount).map(([level, count]) => (
+                <Text key={level} style={styles.summaryItem}>• {level}: {count}</Text>
+              ))
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>DISTRIBUCIÓN POR URGENCIA</Text>
+            {Object.entries(urgencyCount).length === 0 ? (
+              <Text style={{ fontSize: 9, color: '#718096' }}>Sin datos clasificados.</Text>
+            ) : (
+              Object.entries(urgencyCount).map(([level, count]) => (
+                <Text key={level} style={styles.summaryItem}>• {level}: {count}</Text>
+              ))
+            )}
+          </View>
+
+          {Object.keys(stagesCount).length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>PROYECTOS DE LEY POR ETAPA</Text>
+              {Object.entries(stagesCount).map(([stage, count]) => (
+                <Text key={stage} style={styles.summaryItem}>• {stage}: {count}</Text>
+              ))}
+            </View>
+          )}
+
+          <Text style={styles.footer}>
+            Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
+          </Text>
+        </Page>
+      )}
     </Document>
   );
 };
@@ -142,6 +228,7 @@ export function ReportsPage() {
   const [daysBack, setDaysBack] = useState(7);
   const [includeBills, setIncludeBills] = useState(true);
   const [includeNorms, setIncludeNorms] = useState(true);
+  const [includeAnalytics, setIncludeAnalytics] = useState(true);
 
   // Schedules (in-memory)
   const [schedules, setSchedules] = useState<ScheduledReport[]>([]);
@@ -318,7 +405,7 @@ export function ReportsPage() {
             {/* Content */}
             <div className="space-y-3">
               <Label className="font-medium">Contenido</Label>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <Label className="flex items-center gap-2 cursor-pointer">
                   <Switch checked={includeBills} onCheckedChange={setIncludeBills} />
                   <FileText className="h-4 w-4 text-muted-foreground" />
@@ -329,7 +416,15 @@ export function ReportsPage() {
                   <Scale className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Normas</span>
                 </Label>
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <Switch checked={includeAnalytics} onCheckedChange={setIncludeAnalytics} />
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Incluir Analíticas</span>
+                </Label>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Si activas “Incluir Analíticas”, el PDF añade una página final con indicadores agregados (impacto, urgencia, etapas y cobertura editorial) del rango seleccionado.
+              </p>
             </div>
 
             {/* Preview */}
@@ -351,7 +446,7 @@ export function ReportsPage() {
             {/* Manual Download */}
             {canGenerate ? (
               <PDFDownloadLink
-                document={<ReportPDF alerts={filteredAlerts} profileName={profileNames} dateLabel={dateLabel} />}
+                document={<ReportPDF alerts={filteredAlerts} profileName={profileNames} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
                 fileName={`reporte-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
               >
                 {({ loading }) => (
