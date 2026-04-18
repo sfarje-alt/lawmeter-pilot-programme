@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
@@ -23,6 +23,16 @@ export function ClientWizard({ open, onOpenChange, initialData, onSave }: Client
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<ClientProfile>(initialData || DEFAULT_CLIENT_PROFILE);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+
+  // Sync internal state when the wizard opens with new initialData (edit vs create)
+  useEffect(() => {
+    if (open) {
+      setData(initialData ? { ...initialData } : DEFAULT_CLIENT_PROFILE);
+      setCurrentStep(1);
+      // When editing, mark all steps as completed so user can jump around freely
+      setCompletedSteps(initialData ? WIZARD_STEPS.map((_, i) => i + 1) : []);
+    }
+  }, [open, initialData]);
 
   const updateData = (updates: Partial<ClientProfile>) => {
     setData(prev => ({ ...prev, ...updates }));
