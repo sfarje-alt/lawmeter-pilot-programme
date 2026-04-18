@@ -785,9 +785,8 @@ export function AlertsCalendar() {
                   <div key={day.toISOString()} className="space-y-2">
                     <div
                       className={cn(
-                        "text-center p-2 rounded-lg",
-                        heatmapBg(lvl),
-                        isToday(day) && "ring-1 ring-primary/40",
+                        "text-center p-2 rounded-lg bg-card",
+                        isToday(day) && "ring-2 ring-primary",
                         crit > 0 && "border border-[hsl(var(--destructive)/0.45)]"
                       )}
                     >
