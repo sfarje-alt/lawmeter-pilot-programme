@@ -1,6 +1,5 @@
 import * as React from "react";
-import { AnalyticsBlock, AnalyticsEmptyState } from "../shared/AnalyticsBlock";
-import { ChartTooltip } from "../shared/ChartTooltip";
+import { AnalyticsBlock, AnalyticsEmptyState, ChartTooltip } from "../shared";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
 import { Users, Shield, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

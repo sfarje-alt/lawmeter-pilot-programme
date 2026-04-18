@@ -1,7 +1,5 @@
 import * as React from "react";
-import { AnalyticsBlock } from "../shared/AnalyticsBlock";
-import { ChartTooltip } from "../shared/ChartTooltip";
-import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
+import { AnalyticsBlock, ChartTooltip, AnalyticsDrilldownSheet } from "../shared";
 import { ANALYTICS_COLORS, getImpactColor } from "@/lib/analyticsColors";
 import { BarChart3, AlertTriangle, AlertCircle, MinusCircle, CheckCircle } from "lucide-react";
 import { 
