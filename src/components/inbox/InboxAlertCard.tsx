@@ -96,8 +96,8 @@ export function InboxAlertCard({
       className={cn(
         "p-3 bg-card/50 border-border/30 hover:bg-card/80 transition-all cursor-pointer group",
         isPinned && !isArchived && "border-primary/50 bg-primary/5",
-        isPinned && hasCommentary && "ring-1 ring-green-500/30",
-        isPinned && !hasCommentary && "ring-1 ring-amber-500/30",
+        isPinned && hasCommentary && "ring-1 ring-[hsl(var(--success)/0.35)]",
+        isPinned && !hasCommentary && "ring-1 ring-[hsl(var(--warning)/0.35)]",
         isArchived && "opacity-70 border-dashed"
       )}
       onClick={onClick}
@@ -155,11 +155,11 @@ export function InboxAlertCard({
           {/* Commentary Status Badge (only when pinned) */}
           {isPinned && !isArchived && (
             hasCommentary ? (
-              <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-500 border-green-500/30 py-0 px-1.5">
+              <Badge variant="secondary" className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1.5">
                 <CheckCircle2 className="h-3 w-3" />
               </Badge>
             ) : (
-              <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-500 border-amber-500/30 py-0 px-1.5">
+              <Badge variant="secondary" className="text-xs bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)] py-0 px-1.5">
                 <AlertCircle className="h-3 w-3" />
               </Badge>
             )

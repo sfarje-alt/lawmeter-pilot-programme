@@ -39,6 +39,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { RichTextEditor, AttachedFile } from "./RichTextEditor";
+import { useAlerts } from "@/contexts/AlertsContext";
 
 interface ClientCommentary {
   clientId: string;
@@ -78,6 +79,7 @@ export function AlertDetailDrawer({
   onArchive,
   onUnarchive,
 }: AlertDetailDrawerProps) {
+  const { updateAttachments } = useAlerts();
   const [sharedCommentary, setSharedCommentary] = useState("");
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
@@ -91,13 +93,20 @@ export function AlertDetailDrawer({
   useEffect(() => {
     if (alert) {
       setSharedCommentary(alert.expert_commentary || "");
-      setAttachments([]);
+      // Load persisted attachments from the alert (if any)
+      setAttachments((alert.attachments as AttachedFile[]) || []);
       setImpact(alert.impact_level);
       setUrgency("medium");
       setTagsText((alert.affected_areas || []).join(", "));
       setActions([]);
     }
   }, [alert?.id]);
+
+  // Persist attachments back to the context whenever they change
+  const handleAttachmentsChange = (files: AttachedFile[]) => {
+    setAttachments(files);
+    if (alert) updateAttachments(alert.id, files);
+  };
 
   if (!alert) return null;
 
@@ -370,7 +379,7 @@ export function AlertDetailDrawer({
                 value={sharedCommentary}
                 onChange={handleCommentaryChange}
                 attachments={attachments}
-                onAttachmentsChange={setAttachments}
+                onAttachmentsChange={handleAttachmentsChange}
                 placeholder="Documenta el criterio interno: cómo afecta a la organización, supuestos, postura sugerida..."
               />
               <p className="text-[11px] text-muted-foreground">

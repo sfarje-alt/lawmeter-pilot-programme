@@ -367,6 +367,7 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}
+        archivedCount={archivedCount}
       />
 
       {/* Kanban Board */}
