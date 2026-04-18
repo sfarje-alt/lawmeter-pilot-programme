@@ -178,16 +178,16 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
   };
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       {/* KPI Cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="glass-card border-border/30">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full min-w-0">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <InboxIcon className="h-4 w-4 text-primary" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{alertCounts.total}</div>
                 <div className="text-xs text-muted-foreground">Total Normas</div>
               </div>
@@ -195,13 +195,13 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-border/30">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-amber-500/10 shrink-0">
                 <FileText className="h-4 w-4 text-amber-400" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{alertCounts.filtered}</div>
                 <div className="text-xs text-muted-foreground">Mostrando</div>
               </div>
@@ -209,13 +209,13 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-border/30">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <Pin className="h-4 w-4 text-primary" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{pinnedCount}</div>
                 <div className="text-xs text-muted-foreground">Pineados</div>
               </div>
@@ -225,21 +225,23 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
       </div>
 
       {/* Filters */}
-      <RegulationsFilterBar
-        filters={filters}
-        onFiltersChange={setFilters}
-        availableEntities={availableEntities}
-        availableSectors={availableSectors}
-        availableImpactLevels={availableImpactLevels}
-        availableAreas={availableAreas}
-        totalCount={alertCounts.total}
-        filteredCount={alertCounts.filtered}
-        pinnedCount={pinnedCount}
-        archivedCount={archivedCount}
-      />
+      <div className="w-full min-w-0">
+        <RegulationsFilterBar
+          filters={filters}
+          onFiltersChange={setFilters}
+          availableEntities={availableEntities}
+          availableSectors={availableSectors}
+          availableImpactLevels={availableImpactLevels}
+          availableAreas={availableAreas}
+          totalCount={alertCounts.total}
+          filteredCount={alertCounts.filtered}
+          pinnedCount={pinnedCount}
+          archivedCount={archivedCount}
+        />
+      </div>
 
       {/* Grid of Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 w-full min-w-0">
         {sortedAlerts.length === 0 ? (
           <div className="col-span-full p-8 text-center text-muted-foreground">
             {filters.onlyPinned
