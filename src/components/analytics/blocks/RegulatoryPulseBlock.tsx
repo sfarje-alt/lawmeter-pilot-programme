@@ -55,12 +55,18 @@ export function RegulatoryPulseBlock({
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const filterState = useBlockFilters('regulatory_pulse', { legislationType: 'all' });
 
+  // Apply per-block filters first so the small preview and expanded view stay in sync
+  const filteredAlerts = React.useMemo(
+    () => applyAlertFilters(alerts, filterState.filters),
+    [alerts, filterState.filters]
+  );
+
   const baseData = React.useMemo(() => {
     if (demoData) return demoData;
 
     const weekMap = new Map<string, { date: string; total: number; bills: number; regulations: number; ids: string[] }>();
 
-    alerts.forEach(alert => {
+    filteredAlerts.forEach(alert => {
       const date = new Date(alert.created_at || alert.project_date || alert.publication_date);
       const dayOfWeek = date.getDay();
       const startOfWeek = new Date(date);
@@ -89,8 +95,8 @@ export function RegulatoryPulseBlock({
     const previousTotal = previousWeeks.reduce((sum, w) => sum + w.total, 0);
     const trendPct = previousTotal > 0 ? Math.round(((currentTotal - previousTotal) / previousTotal) * 100) : 0;
     const direction = trendPct > 5 ? 'up' : trendPct < -5 ? 'down' : 'stable';
-    const billsCount = alerts.filter(a => a.legislation_type === 'proyecto_de_ley').length;
-    const regsCount = alerts.filter(a => a.legislation_type !== 'proyecto_de_ley').length;
+    const billsCount = filteredAlerts.filter(a => a.legislation_type === 'proyecto_de_ley').length;
+    const regsCount = filteredAlerts.filter(a => a.legislation_type !== 'proyecto_de_ley').length;
 
     return {
       chartData: sortedData,
@@ -99,21 +105,9 @@ export function RegulatoryPulseBlock({
       trendDirection: direction as 'up' | 'down' | 'stable',
       trendPercent: trendPct,
     };
-  }, [alerts, demoData]);
+  }, [filteredAlerts, demoData]);
 
-  // Apply per-block filters (date range + legislation type)
-  const filteredData = React.useMemo(() => {
-    let rows = baseData.chartData;
-    if (filterState.filters.customDateFrom) {
-      const from = filterState.filters.customDateFrom.split('T')[0];
-      rows = rows.filter(r => r.date >= from);
-    }
-    if (filterState.filters.customDateTo) {
-      const to = filterState.filters.customDateTo.split('T')[0];
-      rows = rows.filter(r => r.date <= to);
-    }
-    return rows;
-  }, [baseData.chartData, filterState.filters.customDateFrom, filterState.filters.customDateTo]);
+  const filteredData = baseData.chartData;
 
   const activeType = filterState.filters.legislationType || 'all';
   const totalsForView = React.useMemo(() => {
