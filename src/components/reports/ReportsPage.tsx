@@ -211,7 +211,6 @@ type ScopeMode = "all_active" | "pinned" | "date_range";
 interface ScheduledReport {
   id: string;
   name: string;
-  profileIds: string[];
   scope: ScopeMode;
   frequency: "daily" | "weekly" | "monthly";
   time: string;
@@ -219,11 +218,25 @@ interface ScheduledReport {
   createdAt: string;
 }
 
+const PROFILE_STORAGE_KEY = "lawmeter:company-profile";
+
+function readCompanyName(): string {
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.legalName) return parsed.legalName;
+    }
+  } catch {
+    // ignore
+  }
+  return MOCK_CLIENT_PROFILES[0]?.legalName || "Mi Organización";
+}
+
 export function ReportsPage() {
   const { alerts } = useAlerts();
-  const profiles = MOCK_CLIENT_PROFILES;
+  const profileName = useMemo(() => readCompanyName(), []);
 
-  const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>(profiles[0]?.id ? [profiles[0].id] : []);
   const [scope, setScope] = useState<ScopeMode>("all_active");
   const [daysBack, setDaysBack] = useState(7);
   const [includeBills, setIncludeBills] = useState(true);
@@ -236,12 +249,6 @@ export function ReportsPage() {
   const [scheduleFrequency, setScheduleFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [scheduleTime, setScheduleTime] = useState("08:00");
   const [scheduleRecipients, setScheduleRecipients] = useState("");
-
-  const toggleProfile = (id: string) => {
-    setSelectedProfileIds(prev =>
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-    );
-  };
 
   const filteredAlerts = useMemo(() => {
     const cutoff = subDays(new Date(), daysBack);
@@ -268,18 +275,13 @@ export function ReportsPage() {
   const bills = filteredAlerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = filteredAlerts.filter(a => a.legislation_type === 'norma');
 
-  const profileNames = profiles
-    .filter(p => p.id && selectedProfileIds.includes(p.id))
-    .map(p => p.legalName)
-    .join(' · ') || 'Todos los perfiles';
-
   const dateLabel = scope === "all_active"
     ? "Todas las alertas activas"
     : scope === "pinned"
       ? "Alertas fijadas"
       : `Últimos ${daysBack} días`;
 
-  const canGenerate = selectedProfileIds.length > 0 && (includeBills || includeNorms) && filteredAlerts.length > 0;
+  const canGenerate = (includeBills || includeNorms) && filteredAlerts.length > 0;
 
   const handleSaveSchedule = () => {
     if (!scheduleName.trim() || selectedProfileIds.length === 0) {
