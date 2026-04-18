@@ -10,6 +10,9 @@ interface KanbanColumnProps {
   alerts: PeruAlert[];
   onAlertClick: (alert: PeruAlert) => void;
   onTogglePin?: (alertId: string) => void;
+  onArchive?: (alertId: string) => void;
+  onUnarchive?: (alertId: string) => void;
+  isArchiveView?: boolean;
   selectedClientId?: string | null;
   hasCommentaryForClient?: (alert: PeruAlert, clientId: string) => boolean;
 }
@@ -21,6 +24,9 @@ export function KanbanColumn({
   alerts, 
   onAlertClick,
   onTogglePin,
+  onArchive,
+  onUnarchive,
+  isArchiveView,
   selectedClientId,
   hasCommentaryForClient
 }: KanbanColumnProps) {
@@ -49,6 +55,9 @@ export function KanbanColumn({
                 alert={alert}
                 onClick={() => onAlertClick(alert)}
                 onTogglePin={onTogglePin}
+                onArchive={onArchive}
+                onUnarchive={onUnarchive}
+                isArchiveView={isArchiveView}
                 selectedClientId={selectedClientId}
                 hasCommentaryForClient={hasCommentaryForClient}
               />
