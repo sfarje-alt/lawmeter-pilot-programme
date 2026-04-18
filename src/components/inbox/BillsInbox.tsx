@@ -328,7 +328,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
       />
 
       {/* Kanban Board */}
-      <div className="flex gap-4 w-full">
+      <div className="flex gap-4 w-full min-w-0 items-stretch">
         {BILLS_KANBAN_COLUMNS.map((column) => (
           <KanbanColumn
             key={column.id}
