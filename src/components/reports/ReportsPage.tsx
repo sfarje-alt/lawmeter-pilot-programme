@@ -443,7 +443,7 @@ export function ReportsPage() {
             ) : (
               <Button size="lg" className="w-full" disabled>
                 <Download className="h-4 w-4 mr-2" />
-                Selecciona perfil, contenido y al menos una alerta
+                Selecciona contenido y al menos una alerta
               </Button>
             )}
           </CardContent>
