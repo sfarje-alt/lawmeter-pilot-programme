@@ -96,10 +96,10 @@ export const ANALYTICS_COLORS = {
     published: 'hsl(140, 55%, 45%)',
     unpublished: 'hsl(0, 0%, 70%)',
     
-    // Grid and axes
-    grid: 'hsl(220, 10%, 85%)',
-    axis: 'hsl(220, 10%, 45%)',
-    axisLabel: 'hsl(220, 10%, 35%)',
+    // Grid and axes — design-system tokens (work for both light/dark)
+    grid: 'hsl(var(--border))',
+    axis: 'hsl(var(--muted-foreground))',
+    axisLabel: 'hsl(var(--muted-foreground))',
   },
 
   // Background colors for cards

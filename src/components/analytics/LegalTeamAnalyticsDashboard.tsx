@@ -2,7 +2,7 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings2 } from "lucide-react";
 import { DataFreshnessIndicator } from "./shared/AnalyticsBlock";
@@ -242,20 +242,29 @@ export function LegalTeamAnalyticsDashboard() {
         </div>
       </section>
 
-      {/* Customize Dialog */}
-      <Dialog open={customizeOpen} onOpenChange={setCustomizeOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Personalizar Dashboard</DialogTitle>
-          </DialogHeader>
-          <ReportLayoutBuilder
-            blocks={blockOrder}
-            onChange={handleBlockOrderChange}
-            showInternalBlocks
-            mode="dashboard"
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Customize Side Sheet — wide, BI-style */}
+      <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-[640px] md:max-w-[720px] lg:max-w-[820px] p-0 flex flex-col"
+        >
+          <SheetHeader className="px-6 py-4 border-b border-border flex-shrink-0">
+            <SheetTitle className="text-lg">Personalizar Dashboard</SheetTitle>
+            <SheetDescription>
+              Arrastra para reordenar los bloques. Usa los toggles para mostrar u ocultar cada análisis.
+              Tus preferencias se guardan automáticamente.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-6">
+            <ReportLayoutBuilder
+              blocks={blockOrder}
+              onChange={handleBlockOrderChange}
+              showInternalBlocks
+              mode="dashboard"
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

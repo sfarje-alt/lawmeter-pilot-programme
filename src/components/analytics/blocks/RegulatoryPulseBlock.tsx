@@ -1,5 +1,6 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
+import { ChartTooltip } from "../shared/ChartTooltip";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -140,14 +141,14 @@ export function RegulatoryPulseBlock({
                 tickLine={false}
                 allowDecimals={false}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-                labelFormatter={(value) => `Semana del ${formatDate(value)}`}
+              <Tooltip
+                content={
+                  <ChartTooltip
+                    labelFormatter={(value) => `Semana del ${formatDate(value as string)}`}
+                    valueFormatter={(value) => `${value} alertas`}
+                  />
+                }
+                cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
               />
               
               {showTypeBreakdown ? (

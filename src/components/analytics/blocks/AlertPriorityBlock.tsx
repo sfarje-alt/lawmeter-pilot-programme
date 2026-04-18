@@ -1,5 +1,6 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
+import { ChartTooltip } from "../shared/ChartTooltip";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
 import { ANALYTICS_COLORS, getImpactColor } from "@/lib/analyticsColors";
 import { BarChart3, AlertTriangle, AlertCircle, MinusCircle, CheckCircle } from "lucide-react";
@@ -128,16 +129,7 @@ export function AlertPriorityBlock({
                 tickLine={false}
                 allowDecimals={false}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-                formatter={(value: number) => [`${value} alertas`, 'Cantidad']}
-                cursor={{ fill: 'hsl(var(--muted))' }}
-              />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
               <Bar 
                 dataKey="value" 
                 radius={[4, 4, 0, 0]}

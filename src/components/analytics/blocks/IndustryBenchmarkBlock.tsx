@@ -1,5 +1,6 @@
 import * as React from "react";
 import { AnalyticsBlock, AnalyticsEmptyState } from "../shared/AnalyticsBlock";
+import { ChartTooltip } from "../shared/ChartTooltip";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
 import { Users, Shield, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -141,14 +142,7 @@ export function IndustryBenchmarkBlock({
                 tickLine={false}
                 width={100}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-              />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
               <Bar 
                 dataKey="client" 
                 name={clientName || "Su empresa"}
