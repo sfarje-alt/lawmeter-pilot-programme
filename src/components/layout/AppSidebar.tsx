@@ -83,7 +83,7 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
               className="w-full h-auto object-contain max-h-32" 
             />
             <h1 className="text-sm font-bold text-foreground leading-tight">
-              Compliance &amp; Monitoreo Regulatorio
+              Centro de Inteligencia Regulatoria
             </h1>
             {isClientUser && clientName && (
               <Badge variant="outline" className="w-full justify-center bg-primary/10 border-primary/30 text-primary text-xs">

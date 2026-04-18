@@ -1,8 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, Briefcase } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
+import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, Briefcase, Archive, ArchiveRestore, TrendingUp } from "lucide-react";
+import { 
+  PeruAlert, 
+  getTypeLabel, 
+  getTypeColor, 
+  getImpactLevelInfo, 
+  MOCK_CLIENTS,
+  getArchiveDaysRemaining,
+  getApprovalProbabilityInfo,
+  getMockApprovalProbability,
+} from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -11,6 +20,9 @@ interface InboxAlertCardProps {
   alert: PeruAlert;
   onClick: () => void;
   onTogglePin?: (alertId: string) => void;
+  onArchive?: (alertId: string) => void;
+  onUnarchive?: (alertId: string) => void;
+  isArchiveView?: boolean;
   selectedClientId?: string | null;
   hasCommentaryForClient?: (alert: PeruAlert, clientId: string) => boolean;
 }
@@ -19,12 +31,23 @@ export function InboxAlertCard({
   alert, 
   onClick, 
   onTogglePin,
+  onArchive,
+  onUnarchive,
+  isArchiveView,
   selectedClientId,
   hasCommentaryForClient
 }: InboxAlertCardProps) {
   const isBill = alert.legislation_type === "proyecto_de_ley";
   const isPinned = alert.is_pinned_for_publication;
+  const isArchived = !!alert.archived_at;
+  const daysRemaining = getArchiveDaysRemaining(alert.archived_at);
   
+  // Approval probability (bills only)
+  const approvalProb = isBill
+    ? (alert.approval_probability ?? getMockApprovalProbability(alert.id))
+    : null;
+  const approvalInfo = approvalProb !== null ? getApprovalProbabilityInfo(approvalProb) : null;
+
   // Determine commentary status for the selected client
   const hasCommentary = selectedClientId && hasCommentaryForClient 
     ? hasCommentaryForClient(alert, selectedClientId)
@@ -40,6 +63,15 @@ export function InboxAlertCard({
   const handlePinClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onTogglePin?.(alert.id);
+  };
+
+  const handleArchiveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isArchived) {
+      onUnarchive?.(alert.id);
+    } else {
+      onArchive?.(alert.id);
+    }
   };
 
   const handleLinkClick = (e: React.MouseEvent) => {
@@ -63,9 +95,10 @@ export function InboxAlertCard({
     <Card 
       className={cn(
         "p-3 bg-card/50 border-border/30 hover:bg-card/80 transition-all cursor-pointer group",
-        isPinned && "border-primary/50 bg-primary/5",
+        isPinned && !isArchived && "border-primary/50 bg-primary/5",
         isPinned && hasCommentary && "ring-1 ring-green-500/30",
-        isPinned && !hasCommentary && "ring-1 ring-amber-500/30"
+        isPinned && !hasCommentary && "ring-1 ring-amber-500/30",
+        isArchived && "opacity-70 border-dashed"
       )}
       onClick={onClick}
     >
@@ -87,15 +120,40 @@ export function InboxAlertCard({
               {getImpactLevelInfo(alert.impact_level)?.label}
             </Badge>
           )}
+          {/* Approval Probability (bills only) */}
+          {approvalInfo && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    variant="outline" 
+                    className={cn("text-xs gap-1", approvalInfo.color)}
+                  >
+                    <TrendingUp className="h-3 w-3" />
+                    {approvalInfo.label}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Probabilidad de aprobación estimada por IA</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {isBill && alert.legislation_id && (
             <span className="text-xs text-primary font-mono font-medium">
               {alert.legislation_id}
             </span>
           )}
+          {isArchived && daysRemaining !== null && (
+            <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border/50">
+              <Archive className="h-3 w-3 mr-1" />
+              {daysRemaining}d restantes
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {/* Commentary Status Badge (only when pinned) */}
-          {isPinned && (
+          {isPinned && !isArchived && (
             hasCommentary ? (
               <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-500 border-green-500/30 py-0 px-1.5">
                 <CheckCircle2 className="h-3 w-3" />
@@ -115,7 +173,7 @@ export function InboxAlertCard({
               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
             </button>
           )}
-          {onTogglePin && (
+          {!isArchived && onTogglePin && (
             <button
               onClick={handlePinClick}
               className={cn(
@@ -124,7 +182,7 @@ export function InboxAlertCard({
                   ? "bg-primary/20 hover:bg-primary/30" 
                   : "hover:bg-white/10"
               )}
-              title={isPinned ? "Quitar de publicación" : "Pinear para publicación"}
+              title={isPinned ? "Quitar fijación" : "Fijar arriba"}
             >
               <Pin 
                 className={cn(
@@ -132,6 +190,19 @@ export function InboxAlertCard({
                   isPinned ? "fill-primary text-primary" : "text-muted-foreground"
                 )} 
               />
+            </button>
+          )}
+          {(onArchive || onUnarchive) && (
+            <button
+              onClick={handleArchiveClick}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+              title={isArchived ? "Restaurar del archivo" : "Archivar"}
+            >
+              {isArchived ? (
+                <ArchiveRestore className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+              ) : (
+                <Archive className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+              )}
             </button>
           )}
         </div>
@@ -207,12 +278,17 @@ export function InboxAlertCard({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default">
-                {alert.expert_commentary}
-              </p>
+              <div
+                className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default [&>*]:inline"
+                // Allow simple HTML preview from rich-text editor
+                dangerouslySetInnerHTML={{ __html: alert.expert_commentary }}
+              />
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-md">
-              <p className="text-xs">{alert.expert_commentary}</p>
+              <div
+                className="text-xs"
+                dangerouslySetInnerHTML={{ __html: alert.expert_commentary }}
+              />
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -273,6 +349,12 @@ export function InboxAlertCard({
               <span>{formatDate(alert.publication_date)}</span>
             </div>
           )
+        )}
+        {isArchived && alert.archived_at && (
+          <div className="flex items-center gap-1 ml-auto">
+            <Archive className="h-3 w-3" />
+            <span>Archivada {formatDate(alert.archived_at)}</span>
+          </div>
         )}
       </div>
     </Card>

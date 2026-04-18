@@ -18,6 +18,8 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
     alerts, 
     publishAlert, 
     togglePinAlert, 
+    archiveAlert,
+    unarchiveAlert,
     updateSharedCommentary,
     getPinnedAlerts,
     hasCommentaryForClient 
@@ -104,6 +106,8 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
             alerts={alerts}
             onPublish={publishAlert}
             onTogglePin={togglePinAlert}
+            onArchive={archiveAlert}
+            onUnarchive={unarchiveAlert}
             selectedClientId={selectedClientId}
             hasCommentaryForClient={hasCommentaryForClient}
             onUpdateExpertCommentary={updateExpertCommentary}
@@ -117,6 +121,8 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
             onPublish={publishAlert}
             onMoveAlert={moveAlert}
             onTogglePin={togglePinAlert}
+            onArchive={archiveAlert}
+            onUnarchive={unarchiveAlert}
             selectedClientId={selectedClientId}
             hasCommentaryForClient={hasCommentaryForClient}
             onUpdateExpertCommentary={updateExpertCommentary}

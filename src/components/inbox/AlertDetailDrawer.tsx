@@ -1,7 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,14 +20,26 @@ import {
   Plus,
   Trash2,
   AlertTriangle,
+  TrendingUp,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor, IMPACT_LEVELS, ImpactLevel } from "@/data/peruAlertsMockData";
+import {
+  PeruAlert,
+  getTypeLabel,
+  getTypeColor,
+  IMPACT_LEVELS,
+  ImpactLevel,
+  getMockApprovalProbability,
+  getApprovalProbabilityInfo,
+  getArchiveDaysRemaining,
+} from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { RichTextEditor, AttachedFile } from "./RichTextEditor";
 
-// Kept for backwards-compatibility with callers; no longer used internally.
 interface ClientCommentary {
   clientId: string;
   commentary: string;
@@ -46,9 +57,10 @@ interface AlertDetailDrawerProps {
   alert: PeruAlert | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Legacy prop — kept so existing parents keep compiling. Not invoked in self-service mode. */
   onPublish?: (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => void;
   onUpdateExpertCommentary?: (alertId: string, commentary: string) => void;
+  onArchive?: (alertId: string) => void;
+  onUnarchive?: (alertId: string) => void;
 }
 
 const URGENCY_OPTIONS = [
@@ -58,8 +70,16 @@ const URGENCY_OPTIONS = [
   { value: "critical", label: "Crítica" },
 ];
 
-export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCommentary }: AlertDetailDrawerProps) {
+export function AlertDetailDrawer({
+  alert,
+  open,
+  onOpenChange,
+  onUpdateExpertCommentary,
+  onArchive,
+  onUnarchive,
+}: AlertDetailDrawerProps) {
   const [sharedCommentary, setSharedCommentary] = useState("");
+  const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
   const [urgency, setUrgency] = useState<string>("medium");
   const [tagsText, setTagsText] = useState("");
@@ -71,10 +91,10 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
   useEffect(() => {
     if (alert) {
       setSharedCommentary(alert.expert_commentary || "");
+      setAttachments([]);
       setImpact(alert.impact_level);
       setUrgency("medium");
       setTagsText((alert.affected_areas || []).join(", "));
-      // Local-only action plan (would be persisted in a future iteration)
       setActions([]);
     }
   }, [alert?.id]);
@@ -82,11 +102,15 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
   if (!alert) return null;
 
   const isBill = alert.legislation_type === "proyecto_de_ley";
+  const isArchived = !!alert.archived_at;
+  const archiveDaysRemaining = getArchiveDaysRemaining(alert.archived_at);
 
-  const displayDate = isBill
-    ? alert.stage_date || alert.project_date
-    : alert.publication_date;
+  const approvalProb = isBill
+    ? alert.approval_probability ?? getMockApprovalProbability(alert.id)
+    : null;
+  const approvalInfo = approvalProb !== null ? getApprovalProbabilityInfo(approvalProb) : null;
 
+  const displayDate = isBill ? alert.stage_date || alert.project_date : alert.publication_date;
   const formattedDate = displayDate
     ? format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es })
     : format(new Date(alert.created_at), "dd 'de' MMMM, yyyy", { locale: es });
@@ -123,6 +147,15 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
     setActions((prev) => prev.filter((a) => a.id !== id));
   };
 
+  const handleArchiveToggle = () => {
+    if (isArchived) {
+      onUnarchive?.(alert.id);
+    } else {
+      onArchive?.(alert.id);
+      onOpenChange(false);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl bg-card border-border/50 p-0">
@@ -130,14 +163,48 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
           <div className="p-6 space-y-6">
             {/* Header */}
             <SheetHeader className="space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <Badge variant="outline" className={cn("text-sm", getTypeColor(alert.legislation_type))}>
-                  {getTypeLabel(alert.legislation_type)}
-                </Badge>
-                {isBill && alert.current_stage && (
-                  <Badge variant="secondary" className="text-sm">
-                    {alert.current_stage}
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className={cn("text-sm", getTypeColor(alert.legislation_type))}>
+                    {getTypeLabel(alert.legislation_type)}
                   </Badge>
+                  {isBill && alert.current_stage && (
+                    <Badge variant="secondary" className="text-sm">
+                      {alert.current_stage}
+                    </Badge>
+                  )}
+                  {approvalInfo && (
+                    <Badge variant="outline" className={cn("text-sm gap-1", approvalInfo.color)}>
+                      <TrendingUp className="h-3.5 w-3.5" />
+                      {approvalInfo.label}
+                    </Badge>
+                  )}
+                  {isArchived && archiveDaysRemaining !== null && (
+                    <Badge variant="outline" className="text-sm gap-1 bg-muted/50 text-muted-foreground border-border/50">
+                      <Archive className="h-3.5 w-3.5" />
+                      Archivada · {archiveDaysRemaining}d restantes
+                    </Badge>
+                  )}
+                </div>
+                {(onArchive || onUnarchive) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleArchiveToggle}
+                    className="gap-1.5"
+                  >
+                    {isArchived ? (
+                      <>
+                        <ArchiveRestore className="h-3.5 w-3.5" />
+                        Restaurar
+                      </>
+                    ) : (
+                      <>
+                        <Archive className="h-3.5 w-3.5" />
+                        Archivar
+                      </>
+                    )}
+                  </Button>
                 )}
               </div>
               <SheetTitle className="text-left text-lg font-semibold leading-tight">
@@ -145,10 +212,10 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
               </SheetTitle>
             </SheetHeader>
 
-            {/* AI disclaimer */}
-            <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-200/80 leading-relaxed">
+            {/* AI disclaimer (in-drawer, blue, non-dismissible) */}
+            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
+              <AlertTriangle className="h-4 w-4 text-blue-300 shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-100/90 leading-relaxed">
                 Análisis generado por IA. Valida el contenido y ajusta los campos antes de tomar decisiones.
               </p>
             </div>
@@ -262,13 +329,19 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Etiquetas (separadas por coma)</Label>
+                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  Etiquetas (asignadas automáticamente por IA según el perfil)
+                </Label>
                 <Input
                   value={tagsText}
                   onChange={(e) => setTagsText(e.target.value)}
                   placeholder="p. ej. Salud, Datos personales, Tributario"
                   className="bg-muted/30 border-border/50"
                 />
+                <p className="text-[11px] text-muted-foreground">
+                  La IA sugiere etiquetas basadas en las etiquetas configuradas en cada perfil. Puedes editarlas si necesitas ajustar.
+                </p>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {tagsText
                     .split(",")
@@ -285,7 +358,7 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
 
             <Separator className="bg-border/30" />
 
-            {/* Expert commentary */}
+            {/* Expert commentary — rich text + attachments */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <PenLine className="h-4 w-4 text-primary" />
@@ -293,14 +366,16 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCom
                   Comentario experto
                 </h3>
               </div>
-              <Textarea
-                placeholder="Documenta el criterio interno: cómo afecta a la organización, supuestos, postura sugerida..."
+              <RichTextEditor
                 value={sharedCommentary}
-                onChange={(e) => handleCommentaryChange(e.target.value)}
-                className="min-h-[120px] bg-muted/30 border-border/50 resize-none"
+                onChange={handleCommentaryChange}
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
+                placeholder="Documenta el criterio interno: cómo afecta a la organización, supuestos, postura sugerida..."
               />
               <p className="text-[11px] text-muted-foreground">
                 Este comentario reemplaza o complementa el análisis generado por IA. Se guarda automáticamente.
+                Puedes usar formato (negrita, cursiva, listas) y adjuntar documentos de soporte.
               </p>
             </div>
 

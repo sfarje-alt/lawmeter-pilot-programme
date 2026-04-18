@@ -12,6 +12,8 @@ interface RegulationsInboxProps {
   onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
   onMoveAlert: (alertId: string, newStage: PeruAlert["kanban_stage"]) => void;
   onTogglePin: (alertId: string) => void;
+  onArchive: (alertId: string) => void;
+  onUnarchive: (alertId: string) => void;
   selectedClientId: string | null;
   hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
   onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
@@ -28,9 +30,10 @@ export interface RegulationsFilters {
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onlyPinned: boolean;
+  showArchived: boolean;
 }
 
-export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: RegulationsInboxProps) {
+export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, onArchive, onUnarchive, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: RegulationsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
@@ -44,12 +47,22 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     dateFrom: undefined,
     dateTo: undefined,
     onlyPinned: false,
+    showArchived: false,
   });
 
-  // Filter only regulations
+  // Filter only regulations (and respect archive toggle)
   const regulationAlerts = useMemo(() => {
-    return alerts.filter(a => a.legislation_type === "norma");
-  }, [alerts]);
+    return alerts.filter(a => {
+      if (a.legislation_type !== "norma") return false;
+      if (filters.showArchived) return !!a.archived_at;
+      return !a.archived_at;
+    });
+  }, [alerts, filters.showArchived]);
+
+  const archivedCount = useMemo(
+    () => alerts.filter(a => a.legislation_type === "norma" && !!a.archived_at).length,
+    [alerts]
+  );
 
   // Reset processed flag when initialAlertId changes
   useEffect(() => {
@@ -294,6 +307,9 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
               alert={alert}
               onClick={() => handleAlertClick(alert)}
               onTogglePin={onTogglePin}
+              onArchive={onArchive}
+              onUnarchive={onUnarchive}
+              isArchiveView={filters.showArchived}
               selectedClientId={selectedClientId}
               hasCommentaryForClient={hasCommentaryForClient}
             />
@@ -308,6 +324,8 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         onOpenChange={setDrawerOpen}
         onPublish={handlePublish}
         onUpdateExpertCommentary={onUpdateExpertCommentary}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
       />
     </div>
   );
