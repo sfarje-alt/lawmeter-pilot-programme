@@ -1,7 +1,20 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, Archive, ArchiveRestore } from "lucide-react";
+import {
+  Pin,
+  ExternalLink,
+  Clock,
+  Building2,
+  User,
+  Users,
+  FileText,
+  Tag,
+  CheckCircle2,
+  AlertCircle,
+  Archive,
+  ArchiveRestore,
+} from "lucide-react";
 import {
   PeruAlert,
   getTypeLabel,
@@ -22,6 +35,19 @@ interface InboxAlertCardProps {
   isArchiveView?: boolean;
 }
 
+/**
+ * InboxAlertCard
+ *
+ * Responsive containment rules (do NOT remove):
+ * - Root <Card> uses `w-full max-w-full min-w-0 overflow-hidden` so it can never
+ *   exceed its parent column width.
+ * - The header is a 2-column CSS grid: `[meta] [actions]` where the meta column
+ *   uses `min-w-0` (so it can shrink) and the actions column uses `auto`
+ *   (so icons stay fully visible). This is the structural fix — flexbox kept
+ *   pushing the icons out because the meta side refused to shrink.
+ * - Every text node uses `min-w-0` + `truncate` or `break-words` so long
+ *   strings cannot create horizontal overflow.
+ */
 export function InboxAlertCard({
   alert,
   onClick,
@@ -34,8 +60,6 @@ export function InboxAlertCard({
   const isPinned = alert.is_pinned_for_publication;
   const isArchived = !!alert.archived_at;
   const daysRemaining = getArchiveDaysRemaining(alert.archived_at);
-
-  // Single-profile commentary indicator
   const hasCommentary = !!(alert.expert_commentary && alert.expert_commentary.trim());
 
   const handlePinClick = (e: React.MouseEvent) => {
@@ -71,96 +95,118 @@ export function InboxAlertCard({
   return (
     <Card
       className={cn(
-        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full max-w-full min-w-0 overflow-hidden",
+        "group relative w-full max-w-full min-w-0 overflow-hidden p-3",
+        "bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer",
         isPinned && !isArchived && "border-l-4 border-l-primary",
         isArchived && "opacity-70 border-dashed"
       )}
       onClick={onClick}
     >
-      {/* Header: Actions row (always contained) */}
-      <div className="flex items-center justify-end gap-1 mb-2 -mt-1 -mr-1">
-        {/* Commentary Status Badge (only when pinned) */}
-        {isPinned && !isArchived && (
-          hasCommentary ? (
-            <Badge variant="secondary" className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1.5 shrink-0">
-              <CheckCircle2 className="h-3 w-3" />
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="text-xs bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)] py-0 px-1.5 shrink-0">
-              <AlertCircle className="h-3 w-3" />
-            </Badge>
-          )
-        )}
-        {alert.source_url && (
-          <button
-            onClick={handleLinkClick}
-            className="p-1 hover:bg-white/10 rounded transition-colors shrink-0"
-            title="Ver documento original"
-          >
-            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
-          </button>
-        )}
-        {!isArchived && onTogglePin && (
-          <button
-            onClick={handlePinClick}
-            className={cn(
-              "p-1 rounded transition-colors shrink-0",
-              isPinned
-                ? "bg-primary/20 hover:bg-primary/30"
-                : "hover:bg-white/10"
-            )}
-            title={isPinned ? "Quitar fijación" : "Fijar arriba"}
-          >
-            <Pin
-              className={cn(
-                "h-3.5 w-3.5 transition-colors",
-                isPinned ? "fill-primary text-primary" : "text-muted-foreground"
-              )}
-            />
-          </button>
-        )}
-        {(onArchive || onUnarchive) && (
-          <button
-            onClick={handleArchiveClick}
-            className="p-1 hover:bg-white/10 rounded transition-colors shrink-0"
-            title={isArchived ? "Restaurar del archivo" : "Archivar"}
-          >
-            {isArchived ? (
-              <ArchiveRestore className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
-            ) : (
-              <Archive className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-            )}
-          </button>
-        )}
-      </div>
-
-      {/* Badges row: wraps freely, never collides with actions */}
-      <div className="flex items-center gap-1.5 flex-wrap min-w-0 mb-2">
-        <Badge variant="outline" className={cn("text-xs max-w-full truncate", getTypeColor(alert.legislation_type))}>
-          {getTypeLabel(alert.legislation_type)}
-        </Badge>
-        {alert.impact_level && (
+      {/* ================= HEADER ================= */}
+      {/* Grid: meta (shrinks) | actions (auto, never shrink) */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 mb-2">
+        {/* META (left) — wraps freely, shrinks to 0 */}
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
           <Badge
             variant="outline"
-            className={cn("text-xs max-w-full truncate", getImpactLevelInfo(alert.impact_level)?.color)}
+            className={cn("text-xs max-w-full truncate", getTypeColor(alert.legislation_type))}
           >
-            {getImpactLevelInfo(alert.impact_level)?.label}
+            {getTypeLabel(alert.legislation_type)}
           </Badge>
-        )}
-        {isBill && alert.legislation_id && (
-          <span className="text-xs text-primary font-mono font-medium truncate max-w-full">
-            {alert.legislation_id}
-          </span>
-        )}
-        {isArchived && daysRemaining !== null && (
-          <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border/50">
-            <Archive className="h-3 w-3 mr-1" />
-            {daysRemaining}d restantes
-          </Badge>
-        )}
+          {alert.impact_level && (
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-xs max-w-full truncate",
+                getImpactLevelInfo(alert.impact_level)?.color
+              )}
+            >
+              {getImpactLevelInfo(alert.impact_level)?.label}
+            </Badge>
+          )}
+          {isBill && alert.legislation_id && (
+            <span className="text-xs text-primary font-mono font-medium truncate max-w-full">
+              {alert.legislation_id}
+            </span>
+          )}
+          {isArchived && daysRemaining !== null && (
+            <Badge
+              variant="outline"
+              className="text-xs bg-muted/50 text-muted-foreground border-border/50"
+            >
+              <Archive className="h-3 w-3 mr-1" />
+              {daysRemaining}d
+            </Badge>
+          )}
+        </div>
+
+        {/* ACTIONS (right) — never shrinks, always inside the card */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          {isPinned && !isArchived && (
+            hasCommentary ? (
+              <Badge
+                variant="secondary"
+                className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1 shrink-0"
+                title="Comentario experto agregado"
+              >
+                <CheckCircle2 className="h-3 w-3" />
+              </Badge>
+            ) : (
+              <Badge
+                variant="secondary"
+                className="text-xs bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)] py-0 px-1 shrink-0"
+                title="Sin comentario experto"
+              >
+                <AlertCircle className="h-3 w-3" />
+              </Badge>
+            )
+          )}
+          {alert.source_url && (
+            <button
+              type="button"
+              onClick={handleLinkClick}
+              className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
+              title="Ver documento original"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+            </button>
+          )}
+          {!isArchived && onTogglePin && (
+            <button
+              type="button"
+              onClick={handlePinClick}
+              className={cn(
+                "p-1 rounded transition-colors shrink-0",
+                isPinned ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-white/10"
+              )}
+              title={isPinned ? "Quitar fijación" : "Fijar arriba"}
+            >
+              <Pin
+                className={cn(
+                  "h-3.5 w-3.5 transition-colors",
+                  isPinned ? "fill-primary text-primary" : "text-muted-foreground"
+                )}
+              />
+            </button>
+          )}
+          {(onArchive || onUnarchive) && (
+            <button
+              type="button"
+              onClick={handleArchiveClick}
+              className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
+              title={isArchived ? "Restaurar del archivo" : "Archivar"}
+            >
+              {isArchived ? (
+                <ArchiveRestore className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+              ) : (
+                <Archive className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Title with Tooltip */}
+      {/* ================= TITLE ================= */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -169,13 +215,13 @@ export function InboxAlertCard({
             </h4>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-sm">
-            <p className="text-sm">{alert.legislation_title}</p>
+            <p className="text-sm break-words">{alert.legislation_title}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
-      {/* Bill-specific: Author + Parliamentary Group */}
-      {isBill && (
+      {/* ================= BODY ================= */}
+      {isBill && (alert.author || alert.parliamentary_group) && (
         <div className="space-y-1 mb-2 min-w-0">
           {alert.author && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
@@ -192,7 +238,6 @@ export function InboxAlertCard({
         </div>
       )}
 
-      {/* Norma-specific: Entity */}
       {!isBill && alert.entity && (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2 min-w-0">
           <Building2 className="h-3 w-3 shrink-0" />
@@ -200,44 +245,44 @@ export function InboxAlertCard({
         </div>
       )}
 
-      {/* Bill-specific: Current Stage */}
       {isBill && alert.current_stage && (
-        <div className="mb-2 min-w-0">
-          <Badge variant="secondary" className="text-xs bg-muted/50 max-w-full truncate inline-block">
+        <div className="mb-2 min-w-0 max-w-full">
+          <Badge
+            variant="secondary"
+            className="text-xs bg-muted/50 max-w-full truncate inline-block align-middle"
+          >
             {alert.current_stage}
           </Badge>
         </div>
       )}
 
-      {/* Norma-specific: Summary/Commentary (truncated) */}
       {!isBill && alert.legislation_summary && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default">
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default break-words min-w-0">
                 {alert.legislation_summary}
               </p>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-md">
-              <p className="text-xs">{alert.legislation_summary}</p>
+              <p className="text-xs break-words">{alert.legislation_summary}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       )}
 
-      {/* Bill-specific: Expert Commentary preview */}
       {isBill && alert.expert_commentary && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default break-words [&>*]:inline"
+                className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default break-words min-w-0 [&>*]:inline"
                 dangerouslySetInnerHTML={{ __html: alert.expert_commentary }}
               />
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-md">
               <div
-                className="text-xs"
+                className="text-xs break-words"
                 dangerouslySetInnerHTML={{ __html: alert.expert_commentary }}
               />
             </TooltipContent>
@@ -245,23 +290,29 @@ export function InboxAlertCard({
         </TooltipProvider>
       )}
 
-      {/* Area Tags */}
-      <div className="flex items-center gap-1.5 flex-wrap mb-2 min-w-0">
-        <Tag className="h-3 w-3 text-muted-foreground shrink-0" />
-        {alert.affected_areas.slice(0, 2).map((area) => (
-          <Badge key={area} variant="secondary" className="text-xs bg-muted/50 py-0 max-w-full truncate inline-block">
-            {area}
-          </Badge>
-        ))}
-        {alert.affected_areas.length > 2 && (
-          <Badge variant="secondary" className="text-xs bg-muted/50 py-0 shrink-0">
-            +{alert.affected_areas.length - 2}
-          </Badge>
-        )}
-      </div>
+      {/* ================= AREA TAGS ================= */}
+      {alert.affected_areas.length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap mb-2 min-w-0">
+          <Tag className="h-3 w-3 text-muted-foreground shrink-0" />
+          {alert.affected_areas.slice(0, 2).map((area) => (
+            <Badge
+              key={area}
+              variant="secondary"
+              className="text-xs bg-muted/50 py-0 max-w-full truncate inline-block"
+            >
+              {area}
+            </Badge>
+          ))}
+          {alert.affected_areas.length > 2 && (
+            <Badge variant="secondary" className="text-xs bg-muted/50 py-0 shrink-0">
+              +{alert.affected_areas.length - 2}
+            </Badge>
+          )}
+        </div>
+      )}
 
-      {/* Footer: Dates */}
-      <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground pt-2 border-t border-border/30 min-w-0">
+      {/* ================= FOOTER ================= */}
+      <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-muted-foreground pt-2 border-t border-border/30 min-w-0">
         {isBill ? (
           <>
             {alert.project_date && (
@@ -286,7 +337,7 @@ export function InboxAlertCard({
           )
         )}
         {isArchived && alert.archived_at && (
-          <div className="flex items-center gap-1 ml-auto min-w-0">
+          <div className="flex items-center gap-1 min-w-0 ml-auto">
             <Archive className="h-3 w-3 shrink-0" />
             <span className="truncate">Archivada {formatDate(alert.archived_at)}</span>
           </div>
