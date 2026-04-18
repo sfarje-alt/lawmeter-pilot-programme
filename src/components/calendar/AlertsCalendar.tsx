@@ -708,7 +708,6 @@ export function AlertsCalendar() {
                 const isCurrentMonth = day.getMonth() === currentDate.getMonth();
                 const load = computeDayLoad(filteredEvents, day);
                 const crit = computeDayCritical(filteredEvents, day);
-                const lvl = loadLevel(load, maxLoad);
                 return (
                   <div
                     key={day.toISOString()}
