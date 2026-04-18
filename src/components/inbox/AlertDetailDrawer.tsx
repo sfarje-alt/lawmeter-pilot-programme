@@ -2,106 +2,125 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { 
-  ExternalLink, 
-  Calendar, 
-  User, 
-  Building2, 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  ExternalLink,
+  Calendar,
+  User,
+  Building2,
   FileText,
   Users,
   PenLine,
-  Send,
-  Archive,
   Clock,
-  CheckCircle2,
-  MessageSquarePlus
+  Sparkles,
+  ListChecks,
+  Plus,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
-import { PeruAlert, getTypeLabel, getTypeColor, MOCK_CLIENTS, PRIMARY_CLIENT_ID } from "@/data/peruAlertsMockData";
+import { PeruAlert, getTypeLabel, getTypeColor, IMPACT_LEVELS, ImpactLevel } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
+// Kept for backwards-compatibility with callers; no longer used internally.
 interface ClientCommentary {
   clientId: string;
   commentary: string;
+}
+
+interface ActionItem {
+  id: string;
+  task: string;
+  owner: string;
+  due: string;
+  done: boolean;
 }
 
 interface AlertDetailDrawerProps {
   alert: PeruAlert | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPublish: (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => void;
+  /** Legacy prop — kept so existing parents keep compiling. Not invoked in self-service mode. */
+  onPublish?: (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => void;
   onUpdateExpertCommentary?: (alertId: string, commentary: string) => void;
 }
 
-export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpdateExpertCommentary }: AlertDetailDrawerProps) {
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  const [clientCommentaries, setClientCommentaries] = useState<Record<string, string>>({});
-  const [useSharedCommentary, setUseSharedCommentary] = useState(true);
-  const [sharedCommentary, setSharedCommentary] = useState("");
+const URGENCY_OPTIONS = [
+  { value: "low", label: "Baja" },
+  { value: "medium", label: "Media" },
+  { value: "high", label: "Alta" },
+  { value: "critical", label: "Crítica" },
+];
 
-  // Reset state when alert changes - pre-select primary client if assigned
+export function AlertDetailDrawer({ alert, open, onOpenChange, onUpdateExpertCommentary }: AlertDetailDrawerProps) {
+  const [sharedCommentary, setSharedCommentary] = useState("");
+  const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
+  const [urgency, setUrgency] = useState<string>("medium");
+  const [tagsText, setTagsText] = useState("");
+  const [actions, setActions] = useState<ActionItem[]>([]);
+  const [newTask, setNewTask] = useState("");
+  const [newOwner, setNewOwner] = useState("");
+  const [newDue, setNewDue] = useState("");
+
   useEffect(() => {
     if (alert) {
-      // Pre-select the primary client if the alert has one assigned
-      const initialClients = alert.primary_client_id ? [alert.primary_client_id] : [];
-      setSelectedClients(initialClients);
-      setClientCommentaries({});
       setSharedCommentary(alert.expert_commentary || "");
-      setUseSharedCommentary(true);
+      setImpact(alert.impact_level);
+      setUrgency("medium");
+      setTagsText((alert.affected_areas || []).join(", "));
+      // Local-only action plan (would be persisted in a future iteration)
+      setActions([]);
     }
   }, [alert?.id]);
 
   if (!alert) return null;
 
   const isBill = alert.legislation_type === "proyecto_de_ley";
-  
-  // Get display date based on type
-  const displayDate = isBill 
-    ? alert.stage_date || alert.project_date 
+
+  const displayDate = isBill
+    ? alert.stage_date || alert.project_date
     : alert.publication_date;
-  
-  const formattedDate = displayDate 
+
+  const formattedDate = displayDate
     ? format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es })
     : format(new Date(alert.created_at), "dd 'de' MMMM, yyyy", { locale: es });
 
-  // Auto-save expert commentary when it changes
   const handleCommentaryChange = (commentary: string) => {
     setSharedCommentary(commentary);
-    if (onUpdateExpertCommentary && alert) {
+    if (onUpdateExpertCommentary) {
       onUpdateExpertCommentary(alert.id, commentary);
     }
   };
 
-  const handlePublish = () => {
-    if (selectedClients.length > 0) {
-      const commentaries: ClientCommentary[] = selectedClients.map(clientId => ({
-        clientId,
-        commentary: useSharedCommentary ? sharedCommentary : (clientCommentaries[clientId] || "")
-      }));
-      onPublish(alert, selectedClients, commentaries);
-      onOpenChange(false);
-    }
-  };
-
-  const toggleClient = (clientId: string) => {
-    setSelectedClients(prev => 
-      prev.includes(clientId) 
-        ? prev.filter(id => id !== clientId)
-        : [...prev, clientId]
-    );
-  };
-
-  const updateClientCommentary = (clientId: string, commentary: string) => {
-    setClientCommentaries(prev => ({
+  const addAction = () => {
+    if (!newTask.trim()) return;
+    setActions((prev) => [
       ...prev,
-      [clientId]: commentary
-    }));
+      {
+        id: `action-${Date.now()}`,
+        task: newTask.trim(),
+        owner: newOwner.trim() || "Sin asignar",
+        due: newDue,
+        done: false,
+      },
+    ]);
+    setNewTask("");
+    setNewOwner("");
+    setNewDue("");
+  };
+
+  const toggleAction = (id: string) => {
+    setActions((prev) => prev.map((a) => (a.id === id ? { ...a, done: !a.done } : a)));
+  };
+
+  const removeAction = (id: string) => {
+    setActions((prev) => prev.filter((a) => a.id !== id));
   };
 
   return (
@@ -126,14 +145,19 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpda
               </SheetTitle>
             </SheetHeader>
 
+            {/* AI disclaimer */}
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-200/80 leading-relaxed">
+                Análisis generado por IA. Valida el contenido y ajusta los campos antes de tomar decisiones.
+              </p>
+            </div>
+
             <Separator className="bg-border/30" />
 
-            {/* Metadata Section */}
+            {/* Metadata */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Información
-              </h3>
-              
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Información</h3>
               <div className="grid gap-2">
                 {alert.legislation_id && (
                   <div className="flex items-center gap-2 text-sm">
@@ -142,7 +166,6 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpda
                     <span className="text-foreground font-medium font-mono">{alert.legislation_id}</span>
                   </div>
                 )}
-
                 {isBill && alert.author && (
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-muted-foreground" />
@@ -150,7 +173,6 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpda
                     <span className="text-foreground">{alert.author}</span>
                   </div>
                 )}
-
                 {isBill && alert.parliamentary_group && (
                   <div className="flex items-center gap-2 text-sm">
                     <Users className="h-4 w-4 text-muted-foreground" />
@@ -158,7 +180,6 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpda
                     <span className="text-foreground">{alert.parliamentary_group}</span>
                   </div>
                 )}
-
                 {!isBill && alert.entity && (
                   <div className="flex items-center gap-2 text-sm">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -166,13 +187,11 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpda
                     <span className="text-foreground">{alert.entity}</span>
                   </div>
                 )}
-
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Fecha:</span>
                   <span className="text-foreground">{formattedDate}</span>
                 </div>
-
                 {isBill && alert.project_date && alert.stage_date && alert.project_date !== alert.stage_date && (
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
@@ -183,169 +202,205 @@ export function AlertDetailDrawer({ alert, open, onOpenChange, onPublish, onUpda
                   </div>
                 )}
               </div>
-
-              {/* Affected Areas */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {alert.affected_areas.map((area) => (
-                  <Badge key={area} variant="outline" className="bg-primary/10 border-primary/30 text-primary">
-                    {area}
-                  </Badge>
-                ))}
-              </div>
             </div>
 
-            <Separator className="bg-border/30" />
-
-            {/* Summary Section (for normas) */}
+            {/* Summary (normas) */}
             {!isBill && alert.legislation_summary && (
               <>
+                <Separator className="bg-border/30" />
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    Resumen
-                  </h3>
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Resumen</h3>
                   <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-                    <p className="text-sm text-foreground leading-relaxed">
-                      {alert.legislation_summary}
-                    </p>
+                    <p className="text-sm text-foreground leading-relaxed">{alert.legislation_summary}</p>
                   </div>
                 </div>
-                <Separator className="bg-border/30" />
               </>
             )}
 
-            {/* EDITORIAL SECTION - Publish for Client (Multi-selection) */}
+            <Separator className="bg-border/30" />
+
+            {/* Editable classification */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Send className="h-4 w-4 text-primary" />
+                <Sparkles className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  Publicar para Cliente
+                  Clasificación interna
                 </h3>
-                <Badge variant="secondary" className="text-xs">Multi-selección</Badge>
               </div>
-              
-              <div className="grid gap-2">
-                {MOCK_CLIENTS.map((client) => (
-                  <div 
-                    key={client.id}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
-                      selectedClients.includes(client.id)
-                        ? "bg-primary/10 border-primary/50"
-                        : "bg-muted/20 border-border/30 hover:border-border/50"
-                    )}
-                    onClick={() => toggleClient(client.id)}
-                  >
-                    <Checkbox 
-                      checked={selectedClients.includes(client.id)}
-                      onCheckedChange={() => toggleClient(client.id)}
-                      className="pointer-events-none"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{client.name}</p>
-                      <p className="text-xs text-muted-foreground">{client.sector}</p>
-                    </div>
-                    {selectedClients.includes(client.id) && (
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                    )}
-                  </div>
-                ))}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Impacto</Label>
+                  <Select value={impact} onValueChange={(v) => setImpact(v as ImpactLevel)}>
+                    <SelectTrigger className="bg-muted/30 border-border/50">
+                      <SelectValue placeholder="Seleccionar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {IMPACT_LEVELS.map((lvl) => (
+                        <SelectItem key={lvl.value} value={lvl.value}>
+                          {lvl.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Urgencia</Label>
+                  <Select value={urgency} onValueChange={setUrgency}>
+                    <SelectTrigger className="bg-muted/30 border-border/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {URGENCY_OPTIONS.map((u) => (
+                        <SelectItem key={u.value} value={u.value}>
+                          {u.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              
-              {selectedClients.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {selectedClients.length} cliente{selectedClients.length > 1 ? 's' : ''} seleccionado{selectedClients.length > 1 ? 's' : ''}
-                </p>
-              )}
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Etiquetas (separadas por coma)</Label>
+                <Input
+                  value={tagsText}
+                  onChange={(e) => setTagsText(e.target.value)}
+                  placeholder="p. ej. Salud, Datos personales, Tributario"
+                  className="bg-muted/30 border-border/50"
+                />
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {tagsText
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean)
+                    .map((t, i) => (
+                      <Badge key={`${t}-${i}`} variant="outline" className="bg-primary/10 border-primary/30 text-primary">
+                        {t}
+                      </Badge>
+                    ))}
+                </div>
+              </div>
             </div>
 
             <Separator className="bg-border/30" />
 
-            {/* EDITORIAL SECTION - Expert Commentary */}
-            <div className="space-y-4">
+            {/* Expert commentary */}
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <PenLine className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  Comentario Experto
+                  Comentario experto
                 </h3>
               </div>
-
-              {/* Toggle between shared and personalized */}
-              <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/20 border border-border/30">
-                <div 
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-colors",
-                    useSharedCommentary ? "bg-primary text-primary-foreground" : "hover:bg-muted/50"
-                  )}
-                  onClick={() => setUseSharedCommentary(true)}
-                >
-                  <MessageSquarePlus className="h-4 w-4" />
-                  <span className="text-sm font-medium">Compartido</span>
-                </div>
-                <div 
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-colors",
-                    !useSharedCommentary ? "bg-primary text-primary-foreground" : "hover:bg-muted/50"
-                  )}
-                  onClick={() => setUseSharedCommentary(false)}
-                >
-                  <Users className="h-4 w-4" />
-                  <span className="text-sm font-medium">Por Cliente</span>
-                </div>
-              </div>
-
-              {useSharedCommentary ? (
-                <Textarea
-                  placeholder="Agregar comentario experto compartido para todos los clientes..."
-                  value={sharedCommentary}
-                  onChange={(e) => handleCommentaryChange(e.target.value)}
-                  className="min-h-[120px] bg-muted/30 border-border/50 resize-none"
-                />
-              ) : (
-                <div className="space-y-4">
-                  {selectedClients.length === 0 ? (
-                    <p className="text-sm text-muted-foreground italic">
-                      Selecciona clientes arriba para agregar comentarios personalizados
-                    </p>
-                  ) : (
-                    selectedClients.map(clientId => {
-                      const client = MOCK_CLIENTS.find(c => c.id === clientId);
-                      if (!client) return null;
-                      return (
-                        <div key={clientId} className="space-y-2">
-                          <Label className="text-sm font-medium flex items-center gap-2">
-                            <Building2 className="h-3.5 w-3.5" />
-                            {client.name}
-                          </Label>
-                          <Textarea
-                            placeholder={`Comentario personalizado para ${client.name}...`}
-                            value={clientCommentaries[clientId] || ""}
-                            onChange={(e) => updateClientCommentary(clientId, e.target.value)}
-                            className="min-h-[80px] bg-muted/30 border-border/50 resize-none"
-                          />
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
+              <Textarea
+                placeholder="Documenta el criterio interno: cómo afecta a la organización, supuestos, postura sugerida..."
+                value={sharedCommentary}
+                onChange={(e) => handleCommentaryChange(e.target.value)}
+                className="min-h-[120px] bg-muted/30 border-border/50 resize-none"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Este comentario reemplaza o complementa el análisis generado por IA. Se guarda automáticamente.
+              </p>
             </div>
 
             <Separator className="bg-border/30" />
 
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <Button
-                className="w-full"
-                onClick={handlePublish}
-                disabled={selectedClients.length === 0}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Publicar a {selectedClients.length > 0 ? `${selectedClients.length} Cliente${selectedClients.length > 1 ? 's' : ''}` : 'Cliente'}
+            {/* Action plan */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <ListChecks className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Plan de acción
+                </h3>
+                <Badge variant="secondary" className="text-xs">
+                  {actions.filter((a) => !a.done).length} pendientes
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                {actions.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Aún no hay acciones registradas. Agrega tareas con responsables y fechas.
+                  </p>
+                )}
+                {actions.map((action) => (
+                  <div
+                    key={action.id}
+                    className={cn(
+                      "flex items-start gap-3 p-3 rounded-lg border bg-muted/20 border-border/30",
+                      action.done && "opacity-60"
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={action.done}
+                      onChange={() => toggleAction(action.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className={cn("text-sm text-foreground", action.done && "line-through")}>{action.task}</p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {action.owner}
+                        </span>
+                        {action.due && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(action.due), "dd MMM yyyy", { locale: es })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => removeAction(action.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-12 gap-2 items-end">
+                <div className="col-span-6 space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Tarea</Label>
+                  <Input
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    placeholder="Ej. Preparar informe interno"
+                    className="bg-muted/30 border-border/50"
+                  />
+                </div>
+                <div className="col-span-3 space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Responsable</Label>
+                  <Input
+                    value={newOwner}
+                    onChange={(e) => setNewOwner(e.target.value)}
+                    placeholder="Nombre"
+                    className="bg-muted/30 border-border/50"
+                  />
+                </div>
+                <div className="col-span-3 space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Fecha</Label>
+                  <Input
+                    type="date"
+                    value={newDue}
+                    onChange={(e) => setNewDue(e.target.value)}
+                    className="bg-muted/30 border-border/50"
+                  />
+                </div>
+              </div>
+              <Button onClick={addAction} variant="outline" size="sm" className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar acción
               </Button>
-              
             </div>
 
-            {/* Source Link */}
+            {/* Source */}
             {alert.source_url && (
               <Button
                 variant="ghost"
