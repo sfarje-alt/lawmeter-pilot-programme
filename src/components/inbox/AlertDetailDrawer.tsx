@@ -39,6 +39,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { RichTextEditor, AttachedFile } from "./RichTextEditor";
+import { useAlerts } from "@/contexts/AlertsContext";
 
 interface ClientCommentary {
   clientId: string;
@@ -78,6 +79,7 @@ export function AlertDetailDrawer({
   onArchive,
   onUnarchive,
 }: AlertDetailDrawerProps) {
+  const { updateAttachments } = useAlerts();
   const [sharedCommentary, setSharedCommentary] = useState("");
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
@@ -91,13 +93,20 @@ export function AlertDetailDrawer({
   useEffect(() => {
     if (alert) {
       setSharedCommentary(alert.expert_commentary || "");
-      setAttachments([]);
+      // Load persisted attachments from the alert (if any)
+      setAttachments((alert.attachments as AttachedFile[]) || []);
       setImpact(alert.impact_level);
       setUrgency("medium");
       setTagsText((alert.affected_areas || []).join(", "));
       setActions([]);
     }
   }, [alert?.id]);
+
+  // Persist attachments back to the context whenever they change
+  const handleAttachmentsChange = (files: AttachedFile[]) => {
+    setAttachments(files);
+    if (alert) updateAttachments(alert.id, files);
+  };
 
   if (!alert) return null;
 
@@ -212,10 +221,10 @@ export function AlertDetailDrawer({
               </SheetTitle>
             </SheetHeader>
 
-            {/* AI disclaimer (in-drawer, blue, non-dismissible) */}
-            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
-              <AlertTriangle className="h-4 w-4 text-blue-300 shrink-0 mt-0.5" />
-              <p className="text-xs text-blue-100/90 leading-relaxed">
+            {/* AI disclaimer (in-drawer, blue, non-dismissible) — uses primary (HSL token) */}
+            <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
+              <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-xs text-primary-foreground/90 leading-relaxed [&]:text-foreground">
                 Análisis generado por IA. Valida el contenido y ajusta los campos antes de tomar decisiones.
               </p>
             </div>
@@ -370,7 +379,7 @@ export function AlertDetailDrawer({
                 value={sharedCommentary}
                 onChange={handleCommentaryChange}
                 attachments={attachments}
-                onAttachmentsChange={setAttachments}
+                onAttachmentsChange={handleAttachmentsChange}
                 placeholder="Documenta el criterio interno: cómo afecta a la organización, supuestos, postura sugerida..."
               />
               <p className="text-[11px] text-muted-foreground">

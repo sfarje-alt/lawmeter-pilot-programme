@@ -289,6 +289,7 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}
+        archivedCount={archivedCount}
       />
 
       {/* Grid of Cards */}

@@ -10,11 +10,12 @@ export interface ClientCommentary {
 // Impact levels for legislation
 export type ImpactLevel = "positivo" | "leve" | "medio" | "grave";
 
+// Colors use semantic HSL design tokens (success / muted / warning / destructive)
 export const IMPACT_LEVELS: { value: ImpactLevel; label: string; color: string }[] = [
-  { value: "positivo", label: "Positivo", color: "bg-green-500/20 text-green-500 border-green-500/30" },
-  { value: "leve", label: "Leve", color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
-  { value: "medio", label: "Medio", color: "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" },
-  { value: "grave", label: "Grave", color: "bg-red-500/20 text-red-500 border-red-500/30" },
+  { value: "positivo", label: "Positivo", color: "bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)]" },
+  { value: "leve", label: "Leve", color: "bg-muted/40 text-muted-foreground border-border/50" },
+  { value: "medio", label: "Medio", color: "bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)]" },
+  { value: "grave", label: "Grave", color: "bg-[hsl(var(--destructive)/0.18)] text-[hsl(var(--destructive))] border-[hsl(var(--destructive)/0.35)]" },
 ];
 
 // Sectors for filtering
@@ -93,6 +94,17 @@ export interface PeruAlert extends BasePeruAlert {
   archived_at?: string | null;
   /** AI-generated approval probability (0-100). Only meaningful for bills. */
   approval_probability?: number;
+  /** Attachments uploaded by users alongside the expert commentary. */
+  attachments?: AttachedFileMetaRef[];
+}
+
+/** Forward-declared shape so that PeruAlert can reference it before AttachedFileMeta is exported. */
+export interface AttachedFileMetaRef {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  dataUrl?: string;
 }
 
 /** Days an archived alert is kept before being purged automatically. */
@@ -118,11 +130,30 @@ export function getMockApprovalProbability(alertId: string): number {
   return v;
 }
 
-/** Color tokens for an approval probability bucket. */
+/** Color tokens for an approval probability bucket — uses HSL design tokens. */
 export function getApprovalProbabilityInfo(p: number): { label: string; color: string } {
-  if (p >= 70) return { label: `${p}% probable`, color: "bg-green-500/20 text-green-400 border-green-500/30" };
-  if (p >= 40) return { label: `${p}% probable`, color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
-  return { label: `${p}% probable`, color: "bg-red-500/20 text-red-400 border-red-500/30" };
+  if (p >= 70) return { label: `${p}% probable`, color: "bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)]" };
+  if (p >= 40) return { label: `${p}% probable`, color: "bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)]" };
+  return { label: `${p}% probable`, color: "bg-[hsl(var(--destructive)/0.18)] text-[hsl(var(--destructive))] border-[hsl(var(--destructive)/0.35)]" };
+}
+
+/** Lightweight metadata stored per attachment (kept in-memory for demo). */
+export interface AttachedFileMeta {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  /** data URL — kept in-memory only for demo */
+  dataUrl?: string;
+}
+
+/** Removes alerts that have been archived for more than ARCHIVE_RETENTION_DAYS. */
+export function purgeOldArchivedAlerts(alerts: PeruAlert[]): PeruAlert[] {
+  const cutoffMs = Date.now() - ARCHIVE_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  return alerts.filter((a) => {
+    if (!a.archived_at) return true;
+    return new Date(a.archived_at).getTime() > cutoffMs;
+  });
 }
 
 // Mock clients for matching
