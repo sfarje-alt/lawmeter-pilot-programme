@@ -147,6 +147,8 @@ export const BACKUS_CLIENT_PROFILE: ClientProfile = {
   createdAt: "2025-02-01T10:00:00Z",
   updatedAt: "2025-03-05T14:30:00Z",
 
+  highImpactCriteria: "Alto impacto: cambios a la Ley de Protección de Datos Personales (LPDP) o su reglamento; obligaciones de DPO; sanciones de la ANPD; nuevas reglas de transferencia internacional de datos; o regulación de programas de fidelización y marketing directo.",
+  highUrgencyCriteria: "Alta urgencia: resoluciones de la ANPD con plazos de adecuación menores a 60 días; brechas de seguridad reportables; cambios en consentimiento de cookies o trazabilidad publicitaria; modificaciones al régimen sancionatorio.",
   affectedAreas: [], lawBranches: [], additionalEntities: [],
   stakeholdersAffected: [], customerSegments: [], distributionChannels: [],
 };
