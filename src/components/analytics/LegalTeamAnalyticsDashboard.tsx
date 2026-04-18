@@ -165,7 +165,7 @@ export function LegalTeamAnalyticsDashboard() {
           {isEnabled('industry_benchmark') && (
             <IndustryBenchmarkBlock
               alerts={[]}
-              clientName={selectedClientId !== 'all' ? (MOCK_CLIENTS.find(c => c.id === selectedClientId)?.name || 'Cliente') : 'Promedio Clientes'}
+              clientName="Mi Empresa"
               clientSector="Regulado"
               timeframe={timeframeLabel}
               demoData={demoData.industryBenchmark}
