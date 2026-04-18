@@ -138,11 +138,11 @@ export interface EditorialMetrics {
 }
 
 export interface OperationalQueueMetrics {
+  unread: number;
+  withoutCommentary: number;
+  withoutTags: number;
+  totalActive: number;
   byStage: { stage: string; count: number; avgDaysInStage: number }[];
-  byPriority: { priority: string; count: number }[];
-  pendingReview: number;
-  pendingPublish: number;
-  totalInQueue: number;
 }
 
 export interface ClientMetrics extends AggregatedMetrics {
