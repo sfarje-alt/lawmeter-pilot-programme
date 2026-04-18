@@ -11,15 +11,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  Building2, 
-  Plus, 
-  Search, 
-  Filter, 
-  MapPin, 
-  Users, 
-  Globe, 
+  Building2,
+  Plus,
+  Search,
+  Filter,
+  MapPin,
+  Tag,
+  Globe,
   ChevronRight,
-  ArrowUpDown
+  ArrowUpDown,
+  Sparkles,
 } from "lucide-react";
 import { ClientProfile } from "./types";
 
@@ -69,12 +70,14 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
-          <p className="text-muted-foreground">Gestiona perfiles de clientes y reglas de monitoreo</p>
+          <h1 className="text-2xl font-bold text-foreground">Perfiles de Monitoreo</h1>
+          <p className="text-muted-foreground">
+            Cada perfil define cómo la IA clasifica las alertas: palabras clave, instrumentos, etiquetas y criterios de impacto/urgencia.
+          </p>
         </div>
         <Button onClick={onCreateClient} className="gap-2">
           <Plus className="h-4 w-4" />
-          Crear Perfil de Cliente
+          Crear Perfil
         </Button>
       </div>
 
@@ -85,15 +88,15 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
             <div className="text-3xl font-bold text-foreground">
               {clients.filter(c => c.status === 'active').length}
             </div>
-            <div className="text-sm text-muted-foreground">Clientes Activos</div>
+            <div className="text-sm text-muted-foreground">Perfiles Activos</div>
           </CardContent>
         </Card>
         <Card className="glass-card border-border/30">
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-foreground">
-              {clients.reduce((acc, c) => acc + c.clientUsers.length, 0)}
+              {clients.reduce((acc, c) => acc + (c.tagCategories?.reduce((s, cat) => s + cat.tags.length, 0) || 0), 0)}
             </div>
-            <div className="text-sm text-muted-foreground">Usuarios de Clientes</div>
+            <div className="text-sm text-muted-foreground">Etiquetas Definidas</div>
           </CardContent>
         </Card>
         <Card className="glass-card border-border/30">
@@ -111,7 +114,7 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar clientes..."
+            placeholder="Buscar perfiles..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 bg-background/50 border-border/30"
@@ -176,9 +179,15 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
                           </span>
                         )}
                         <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {client.clientUsers.length} usuarios
+                          <Tag className="h-3 w-3" />
+                          {client.keywords.length} keywords
                         </span>
+                        {(client.highImpactCriteria?.trim() || client.highUrgencyCriteria?.trim()) && (
+                          <span className="flex items-center gap-1 text-primary">
+                            <Sparkles className="h-3 w-3" />
+                            IA configurada
+                          </span>
+                        )}
                         {client.isCrossBorder && (
                           <span className="flex items-center gap-1">
                             <Globe className="h-3 w-3" />
@@ -199,17 +208,17 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Perfiles de Clientes
+              Perfiles de Monitoreo
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center py-12 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aún no hay perfiles de clientes.</p>
-              <p className="text-sm mt-1">Crea tu primer perfil de cliente para comenzar a monitorear legislación.</p>
+              <p>Aún no hay perfiles de monitoreo.</p>
+              <p className="text-sm mt-1">Crea tu primer perfil para que la IA empiece a clasificar alertas según tu negocio.</p>
               <Button className="mt-4" onClick={onCreateClient}>
                 <Plus className="h-4 w-4 mr-2" />
-                Crear Perfil de Cliente
+                Crear Perfil
               </Button>
             </div>
           </CardContent>
@@ -219,7 +228,7 @@ export function ClientsList({ clients, onCreateClient, onSelectClient }: Clients
           <CardContent className="py-12">
             <div className="text-center text-muted-foreground">
               <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Ningún cliente coincide con tu búsqueda.</p>
+              <p>Ningún perfil coincide con tu búsqueda.</p>
               <p className="text-sm mt-1">Intenta ajustar los filtros o el término de búsqueda.</p>
             </div>
           </CardContent>
