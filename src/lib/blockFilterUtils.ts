@@ -81,10 +81,12 @@ export function applyAlertFilters(alerts: PeruAlert[], filters: BlockFilters): P
   const q = (filters.search || '').trim().toLowerCase();
   if (q) {
     result = result.filter(a =>
-      (a.title || '').toLowerCase().includes(q) ||
-      (a.summary || '').toLowerCase().includes(q) ||
+      (a.legislation_title || '').toLowerCase().includes(q) ||
+      (a.legislation_summary || '').toLowerCase().includes(q) ||
+      (a.expert_commentary || '').toLowerCase().includes(q) ||
       (a.entity || '').toLowerCase().includes(q) ||
-      (a.parliamentary_group || '').toLowerCase().includes(q)
+      (a.parliamentary_group || '').toLowerCase().includes(q) ||
+      (a.author || '').toLowerCase().includes(q)
     );
   }
 
