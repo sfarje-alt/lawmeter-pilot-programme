@@ -164,7 +164,7 @@ export function InboxAlertCard({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors cursor-default">
+            <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors cursor-default break-words min-w-0">
               {alert.legislation_title}
             </h4>
           </TooltipTrigger>
