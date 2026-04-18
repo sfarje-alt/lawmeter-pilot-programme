@@ -713,10 +713,9 @@ export function AlertsCalendar() {
                   <div
                     key={day.toISOString()}
                     className={cn(
-                      "min-h-[110px] p-1 border border-border/20 rounded-md cursor-pointer hover:bg-muted/20 transition-colors relative",
-                      heatmapBg(lvl),
+                      "min-h-[110px] p-1 border border-border/20 rounded-md cursor-pointer hover:bg-muted/20 transition-colors relative bg-card",
                       !isCurrentMonth && "opacity-40",
-                      isToday(day) && "ring-1 ring-primary/40",
+                      isToday(day) && "ring-2 ring-primary",
                       selectedDate && isSameDay(day, selectedDate) && "ring-2 ring-primary",
                       crit > 0 && "border-[hsl(var(--destructive)/0.45)]"
                     )}
