@@ -405,7 +405,7 @@ export function ReportsPage() {
             {/* Content */}
             <div className="space-y-3">
               <Label className="font-medium">Contenido</Label>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <Label className="flex items-center gap-2 cursor-pointer">
                   <Switch checked={includeBills} onCheckedChange={setIncludeBills} />
                   <FileText className="h-4 w-4 text-muted-foreground" />
@@ -416,7 +416,15 @@ export function ReportsPage() {
                   <Scale className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Normas</span>
                 </Label>
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <Switch checked={includeAnalytics} onCheckedChange={setIncludeAnalytics} />
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Incluir Analíticas</span>
+                </Label>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Si activas “Incluir Analíticas”, el PDF añade una página final con indicadores agregados (impacto, urgencia, etapas y cobertura editorial) del rango seleccionado.
+              </p>
             </div>
 
             {/* Preview */}
@@ -438,7 +446,7 @@ export function ReportsPage() {
             {/* Manual Download */}
             {canGenerate ? (
               <PDFDownloadLink
-                document={<ReportPDF alerts={filteredAlerts} profileName={profileNames} dateLabel={dateLabel} />}
+                document={<ReportPDF alerts={filteredAlerts} profileName={profileNames} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
                 fileName={`reporte-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
               >
                 {({ loading }) => (
