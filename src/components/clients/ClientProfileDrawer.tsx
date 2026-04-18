@@ -3,18 +3,17 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Building2, Users, Key, Palette, Mail, Phone, Globe, MapPin, 
-  Briefcase, Shield, Clock, FileText, Copy, Trash2, Plus,
-  Check, X, Edit2, UserPlus, AlertCircle, RefreshCw
+import {
+  Building2, Palette, Globe, MapPin,
+  Briefcase, Shield, FileText, Check,
+  Edit2, Sparkles, AlertTriangle, Zap, Trash2, Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ClientProfile, ClientUser } from "./types";
+import { ClientProfile } from "./types";
 
 // Available icons for client identification
 const CLIENT_ICONS = [
@@ -38,96 +37,35 @@ const CLIENT_COLORS = [
   { id: "indigo", color: "hsl(235, 85%, 60%)", label: "Índigo" },
 ];
 
-interface InvitationCode {
-  id: string;
-  code: string;
-  maxUsers: number;
-  usedCount: number;
-  createdAt: string;
-  expiresAt?: string;
-  isActive: boolean;
-}
-
 interface ClientProfileDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   client: ClientProfile | null;
   onEdit: () => void;
   onUpdateClient?: (client: ClientProfile) => void;
+  onDeleteClient?: (clientId: string) => void;
 }
 
-export function ClientProfileDrawer({ 
-  open, 
-  onOpenChange, 
-  client, 
+export function ClientProfileDrawer({
+  open,
+  onOpenChange,
+  client,
   onEdit,
-  onUpdateClient 
+  onDeleteClient,
 }: ClientProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedIcon, setSelectedIcon] = useState("building");
   const [selectedColor, setSelectedColor] = useState("blue");
-  const [invitationCodes, setInvitationCodes] = useState<InvitationCode[]>([
-    {
-      id: "inv-001",
-      code: "FARMA2024",
-      maxUsers: 10,
-      usedCount: 4,
-      createdAt: "2024-06-15T10:00:00Z",
-      isActive: true
-    }
-  ]);
-  const [newCodeMaxUsers, setNewCodeMaxUsers] = useState(5);
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
 
   if (!client) return null;
 
-  const generateInvitationCode = () => {
-    setIsGeneratingCode(true);
-    
-    // Generate a random code
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let code = "";
-    for (let i = 0; i < 8; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+  const handleDelete = () => {
+    if (!client.id || !onDeleteClient) return;
+    if (window.confirm(`¿Eliminar el perfil "${client.legalName}"? Esta acción no se puede deshacer.`)) {
+      onDeleteClient(client.id);
+      toast.success("Perfil eliminado");
+      onOpenChange(false);
     }
-    
-    const newCode: InvitationCode = {
-      id: `inv-${Date.now()}`,
-      code,
-      maxUsers: newCodeMaxUsers,
-      usedCount: 0,
-      createdAt: new Date().toISOString(),
-      isActive: true
-    };
-    
-    setTimeout(() => {
-      setInvitationCodes([...invitationCodes, newCode]);
-      setIsGeneratingCode(false);
-      toast.success(`Código de invitación generado: ${code}`);
-    }, 500);
-  };
-
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success("Código copiado al portapapeles");
-  };
-
-  const deleteCode = (id: string) => {
-    setInvitationCodes(invitationCodes.filter(c => c.id !== id));
-    toast.success("Código de invitación eliminado");
-  };
-
-  const toggleCodeStatus = (id: string) => {
-    setInvitationCodes(invitationCodes.map(c => 
-      c.id === id ? { ...c, isActive: !c.isActive } : c
-    ));
-  };
-
-  const deleteUser = (userId: string) => {
-    if (!onUpdateClient) return;
-    const updatedUsers = client.clientUsers.filter(u => u.id !== userId);
-    onUpdateClient({ ...client, clientUsers: updatedUsers });
-    toast.success("Usuario eliminado");
   };
 
   const getSelectedIconComponent = () => {
@@ -141,19 +79,20 @@ export function ClientProfileDrawer({
   };
 
   const IconComponent = getSelectedIconComponent();
+  const hasAICriteria = !!(client.highImpactCriteria?.trim() || client.highUrgencyCriteria?.trim());
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
         <SheetHeader className="flex-shrink-0">
           <div className="flex items-center gap-4">
-            <div 
+            <div
               className="w-14 h-14 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: `${getSelectedColorValue()}20` }}
             >
-              <IconComponent 
-                className="h-7 w-7" 
-                style={{ color: getSelectedColorValue() }} 
+              <IconComponent
+                className="h-7 w-7"
+                style={{ color: getSelectedColorValue() }}
               />
             </div>
             <div className="flex-1">
@@ -162,10 +101,10 @@ export function ClientProfileDrawer({
                 <p className="text-sm text-muted-foreground">{client.tradeName}</p>
               )}
             </div>
-            <Badge 
-              className={client.status === 'active' 
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
-                : "bg-amber-500/20 text-amber-400 border-amber-500/30"
+            <Badge
+              className={client.status === 'active'
+                ? "bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)]"
+                : "bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)]"
               }
             >
               {client.status === 'active' ? 'Activo' : 'Pendiente'}
@@ -174,10 +113,11 @@ export function ClientProfileDrawer({
         </SheetHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden mt-4">
-          <TabsList className="grid grid-cols-4 flex-shrink-0">
+          <TabsList className="grid grid-cols-3 flex-shrink-0">
             <TabsTrigger value="overview" className="text-xs">Resumen</TabsTrigger>
-            <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
-            <TabsTrigger value="invitations" className="text-xs">Invitaciones</TabsTrigger>
+            <TabsTrigger value="ai" className="text-xs gap-1">
+              <Sparkles className="h-3 w-3" /> Criterios IA
+            </TabsTrigger>
             <TabsTrigger value="branding" className="text-xs">Identidad</TabsTrigger>
           </TabsList>
 
@@ -257,7 +197,7 @@ export function ClientProfileDrawer({
                       <Label className="text-xs text-muted-foreground">Entidades Supervisoras</Label>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {client.supervisingAuthorities.map(a => (
-                          <Badge key={a} className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                          <Badge key={a} className="bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)] text-xs">
                             {a}
                           </Badge>
                         ))}
@@ -276,30 +216,33 @@ export function ClientProfileDrawer({
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div>
-                    <Label className="text-xs text-muted-foreground">Ramas del Derecho</Label>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {client.lawBranches.map(b => (
-                        <Badge key={b} variant="secondary" className="text-xs">{b}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
                     <Label className="text-xs text-muted-foreground">Palabras Clave</Label>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {client.keywords.slice(0, 10).map(k => (
+                      {client.keywords.slice(0, 12).map(k => (
                         <Badge key={k} variant="outline" className="text-xs">{k}</Badge>
                       ))}
-                      {client.keywords.length > 10 && (
-                        <Badge variant="outline" className="text-xs">+{client.keywords.length - 10} más</Badge>
+                      {client.keywords.length > 12 && (
+                        <Badge variant="outline" className="text-xs">+{client.keywords.length - 12} más</Badge>
                       )}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Áreas Afectadas</Label>
+                    <Label className="text-xs text-muted-foreground">Tipos de Instrumentos</Label>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {client.affectedAreas.map(a => (
-                        <Badge key={a.area} className="bg-primary/20 text-primary border-primary/30 text-xs">
-                          {a.area}
+                      {client.instrumentTypes.slice(0, 8).map(t => (
+                        <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+                      ))}
+                      {client.instrumentTypes.length > 8 && (
+                        <Badge variant="secondary" className="text-xs">+{client.instrumentTypes.length - 8}</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Categorías de Etiquetas</Label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(client.tagCategories || []).map(cat => (
+                        <Badge key={cat.id} className="bg-primary/20 text-primary border-primary/30 text-xs">
+                          {cat.name} ({cat.tags.length})
                         </Badge>
                       ))}
                     </div>
@@ -307,200 +250,79 @@ export function ClientProfileDrawer({
                 </CardContent>
               </Card>
 
-
-              <div className="flex justify-end pb-4">
-                <Button onClick={onEdit} className="gap-2">
+              <div className="flex justify-between items-center pb-4">
+                {onDeleteClient && client.id && (
+                  <Button onClick={handleDelete} variant="outline" className="gap-2 text-destructive hover:text-destructive border-destructive/30">
+                    <Trash2 className="h-4 w-4" />
+                    Eliminar Perfil
+                  </Button>
+                )}
+                <Button onClick={onEdit} className="gap-2 ml-auto">
                   <Edit2 className="h-4 w-4" />
-                  Editar Configuración Completa
+                  Editar Perfil
                 </Button>
               </div>
             </TabsContent>
 
-            {/* USERS TAB */}
-            <TabsContent value="users" className="m-0 space-y-4">
-              <Card className="border-border/50">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
-                      <CardDescription>{client.clientUsers.length} usuarios registrados</CardDescription>
-                    </div>
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      Agregar Usuario
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {client.clientUsers.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No hay usuarios registrados</p>
-                      <p className="text-xs">Genera un código de invitación para que los usuarios se registren</p>
-                    </div>
-                  ) : (
-                    client.clientUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span className="text-sm font-semibold text-primary">
-                              {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{user.name}</p>
-                            <p className="text-xs text-muted-foreground">{user.title} • {user.area}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Mail className="h-3 w-3" />
-                                {user.email}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => deleteUser(user.id!)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* INVITATIONS TAB */}
-            <TabsContent value="invitations" className="m-0 space-y-4">
-              <Card className="border-border/50">
-                <CardHeader>
+            {/* AI CRITERIA TAB */}
+            <TabsContent value="ai" className="m-0 space-y-4">
+              <Card className="border-[hsl(var(--primary)/0.25)] bg-[hsl(var(--primary)/0.05)]">
+                <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Key className="h-4 w-4 text-primary" />
-                    Generar Nuevo Código
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Criterios de Clasificación IA
                   </CardTitle>
                   <CardDescription>
-                    Los códigos de invitación permiten a los usuarios registrarse como parte de este cliente
+                    La IA usa estos criterios para asignar Impacto y Urgencia a cada alerta entrante asociada a este perfil.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1">
-                      <Label htmlFor="maxUsers" className="text-xs">Usuarios Permitidos</Label>
-                      <Input
-                        id="maxUsers"
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={newCodeMaxUsers}
-                        onChange={(e) => setNewCodeMaxUsers(parseInt(e.target.value) || 1)}
-                        className="mt-1"
-                      />
+                  {!hasAICriteria && (
+                    <div className="text-center py-4 text-sm text-muted-foreground">
+                      No has definido criterios de IA. Edita el perfil para configurarlos.
                     </div>
-                    <Button 
-                      onClick={generateInvitationCode}
-                      disabled={isGeneratingCode}
-                      className="gap-2"
-                    >
-                      {isGeneratingCode ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Plus className="h-4 w-4" />
-                      )}
-                      Generar Código
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium">Códigos Activos</CardTitle>
-                  <CardDescription>{invitationCodes.filter(c => c.isActive).length} códigos activos</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {invitationCodes.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Key className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No hay códigos de invitación</p>
-                      <p className="text-xs">Genera un código para permitir el registro de usuarios</p>
-                    </div>
-                  ) : (
-                    invitationCodes.map((code) => (
-                      <div key={code.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${code.isActive ? 'bg-emerald-500/20' : 'bg-muted'}`}>
-                            <Key className={`h-5 w-5 ${code.isActive ? 'text-emerald-400' : 'text-muted-foreground'}`} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <code className="font-mono font-bold text-sm bg-background px-2 py-1 rounded">
-                                {code.code}
-                              </code>
-                              <Button 
-                                size="icon" 
-                                variant="ghost" 
-                                className="h-6 w-6"
-                                onClick={() => copyCode(code.code)}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                {code.usedCount}/{code.maxUsers} usuarios
-                              </span>
-                              <span>
-                                Creado: {new Date(code.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="sm" 
-                            variant={code.isActive ? "outline" : "secondary"}
-                            className="h-8 text-xs"
-                            onClick={() => toggleCodeStatus(code.id)}
-                          >
-                            {code.isActive ? (
-                              <><X className="h-3 w-3 mr-1" /> Desactivar</>
-                            ) : (
-                              <><Check className="h-3 w-3 mr-1" /> Activar</>
-                            )}
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => deleteCode(code.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))
                   )}
                 </CardContent>
               </Card>
 
-              <Card className="border-amber-500/30 bg-amber-500/5">
-                <CardContent className="pt-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-medium text-amber-400">Instrucciones de Uso</p>
-                      <p className="text-muted-foreground mt-1">
-                        Comparte el código de invitación con los usuarios del cliente. Al registrarse, 
-                        deberán ingresar este código para ser asociados automáticamente a {client.legalName}.
-                      </p>
-                    </div>
-                  </div>
+              <Card className="border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-[hsl(var(--destructive))]" />
+                    Criterios de Alto Impacto
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {client.highImpactCriteria?.trim() ? (
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{client.highImpactCriteria}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">Sin criterios definidos.</p>
+                  )}
                 </CardContent>
               </Card>
+
+              <Card className="border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-[hsl(var(--warning))]" />
+                    Criterios de Alta Urgencia
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {client.highUrgencyCriteria?.trim() ? (
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{client.highUrgencyCriteria}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">Sin criterios definidos.</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end pb-4">
+                <Button onClick={onEdit} className="gap-2">
+                  <Edit2 className="h-4 w-4" />
+                  Editar Criterios IA
+                </Button>
+              </div>
             </TabsContent>
 
             {/* BRANDING TAB */}
@@ -512,19 +334,19 @@ export function ClientProfileDrawer({
                     Identidad Visual
                   </CardTitle>
                   <CardDescription>
-                    Personaliza el ícono y color que identificará a este cliente en el sistema
+                    Personaliza el ícono y color que identificará a este perfil en el sistema.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Preview */}
                   <div className="flex items-center justify-center py-6">
-                    <div 
+                    <div
                       className="w-20 h-20 rounded-2xl flex items-center justify-center transition-all"
                       style={{ backgroundColor: `${getSelectedColorValue()}20` }}
                     >
-                      <IconComponent 
-                        className="h-10 w-10 transition-all" 
-                        style={{ color: getSelectedColorValue() }} 
+                      <IconComponent
+                        className="h-10 w-10 transition-all"
+                        style={{ color: getSelectedColorValue() }}
                       />
                     </div>
                   </div>
@@ -542,8 +364,8 @@ export function ClientProfileDrawer({
                             key={iconOption.id}
                             onClick={() => setSelectedIcon(iconOption.id)}
                             className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
-                              selectedIcon === iconOption.id 
-                                ? 'border-primary bg-primary/10' 
+                              selectedIcon === iconOption.id
+                                ? 'border-primary bg-primary/10'
                                 : 'border-border/50 hover:border-primary/50 bg-muted/30'
                             }`}
                           >
@@ -564,8 +386,8 @@ export function ClientProfileDrawer({
                           key={colorOption.id}
                           onClick={() => setSelectedColor(colorOption.id)}
                           className={`w-10 h-10 rounded-lg border-2 transition-all ${
-                            selectedColor === colorOption.id 
-                              ? 'border-white ring-2 ring-primary ring-offset-2 ring-offset-background' 
+                            selectedColor === colorOption.id
+                              ? 'border-foreground ring-2 ring-primary ring-offset-2 ring-offset-background'
                               : 'border-transparent hover:scale-110'
                           }`}
                           style={{ backgroundColor: colorOption.color }}
@@ -576,7 +398,7 @@ export function ClientProfileDrawer({
                   </div>
 
                   <div className="flex justify-end pt-4">
-                    <Button 
+                    <Button
                       onClick={() => toast.success("Identidad visual guardada")}
                       className="gap-2"
                     >
