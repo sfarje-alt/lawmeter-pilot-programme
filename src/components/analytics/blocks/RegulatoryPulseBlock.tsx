@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { type PeruAlert } from "@/data/peruAlertsMockData";
 import { useBlockFilters } from "@/hooks/useBlockFilters";
+import { applyAlertFilters } from "@/lib/blockFilterUtils";
 import {
   Table,
   TableBody,
