@@ -1,7 +1,5 @@
 import * as React from "react";
-import { AnalyticsBlock } from "../shared/AnalyticsBlock";
-import { ChartTooltip } from "../shared/ChartTooltip";
-import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
+import { AnalyticsBlock, ChartTooltip, AnalyticsDrilldownSheet } from "../shared";
 import { getNeutralColor } from "@/lib/analyticsColors";
 import { Building2 } from "lucide-react";
 import { 
