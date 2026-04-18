@@ -13,22 +13,18 @@ interface KanbanColumnProps {
   onArchive?: (alertId: string) => void;
   onUnarchive?: (alertId: string) => void;
   isArchiveView?: boolean;
-  selectedClientId?: string | null;
-  hasCommentaryForClient?: (alert: PeruAlert, clientId: string) => boolean;
 }
 
-export function KanbanColumn({ 
-  id, 
-  label, 
-  color, 
-  alerts, 
+export function KanbanColumn({
+  id,
+  label,
+  color,
+  alerts,
   onAlertClick,
   onTogglePin,
   onArchive,
   onUnarchive,
   isArchiveView,
-  selectedClientId,
-  hasCommentaryForClient
 }: KanbanColumnProps) {
   return (
     <div className="flex flex-col flex-1 min-w-[320px] bg-card/30 rounded-lg border border-border/30">
@@ -58,8 +54,6 @@ export function KanbanColumn({
                 onArchive={onArchive}
                 onUnarchive={onUnarchive}
                 isArchiveView={isArchiveView}
-                selectedClientId={selectedClientId}
-                hasCommentaryForClient={hasCommentaryForClient}
               />
             ))
           )}

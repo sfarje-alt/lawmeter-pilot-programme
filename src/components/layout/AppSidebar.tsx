@@ -1,4 +1,4 @@
-import { Inbox, Building2, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock, Eye, User } from "lucide-react";
+import { Inbox, Building2, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useClientUser } from "@/hooks/useClientUser";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
@@ -25,30 +24,20 @@ interface AppSidebarProps {
   onSettingsOpen: () => void;
 }
 
-// Operational menu items (single user type — internal compliance team)
-const adminMenuItems = [
+// Operational menu items (single user type — internal compliance team, single profile)
+const menuItems = [
   { id: "inbox", title: "Alertas", icon: Inbox },
   { id: "sessions", title: "Sesiones", icon: Video },
-  { id: "clients", title: "Perfiles", icon: Building2 },
+  { id: "clients", title: "Perfil", icon: Building2 },
   { id: "reports", title: "Reportes", icon: FileText },
   { id: "analytics", title: "Analíticas", icon: BarChart3 },
   { id: "calendar", title: "Calendario", icon: Calendar },
-];
-
-// Client (view-only) menu items
-const clientMenuItems = [
-  { id: "client-inbox", title: "Alertas", icon: Inbox },
-  { id: "client-profile", title: "Mi Perfil", icon: User },
-  { id: "client-reports", title: "Reportes", icon: FileText },
-  { id: "client-analytics", title: "Analíticas", icon: BarChart3 },
-  { id: "client-calendar", title: "Calendario", icon: Calendar },
 ];
 
 export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const { signOut } = useAuth();
-  const { isClientUser, isAdmin, clientName } = useClientUser();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,50 +50,32 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
     navigate("/auth");
   };
 
-  // Choose menu items based on user type
-  const menuItems = isClientUser ? clientMenuItems : adminMenuItems;
-
   return (
     <Sidebar collapsible="icon" className="border-r border-white/10 bg-gradient-to-b from-[hsl(220,40%,10%)] to-[hsl(220,45%,8%)]">
       <SidebarHeader className="p-3 pb-2">
         {isCollapsed ? (
           <div className="flex justify-center">
-            <img 
-              src={lawmeterIcon} 
-              alt="LawMeter" 
-              className="w-12 h-12 object-contain" 
+            <img
+              src={lawmeterIcon}
+              alt="LawMeter"
+              className="w-12 h-12 object-contain"
             />
           </div>
         ) : (
           <div className="space-y-2">
-            <img 
-              src={lawmeterLogo} 
-              alt="LawMeter" 
-              className="w-full h-auto object-contain max-h-32" 
+            <img
+              src={lawmeterLogo}
+              alt="LawMeter"
+              className="w-full h-auto object-contain max-h-32"
             />
             <h1 className="text-sm font-bold text-foreground leading-tight">
               Centro de Inteligencia Regulatoria
             </h1>
-            {isClientUser && clientName && (
-              <Badge variant="outline" className="w-full justify-center bg-primary/10 border-primary/30 text-primary text-xs">
-                {clientName}
-              </Badge>
-            )}
           </div>
         )}
       </SidebarHeader>
 
       <SidebarSeparator className="bg-white/10" />
-
-      {/* View-only badge for client users */}
-      {isClientUser && !isCollapsed && (
-        <div className="px-3 py-2">
-          <Badge variant="outline" className="w-full justify-center bg-green-500/10 border-green-500/30 text-green-500 text-xs gap-1">
-            <Eye className="h-3 w-3" />
-            Solo Lectura
-          </Badge>
-        </div>
-      )}
 
       <SidebarContent>
         <SidebarGroup>
@@ -132,7 +103,7 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
 
       <div className="p-2 space-y-1">
         <SidebarMenuButton
-          onClick={() => isClientUser ? onTabChange('client-settings') : navigate('/settings')}
+          onClick={() => navigate('/settings')}
           tooltip="Configuración"
           className="text-sidebar-foreground hover:bg-white/10"
         >

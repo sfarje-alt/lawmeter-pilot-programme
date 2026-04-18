@@ -1,16 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, Briefcase, Archive, ArchiveRestore, TrendingUp } from "lucide-react";
-import { 
-  PeruAlert, 
-  getTypeLabel, 
-  getTypeColor, 
-  getImpactLevelInfo, 
-  MOCK_CLIENTS,
+import { Pin, ExternalLink, Clock, Building2, User, Users, FileText, Tag, CheckCircle2, AlertCircle, Archive, ArchiveRestore } from "lucide-react";
+import {
+  PeruAlert,
+  getTypeLabel,
+  getTypeColor,
+  getImpactLevelInfo,
   getArchiveDaysRemaining,
-  getApprovalProbabilityInfo,
-  getMockApprovalProbability,
 } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -23,42 +20,23 @@ interface InboxAlertCardProps {
   onArchive?: (alertId: string) => void;
   onUnarchive?: (alertId: string) => void;
   isArchiveView?: boolean;
-  selectedClientId?: string | null;
-  hasCommentaryForClient?: (alert: PeruAlert, clientId: string) => boolean;
 }
 
-export function InboxAlertCard({ 
-  alert, 
-  onClick, 
+export function InboxAlertCard({
+  alert,
+  onClick,
   onTogglePin,
   onArchive,
   onUnarchive,
   isArchiveView,
-  selectedClientId,
-  hasCommentaryForClient
 }: InboxAlertCardProps) {
   const isBill = alert.legislation_type === "proyecto_de_ley";
   const isPinned = alert.is_pinned_for_publication;
   const isArchived = !!alert.archived_at;
   const daysRemaining = getArchiveDaysRemaining(alert.archived_at);
-  
-  // Approval probability (bills only)
-  const approvalProb = isBill
-    ? (alert.approval_probability ?? getMockApprovalProbability(alert.id))
-    : null;
-  const approvalInfo = approvalProb !== null ? getApprovalProbabilityInfo(approvalProb) : null;
 
-  // Determine commentary status for the selected client
-  const hasCommentary = selectedClientId && hasCommentaryForClient 
-    ? hasCommentaryForClient(alert, selectedClientId)
-    : !!(alert.expert_commentary && alert.expert_commentary.trim());
-
-  // Get published clients from client_commentaries (only for published alerts)
-  const publishedClients = alert.status === "published" && alert.client_commentaries.length > 0
-    ? alert.client_commentaries
-        .map(cc => MOCK_CLIENTS.find(c => c.id === cc.clientId))
-        .filter((client): client is typeof MOCK_CLIENTS[number] => Boolean(client))
-    : [];
+  // Single-profile commentary indicator
+  const hasCommentary = !!(alert.expert_commentary && alert.expert_commentary.trim());
 
   const handlePinClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,7 +59,6 @@ export function InboxAlertCard({
     }
   };
 
-  // Format dates
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return null;
     try {
@@ -92,7 +69,7 @@ export function InboxAlertCard({
   };
 
   return (
-    <Card 
+    <Card
       className={cn(
         "p-3 bg-card/50 border-border/30 hover:bg-card/80 transition-all cursor-pointer group",
         isPinned && !isArchived && "border-primary/50 bg-primary/5",
@@ -108,36 +85,13 @@ export function InboxAlertCard({
           <Badge variant="outline" className={cn("text-xs", getTypeColor(alert.legislation_type))}>
             {getTypeLabel(alert.legislation_type)}
           </Badge>
-          {/* Impact Level Badge */}
           {alert.impact_level && (
-            <Badge 
-              variant="outline" 
-              className={cn(
-                "text-xs",
-                getImpactLevelInfo(alert.impact_level)?.color
-              )}
+            <Badge
+              variant="outline"
+              className={cn("text-xs", getImpactLevelInfo(alert.impact_level)?.color)}
             >
               {getImpactLevelInfo(alert.impact_level)?.label}
             </Badge>
-          )}
-          {/* Approval Probability (bills only) */}
-          {approvalInfo && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge 
-                    variant="outline" 
-                    className={cn("text-xs gap-1", approvalInfo.color)}
-                  >
-                    <TrendingUp className="h-3 w-3" />
-                    {approvalInfo.label}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">Probabilidad de aprobación estimada por IA</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           )}
           {isBill && alert.legislation_id && (
             <span className="text-xs text-primary font-mono font-medium">
@@ -178,17 +132,17 @@ export function InboxAlertCard({
               onClick={handlePinClick}
               className={cn(
                 "p-1 rounded transition-colors",
-                isPinned 
-                  ? "bg-primary/20 hover:bg-primary/30" 
+                isPinned
+                  ? "bg-primary/20 hover:bg-primary/30"
                   : "hover:bg-white/10"
               )}
               title={isPinned ? "Quitar fijación" : "Fijar arriba"}
             >
-              <Pin 
+              <Pin
                 className={cn(
                   "h-3.5 w-3.5 transition-colors",
                   isPinned ? "fill-primary text-primary" : "text-muted-foreground"
-                )} 
+                )}
               />
             </button>
           )}
@@ -257,7 +211,7 @@ export function InboxAlertCard({
         </div>
       )}
 
-      {/* Norma-specific: Summary/Commentary (truncated) with Tooltip */}
+      {/* Norma-specific: Summary/Commentary (truncated) */}
       {!isBill && alert.legislation_summary && (
         <TooltipProvider>
           <Tooltip>
@@ -273,14 +227,13 @@ export function InboxAlertCard({
         </TooltipProvider>
       )}
 
-      {/* Bill-specific: Expert Commentary indicator or preview with Tooltip */}
+      {/* Bill-specific: Expert Commentary preview */}
       {isBill && alert.expert_commentary && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <div
                 className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default [&>*]:inline"
-                // Allow simple HTML preview from rich-text editor
                 dangerouslySetInnerHTML={{ __html: alert.expert_commentary }}
               />
             </TooltipTrigger>
@@ -308,22 +261,6 @@ export function InboxAlertCard({
           </Badge>
         )}
       </div>
-
-      {/* Published Client Tags - Only show when alert is published to clients */}
-      {publishedClients.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-          <Briefcase className="h-3 w-3 text-primary/70" />
-          {publishedClients.map(client => (
-            <Badge 
-              key={client.id}
-              variant="outline" 
-              className="text-xs bg-primary/10 text-primary border-primary/30 py-0"
-            >
-              {client.name}
-            </Badge>
-          ))}
-        </div>
-      )}
 
       {/* Footer: Dates */}
       <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-border/30">

@@ -16,11 +16,7 @@ import {
   PenLine,
   Clock,
   Sparkles,
-  ListChecks,
-  Plus,
-  Trash2,
   AlertTriangle,
-  TrendingUp,
   Archive,
   ArchiveRestore,
 } from "lucide-react";
@@ -30,8 +26,6 @@ import {
   getTypeColor,
   IMPACT_LEVELS,
   ImpactLevel,
-  getMockApprovalProbability,
-  getApprovalProbabilityInfo,
   getArchiveDaysRemaining,
 } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
@@ -41,24 +35,10 @@ import { useState, useEffect } from "react";
 import { RichTextEditor, AttachedFile } from "./RichTextEditor";
 import { useAlerts } from "@/contexts/AlertsContext";
 
-interface ClientCommentary {
-  clientId: string;
-  commentary: string;
-}
-
-interface ActionItem {
-  id: string;
-  task: string;
-  owner: string;
-  due: string;
-  done: boolean;
-}
-
 interface AlertDetailDrawerProps {
   alert: PeruAlert | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPublish?: (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => void;
   onUpdateExpertCommentary?: (alertId: string, commentary: string) => void;
   onArchive?: (alertId: string) => void;
   onUnarchive?: (alertId: string) => void;
@@ -85,24 +65,17 @@ export function AlertDetailDrawer({
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
   const [urgency, setUrgency] = useState<string>("medium");
   const [tagsText, setTagsText] = useState("");
-  const [actions, setActions] = useState<ActionItem[]>([]);
-  const [newTask, setNewTask] = useState("");
-  const [newOwner, setNewOwner] = useState("");
-  const [newDue, setNewDue] = useState("");
 
   useEffect(() => {
     if (alert) {
       setSharedCommentary(alert.expert_commentary || "");
-      // Load persisted attachments from the alert (if any)
       setAttachments((alert.attachments as AttachedFile[]) || []);
       setImpact(alert.impact_level);
       setUrgency("medium");
       setTagsText((alert.affected_areas || []).join(", "));
-      setActions([]);
     }
   }, [alert?.id]);
 
-  // Persist attachments back to the context whenever they change
   const handleAttachmentsChange = (files: AttachedFile[]) => {
     setAttachments(files);
     if (alert) updateAttachments(alert.id, files);
@@ -114,11 +87,6 @@ export function AlertDetailDrawer({
   const isArchived = !!alert.archived_at;
   const archiveDaysRemaining = getArchiveDaysRemaining(alert.archived_at);
 
-  const approvalProb = isBill
-    ? alert.approval_probability ?? getMockApprovalProbability(alert.id)
-    : null;
-  const approvalInfo = approvalProb !== null ? getApprovalProbabilityInfo(approvalProb) : null;
-
   const displayDate = isBill ? alert.stage_date || alert.project_date : alert.publication_date;
   const formattedDate = displayDate
     ? format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es })
@@ -129,31 +97,6 @@ export function AlertDetailDrawer({
     if (onUpdateExpertCommentary) {
       onUpdateExpertCommentary(alert.id, commentary);
     }
-  };
-
-  const addAction = () => {
-    if (!newTask.trim()) return;
-    setActions((prev) => [
-      ...prev,
-      {
-        id: `action-${Date.now()}`,
-        task: newTask.trim(),
-        owner: newOwner.trim() || "Sin asignar",
-        due: newDue,
-        done: false,
-      },
-    ]);
-    setNewTask("");
-    setNewOwner("");
-    setNewDue("");
-  };
-
-  const toggleAction = (id: string) => {
-    setActions((prev) => prev.map((a) => (a.id === id ? { ...a, done: !a.done } : a)));
-  };
-
-  const removeAction = (id: string) => {
-    setActions((prev) => prev.filter((a) => a.id !== id));
   };
 
   const handleArchiveToggle = () => {
@@ -180,12 +123,6 @@ export function AlertDetailDrawer({
                   {isBill && alert.current_stage && (
                     <Badge variant="secondary" className="text-sm">
                       {alert.current_stage}
-                    </Badge>
-                  )}
-                  {approvalInfo && (
-                    <Badge variant="outline" className={cn("text-sm gap-1", approvalInfo.color)}>
-                      <TrendingUp className="h-3.5 w-3.5" />
-                      {approvalInfo.label}
                     </Badge>
                   )}
                   {isArchived && archiveDaysRemaining !== null && (
@@ -221,7 +158,7 @@ export function AlertDetailDrawer({
               </SheetTitle>
             </SheetHeader>
 
-            {/* AI disclaimer (in-drawer, blue, non-dismissible) — uses primary (HSL token) */}
+            {/* AI disclaimer */}
             <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
               <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <p className="text-xs text-primary-foreground/90 leading-relaxed [&]:text-foreground">
@@ -349,7 +286,7 @@ export function AlertDetailDrawer({
                   className="bg-muted/30 border-border/50"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  La IA sugiere etiquetas basadas en las etiquetas configuradas en cada perfil. Puedes editarlas si necesitas ajustar.
+                  La IA sugiere etiquetas basadas en las etiquetas configuradas en el perfil. Puedes editarlas si necesitas ajustar.
                 </p>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {tagsText
@@ -386,102 +323,6 @@ export function AlertDetailDrawer({
                 Este comentario reemplaza o complementa el análisis generado por IA. Se guarda automáticamente.
                 Puedes usar formato (negrita, cursiva, listas) y adjuntar documentos de soporte.
               </p>
-            </div>
-
-            <Separator className="bg-border/30" />
-
-            {/* Action plan */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <ListChecks className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  Plan de acción
-                </h3>
-                <Badge variant="secondary" className="text-xs">
-                  {actions.filter((a) => !a.done).length} pendientes
-                </Badge>
-              </div>
-
-              <div className="space-y-2">
-                {actions.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">
-                    Aún no hay acciones registradas. Agrega tareas con responsables y fechas.
-                  </p>
-                )}
-                {actions.map((action) => (
-                  <div
-                    key={action.id}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-lg border bg-muted/20 border-border/30",
-                      action.done && "opacity-60"
-                    )}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={action.done}
-                      onChange={() => toggleAction(action.id)}
-                      className="mt-1"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className={cn("text-sm text-foreground", action.done && "line-through")}>{action.task}</p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {action.owner}
-                        </span>
-                        {action.due && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(action.due), "dd MMM yyyy", { locale: es })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeAction(action.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-6 space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Tarea</Label>
-                  <Input
-                    value={newTask}
-                    onChange={(e) => setNewTask(e.target.value)}
-                    placeholder="Ej. Preparar informe interno"
-                    className="bg-muted/30 border-border/50"
-                  />
-                </div>
-                <div className="col-span-3 space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Responsable</Label>
-                  <Input
-                    value={newOwner}
-                    onChange={(e) => setNewOwner(e.target.value)}
-                    placeholder="Nombre"
-                    className="bg-muted/30 border-border/50"
-                  />
-                </div>
-                <div className="col-span-3 space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Fecha</Label>
-                  <Input
-                    type="date"
-                    value={newDue}
-                    onChange={(e) => setNewDue(e.target.value)}
-                    className="bg-muted/30 border-border/50"
-                  />
-                </div>
-              </div>
-              <Button onClick={addAction} variant="outline" size="sm" className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar acción
-              </Button>
             </div>
 
             {/* Source */}

@@ -4,18 +4,13 @@ import { Inbox as InboxIcon, FileText, Pin } from "lucide-react";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { RegulationsFilterBar } from "./RegulationsFilterBar";
 import { InboxAlertCard } from "./InboxAlertCard";
-import { PeruAlert, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
-import { toast } from "sonner";
+import { PeruAlert } from "@/data/peruAlertsMockData";
 
 interface RegulationsInboxProps {
   alerts: PeruAlert[];
-  onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
-  onMoveAlert: (alertId: string, newStage: PeruAlert["kanban_stage"]) => void;
   onTogglePin: (alertId: string) => void;
   onArchive: (alertId: string) => void;
   onUnarchive: (alertId: string) => void;
-  selectedClientId: string | null;
-  hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
   onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
   initialAlertId?: string | null;
 }
@@ -26,14 +21,13 @@ export interface RegulationsFilters {
   entities: string[];
   sectors: string[];
   impactLevels: string[];
-  clientIds: string[];
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onlyPinned: boolean;
   showArchived: boolean;
 }
 
-export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, onArchive, onUnarchive, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: RegulationsInboxProps) {
+export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpdateExpertCommentary, initialAlertId }: RegulationsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
@@ -43,7 +37,6 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     entities: [],
     sectors: [],
     impactLevels: [],
-    clientIds: [],
     dateFrom: undefined,
     dateTo: undefined,
     onlyPinned: false,
@@ -64,14 +57,12 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     [alerts]
   );
 
-  // Reset processed flag when initialAlertId changes
   useEffect(() => {
     if (initialAlertId) {
       setProcessedInitialAlert(false);
     }
   }, [initialAlertId]);
 
-  // Open drawer automatically if initialAlertId is provided
   useEffect(() => {
     if (initialAlertId && !processedInitialAlert && regulationAlerts.length > 0) {
       const alertToOpen = regulationAlerts.find(a => a.id === initialAlertId);
@@ -83,7 +74,6 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     }
   }, [initialAlertId, regulationAlerts, processedInitialAlert]);
 
-  // Extract dynamic filter options from data
   const availableEntities = useMemo(() => {
     const entities = new Set<string>();
     regulationAlerts.forEach(alert => {
@@ -116,20 +106,13 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     return Array.from(areas).sort();
   }, [regulationAlerts]);
 
-  // Get available clients from data
-  const availableClients = useMemo(() => {
-    return MOCK_CLIENTS;
-  }, []);
-
   // Apply filters with multi-select support
   const filteredAlerts = useMemo(() => {
     return regulationAlerts.filter((alert) => {
-      // Pinned filter
       if (filters.onlyPinned && !alert.is_pinned_for_publication) {
         return false;
       }
 
-      // Search filter
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesTitle = alert.legislation_title.toLowerCase().includes(searchLower);
@@ -138,43 +121,26 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         if (!matchesTitle && !matchesEntity && !matchesSummary) return false;
       }
 
-      // Area filter (multi-select: match if any selected area is in affected_areas)
       if (filters.areas.length > 0 && !filters.areas.some(area => alert.affected_areas.includes(area))) {
         return false;
       }
 
-      // Entity filter (multi-select)
       if (filters.entities.length > 0 && !filters.entities.includes(alert.entity || "")) {
         return false;
       }
 
-      // Sector filter (multi-select)
       if (filters.sectors.length > 0 && !filters.sectors.includes(alert.sector || "")) {
         return false;
       }
 
-      // Impact level filter (multi-select)
       if (filters.impactLevels.length > 0 && !filters.impactLevels.includes(alert.impact_level || "")) {
         return false;
       }
 
-      // Client filter (multi-select)
-      if (filters.clientIds.length > 0) {
-        const alertClientIds = [
-          alert.client_id,
-          alert.primary_client_id,
-          ...alert.client_commentaries.map(c => c.clientId)
-        ].filter(Boolean);
-        if (!filters.clientIds.some(clientId => alertClientIds.includes(clientId))) {
-          return false;
-        }
-      }
-
-      // Date range filter (using publication_date for regulations)
       if (filters.dateFrom || filters.dateTo) {
         const alertDate = alert.publication_date ? new Date(alert.publication_date) : null;
         if (!alertDate) return false;
-        
+
         if (filters.dateFrom && alertDate < filters.dateFrom) return false;
         if (filters.dateTo) {
           const endOfDay = new Date(filters.dateTo);
@@ -187,26 +153,20 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
     });
   }, [regulationAlerts, filters]);
 
-  // Pinned count
   const pinnedCount = useMemo(() => {
     return regulationAlerts.filter(a => a.is_pinned_for_publication).length;
   }, [regulationAlerts]);
 
-  // Sort alerts by date (newest first) - with pinned at top
   const sortedAlerts = useMemo(() => {
     return [...filteredAlerts].sort((a, b) => {
-      // Pinned items first
       if (a.is_pinned_for_publication && !b.is_pinned_for_publication) return -1;
       if (!a.is_pinned_for_publication && b.is_pinned_for_publication) return 1;
-      
-      // Then by date
       const dateA = new Date(a.updated_at).getTime();
       const dateB = new Date(b.updated_at).getTime();
       return dateB - dateA;
     });
   }, [filteredAlerts]);
 
-  // Counts
   const alertCounts = useMemo(() => ({
     total: regulationAlerts.length,
     filtered: filteredAlerts.length,
@@ -215,19 +175,6 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
   const handleAlertClick = (alert: PeruAlert) => {
     setSelectedAlert(alert);
     setDrawerOpen(true);
-  };
-
-  const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
-    // Call onPublish once with all clients - context handles multi-client publishing
-    onPublish(alert, clientIds, commentaries);
-    
-    const clientNames = clientIds.map(id => 
-      MOCK_CLIENTS.find(c => c.id === id)?.name || id
-    ).join(", ");
-    
-    toast.success(`Publicado a ${clientIds.length} cliente${clientIds.length > 1 ? 's' : ''}`, {
-      description: clientNames
-    });
   };
 
   return (
@@ -285,7 +232,6 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         availableSectors={availableSectors}
         availableImpactLevels={availableImpactLevels}
         availableAreas={availableAreas}
-        availableClients={availableClients}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}
@@ -296,7 +242,7 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {sortedAlerts.length === 0 ? (
           <div className="col-span-full p-8 text-center text-muted-foreground">
-            {filters.onlyPinned 
+            {filters.onlyPinned
               ? "No hay normas pineadas. Pinea algunas desde las cards para verlas aquí."
               : "No hay normas que coincidan con los filtros."
             }
@@ -311,8 +257,6 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
               onArchive={onArchive}
               onUnarchive={onUnarchive}
               isArchiveView={filters.showArchived}
-              selectedClientId={selectedClientId}
-              hasCommentaryForClient={hasCommentaryForClient}
             />
           ))
         )}
@@ -323,7 +267,6 @@ export function RegulationsInbox({ alerts, onPublish, onMoveAlert, onTogglePin, 
         alert={selectedAlert}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
-        onPublish={handlePublish}
         onUpdateExpertCommentary={onUpdateExpertCommentary}
         onArchive={onArchive}
         onUnarchive={onUnarchive}

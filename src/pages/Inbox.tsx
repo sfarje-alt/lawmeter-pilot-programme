@@ -1,12 +1,10 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scale, FileText } from "lucide-react";
 import { BillsInbox } from "@/components/inbox/BillsInbox";
 import { RegulationsInbox } from "@/components/inbox/RegulationsInbox";
-import { PublicationPanel } from "@/components/inbox/PublicationPanel";
 import { useAlerts } from "@/contexts/AlertsContext";
-import { PeruAlert } from "@/data/peruAlertsMockData";
 
 interface InboxProps {
   initialTab?: string | null;
@@ -14,17 +12,13 @@ interface InboxProps {
 }
 
 export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
-  const { 
-    alerts, 
-    publishAlert, 
-    togglePinAlert, 
+  const {
+    alerts,
+    togglePinAlert,
     archiveAlert,
     unarchiveAlert,
     updateSharedCommentary,
-    getPinnedAlerts,
-    hasCommentaryForClient 
   } = useAlerts();
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(initialTab === 'regulations' ? 'regulations' : 'bills');
 
   // Update tab when initialTab changes (from URL navigation)
@@ -39,31 +33,6 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
     bills: alerts.filter(a => a.legislation_type === "proyecto_de_ley").length,
     regulations: alerts.filter(a => a.legislation_type === "norma").length,
   }), [alerts]);
-
-  // Pinned alerts
-  const pinnedAlerts = useMemo(() => getPinnedAlerts(), [getPinnedAlerts]);
-
-  // Update expert commentary wrapper
-  const updateExpertCommentary = useCallback((alertId: string, commentary: string) => {
-    updateSharedCommentary(alertId, commentary);
-  }, [updateSharedCommentary]);
-
-  // Batch publish pinned alerts
-  const batchPublishPinned = useCallback((clientIds: string[]) => {
-    const pinned = getPinnedAlerts();
-    pinned.forEach(alert => {
-      publishAlert(alert, clientIds, clientIds.map(id => ({
-        clientId: id,
-        commentary: alert.expert_commentary || ""
-      })));
-    });
-  }, [getPinnedAlerts, publishAlert]);
-
-  // Move alert (stub - would need to add to context if needed)
-  const moveAlert = useCallback((alertId: string, newStage: PeruAlert["kanban_stage"]) => {
-    // For now, moving is handled differently - could extend context
-    console.log("Move alert", alertId, newStage);
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -104,13 +73,10 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
         <TabsContent value="bills" className="mt-6">
           <BillsInbox
             alerts={alerts}
-            onPublish={publishAlert}
             onTogglePin={togglePinAlert}
             onArchive={archiveAlert}
             onUnarchive={unarchiveAlert}
-            selectedClientId={selectedClientId}
-            hasCommentaryForClient={hasCommentaryForClient}
-            onUpdateExpertCommentary={updateExpertCommentary}
+            onUpdateExpertCommentary={updateSharedCommentary}
             initialAlertId={activeTab === 'bills' ? initialAlertId : undefined}
           />
         </TabsContent>
@@ -118,14 +84,10 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
         <TabsContent value="regulations" className="mt-6">
           <RegulationsInbox
             alerts={alerts}
-            onPublish={publishAlert}
-            onMoveAlert={moveAlert}
             onTogglePin={togglePinAlert}
             onArchive={archiveAlert}
             onUnarchive={unarchiveAlert}
-            selectedClientId={selectedClientId}
-            hasCommentaryForClient={hasCommentaryForClient}
-            onUpdateExpertCommentary={updateExpertCommentary}
+            onUpdateExpertCommentary={updateSharedCommentary}
             initialAlertId={activeTab === 'regulations' ? initialAlertId : undefined}
           />
         </TabsContent>

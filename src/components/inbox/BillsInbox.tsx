@@ -5,17 +5,13 @@ import { Inbox as InboxIcon, Scale, Pin } from "lucide-react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
-import { PeruAlert, BILLS_KANBAN_COLUMNS, MOCK_CLIENTS, ALL_LEGISLATIVE_STAGES } from "@/data/peruAlertsMockData";
-import { toast } from "sonner";
+import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES } from "@/data/peruAlertsMockData";
 
 interface BillsInboxProps {
   alerts: PeruAlert[];
-  onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
   onTogglePin: (alertId: string) => void;
   onArchive: (alertId: string) => void;
   onUnarchive: (alertId: string) => void;
-  selectedClientId: string | null;
-  hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
   onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
   initialAlertId?: string | null;
 }
@@ -27,7 +23,6 @@ export interface BillsFilters {
   sectors: string[];
   parliamentaryGroups: string[];
   impactLevels: string[];
-  clientIds: string[];
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onlyPinned: boolean;
@@ -36,7 +31,7 @@ export interface BillsFilters {
 
 type BillKanbanStage = "comision" | "pleno" | "tramite_final";
 
-export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarchive, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: BillsInboxProps) {
+export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpdateExpertCommentary, initialAlertId }: BillsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
@@ -47,7 +42,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
     sectors: [],
     parliamentaryGroups: [],
     impactLevels: [],
-    clientIds: [],
     dateFrom: undefined,
     dateTo: undefined,
     onlyPinned: false,
@@ -139,11 +133,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
     return Array.from(areas).sort();
   }, [billAlerts]);
 
-  // Get available clients from data
-  const availableClients = useMemo(() => {
-    return MOCK_CLIENTS;
-  }, []);
-
   // Apply filters with multi-select support
   const filteredAlerts = useMemo(() => {
     return billAlerts.filter((alert) => {
@@ -186,18 +175,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
         return false;
       }
 
-      // Client filter (multi-select)
-      if (filters.clientIds.length > 0) {
-        const alertClientIds = [
-          alert.client_id,
-          alert.primary_client_id,
-          ...alert.client_commentaries.map(c => c.clientId)
-        ].filter(Boolean);
-        if (!filters.clientIds.some(clientId => alertClientIds.includes(clientId))) {
-          return false;
-        }
-      }
-
       // Date range filter (using project_date or stage_date)
       if (filters.dateFrom || filters.dateTo) {
         const alertDate = alert.project_date ? new Date(alert.project_date) : null;
@@ -205,7 +182,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
           if (filters.dateFrom && alertDate < filters.dateFrom) return false;
           if (filters.dateTo && alertDate > filters.dateTo) return false;
         } else {
-          // If no date, exclude when date filter is active
           return false;
         }
       }
@@ -215,7 +191,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
   }, [billAlerts, filters]);
 
   // Group alerts by kanban stage (legislative stage)
-  // Note: kanban_stage represents legislative progress and is independent of publication status
   const alertsByStage = useMemo(() => {
     const grouped: Record<BillKanbanStage, PeruAlert[]> = {
       comision: [],
@@ -230,10 +205,8 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
       }
     });
 
-    // Sort each column: pinned first, then by date (newest first)
     Object.keys(grouped).forEach((stage) => {
       grouped[stage as BillKanbanStage].sort((a, b) => {
-        // Pinned items first
         if (a.is_pinned_for_publication !== b.is_pinned_for_publication) {
           return a.is_pinned_for_publication ? -1 : 1;
         }
@@ -262,21 +235,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
     setDrawerOpen(true);
   };
 
-
-  const handlePublish = (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => {
-    // Call onPublish once with all clients - context handles multi-client publishing
-    onPublish(alert, clientIds, commentaries);
-    
-    const clientNames = clientIds.map(id => 
-      MOCK_CLIENTS.find(c => c.id === id)?.name || id
-    ).join(", ");
-    
-    toast.success(`Publicado a ${clientIds.length} cliente${clientIds.length > 1 ? 's' : ''}`, {
-      description: clientNames
-    });
-  };
-
-  // Pending count (non-archived)
   const pendingCount = alertCounts.byStage.comision + alertCounts.byStage.pleno + alertCounts.byStage.tramite_final;
 
   return (
@@ -363,7 +321,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
         availableStages={availableStages}
         availableImpactLevels={availableImpactLevels}
         availableAreas={availableAreas}
-        availableClients={availableClients}
         totalCount={alertCounts.total}
         filteredCount={alertCounts.filtered}
         pinnedCount={pinnedCount}
@@ -384,8 +341,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
             onArchive={onArchive}
             onUnarchive={onUnarchive}
             isArchiveView={filters.showArchived}
-            selectedClientId={selectedClientId}
-            hasCommentaryForClient={hasCommentaryForClient}
           />
         ))}
       </div>
@@ -395,7 +350,6 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarch
         alert={selectedAlert}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
-        onPublish={handlePublish}
         onUpdateExpertCommentary={onUpdateExpertCommentary}
         onArchive={onArchive}
         onUnarchive={onUnarchive}

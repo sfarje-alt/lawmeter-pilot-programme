@@ -21,7 +21,6 @@ interface RegulationsFilterBarProps {
   availableSectors: string[];
   availableImpactLevels: string[];
   availableAreas: string[];
-  availableClients: { id: string; name: string }[];
   totalCount: number;
   filteredCount: number;
   pinnedCount: number;
@@ -36,14 +35,13 @@ const QUICK_DATE_OPTIONS = [
   { label: "Últimos 90 días", days: 90 },
 ];
 
-export function RegulationsFilterBar({ 
-  filters, 
-  onFiltersChange, 
+export function RegulationsFilterBar({
+  filters,
+  onFiltersChange,
   availableEntities,
   availableSectors,
   availableImpactLevels,
   availableAreas,
-  availableClients,
   totalCount,
   filteredCount,
   pinnedCount,
@@ -51,23 +49,21 @@ export function RegulationsFilterBar({
 }: RegulationsFilterBarProps) {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
-  const hasActiveFilters = 
-    filters.search !== "" || 
-    filters.areas.length > 0 || 
+  const hasActiveFilters =
+    filters.search !== "" ||
+    filters.areas.length > 0 ||
     filters.entities.length > 0 ||
     filters.sectors.length > 0 ||
     filters.impactLevels.length > 0 ||
-    filters.clientIds.length > 0 ||
     filters.dateFrom !== undefined ||
     filters.dateTo !== undefined ||
     filters.onlyPinned;
 
-  const activeFilterCount = 
+  const activeFilterCount =
     (filters.areas.length > 0 ? 1 : 0) +
     (filters.entities.length > 0 ? 1 : 0) +
     (filters.sectors.length > 0 ? 1 : 0) +
-    (filters.impactLevels.length > 0 ? 1 : 0) +
-    (filters.clientIds.length > 0 ? 1 : 0);
+    (filters.impactLevels.length > 0 ? 1 : 0);
 
   const clearFilters = () => {
     onFiltersChange({
@@ -76,7 +72,6 @@ export function RegulationsFilterBar({
       entities: [],
       sectors: [],
       impactLevels: [],
-      clientIds: [],
       dateFrom: undefined,
       dateTo: undefined,
       onlyPinned: false,
@@ -90,14 +85,13 @@ export function RegulationsFilterBar({
     onFiltersChange({ ...filters, dateFrom: fromDate, dateTo: today });
   };
 
-  // Build options for multiselects
   const impactOptions: MultiSelectOption[] = availableImpactLevels.map(level => {
     const levelInfo = IMPACT_LEVELS.find(l => l.value === level);
     return {
       value: level,
       label: levelInfo?.label || level,
       icon: (
-        <div className={cn("w-2 h-2 rounded-full", 
+        <div className={cn("w-2 h-2 rounded-full",
           level === "positivo" && "bg-green-500",
           level === "leve" && "bg-gray-400",
           level === "medio" && "bg-yellow-500",
@@ -106,327 +100,142 @@ export function RegulationsFilterBar({
       ),
     };
   });
-
-  const sectorOptions: MultiSelectOption[] = availableSectors.map(sector => ({
-    value: sector,
-    label: sector,
-  }));
-
-  const entityOptions: MultiSelectOption[] = availableEntities.map(entity => ({
-    value: entity,
-    label: entity,
-  }));
-
-  const areaOptions: MultiSelectOption[] = availableAreas.map(area => ({
-    value: area,
-    label: area,
-  }));
-
-  const clientOptions: MultiSelectOption[] = availableClients.map(client => ({
-    value: client.id,
-    label: client.name,
-  }));
+  const sectorOptions: MultiSelectOption[] = availableSectors.map(sector => ({ value: sector, label: sector }));
+  const entityOptions: MultiSelectOption[] = availableEntities.map(entity => ({ value: entity, label: entity }));
+  const areaOptions: MultiSelectOption[] = availableAreas.map(area => ({ value: area, label: area }));
 
   return (
     <div className="space-y-3">
-      {/* Main Row: Search + Action Buttons (Pineados, Fechas) */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Search */}
         <div className="relative flex-1 min-w-[180px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por título, entidad, resumen..."
-            value={filters.search}
-            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-            className="pl-10 bg-muted/30 border-border/50 h-9"
-          />
+          <Input placeholder="Buscar por título, entidad, resumen..." value={filters.search} onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })} className="pl-10 bg-muted/30 border-border/50 h-9" />
         </div>
 
-        {/* Pinned Filter Toggle */}
-        <Toggle
-          pressed={filters.onlyPinned}
-          onPressedChange={(pressed) => onFiltersChange({ ...filters, onlyPinned: pressed })}
-          className="gap-1.5 h-9 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-          aria-label="Solo pineados"
-        >
+        <Toggle pressed={filters.onlyPinned} onPressedChange={(pressed) => onFiltersChange({ ...filters, onlyPinned: pressed })} className="gap-1.5 h-9 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" aria-label="Solo pineados">
           <Pin className="h-4 w-4" />
           <span className="hidden sm:inline text-sm">Pineados</span>
-          {pinnedCount > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-              {pinnedCount}
-            </Badge>
-          )}
+          {pinnedCount > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{pinnedCount}</Badge>}
         </Toggle>
 
-        {/* Archived Toggle */}
-        <Toggle
-          pressed={filters.showArchived}
-          onPressedChange={(pressed) => onFiltersChange({ ...filters, showArchived: pressed })}
-          className="gap-1.5 h-9 data-[state=on]:bg-muted data-[state=on]:text-foreground"
-          aria-label="Ver archivados"
-        >
+        <Toggle pressed={filters.showArchived} onPressedChange={(pressed) => onFiltersChange({ ...filters, showArchived: pressed })} className="gap-1.5 h-9 data-[state=on]:bg-muted data-[state=on]:text-foreground" aria-label="Ver archivados">
           <Archive className="h-4 w-4" />
           <span className="hidden sm:inline text-sm">Archivados</span>
-          {archivedCount > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-              {archivedCount}
-            </Badge>
-          )}
+          {archivedCount > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{archivedCount}</Badge>}
         </Toggle>
 
-        {/* Date Range Filter with Quick Options */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className={cn(
-                "h-9 gap-1.5 bg-muted/30 border-border/50 text-sm",
-                (filters.dateFrom || filters.dateTo) && "border-primary/50 bg-primary/10"
-              )}
-            >
+            <Button variant="outline" size="sm" className={cn("h-9 gap-1.5 bg-muted/30 border-border/50 text-sm", (filters.dateFrom || filters.dateTo) && "border-primary/50 bg-primary/10")}>
               <CalendarIcon className="h-4 w-4" />
               <span className="hidden sm:inline">
-                {filters.dateFrom && filters.dateTo
-                  ? `${format(filters.dateFrom, "dd/MM", { locale: es })} - ${format(filters.dateTo, "dd/MM", { locale: es })}`
-                  : filters.dateFrom
-                  ? `Desde ${format(filters.dateFrom, "dd/MM", { locale: es })}`
-                  : filters.dateTo
-                  ? `Hasta ${format(filters.dateTo, "dd/MM", { locale: es })}`
-                  : "Fechas"
-                }
+                {filters.dateFrom && filters.dateTo ? `${format(filters.dateFrom, "dd/MM", { locale: es })} - ${format(filters.dateTo, "dd/MM", { locale: es })}` : filters.dateFrom ? `Desde ${format(filters.dateFrom, "dd/MM", { locale: es })}` : filters.dateTo ? `Hasta ${format(filters.dateTo, "dd/MM", { locale: es })}` : "Fechas"}
               </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 z-50 bg-popover border border-border" align="start">
             <div className="p-3 space-y-3">
-              {/* Quick Date Options */}
               <div className="space-y-1">
                 <div className="text-xs font-medium text-muted-foreground mb-2">Acceso rápido</div>
                 <div className="flex flex-wrap gap-1">
                   {QUICK_DATE_OPTIONS.map((option) => (
-                    <Button
-                      key={option.days}
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => applyQuickDateFilter(option.days)}
-                    >
-                      {option.label}
-                    </Button>
+                    <Button key={option.days} variant="outline" size="sm" className="h-7 text-xs" onClick={() => applyQuickDateFilter(option.days)}>{option.label}</Button>
                   ))}
                 </div>
               </div>
-              
               <div className="border-t pt-3">
                 <div className="text-xs font-medium text-muted-foreground mb-2">Rango personalizado</div>
                 <div className="flex gap-2">
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Desde</div>
-                    <Calendar
-                      mode="single"
-                      selected={filters.dateFrom}
-                      onSelect={(date) => onFiltersChange({ ...filters, dateFrom: date })}
-                      locale={es}
-                      className="rounded-md border pointer-events-auto bg-background"
-                    />
+                    <Calendar mode="single" selected={filters.dateFrom} onSelect={(date) => onFiltersChange({ ...filters, dateFrom: date })} locale={es} className="rounded-md border pointer-events-auto bg-background" />
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Hasta</div>
-                    <Calendar
-                      mode="single"
-                      selected={filters.dateTo}
-                      onSelect={(date) => onFiltersChange({ ...filters, dateTo: date })}
-                      locale={es}
-                      className="rounded-md border pointer-events-auto bg-background"
-                    />
+                    <Calendar mode="single" selected={filters.dateTo} onSelect={(date) => onFiltersChange({ ...filters, dateTo: date })} locale={es} className="rounded-md border pointer-events-auto bg-background" />
                   </div>
                 </div>
               </div>
-              
               {(filters.dateFrom || filters.dateTo) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => onFiltersChange({ ...filters, dateFrom: undefined, dateTo: undefined })}
-                >
-                  Limpiar fechas
-                </Button>
+                <Button variant="ghost" size="sm" className="w-full" onClick={() => onFiltersChange({ ...filters, dateFrom: undefined, dateTo: undefined })}>Limpiar fechas</Button>
               )}
             </div>
           </PopoverContent>
         </Popover>
 
-        {/* Expand Filters Button */}
         <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
           <CollapsibleTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className={cn(
-                "h-9 gap-1.5 bg-muted/30 border-border/50 text-sm",
-                activeFilterCount > 0 && "border-primary/50 bg-primary/10"
-              )}
-            >
+            <Button variant="outline" size="sm" className={cn("h-9 gap-1.5 bg-muted/30 border-border/50 text-sm", activeFilterCount > 0 && "border-primary/50 bg-primary/10")}>
               <Filter className="h-4 w-4" />
               <span className="hidden sm:inline">Filtros</span>
-              {activeFilterCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-primary/20 text-primary">
-                  {activeFilterCount}
-                </Badge>
-              )}
+              {activeFilterCount > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-primary/20 text-primary">{activeFilterCount}</Badge>}
               <ChevronDown className={cn("h-3 w-3 transition-transform", filtersExpanded && "rotate-180")} />
             </Button>
           </CollapsibleTrigger>
         </Collapsible>
 
-        {/* Clear Filters */}
         {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="h-9 text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-muted-foreground hover:text-foreground">
             <X className="h-4 w-4 mr-1" />
             Limpiar
           </Button>
         )}
       </div>
 
-      {/* Expandable Filters Row */}
       <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
         <CollapsibleContent>
           <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-t border-border/30">
-            {/* Impact Level Filter - MultiSelect */}
-            <MultiSelect
-              options={impactOptions}
-              selected={filters.impactLevels}
-              onChange={(impactLevels) => onFiltersChange({ ...filters, impactLevels })}
-              placeholder="Impacto: Todos"
-              className="w-[160px]"
-            />
-
-            {/* Sector Filter - MultiSelect */}
-            <MultiSelect
-              options={sectorOptions}
-              selected={filters.sectors}
-              onChange={(sectors) => onFiltersChange({ ...filters, sectors })}
-              placeholder="Sector: Todos"
-              className="w-[160px]"
-            />
-
-            {/* Entity Filter - MultiSelect */}
-            <MultiSelect
-              options={entityOptions}
-              selected={filters.entities}
-              onChange={(entities) => onFiltersChange({ ...filters, entities })}
-              placeholder="Institución: Todas"
-              className="w-[175px]"
-            />
-
-            {/* Client Filter - MultiSelect */}
-            <MultiSelect
-              options={clientOptions}
-              selected={filters.clientIds}
-              onChange={(clientIds) => onFiltersChange({ ...filters, clientIds })}
-              placeholder="Cliente: Todos"
-              className="w-[170px]"
-            />
-
-            {/* Area Filter - MultiSelect */}
-            <MultiSelect
-              options={areaOptions}
-              selected={filters.areas}
-              onChange={(areas) => onFiltersChange({ ...filters, areas })}
-              placeholder="Área: Todas"
-              className="w-[160px]"
-            />
+            <MultiSelect options={impactOptions} selected={filters.impactLevels} onChange={(impactLevels) => onFiltersChange({ ...filters, impactLevels })} placeholder="Impacto: Todos" className="w-[160px]" />
+            <MultiSelect options={sectorOptions} selected={filters.sectors} onChange={(sectors) => onFiltersChange({ ...filters, sectors })} placeholder="Sector: Todos" className="w-[160px]" />
+            <MultiSelect options={entityOptions} selected={filters.entities} onChange={(entities) => onFiltersChange({ ...filters, entities })} placeholder="Institución: Todas" className="w-[175px]" />
+            <MultiSelect options={areaOptions} selected={filters.areas} onChange={(areas) => onFiltersChange({ ...filters, areas })} placeholder="Área: Todas" className="w-[160px]" />
           </div>
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Active Filters Display */}
       {hasActiveFilters && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted-foreground">
-            Mostrando {filteredCount} de {totalCount} normas:
-          </span>
+          <span className="text-xs text-muted-foreground">Mostrando {filteredCount} de {totalCount} normas:</span>
           {filters.search && (
             <Badge variant="secondary" className="gap-1 text-xs">
               Búsqueda: "{filters.search}"
-              <button onClick={() => onFiltersChange({ ...filters, search: "" })}>
-                <X className="h-3 w-3" />
-              </button>
+              <button onClick={() => onFiltersChange({ ...filters, search: "" })}><X className="h-3 w-3" /></button>
             </Badge>
           )}
           {filters.onlyPinned && (
             <Badge variant="secondary" className="gap-1 text-xs bg-primary/20 text-primary">
-              <Pin className="h-3 w-3" />
-              Solo pineados
-              <button onClick={() => onFiltersChange({ ...filters, onlyPinned: false })}>
-                <X className="h-3 w-3" />
-              </button>
+              <Pin className="h-3 w-3" /> Solo pineados
+              <button onClick={() => onFiltersChange({ ...filters, onlyPinned: false })}><X className="h-3 w-3" /></button>
             </Badge>
           )}
           {filters.impactLevels.map(level => (
-            <Badge key={level} variant="secondary" className={cn(
-              "gap-1 text-xs",
-              IMPACT_LEVELS.find(l => l.value === level)?.color
-            )}>
+            <Badge key={level} variant="secondary" className={cn("gap-1 text-xs", IMPACT_LEVELS.find(l => l.value === level)?.color)}>
               Impacto: {IMPACT_LEVELS.find(l => l.value === level)?.label || level}
-              <button onClick={() => onFiltersChange({ ...filters, impactLevels: filters.impactLevels.filter(l => l !== level) })}>
-                <X className="h-3 w-3" />
-              </button>
+              <button onClick={() => onFiltersChange({ ...filters, impactLevels: filters.impactLevels.filter(l => l !== level) })}><X className="h-3 w-3" /></button>
             </Badge>
           ))}
           {filters.sectors.map(sector => (
             <Badge key={sector} variant="secondary" className="gap-1 text-xs">
               Sector: {sector}
-              <button onClick={() => onFiltersChange({ ...filters, sectors: filters.sectors.filter(s => s !== sector) })}>
-                <X className="h-3 w-3" />
-              </button>
+              <button onClick={() => onFiltersChange({ ...filters, sectors: filters.sectors.filter(s => s !== sector) })}><X className="h-3 w-3" /></button>
             </Badge>
           ))}
           {filters.entities.map(entity => (
             <Badge key={entity} variant="secondary" className="gap-1 text-xs">
               Institución: {entity}
-              <button onClick={() => onFiltersChange({ ...filters, entities: filters.entities.filter(e => e !== entity) })}>
-                <X className="h-3 w-3" />
-              </button>
+              <button onClick={() => onFiltersChange({ ...filters, entities: filters.entities.filter(e => e !== entity) })}><X className="h-3 w-3" /></button>
             </Badge>
           ))}
           {filters.areas.map(area => (
             <Badge key={area} variant="secondary" className="gap-1 text-xs">
               Área: {area}
-              <button onClick={() => onFiltersChange({ ...filters, areas: filters.areas.filter(a => a !== area) })}>
-                <X className="h-3 w-3" />
-              </button>
+              <button onClick={() => onFiltersChange({ ...filters, areas: filters.areas.filter(a => a !== area) })}><X className="h-3 w-3" /></button>
             </Badge>
           ))}
-          {filters.clientIds.map(clientId => {
-            const client = availableClients.find(c => c.id === clientId);
-            return (
-              <Badge key={clientId} variant="secondary" className="gap-1 text-xs bg-accent/50">
-                Cliente: {client?.name || clientId}
-                <button onClick={() => onFiltersChange({ ...filters, clientIds: filters.clientIds.filter(c => c !== clientId) })}>
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            );
-          })}
           {(filters.dateFrom || filters.dateTo) && (
             <Badge variant="secondary" className="gap-1 text-xs">
-              {filters.dateFrom && filters.dateTo
-                ? `${format(filters.dateFrom, "dd/MM/yy")} - ${format(filters.dateTo, "dd/MM/yy")}`
-                : filters.dateFrom
-                ? `Desde ${format(filters.dateFrom, "dd/MM/yy")}`
-                : `Hasta ${format(filters.dateTo!, "dd/MM/yy")}`
-              }
-              <button onClick={() => onFiltersChange({ ...filters, dateFrom: undefined, dateTo: undefined })}>
-                <X className="h-3 w-3" />
-              </button>
+              {filters.dateFrom && filters.dateTo ? `${format(filters.dateFrom, "dd/MM/yy")} - ${format(filters.dateTo, "dd/MM/yy")}` : filters.dateFrom ? `Desde ${format(filters.dateFrom, "dd/MM/yy")}` : `Hasta ${format(filters.dateTo!, "dd/MM/yy")}`}
+              <button onClick={() => onFiltersChange({ ...filters, dateFrom: undefined, dateTo: undefined })}><X className="h-3 w-3" /></button>
             </Badge>
           )}
         </div>
