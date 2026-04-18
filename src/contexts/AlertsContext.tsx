@@ -12,8 +12,11 @@ interface AlertsContextType {
   // Publishing
   publishAlert: (alert: PeruAlert, clientIds: string[], commentaries: ClientCommentary[]) => void;
   unpublishAlert: (alertId: string) => void;
-  // Pinning
+  // Pinning (pin to top of list)
   togglePinAlert: (alertId: string) => void;
+  // Archiving
+  archiveAlert: (alertId: string) => void;
+  unarchiveAlert: (alertId: string) => void;
   // Commentary
   updateAlertCommentary: (alertId: string, clientId: string, commentary: string) => void;
   updateSharedCommentary: (alertId: string, commentary: string) => void;
@@ -122,6 +125,28 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  // Archive an alert (sets archived_at; auto-purged after 30 days at the data layer)
+  const archiveAlert = useCallback((alertId: string) => {
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.id === alertId
+          ? { ...a, archived_at: new Date().toISOString(), is_pinned_for_publication: false, updated_at: new Date().toISOString() }
+          : a
+      )
+    );
+  }, []);
+
+  // Restore an archived alert
+  const unarchiveAlert = useCallback((alertId: string) => {
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.id === alertId
+          ? { ...a, archived_at: null, updated_at: new Date().toISOString() }
+          : a
+      )
+    );
+  }, []);
+
   // Update client-specific commentary
   const updateAlertCommentary = useCallback((alertId: string, clientId: string, commentary: string) => {
     setAlerts((prev) =>
@@ -183,6 +208,8 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         publishAlert,
         unpublishAlert,
         togglePinAlert,
+        archiveAlert,
+        unarchiveAlert,
         updateAlertCommentary,
         updateSharedCommentary,
         getPublishedAlertsForClient,

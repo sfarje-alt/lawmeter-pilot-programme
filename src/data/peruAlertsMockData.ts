@@ -86,9 +86,43 @@ interface BasePeruAlert {
 
 // Full interface with publication workflow fields
 export interface PeruAlert extends BasePeruAlert {
-  is_pinned_for_publication: boolean;  // Whether this alert is marked for publication
+  is_pinned_for_publication: boolean;  // Whether this alert is marked for publication / pinned to top
   client_commentaries: ClientCommentary[];  // Commentaries per client
   primary_client_id?: string;  // Primary client assigned to this alert
+  /** Archive timestamp — when set, alert is in archive (auto-purged after 30 days). */
+  archived_at?: string | null;
+  /** AI-generated approval probability (0-100). Only meaningful for bills. */
+  approval_probability?: number;
+}
+
+/** Days an archived alert is kept before being purged automatically. */
+export const ARCHIVE_RETENTION_DAYS = 30;
+
+/** Returns days remaining before an archived alert is purged. */
+export function getArchiveDaysRemaining(archived_at: string | null | undefined): number | null {
+  if (!archived_at) return null;
+  const archivedDate = new Date(archived_at);
+  const purgeDate = new Date(archivedDate.getTime() + ARCHIVE_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  const diffMs = purgeDate.getTime() - Date.now();
+  return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
+}
+
+/** Deterministic mock approval probability based on alert id (0-100). */
+export function getMockApprovalProbability(alertId: string): number {
+  let hash = 0;
+  for (let i = 0; i < alertId.length; i++) {
+    hash = (hash * 31 + alertId.charCodeAt(i)) | 0;
+  }
+  // map to 5..95
+  const v = Math.abs(hash % 91) + 5;
+  return v;
+}
+
+/** Color tokens for an approval probability bucket. */
+export function getApprovalProbabilityInfo(p: number): { label: string; color: string } {
+  if (p >= 70) return { label: `${p}% probable`, color: "bg-green-500/20 text-green-400 border-green-500/30" };
+  if (p >= 40) return { label: `${p}% probable`, color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
+  return { label: `${p}% probable`, color: "bg-red-500/20 text-red-400 border-red-500/30" };
 }
 
 // Mock clients for matching
