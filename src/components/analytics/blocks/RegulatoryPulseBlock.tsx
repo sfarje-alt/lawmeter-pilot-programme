@@ -140,7 +140,15 @@ export function RegulatoryPulseBlock({
                 tickLine={false}
                 allowDecimals={false}
               />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
+              <Tooltip
+                content={
+                  <ChartTooltip
+                    labelFormatter={(value) => `Semana del ${formatDate(value as string)}`}
+                    valueFormatter={(value) => `${value} alertas`}
+                  />
+                }
+                cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
+              />
               
               {showTypeBreakdown ? (
                 <>
