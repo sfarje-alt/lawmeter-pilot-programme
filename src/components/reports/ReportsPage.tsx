@@ -422,15 +422,15 @@ export function ReportsPage() {
                 <div className="text-xs text-muted-foreground">Normas</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">{selectedProfileIds.length}</div>
-                <div className="text-xs text-muted-foreground">Perfiles</div>
+                <div className="text-2xl font-bold text-foreground">{filteredAlerts.length}</div>
+                <div className="text-xs text-muted-foreground">Total alertas</div>
               </div>
             </div>
 
             {/* Manual Download */}
             {canGenerate ? (
               <PDFDownloadLink
-                document={<ReportPDF alerts={filteredAlerts} profileName={profileNames} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
+                document={<ReportPDF alerts={filteredAlerts} profileName={profileName} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
                 fileName={`reporte-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
               >
                 {({ loading }) => (
@@ -513,7 +513,6 @@ export function ReportsPage() {
                           {s.frequency === "daily" ? "Diario" : s.frequency === "weekly" ? "Semanal" : "Mensual"} · {s.time}
                         </p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          <Badge variant="outline" className="text-xs">{s.profileIds.length} perfil(es)</Badge>
                           <Badge variant="outline" className="text-xs">
                             {s.scope === "all_active" ? "Activas" : s.scope === "pinned" ? "Fijadas" : "Por fecha"}
                           </Badge>
