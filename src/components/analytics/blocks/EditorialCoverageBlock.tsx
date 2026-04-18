@@ -109,15 +109,7 @@ export function EditorialCoverageBlock({
                   domain={[0, 100]}
                   tickFormatter={(v) => `${v}%`}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--popover))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Cobertura']}
-                />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
                 <Bar 
                   dataKey="coverage" 
                   fill={ANALYTICS_COLORS.chart.primary}

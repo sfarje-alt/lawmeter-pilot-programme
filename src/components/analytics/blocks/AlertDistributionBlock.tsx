@@ -134,15 +134,7 @@ export function AlertDistributionBlock({
                   />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-                formatter={(value: number) => [`${value} alertas`, 'Cantidad']}
-              />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
             </PieChart>
           </ResponsiveContainer>
         </div>

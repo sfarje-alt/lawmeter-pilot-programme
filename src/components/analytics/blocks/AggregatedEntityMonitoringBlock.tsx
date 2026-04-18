@@ -73,16 +73,7 @@ export function AggregatedEntityMonitoringBlock({
               width={120}
               tickFormatter={(v) => (v.length > 18 ? v.slice(0, 17) + "…" : v)}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                fontSize: "12px",
-              }}
-              formatter={(value: number) => [`${value} alertas`, "Total capturado"]}
-              cursor={{ fill: "hsl(var(--muted))" }}
-            />
+            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
             <Bar dataKey="value" radius={[0, 4, 4, 0]}>
               {data.map((_, index) => (
                 <Cell key={index} fill={getNeutralColor(index)} />

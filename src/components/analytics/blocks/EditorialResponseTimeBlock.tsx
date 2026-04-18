@@ -87,19 +87,7 @@ export function EditorialResponseTimeBlock({
                 tickLine={false}
                 tickFormatter={(v) => `${v}h`}
               />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                }}
-                formatter={(value: number) => [`${value}h`, "Tiempo"]}
-                labelFormatter={(v) => {
-                  try { return `Semana del ${new Date(v).toLocaleDateString("es-PE", { day: "numeric", month: "short" })}`; }
-                  catch { return v; }
-                }}
-              />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
               <ReferenceLine
                 y={24}
                 stroke="hsl(0, 65%, 50%)"

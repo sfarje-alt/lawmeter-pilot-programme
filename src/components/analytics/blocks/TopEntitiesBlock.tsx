@@ -117,16 +117,7 @@ export function TopEntitiesBlock({
                 width={100}
                 tickFormatter={(value) => truncateLabel(value, 14)}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-                formatter={(value: number) => [`${value} alertas`, 'Cantidad']}
-                cursor={{ fill: 'hsl(var(--muted))' }}
-              />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
               <Bar 
                 dataKey="value" 
                 radius={[0, 4, 4, 0]}

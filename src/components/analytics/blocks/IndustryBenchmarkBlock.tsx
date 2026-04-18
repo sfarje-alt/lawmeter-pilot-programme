@@ -141,14 +141,7 @@ export function IndustryBenchmarkBlock({
                 tickLine={false}
                 width={100}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-              />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
               <Bar 
                 dataKey="client" 
                 name={clientName || "Su empresa"}
