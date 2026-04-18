@@ -2,6 +2,7 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -9,8 +10,27 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Info, ChevronRight, AlertCircle, Maximize2, Calendar, Database } from "lucide-react";
+import {
+  Info,
+  ChevronRight,
+  AlertCircle,
+  Maximize2,
+  Calendar,
+  Database,
+  BarChart3,
+  Table as TableIcon,
+  Sparkles,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { BlockFilters } from "@/hooks/useBlockFilters";
+import { BlockFilterPanel, type FilterDimension } from "./BlockFilterPanel";
+
+export type ExpandedTab = 'chart' | 'data' | 'insights';
+
+interface ExpandedRenderArgs {
+  filters: BlockFilters;
+  tab: ExpandedTab;
+}
 
 interface AnalyticsBlockProps {
   title: string;
@@ -26,14 +46,39 @@ interface AnalyticsBlockProps {
   className?: string;
   compact?: boolean;
   expandable?: boolean;
-  /** Optional render function for the expanded view. Receives a flag indicating expanded mode. Falls back to `children`. */
-  renderExpanded?: () => React.ReactNode;
+  /**
+   * Render function for the expanded view. Receives current filters and active tab.
+   * If omitted, the expanded view simply enlarges `children` (legacy behavior).
+   */
+  renderExpanded?: (args: ExpandedRenderArgs) => React.ReactNode;
+  /**
+   * Render function for the "Datos" (data table) tab. Optional.
+   */
+  renderDataTable?: (args: ExpandedRenderArgs) => React.ReactNode;
+  /**
+   * Render function for the "Insights" tab. Optional — shows AI-generated takeaways.
+   */
+  renderInsights?: (args: ExpandedRenderArgs) => React.ReactNode;
+  /**
+   * Filter dimensions to show in the expanded modal. If omitted, no filters are shown.
+   */
+  filterDimensions?: FilterDimension[];
+  /**
+   * Filter state from useBlockFilters. Required if filterDimensions is provided.
+   */
+  filterState?: {
+    filters: BlockFilters;
+    setFilter: <K extends keyof BlockFilters>(key: K, value: BlockFilters[K]) => void;
+    resetFilters: () => void;
+    isCustomized: boolean;
+  };
 }
 
 /**
  * Base component for all analytics blocks.
- * Provides consistent structure: title, takeaway, chart area, footer with metadata.
- * Expand button opens an immersive BI-style dialog with a much larger chart canvas.
+ * Provides consistent structure and an immersive expanded modal with:
+ *  - Persistent per-block filters
+ *  - Tabs: Visualización / Datos / Insights IA
  */
 export function AnalyticsBlock({
   title,
@@ -50,8 +95,34 @@ export function AnalyticsBlock({
   compact = false,
   expandable = true,
   renderExpanded,
+  renderDataTable,
+  renderInsights,
+  filterDimensions,
+  filterState,
 }: AnalyticsBlockProps) {
   const [expanded, setExpanded] = React.useState(false);
+  const [tab, setTab] = React.useState<ExpandedTab>(filterState?.filters.viewTab || 'chart');
+
+  // Sync tab with persisted filter state when expanded opens
+  React.useEffect(() => {
+    if (expanded && filterState?.filters.viewTab) {
+      setTab(filterState.filters.viewTab);
+    }
+  }, [expanded, filterState?.filters.viewTab]);
+
+  const handleTabChange = (next: string) => {
+    const t = next as ExpandedTab;
+    setTab(t);
+    filterState?.setFilter('viewTab', t);
+  };
+
+  const expandedArgs: ExpandedRenderArgs = {
+    filters: filterState?.filters || {},
+    tab,
+  };
+
+  const showFilters = !!filterDimensions && !!filterState && filterDimensions.length > 0;
+  const showTabs = !!(renderDataTable || renderInsights);
 
   return (
     <>
@@ -69,13 +140,16 @@ export function AnalyticsBlock({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-semibold text-foreground truncate">
-                  {title}
-                </h3>
+                <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>
               </div>
             </div>
 
             <div className="flex items-center gap-1 flex-shrink-0">
+              {filterState?.isCustomized && (
+                <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                  Personalizado
+                </Badge>
+              )}
               {expandable && !isEmpty && (
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
@@ -90,7 +164,7 @@ export function AnalyticsBlock({
                         <span className="sr-only">Explorar a pantalla completa</span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="top">Explorar</TooltipContent>
+                    <TooltipContent side="top">Explorar y filtrar</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -106,12 +180,7 @@ export function AnalyticsBlock({
                       <span className="sr-only">Información</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent
-                    side="top"
-                    align="end"
-                    sideOffset={8}
-                    className="max-w-sm z-[100]"
-                  >
+                  <TooltipContent side="top" align="end" sideOffset={8} className="max-w-sm z-[100]">
                     <p className="text-sm">{infoTooltip}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -120,21 +189,14 @@ export function AnalyticsBlock({
           </div>
 
           {/* Takeaway */}
-          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-            {takeaway}
-          </p>
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{takeaway}</p>
 
           {/* Content / Chart Area */}
-          <div className={cn(
-            "relative",
-            compact ? "min-h-[120px]" : "min-h-[280px]"
-          )}>
+          <div className={cn("relative", compact ? "min-h-[120px]" : "min-h-[280px]")}>
             {isEmpty ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
                 <AlertCircle className="h-8 w-8 text-muted-foreground/50 mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  {emptyMessage}
-                </p>
+                <p className="text-sm text-muted-foreground">{emptyMessage}</p>
               </div>
             ) : (
               children
@@ -191,9 +253,7 @@ export function AnalyticsBlock({
                     </div>
                   )}
                   <div className="min-w-0">
-                    <DialogTitle className="text-xl font-semibold text-foreground">
-                      {title}
-                    </DialogTitle>
+                    <DialogTitle className="text-xl font-semibold text-foreground">{title}</DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground mt-1">
                       {takeaway}
                     </DialogDescription>
@@ -213,14 +273,67 @@ export function AnalyticsBlock({
               </div>
             </DialogHeader>
 
-            {/* Expanded chart canvas — much larger */}
-            <div className="flex-1 overflow-auto px-8 py-6 bg-background">
-              <div className="h-full min-h-[500px] w-full">
-                {renderExpanded ? renderExpanded() : children}
+            {/* Filter panel */}
+            {showFilters && filterState && (
+              <div className="px-6 pt-4 flex-shrink-0">
+                <BlockFilterPanel
+                  filters={filterState.filters}
+                  setFilter={filterState.setFilter}
+                  resetFilters={filterState.resetFilters}
+                  isCustomized={filterState.isCustomized}
+                  dimensions={filterDimensions}
+                />
               </div>
+            )}
+
+            {/* Body — tabs or single canvas */}
+            <div className="flex-1 overflow-hidden flex flex-col px-6 pt-4 pb-2 bg-background">
+              {showTabs ? (
+                <Tabs value={tab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
+                  <TabsList className="self-start mb-4">
+                    <TabsTrigger value="chart" className="gap-1.5 text-xs">
+                      <BarChart3 className="h-3.5 w-3.5" />
+                      Visualización
+                    </TabsTrigger>
+                    {renderDataTable && (
+                      <TabsTrigger value="data" className="gap-1.5 text-xs">
+                        <TableIcon className="h-3.5 w-3.5" />
+                        Datos
+                      </TabsTrigger>
+                    )}
+                    {renderInsights && (
+                      <TabsTrigger value="insights" className="gap-1.5 text-xs">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Insights IA
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                  <TabsContent value="chart" className="flex-1 overflow-auto m-0">
+                    <div className="h-full min-h-[460px] w-full">
+                      {renderExpanded ? renderExpanded(expandedArgs) : children}
+                    </div>
+                  </TabsContent>
+                  {renderDataTable && (
+                    <TabsContent value="data" className="flex-1 overflow-auto m-0">
+                      {renderDataTable(expandedArgs)}
+                    </TabsContent>
+                  )}
+                  {renderInsights && (
+                    <TabsContent value="insights" className="flex-1 overflow-auto m-0">
+                      {renderInsights(expandedArgs)}
+                    </TabsContent>
+                  )}
+                </Tabs>
+              ) : (
+                <div className="flex-1 overflow-auto">
+                  <div className="h-full min-h-[500px] w-full">
+                    {renderExpanded ? renderExpanded(expandedArgs) : children}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Footer with explanation + drilldown */}
+            {/* Footer */}
             <div className="flex items-center justify-between gap-4 px-6 py-3 border-t border-border bg-card/50 flex-shrink-0 text-xs">
               <div className="flex items-start gap-2 text-muted-foreground max-w-2xl">
                 <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
@@ -252,7 +365,7 @@ export function AnalyticsBlock({
  */
 export function AnalyticsEmptyState({
   title,
-  message = "No hay suficientes alertas publicadas en este período para mostrar este análisis.",
+  message = "No hay suficientes alertas en este período para mostrar este análisis.",
   suggestion,
 }: {
   title: string;
