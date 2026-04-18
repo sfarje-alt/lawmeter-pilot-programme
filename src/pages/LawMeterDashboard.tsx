@@ -116,20 +116,12 @@ export default function LawMeterDashboard() {
   // Get display name for current tab
   const getTabDisplayName = () => {
     const tabNames: Record<string, string> = {
-      // Admin tabs
-      sessions: "Sessions",
-      inbox: "Inbox",
-      clients: "Clients",
-      reports: "Reports",
-      analytics: "Analytics",
-      calendar: "Calendar",
-      // Client tabs
-      "client-inbox": "Alertas",
-      "client-profile": "Mi Perfil",
-      "client-reports": "Reportes",
-      "client-analytics": "Analytics",
-      "client-calendar": "Calendario",
-      "client-settings": "Configuración",
+      sessions: "Sesiones",
+      inbox: "Alertas",
+      clients: "Perfiles",
+      reports: "Reportes",
+      analytics: "Analíticas",
+      calendar: "Calendario",
     };
     return tabNames[activeTab] || activeTab;
   };
@@ -156,19 +148,22 @@ export default function LawMeterDashboard() {
           <header className="sticky top-0 z-10 flex h-12 items-center gap-4 border-b border-white/10 bg-[hsl(220,40%,8%)]/80 backdrop-blur-sm px-4">
             <SidebarTrigger className="text-foreground hover:bg-white/10" />
             <span className="text-sm font-medium text-muted-foreground">{getTabDisplayName()}</span>
-            
+
             <div className="ml-auto flex items-center gap-2">
-              {isClientUser && (
-                <Badge variant="outline" className="bg-green-500/10 border-green-500/30 text-green-500 text-xs gap-1">
-                  <Eye className="h-3 w-3" />
-                  Solo Lectura
-                </Badge>
-              )}
               <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
-                Peru
+                Perú
               </Badge>
             </div>
           </header>
+
+          {/* AI Disclaimer banner — shown across the app */}
+          <div className="border-b border-amber-500/20 bg-amber-500/5 px-6 py-2">
+            <p className="text-[11px] text-amber-200/80 leading-relaxed">
+              <span className="font-semibold">Aviso:</span> Los análisis, resúmenes y clasificaciones generados por
+              inteligencia artificial son informativos y no constituyen asesoría legal. La validación final y la toma
+              de decisiones corresponden siempre al equipo interno de compliance.
+            </p>
+          </div>
 
           <div className="flex-1 px-6 py-6 overflow-auto">
             {renderContent()}

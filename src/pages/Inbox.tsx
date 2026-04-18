@@ -68,20 +68,12 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Bandeja</h1>
+          <h1 className="text-2xl font-bold text-foreground">Alertas</h1>
           <p className="text-muted-foreground">
-            Revisa y gestiona alertas legislativas para tus clientes
+            Revisa, clasifica y gestiona las alertas regulatorias de tu organización
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <PublicationPanel
-            pinnedAlerts={pinnedAlerts}
-            selectedClientId={selectedClientId}
-            onClientChange={setSelectedClientId}
-            hasCommentaryForClient={hasCommentaryForClient}
-            onBatchPublish={batchPublishPinned}
-            onUnpinAlert={togglePinAlert}
-          />
           <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
             Perú
           </Badge>

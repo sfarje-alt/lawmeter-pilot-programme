@@ -25,11 +25,11 @@ interface AppSidebarProps {
   onSettingsOpen: () => void;
 }
 
-// Admin menu items
+// Operational menu items (single user type — internal compliance team)
 const adminMenuItems = [
+  { id: "inbox", title: "Alertas", icon: Inbox },
   { id: "sessions", title: "Sesiones", icon: Video },
-  { id: "inbox", title: "Bandeja", icon: Inbox },
-  { id: "clients", title: "Clientes", icon: Building2 },
+  { id: "clients", title: "Perfiles", icon: Building2 },
   { id: "reports", title: "Reportes", icon: FileText },
   { id: "analytics", title: "Analíticas", icon: BarChart3 },
   { id: "calendar", title: "Calendario", icon: Calendar },
@@ -83,7 +83,7 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
               className="w-full h-auto object-contain max-h-32" 
             />
             <h1 className="text-sm font-bold text-foreground leading-tight">
-              {isClientUser ? "Portal Cliente" : "Centro de Inteligencia Regulatoria"}
+              Compliance &amp; Monitoreo Regulatorio
             </h1>
             {isClientUser && clientName && (
               <Badge variant="outline" className="w-full justify-center bg-primary/10 border-primary/30 text-primary text-xs">
