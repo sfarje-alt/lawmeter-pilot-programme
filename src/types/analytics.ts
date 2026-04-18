@@ -334,8 +334,8 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
   {
     key: 'service_kpis',
     title: 'Indicadores de Servicio',
-    takeaway: 'Métricas de cobertura y tiempo de respuesta',
-    infoTooltip: 'Alertas publicadas, tiempo promedio de comentarios expertos, consistencia del servicio.',
+    takeaway: 'Calidad operativa: tiempo, cobertura experta y SLA',
+    infoTooltip: 'Tiempo medio de revisión, cobertura con comentario experto y cumplimiento de SLA del servicio.',
     visibility: 'both',
     chartType: 'kpi',
     defaultEnabled: true,

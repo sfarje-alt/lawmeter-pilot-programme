@@ -79,7 +79,7 @@ export function ServiceKPIsBlock({
     <AnalyticsBlock
       title="Indicadores de Servicio"
       takeaway={takeaway}
-      infoTooltip="Métricas de calidad del servicio: alertas publicadas, tiempo de respuesta y consistencia de cobertura. Tu configuración se guarda automáticamente."
+      infoTooltip="Métricas de calidad operativa del servicio: tiempo de revisión, cobertura con comentario experto y cumplimiento de SLA. Tu configuración se guarda automáticamente."
       timeframe={timeframe}
       source={source}
       onDrilldown={onDrilldown}
