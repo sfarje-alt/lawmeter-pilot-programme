@@ -1,59 +1,461 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ReportClientConfigs } from "./ReportClientConfigs";
-import { ReportScheduleDashboard } from "./ReportScheduleDashboard";
-import { ReportHistory } from "./ReportHistory";
-import { ReportManualGeneration } from "./ReportManualGeneration";
-import { Building2, Calendar, History, FileDown } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
+import { useAlerts } from "@/contexts/AlertsContext";
+import { PeruAlert } from "@/data/peruAlertsMockData";
+import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
+import {
+  FileDown,
+  Building2,
+  Calendar as CalendarIcon,
+  FileText,
+  Scale,
+  Download,
+  Loader2,
+  Pin,
+  Filter,
+  Clock,
+} from "lucide-react";
+import { format, subDays, parseISO, isAfter, isBefore } from "date-fns";
+import { es } from "date-fns/locale";
+import { toast } from "sonner";
+
+// PDF Styles
+const styles = StyleSheet.create({
+  page: { padding: 40, fontFamily: 'Helvetica', fontSize: 10 },
+  header: { marginBottom: 30, borderBottom: '2 solid #1a365d', paddingBottom: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1a365d', marginBottom: 5 },
+  subtitle: { fontSize: 12, color: '#4a5568', marginBottom: 3 },
+  section: { marginBottom: 20 },
+  sectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#1a365d', marginBottom: 10, backgroundColor: '#edf2f7', padding: 8 },
+  stageHeader: { fontSize: 11, fontWeight: 'bold', color: '#2d3748', marginBottom: 8, marginTop: 12, borderLeft: '3 solid #3182ce', paddingLeft: 8 },
+  alertCard: { marginBottom: 12, padding: 10, backgroundColor: '#f7fafc', borderRadius: 4 },
+  alertTitle: { fontSize: 10, fontWeight: 'bold', color: '#2d3748', marginBottom: 4 },
+  alertMeta: { fontSize: 8, color: '#718096', marginBottom: 6 },
+  commentary: { fontSize: 9, color: '#4a5568', marginTop: 6, padding: 8, backgroundColor: '#ebf8ff', borderRadius: 3 },
+  commentaryLabel: { fontSize: 8, fontWeight: 'bold', color: '#2b6cb0', marginBottom: 3 },
+  footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 8, color: '#a0aec0' },
+  summary: { backgroundColor: '#edf2f7', padding: 15, marginBottom: 20, borderRadius: 4 },
+  summaryItem: { fontSize: 10, marginBottom: 5 },
+  sourceLink: { fontSize: 8, color: '#2b6cb0', textDecoration: 'underline', marginTop: 4 },
+});
+
+const ReportPDF = ({ alerts, profileName, dateLabel }: { alerts: PeruAlert[]; profileName: string; dateLabel: string }) => {
+  const bills = alerts.filter(a => a.legislation_type === 'proyecto_de_ley');
+  const norms = alerts.filter(a => a.legislation_type === 'norma');
+
+  const billsByStage = bills.reduce((acc, bill) => {
+    const stage = bill.current_stage || 'SIN ESTADO';
+    if (!acc[stage]) acc[stage] = [];
+    acc[stage].push(bill);
+    return acc;
+  }, {} as Record<string, PeruAlert[]>);
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.title}>REPORTE REGULATORIO</Text>
+          <Text style={styles.subtitle}>{profileName}</Text>
+          <Text style={styles.subtitle}>{format(new Date(), "d 'de' MMMM yyyy", { locale: es })}</Text>
+          <Text style={styles.subtitle}>Alcance: {dateLabel}</Text>
+        </View>
+
+        <View style={styles.summary}>
+          <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 8 }}>RESUMEN EJECUTIVO</Text>
+          <Text style={styles.summaryItem}>• {bills.length} Proyectos de Ley</Text>
+          <Text style={styles.summaryItem}>• {norms.length} Normas publicadas</Text>
+        </View>
+
+        {bills.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>PROYECTOS DE LEY</Text>
+            {Object.entries(billsByStage).map(([stage, stageBills]) => (
+              <View key={stage}>
+                <Text style={styles.stageHeader}>{stage} ({stageBills.length})</Text>
+                {stageBills.map(bill => (
+                  <View key={bill.id} style={styles.alertCard}>
+                    <Text style={styles.alertTitle}>{bill.legislation_id}</Text>
+                    <Text style={{ fontSize: 9, marginBottom: 4 }}>{bill.legislation_title}</Text>
+                    <Text style={styles.alertMeta}>Autor: {bill.author || 'N/A'}</Text>
+                    {bill.source_url && <Link src={bill.source_url} style={styles.sourceLink}>Fuente Oficial</Link>}
+                    {bill.expert_commentary && (
+                      <View style={styles.commentary}>
+                        <Text style={styles.commentaryLabel}>COMENTARIO:</Text>
+                        <Text>{bill.expert_commentary.replace(/<[^>]+>/g, '')}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {norms.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>NORMAS PUBLICADAS</Text>
+            {norms.map(norm => (
+              <View key={norm.id} style={styles.alertCard}>
+                <Text style={styles.alertTitle}>{norm.legislation_title}</Text>
+                <Text style={styles.alertMeta}>Entidad: {norm.entity || 'N/A'} · Publicación: {norm.publication_date || 'N/A'}</Text>
+                {norm.source_url && <Link src={norm.source_url} style={styles.sourceLink}>Fuente Oficial</Link>}
+              </View>
+            ))}
+          </View>
+        )}
+
+        <Text style={styles.footer}>
+          Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
+        </Text>
+      </Page>
+    </Document>
+  );
+};
+
+type ScopeMode = "all_active" | "pinned" | "date_range";
+
+interface ScheduledReport {
+  id: string;
+  name: string;
+  profileIds: string[];
+  scope: ScopeMode;
+  frequency: "daily" | "weekly" | "monthly";
+  time: string;
+  recipients: string;
+  createdAt: string;
+}
 
 export function ReportsPage() {
-  const [activeTab, setActiveTab] = useState("clients");
+  const { alerts } = useAlerts();
+  const profiles = MOCK_CLIENT_PROFILES;
+
+  const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>(profiles[0]?.id ? [profiles[0].id] : []);
+  const [scope, setScope] = useState<ScopeMode>("all_active");
+  const [daysBack, setDaysBack] = useState(7);
+  const [includeBills, setIncludeBills] = useState(true);
+  const [includeNorms, setIncludeNorms] = useState(true);
+
+  // Schedules (in-memory)
+  const [schedules, setSchedules] = useState<ScheduledReport[]>([]);
+  const [scheduleName, setScheduleName] = useState("");
+  const [scheduleFrequency, setScheduleFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
+  const [scheduleTime, setScheduleTime] = useState("08:00");
+  const [scheduleRecipients, setScheduleRecipients] = useState("");
+
+  const toggleProfile = (id: string) => {
+    setSelectedProfileIds(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const filteredAlerts = useMemo(() => {
+    const cutoff = subDays(new Date(), daysBack);
+    return alerts.filter(a => {
+      // Always exclude archived
+      if (a.archived_at) return false;
+      // Type filter
+      if (!includeBills && a.legislation_type === 'proyecto_de_ley') return false;
+      if (!includeNorms && a.legislation_type === 'norma') return false;
+      // Scope
+      if (scope === "pinned" && !a.is_pinned_for_publication) return false;
+      if (scope === "date_range") {
+        try {
+          const updated = parseISO(a.updated_at);
+          if (isBefore(updated, cutoff)) return false;
+        } catch {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [alerts, scope, daysBack, includeBills, includeNorms]);
+
+  const bills = filteredAlerts.filter(a => a.legislation_type === 'proyecto_de_ley');
+  const norms = filteredAlerts.filter(a => a.legislation_type === 'norma');
+
+  const profileNames = profiles
+    .filter(p => p.id && selectedProfileIds.includes(p.id))
+    .map(p => p.legalName)
+    .join(' · ') || 'Todos los perfiles';
+
+  const dateLabel = scope === "all_active"
+    ? "Todas las alertas activas"
+    : scope === "pinned"
+      ? "Alertas fijadas"
+      : `Últimos ${daysBack} días`;
+
+  const canGenerate = selectedProfileIds.length > 0 && (includeBills || includeNorms) && filteredAlerts.length > 0;
+
+  const handleSaveSchedule = () => {
+    if (!scheduleName.trim() || selectedProfileIds.length === 0) {
+      toast.error("Asigna un nombre y al menos un perfil al reporte programado.");
+      return;
+    }
+    const next: ScheduledReport = {
+      id: crypto.randomUUID(),
+      name: scheduleName.trim(),
+      profileIds: [...selectedProfileIds],
+      scope,
+      frequency: scheduleFrequency,
+      time: scheduleTime,
+      recipients: scheduleRecipients,
+      createdAt: new Date().toISOString(),
+    };
+    setSchedules(prev => [next, ...prev]);
+    setScheduleName("");
+    setScheduleRecipients("");
+    toast.success(`Reporte "${next.name}" programado`);
+  };
+
+  const handleDeleteSchedule = (id: string) => {
+    setSchedules(prev => prev.filter(s => s.id !== id));
+    toast.success("Programación eliminada");
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Reportes</h1>
         <p className="text-muted-foreground">
-          Configure la generación automática de reportes por cliente y consulte el historial
+          Genera reportes manuales o prográmalos. Los reportes se construyen a partir de tus perfiles de monitoreo.
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 bg-muted/50">
-          <TabsTrigger value="clients" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            Configuración
-          </TabsTrigger>
-          <TabsTrigger value="schedule" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            Programación
-          </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2">
-            <History className="h-4 w-4" />
-            Historial
-          </TabsTrigger>
-          <TabsTrigger value="manual" className="gap-2">
-            <FileDown className="h-4 w-4" />
-            Generar Manual
-          </TabsTrigger>
-        </TabsList>
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* CONFIGURATION COLUMN */}
+        <Card className="border-border/50 lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileDown className="h-5 w-5" />
+              Configuración del Reporte
+            </CardTitle>
+            <CardDescription>
+              Selecciona perfiles, alcance y contenido. Aplica tanto a descarga manual como a programación.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Profile Selection */}
+            <div className="space-y-3">
+              <Label className="font-medium">Perfiles de Monitoreo</Label>
+              {profiles.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">
+                  Crea al menos un perfil de monitoreo para generar reportes.
+                </p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {profiles.map(profile => (
+                    <Label
+                      key={profile.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50"
+                    >
+                      <Checkbox
+                        checked={selectedProfileIds.includes(profile.id!)}
+                        onCheckedChange={() => toggleProfile(profile.id!)}
+                      />
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{profile.legalName}</span>
+                    </Label>
+                  ))}
+                </div>
+              )}
+            </div>
 
-        <TabsContent value="clients" className="mt-6">
-          <ReportClientConfigs />
-        </TabsContent>
+            {/* Scope */}
+            <div className="space-y-3">
+              <Label className="font-medium flex items-center gap-2">
+                <Filter className="h-4 w-4" /> Alcance de Alertas
+              </Label>
+              <div className="grid sm:grid-cols-3 gap-2">
+                {[
+                  { value: "all_active" as const, label: "Todas activas", icon: FileText, desc: "Excluye archivadas" },
+                  { value: "pinned" as const, label: "Solo fijadas", icon: Pin, desc: "Marcadas con 📌" },
+                  { value: "date_range" as const, label: "Rango de tiempo", icon: CalendarIcon, desc: "Últimos N días" },
+                ].map(opt => {
+                  const Icon = opt.icon;
+                  const active = scope === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setScope(opt.value)}
+                      className={`p-3 rounded-lg border text-left transition-all ${
+                        active ? "border-primary bg-primary/10" : "border-border/50 hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className="text-sm font-medium">{opt.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+              {scope === "date_range" && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="days" className="text-sm">Últimos</Label>
+                  <Input
+                    id="days"
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={daysBack}
+                    onChange={e => setDaysBack(parseInt(e.target.value) || 7)}
+                    className="w-20"
+                  />
+                  <span className="text-sm text-muted-foreground">días</span>
+                </div>
+              )}
+            </div>
 
-        <TabsContent value="schedule" className="mt-6">
-          <ReportScheduleDashboard />
-        </TabsContent>
+            {/* Content */}
+            <div className="space-y-3">
+              <Label className="font-medium">Contenido</Label>
+              <div className="flex gap-4">
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <Switch checked={includeBills} onCheckedChange={setIncludeBills} />
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Proyectos de Ley</span>
+                </Label>
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <Switch checked={includeNorms} onCheckedChange={setIncludeNorms} />
+                  <Scale className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Normas</span>
+                </Label>
+              </div>
+            </div>
 
-        <TabsContent value="history" className="mt-6">
-          <ReportHistory />
-        </TabsContent>
+            {/* Preview */}
+            <div className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-muted/50">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-foreground">{bills.length}</div>
+                <div className="text-xs text-muted-foreground">Proyectos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-foreground">{norms.length}</div>
+                <div className="text-xs text-muted-foreground">Normas</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-foreground">{selectedProfileIds.length}</div>
+                <div className="text-xs text-muted-foreground">Perfiles</div>
+              </div>
+            </div>
 
-        <TabsContent value="manual" className="mt-6">
-          <ReportManualGeneration />
-        </TabsContent>
-      </Tabs>
+            {/* Manual Download */}
+            {canGenerate ? (
+              <PDFDownloadLink
+                document={<ReportPDF alerts={filteredAlerts} profileName={profileNames} dateLabel={dateLabel} />}
+                fileName={`reporte-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
+              >
+                {({ loading }) => (
+                  <Button size="lg" className="w-full" disabled={loading}>
+                    {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                    {loading ? 'Generando PDF...' : 'Descargar Reporte Ahora'}
+                  </Button>
+                )}
+              </PDFDownloadLink>
+            ) : (
+              <Button size="lg" className="w-full" disabled>
+                <Download className="h-4 w-4 mr-2" />
+                Selecciona perfil, contenido y al menos una alerta
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* SCHEDULE COLUMN */}
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Programar Envío
+            </CardTitle>
+            <CardDescription>
+              Reutiliza la configuración de la izquierda para envíos automáticos.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="sname" className="text-xs">Nombre del reporte</Label>
+              <Input
+                id="sname"
+                value={scheduleName}
+                onChange={e => setScheduleName(e.target.value)}
+                placeholder="Ej., Reporte semanal regulatorio"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label className="text-xs">Frecuencia</Label>
+                <Select value={scheduleFrequency} onValueChange={v => setScheduleFrequency(v as typeof scheduleFrequency)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Diario</SelectItem>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                    <SelectItem value="monthly">Mensual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Hora</Label>
+                <Input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Destinatarios (emails separados por coma)</Label>
+              <Input
+                value={scheduleRecipients}
+                onChange={e => setScheduleRecipients(e.target.value)}
+                placeholder="legal@empresa.com, ceo@empresa.com"
+              />
+            </div>
+            <Button onClick={handleSaveSchedule} className="w-full" variant="secondary">
+              <Clock className="h-4 w-4 mr-2" />
+              Programar
+            </Button>
+
+            {/* Schedule list */}
+            {schedules.length > 0 && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-xs text-muted-foreground">Reportes programados</Label>
+                {schedules.map(s => (
+                  <div key={s.id} className="p-3 rounded-lg bg-muted/30 border border-border/50 text-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{s.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {s.frequency === "daily" ? "Diario" : s.frequency === "weekly" ? "Semanal" : "Mensual"} · {s.time}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <Badge variant="outline" className="text-xs">{s.profileIds.length} perfil(es)</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {s.scope === "all_active" ? "Activas" : s.scope === "pinned" ? "Fijadas" : "Por fecha"}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteSchedule(s.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

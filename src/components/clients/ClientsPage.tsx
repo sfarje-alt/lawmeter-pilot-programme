@@ -4,6 +4,7 @@ import { ClientWizard } from "./ClientWizard";
 import { ClientProfileDrawer } from "./ClientProfileDrawer";
 import { ClientProfile } from "./types";
 import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
+import { toast } from "sonner";
 
 export function ClientsPage() {
   const [clients, setClients] = useState<ClientProfile[]>(MOCK_CLIENT_PROFILES);
@@ -39,6 +40,12 @@ export function ClientsPage() {
     setSelectedClient(updatedClient);
   };
 
+  const handleDeleteClient = (clientId: string) => {
+    setClients(prev => prev.filter(c => c.id !== clientId));
+    setSelectedClient(undefined);
+    toast.success("Perfil eliminado");
+  };
+
   return (
     <>
       <ClientsList
@@ -52,6 +59,7 @@ export function ClientsPage() {
         client={selectedClient || null}
         onEdit={handleEditClient}
         onUpdateClient={handleUpdateClient}
+        onDeleteClient={handleDeleteClient}
       />
       <ClientWizard
         open={wizardOpen}
