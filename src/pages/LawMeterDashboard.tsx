@@ -15,7 +15,8 @@ import { ClientAnalyticsDashboard } from "@/components/analytics/ClientAnalytics
 import { LegalTeamAnalyticsDashboard } from "@/components/analytics/LegalTeamAnalyticsDashboard";
 import { ReportsPage } from "@/components/reports/ReportsPage";
 import { Badge } from "@/components/ui/badge";
-import { Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Eye, Info, X } from "lucide-react";
 import Inbox from "@/pages/Inbox";
 
 // Client Portal Components
@@ -36,6 +37,15 @@ export default function LawMeterDashboard() {
   const [activeTab, setActiveTab] = useState(""); 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showDailyPopup, setShowDailyPopup] = useState(false);
+  const [aiDisclaimerVisible, setAiDisclaimerVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("lm:hide-ai-disclaimer") !== "1";
+  });
+
+  const dismissAiDisclaimer = () => {
+    setAiDisclaimerVisible(false);
+    try { localStorage.setItem("lm:hide-ai-disclaimer", "1"); } catch {}
+  };
 
   // Get URL parameters for navigation from calendar
   const sectionParam = searchParams.get('section');
@@ -156,14 +166,26 @@ export default function LawMeterDashboard() {
             </div>
           </header>
 
-          {/* AI Disclaimer banner — shown across the app */}
-          <div className="border-b border-amber-500/20 bg-amber-500/5 px-6 py-2">
-            <p className="text-[11px] text-amber-200/80 leading-relaxed">
-              <span className="font-semibold">Aviso:</span> Los análisis, resúmenes y clasificaciones generados por
-              inteligencia artificial son informativos y no constituyen asesoría legal. La validación final y la toma
-              de decisiones corresponden siempre al equipo interno de compliance.
-            </p>
-          </div>
+          {/* AI Disclaimer banner — dismissible */}
+          {aiDisclaimerVisible && (
+            <div className="border-b border-blue-500/20 bg-blue-500/10 px-6 py-2 flex items-start gap-2">
+              <Info className="h-3.5 w-3.5 text-blue-300 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-blue-100/90 leading-relaxed flex-1">
+                <span className="font-semibold">Aviso:</span> Los análisis, resúmenes y clasificaciones generados por
+                inteligencia artificial son informativos y no constituyen asesoría legal. La validación final y la toma
+                de decisiones corresponden siempre al equipo interno de compliance.
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 text-blue-200/80 hover:text-blue-100 hover:bg-blue-500/20 shrink-0"
+                onClick={dismissAiDisclaimer}
+                aria-label="Ocultar aviso"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
 
           <div className="flex-1 px-6 py-6 overflow-auto">
             {renderContent()}
