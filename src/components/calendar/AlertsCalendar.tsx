@@ -145,7 +145,7 @@ function heatmapBg(level: 0 | 1 | 2 | 3): string {
 
 export function AlertsCalendar() {
   const navigate = useNavigate();
-  const { alerts, archiveAlert, unarchiveAlert, updateSharedCommentary, publishAlert } = useAlerts();
+  const { alerts, archiveAlert, unarchiveAlert, updateSharedCommentary } = useAlerts();
 
   const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -1063,7 +1063,6 @@ export function AlertsCalendar() {
           setDrawerOpen(o);
           if (!o) setActiveAlert(null);
         }}
-        onPublish={(a, ids, comms) => publishAlert(a, ids, comms)}
         onUpdateExpertCommentary={(id, c) => updateSharedCommentary(id, c)}
         onArchive={(id) => archiveAlert(id)}
         onUnarchive={(id) => unarchiveAlert(id)}

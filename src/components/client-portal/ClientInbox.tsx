@@ -9,13 +9,10 @@ import { ClientRegulationsInbox } from "./ClientRegulationsInbox";
 
 export function ClientInbox() {
   const { clientId, clientName } = useClientUser();
-  const { getPublishedAlertsForClient } = useAlerts();
+  const { alerts } = useAlerts();
 
-  // Get published alerts for this client from shared context
-  const publishedAlerts = useMemo(() => {
-    if (!clientId) return [];
-    return getPublishedAlertsForClient(clientId);
-  }, [clientId, getPublishedAlertsForClient]);
+  // Single-profile model: all alerts belong to the organization
+  const publishedAlerts = useMemo(() => alerts, [alerts]);
 
   // Split by type for tab counts
   const bills = useMemo(() => 
