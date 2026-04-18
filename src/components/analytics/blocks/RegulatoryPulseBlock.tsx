@@ -189,7 +189,7 @@ export function RegulatoryPulseBlock({
         onDrilldown={handleDrilldown}
         isEmpty={isEmpty}
         icon={<TrendIcon className="h-4 w-4 text-primary" />}
-        filterDimensions={['period', 'legislationType', 'search']}
+        filterDimensions={['period', 'legislationType', 'impactLevels', 'search']}
         filterState={filterState}
         renderExpanded={({ filters }) => {
           const breakdown = (filters.legislationType || 'all') !== 'all' || showTypeBreakdown;
