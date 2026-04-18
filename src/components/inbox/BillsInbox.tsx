@@ -12,6 +12,8 @@ interface BillsInboxProps {
   alerts: PeruAlert[];
   onPublish: (alert: PeruAlert, clientIds: string[], commentaries: { clientId: string; commentary: string }[]) => void;
   onTogglePin: (alertId: string) => void;
+  onArchive: (alertId: string) => void;
+  onUnarchive: (alertId: string) => void;
   selectedClientId: string | null;
   hasCommentaryForClient: (alert: PeruAlert, clientId: string) => boolean;
   onUpdateExpertCommentary: (alertId: string, commentary: string) => void;
@@ -29,11 +31,12 @@ export interface BillsFilters {
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onlyPinned: boolean;
+  showArchived: boolean;
 }
 
 type BillKanbanStage = "comision" | "pleno" | "tramite_final";
 
-export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: BillsInboxProps) {
+export function BillsInbox({ alerts, onPublish, onTogglePin, onArchive, onUnarchive, selectedClientId, hasCommentaryForClient, onUpdateExpertCommentary, initialAlertId }: BillsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
@@ -48,12 +51,22 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
     dateFrom: undefined,
     dateTo: undefined,
     onlyPinned: false,
+    showArchived: false,
   });
 
-  // Filter only bills
+  // Filter only bills (and respect archive toggle)
   const billAlerts = useMemo(() => {
-    return alerts.filter(a => a.legislation_type === "proyecto_de_ley");
-  }, [alerts]);
+    return alerts.filter(a => {
+      if (a.legislation_type !== "proyecto_de_ley") return false;
+      if (filters.showArchived) return !!a.archived_at;
+      return !a.archived_at;
+    });
+  }, [alerts, filters.showArchived]);
+
+  const archivedCount = useMemo(
+    () => alerts.filter(a => a.legislation_type === "proyecto_de_ley" && !!a.archived_at).length,
+    [alerts]
+  );
 
   // Reset processed flag when initialAlertId changes
   useEffect(() => {
@@ -367,6 +380,9 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
             alerts={alertsByStage[column.id as BillKanbanStage] || []}
             onAlertClick={handleAlertClick}
             onTogglePin={onTogglePin}
+            onArchive={onArchive}
+            onUnarchive={onUnarchive}
+            isArchiveView={filters.showArchived}
             selectedClientId={selectedClientId}
             hasCommentaryForClient={hasCommentaryForClient}
           />
@@ -380,6 +396,8 @@ export function BillsInbox({ alerts, onPublish, onTogglePin, selectedClientId, h
         onOpenChange={setDrawerOpen}
         onPublish={handlePublish}
         onUpdateExpertCommentary={onUpdateExpertCommentary}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
       />
     </div>
   );
