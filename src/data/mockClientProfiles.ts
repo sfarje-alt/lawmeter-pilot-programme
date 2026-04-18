@@ -74,6 +74,9 @@ export const FARMASALUD_CLIENT_PROFILE: ClientProfile = {
   createdAt: "2024-06-15T10:00:00Z",
   updatedAt: "2025-01-20T14:30:00Z",
   
+  // AI classification criteria
+  highImpactCriteria: "Alto impacto: cambios regulatorios que afecten directamente la importación, distribución o comercialización de oncológicos, biotecnológicos o productos sujetos a control sanitario; nuevas obligaciones de farmacovigilancia; o modificaciones a contrataciones públicas con SUSALUD/EsSalud.",
+  highUrgencyCriteria: "Alta urgencia: normas con vigencia inmediata o plazos menores a 30 días; suspensiones de registros sanitarios; cambios en requisitos de etiquetado o trazabilidad; resoluciones DIGEMID que requieran adecuación operativa.",
   // Legacy fields for backward compatibility
   affectedAreas: [], lawBranches: [], additionalEntities: [],
   stakeholdersAffected: [], customerSegments: [], distributionChannels: [],
@@ -144,6 +147,8 @@ export const BACKUS_CLIENT_PROFILE: ClientProfile = {
   createdAt: "2025-02-01T10:00:00Z",
   updatedAt: "2025-03-05T14:30:00Z",
 
+  highImpactCriteria: "Alto impacto: cambios a la Ley de Protección de Datos Personales (LPDP) o su reglamento; obligaciones de DPO; sanciones de la ANPD; nuevas reglas de transferencia internacional de datos; o regulación de programas de fidelización y marketing directo.",
+  highUrgencyCriteria: "Alta urgencia: resoluciones de la ANPD con plazos de adecuación menores a 60 días; brechas de seguridad reportables; cambios en consentimiento de cookies o trazabilidad publicitaria; modificaciones al régimen sancionatorio.",
   affectedAreas: [], lawBranches: [], additionalEntities: [],
   stakeholdersAffected: [], customerSegments: [], distributionChannels: [],
 };
