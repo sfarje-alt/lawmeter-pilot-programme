@@ -1,7 +1,7 @@
 import * as React from "react";
 import { AnalyticsBlock, ChartTooltip } from "../shared";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
-import { Clock, TrendingDown, Sparkles } from "lucide-react";
+import { Eye, TrendingDown, Sparkles } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -30,14 +30,15 @@ interface EditorialResponseTimeBlockProps {
   demoData?: typeof DEMO_EDITORIAL_RESPONSE_TIME;
 }
 
+const TARGET_HOURS = 12;
+
 export function EditorialResponseTimeBlock({
   timeframe,
-  source = "Alertas publicadas con comentario",
+  source = "Tiempo entre creación y primera lectura",
   demoData = DEMO_EDITORIAL_RESPONSE_TIME,
 }: EditorialResponseTimeBlockProps) {
   const filterState = useBlockFilters('editorial_response_time');
 
-  // Apply date filter to weekly trend
   const filteredTrend = React.useMemo(() => {
     const { from, to } = resolveDateRange(filterState.filters);
     if (!from && !to) return demoData.weeklyTrend;
@@ -62,17 +63,13 @@ export function EditorialResponseTimeBlock({
   const isEmpty = filteredTrend.length === 0;
 
   const takeaway = isEmpty
-    ? "No hay datos de tiempo de respuesta en el rango filtrado"
-    : `Tiempo promedio de ${stats.avg}h (mediana: ${stats.median}h) entre captura y publicación`;
+    ? "No hay datos de apertura en el rango filtrado"
+    : `Tiempo medio de ${stats.avg}h (mediana: ${stats.median}h) entre creación y primera apertura`;
 
   const renderChart = (compact: boolean) => (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={filteredTrend} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
-        <CartesianGrid
-          strokeDasharray="3 3"
-          stroke={ANALYTICS_COLORS.chart.grid}
-          vertical={false}
-        />
+        <CartesianGrid strokeDasharray="3 3" stroke={ANALYTICS_COLORS.chart.grid} vertical={false} />
         <XAxis
           dataKey="date"
           tickFormatter={(v) => {
@@ -91,32 +88,25 @@ export function EditorialResponseTimeBlock({
         />
         <Tooltip content={<ChartTooltip valueFormatter={(v) => `${v} horas`} />} cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }} />
         <ReferenceLine
-          y={24}
+          y={TARGET_HOURS}
           stroke="hsl(0, 65%, 50%)"
           strokeDasharray="4 4"
-          label={{ value: "Meta 24h", fill: "hsl(0, 65%, 50%)", fontSize: 10, position: "insideTopRight" }}
+          label={{ value: `Meta ${TARGET_HOURS}h`, fill: "hsl(0, 65%, 50%)", fontSize: 10, position: "insideTopRight" }}
         />
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke={ANALYTICS_COLORS.chart.primary}
-          strokeWidth={2}
-          dot={false}
-          activeDot={{ r: 4 }}
-        />
+        <Line type="monotone" dataKey="value" stroke={ANALYTICS_COLORS.chart.primary} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
       </LineChart>
     </ResponsiveContainer>
   );
 
   return (
     <AnalyticsBlock
-      title="Tiempo de Respuesta Editorial"
+      title="Tiempo Medio de Apertura"
       takeaway={takeaway}
-      infoTooltip="Tiempo promedio entre la captura de una alerta y la publicación del comentario experto. Objetivo: < 24h. Tu configuración se guarda automáticamente."
+      infoTooltip={`Horas promedio entre la creación de una alerta y la primera vez que el equipo la abre. Meta: < ${TARGET_HOURS}h. Tu configuración se guarda automáticamente.`}
       timeframe={timeframe}
       source={source}
       isEmpty={isEmpty}
-      icon={<Clock className="h-4 w-4 text-primary" />}
+      icon={<Eye className="h-4 w-4 text-primary" />}
       filterDimensions={['period']}
       filterState={filterState}
       renderExpanded={() => (
@@ -129,7 +119,7 @@ export function EditorialResponseTimeBlock({
               <TableRow>
                 <TableHead>Semana</TableHead>
                 <TableHead className="text-right">Tiempo (horas)</TableHead>
-                <TableHead className="text-right">Vs meta (24h)</TableHead>
+                <TableHead className="text-right">Vs meta ({TARGET_HOURS}h)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -139,8 +129,8 @@ export function EditorialResponseTimeBlock({
                     {new Date(row.date).toLocaleDateString("es-PE", { day: "numeric", month: "short", year: "numeric" })}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{row.value}h</TableCell>
-                  <TableCell className={`text-right tabular-nums ${row.value <= 24 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {row.value <= 24 ? '✓ OK' : `+${row.value - 24}h`}
+                  <TableCell className={`text-right tabular-nums ${row.value <= TARGET_HOURS ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {row.value <= TARGET_HOURS ? '✓ OK' : `+${row.value - TARGET_HOURS}h`}
                   </TableCell>
                 </TableRow>
               ))}
@@ -149,23 +139,23 @@ export function EditorialResponseTimeBlock({
         </div>
       )}
       renderInsights={() => {
-        const overTarget = filteredTrend.filter(p => p.value > 24).length;
+        const overTarget = filteredTrend.filter(p => p.value > TARGET_HOURS).length;
         const onTarget = filteredTrend.length - overTarget;
         const compliance = filteredTrend.length ? Math.round((onTarget / filteredTrend.length) * 100) : 0;
         return (
           <div className="space-y-3">
-            <InsightCard icon={<Clock className="h-4 w-4" />} title="Resumen" body={takeaway} />
+            <InsightCard icon={<Eye className="h-4 w-4" />} title="Resumen" body={takeaway} />
             <InsightCard
               icon={<TrendingDown className="h-4 w-4" />}
               title="Cumplimiento de meta"
-              body={`${onTarget} de ${filteredTrend.length} semanas (${compliance}%) cumplieron la meta de respuesta < 24h.`}
+              body={`${onTarget} de ${filteredTrend.length} semanas (${compliance}%) cumplieron la meta de apertura < ${TARGET_HOURS}h.`}
             />
             <InsightCard
               icon={<Sparkles className="h-4 w-4" />}
               title="Recomendación"
               body={overTarget > filteredTrend.length / 2
-                ? "Más de la mitad de las semanas excedieron la meta. Revisa la asignación de comentarios."
-                : "El equipo mantiene un buen ritmo de respuesta editorial."}
+                ? "Más de la mitad de las semanas excedieron la meta. Las alertas tardan en ser abiertas."
+                : "El equipo abre las alertas de forma oportuna."}
             />
             <p className="text-[11px] text-muted-foreground italic pt-2">
               Insights derivados del rango filtrado. Cambia el período arriba para recalcular.
@@ -184,12 +174,12 @@ export function EditorialResponseTimeBlock({
             <div className="text-lg font-semibold text-foreground">{stats.median}h</div>
             <div className="text-xs text-muted-foreground">Mediana</div>
           </div>
-          <div className={`p-2 rounded-lg ${stats.avg <= 24 ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
-            <div className={`flex items-center justify-center gap-1 text-lg font-semibold ${stats.avg <= 24 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+          <div className={`p-2 rounded-lg ${stats.avg <= TARGET_HOURS ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+            <div className={`flex items-center justify-center gap-1 text-lg font-semibold ${stats.avg <= TARGET_HOURS ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
               <TrendingDown className="h-4 w-4" />
-              {stats.avg <= 24 ? 'OK' : '!'}
+              {stats.avg <= TARGET_HOURS ? 'OK' : '!'}
             </div>
-            <div className="text-xs text-muted-foreground">{"< 24h"}</div>
+            <div className="text-xs text-muted-foreground">{`< ${TARGET_HOURS}h`}</div>
           </div>
         </div>
 

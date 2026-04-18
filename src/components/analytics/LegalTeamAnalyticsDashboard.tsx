@@ -23,13 +23,12 @@ import {
   EditorialResponseTimeBlock,
   AggregatedEntityMonitoringBlock,
   IndustryBenchmarkBlock,
+  PinnedArchivedBlock,
 } from "./blocks";
 import {
   DEMO_EDITORIAL_COVERAGE,
   DEMO_OPERATIONAL_QUEUE,
   DEMO_DATA_FRESHNESS,
-  DEMO_EDITORIAL_RESPONSE_TIME,
-  DEMO_AGGREGATED_ENTITIES,
   getDemoDataForClient,
 } from "@/lib/analyticsMockData";
 import type { AnalyticsFilters } from "@/types/analytics";
@@ -208,8 +207,8 @@ export function LegalTeamAnalyticsDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('editorial_coverage') && (
             <EditorialCoverageBlock
-              captured={DEMO_EDITORIAL_COVERAGE.totalCaptured}
-              published={DEMO_EDITORIAL_COVERAGE.totalPublished}
+              totalAlerts={DEMO_EDITORIAL_COVERAGE.totalAlerts}
+              withCommentary={DEMO_EDITORIAL_COVERAGE.withCommentary}
               coverageRate={DEMO_EDITORIAL_COVERAGE.coverageRate}
               coverageTrend={DEMO_EDITORIAL_COVERAGE.coverageTrend}
               timeframe={timeframeLabel}
@@ -220,6 +219,9 @@ export function LegalTeamAnalyticsDashboard() {
           )}
           {isEnabled('operational_queue') && (
             <OperationalQueueBlock data={DEMO_OPERATIONAL_QUEUE} timeframe={timeframeLabel} />
+          )}
+          {isEnabled('pin_archive') && (
+            <PinnedArchivedBlock timeframe={timeframeLabel} />
           )}
           {isEnabled('aggregated_entity_monitoring') && (
             <AggregatedEntityMonitoringBlock timeframe={timeframeLabel} />

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { AnalyticsBlock, ChartTooltip } from "../shared";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
-import { Layers, TrendingUp, Sparkles } from "lucide-react";
+import { MessageSquare, TrendingUp, Sparkles } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/table";
 
 interface EditorialCoverageBlockProps {
-  captured: number;
-  published: number;
+  totalAlerts: number;
+  withCommentary: number;
   coverageRate: number;
   coverageTrend: TimeSeriesDataPoint[];
   timeframe: string;
@@ -34,8 +34,8 @@ interface EditorialCoverageBlockProps {
 }
 
 export function EditorialCoverageBlock({
-  captured,
-  published,
+  totalAlerts,
+  withCommentary,
   coverageRate,
   coverageTrend,
   timeframe,
@@ -56,32 +56,27 @@ export function EditorialCoverageBlock({
   }, [coverageTrend, filterState.filters]);
 
   const stats = React.useMemo(() => {
-    if (filteredTrend.length === 0) return { captured, published, coverageRate };
-    // For demo: scale based on filtered points proportion
+    if (filteredTrend.length === 0) return { totalAlerts, withCommentary, coverageRate };
     const ratio = filteredTrend.length / Math.max(coverageTrend.length, 1);
-    const cap = Math.round(captured * ratio);
-    const pub = Math.round(published * ratio);
+    const total = Math.round(totalAlerts * ratio);
+    const withC = Math.round(withCommentary * ratio);
     const avg = filteredTrend.reduce((s, p) => s + p.value, 0) / filteredTrend.length;
-    return { captured: cap, published: pub, coverageRate: avg };
-  }, [filteredTrend, coverageTrend.length, captured, published, coverageRate]);
+    return { totalAlerts: total, withCommentary: withC, coverageRate: avg };
+  }, [filteredTrend, coverageTrend.length, totalAlerts, withCommentary, coverageRate]);
 
-  const isEmpty = stats.captured === 0;
-  const unpublished = stats.captured - stats.published;
+  const isEmpty = stats.totalAlerts === 0;
+  const withoutCommentary = stats.totalAlerts - stats.withCommentary;
 
   const takeaway = isEmpty
-    ? "No hay alertas capturadas en el rango filtrado"
-    : `${stats.coverageRate.toFixed(1)}% de cobertura editorial: ${stats.published} de ${stats.captured} alertas publicadas`;
+    ? "No hay alertas en el rango filtrado"
+    : `${stats.coverageRate.toFixed(1)}% con comentario experto: ${stats.withCommentary} de ${stats.totalAlerts} alertas`;
 
   const chartData = filteredTrend.map(p => ({ date: p.date, coverage: p.value }));
 
   const renderChart = (compact: boolean) => (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
-        <CartesianGrid
-          strokeDasharray="3 3"
-          stroke={ANALYTICS_COLORS.chart.grid}
-          vertical={false}
-        />
+        <CartesianGrid strokeDasharray="3 3" stroke={ANALYTICS_COLORS.chart.grid} vertical={false} />
         <XAxis
           dataKey="date"
           tickFormatter={formatWeek}
@@ -96,26 +91,22 @@ export function EditorialCoverageBlock({
           domain={[0, 100]}
           tickFormatter={(v) => `${v}%`}
         />
-        <Tooltip content={<ChartTooltip valueFormatter={(v) => `${v}% cobertura`} />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
-        <Bar
-          dataKey="coverage"
-          fill={ANALYTICS_COLORS.chart.primary}
-          radius={[4, 4, 0, 0]}
-        />
+        <Tooltip content={<ChartTooltip valueFormatter={(v) => `${v}% con comentario`} />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.4 }} />
+        <Bar dataKey="coverage" fill={ANALYTICS_COLORS.chart.primary} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
 
   return (
     <AnalyticsBlock
-      title="Cobertura Editorial"
+      title="Cobertura con Comentario Experto"
       takeaway={takeaway}
-      infoTooltip="Proporción de alertas capturadas que fueron publicadas. Mide la curación del equipo legal. Tu configuración se guarda automáticamente."
+      infoTooltip="Porcentaje de alertas que cuentan con comentario experto añadido por el equipo. Tu configuración se guarda automáticamente."
       timeframe={timeframe}
       source={source}
       onDrilldown={onDrilldown}
       isEmpty={isEmpty}
-      icon={<Layers className="h-4 w-4 text-primary" />}
+      icon={<MessageSquare className="h-4 w-4 text-primary" />}
       filterDimensions={['period']}
       filterState={filterState}
       renderExpanded={() => (
@@ -150,19 +141,24 @@ export function EditorialCoverageBlock({
         const low = [...chartData].sort((a, b) => a.coverage - b.coverage)[0];
         return (
           <div className="space-y-3">
-            <InsightCard icon={<Layers className="h-4 w-4" />} title="Resumen" body={takeaway} />
+            <InsightCard icon={<MessageSquare className="h-4 w-4" />} title="Resumen" body={takeaway} />
+            <InsightCard
+              icon={<Sparkles className="h-4 w-4" />}
+              title="Pendientes de comentario"
+              body={`${withoutCommentary} alertas aún no tienen comentario experto en el rango seleccionado.`}
+            />
             {peak && (
               <InsightCard
                 icon={<TrendingUp className="h-4 w-4" />}
-                title="Mejor cobertura"
-                body={`Semana del ${formatWeek(peak.date)}: ${peak.coverage.toFixed(1)}% de cobertura editorial.`}
+                title="Mejor semana"
+                body={`Semana del ${formatWeek(peak.date)}: ${peak.coverage.toFixed(1)}% con comentario.`}
               />
             )}
             {low && (
               <InsightCard
                 icon={<Sparkles className="h-4 w-4" />}
                 title="Oportunidad de mejora"
-                body={`La semana del ${formatWeek(low.date)} tuvo la cobertura más baja (${low.coverage.toFixed(1)}%). Considera reforzar la curación.`}
+                body={`La semana del ${formatWeek(low.date)} tuvo la cobertura más baja (${low.coverage.toFixed(1)}%).`}
               />
             )}
             <p className="text-[11px] text-muted-foreground italic pt-2">
@@ -175,22 +171,15 @@ export function EditorialCoverageBlock({
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="p-2 rounded-lg bg-muted/30">
-            <div className="text-lg font-semibold text-foreground">{stats.captured}</div>
-            <div className="text-xs text-muted-foreground">Capturadas</div>
+            <div className="text-lg font-semibold text-foreground">{stats.totalAlerts}</div>
+            <div className="text-xs text-muted-foreground">Total</div>
           </div>
           <div className="p-2 rounded-lg bg-muted/30">
-            <div
-              className="text-lg font-semibold"
-              style={{ color: ANALYTICS_COLORS.chart.published }}
-            >
-              {stats.published}
-            </div>
-            <div className="text-xs text-muted-foreground">Publicadas</div>
+            <div className="text-lg font-semibold text-primary">{stats.withCommentary}</div>
+            <div className="text-xs text-muted-foreground">Con comentario</div>
           </div>
           <div className="p-2 rounded-lg bg-muted/30">
-            <div className="text-lg font-semibold text-foreground">
-              {stats.coverageRate.toFixed(0)}%
-            </div>
+            <div className="text-lg font-semibold text-foreground">{stats.coverageRate.toFixed(0)}%</div>
             <div className="text-xs text-muted-foreground">Cobertura</div>
           </div>
         </div>
