@@ -10,6 +10,7 @@ export type AnalyticsBlockKey =
   | 'editorial_coverage'
   | 'editorial_response_time'
   | 'operational_queue'
+  | 'pin_archive'
   | 'aggregated_entity_monitoring'
   // Client (shared with Legal Team)
   | 'impact_matrix'
