@@ -1,10 +1,12 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { 
   ALL_MOCK_ALERTS, 
   PeruAlert, 
   ClientCommentary,
   PRIMARY_CLIENT_ID,
-  BACKUS_CLIENT_ID
+  BACKUS_CLIENT_ID,
+  AttachedFileMetaRef,
+  purgeOldArchivedAlerts,
 } from "@/data/peruAlertsMockData";
 
 interface AlertsContextType {
@@ -20,6 +22,8 @@ interface AlertsContextType {
   // Commentary
   updateAlertCommentary: (alertId: string, clientId: string, commentary: string) => void;
   updateSharedCommentary: (alertId: string, commentary: string) => void;
+  // Attachments (persisted on the alert across drawer sessions)
+  updateAttachments: (alertId: string, attachments: AttachedFileMetaRef[]) => void;
   // Filtering helpers
   getPublishedAlertsForClient: (clientId: string) => PeruAlert[];
   getPinnedAlerts: () => PeruAlert[];
@@ -70,7 +74,18 @@ function initializeAlerts(): PeruAlert[] {
 }
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
-  const [alerts, setAlerts] = useState<PeruAlert[]>(initializeAlerts);
+  const [alerts, setAlerts] = useState<PeruAlert[]>(() => purgeOldArchivedAlerts(initializeAlerts()));
+
+  // Auto-purge: re-evaluate every hour while the app is open
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAlerts((prev) => {
+        const next = purgeOldArchivedAlerts(prev);
+        return next.length === prev.length ? prev : next;
+      });
+    }, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Publish alert to specific clients
   // Note: Publishing only changes status - kanban_stage (legislative stage) remains unchanged
@@ -176,6 +191,13 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  // Update attachments for an alert (persisted across drawer open/close)
+  const updateAttachments = useCallback((alertId: string, attachments: AttachedFileMetaRef[]) => {
+    setAlerts((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, attachments } : a))
+    );
+  }, []);
+
   // Get published alerts for a specific client
   const getPublishedAlertsForClient = useCallback((clientId: string): PeruAlert[] => {
     return alerts.filter(
@@ -212,6 +234,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         unarchiveAlert,
         updateAlertCommentary,
         updateSharedCommentary,
+        updateAttachments,
         getPublishedAlertsForClient,
         getPinnedAlerts,
         hasCommentaryForClient,
