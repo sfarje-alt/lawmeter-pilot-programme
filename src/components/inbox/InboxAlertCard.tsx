@@ -71,38 +71,97 @@ export function InboxAlertCard({
   return (
     <Card
       className={cn(
-        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group",
+        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full max-w-full min-w-0 overflow-hidden",
         isPinned && !isArchived && "border-l-4 border-l-primary",
         isArchived && "opacity-70 border-dashed"
       )}
       onClick={onClick}
     >
-      {/* Header: Type Badge + Impact + ID + Actions */}
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
-          <Badge variant="outline" className={cn("text-xs", getTypeColor(alert.legislation_type))}>
-            {getTypeLabel(alert.legislation_type)}
+      {/* Header: Actions row (always contained) */}
+      <div className="flex items-center justify-end gap-1 mb-2 -mt-1 -mr-1">
+        {/* Commentary Status Badge (only when pinned) */}
+        {isPinned && !isArchived && (
+          hasCommentary ? (
+            <Badge variant="secondary" className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1.5 shrink-0">
+              <CheckCircle2 className="h-3 w-3" />
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)] py-0 px-1.5 shrink-0">
+              <AlertCircle className="h-3 w-3" />
+            </Badge>
+          )
+        )}
+        {alert.source_url && (
+          <button
+            onClick={handleLinkClick}
+            className="p-1 hover:bg-white/10 rounded transition-colors shrink-0"
+            title="Ver documento original"
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+          </button>
+        )}
+        {!isArchived && onTogglePin && (
+          <button
+            onClick={handlePinClick}
+            className={cn(
+              "p-1 rounded transition-colors shrink-0",
+              isPinned
+                ? "bg-primary/20 hover:bg-primary/30"
+                : "hover:bg-white/10"
+            )}
+            title={isPinned ? "Quitar fijación" : "Fijar arriba"}
+          >
+            <Pin
+              className={cn(
+                "h-3.5 w-3.5 transition-colors",
+                isPinned ? "fill-primary text-primary" : "text-muted-foreground"
+              )}
+            />
+          </button>
+        )}
+        {(onArchive || onUnarchive) && (
+          <button
+            onClick={handleArchiveClick}
+            className="p-1 hover:bg-white/10 rounded transition-colors shrink-0"
+            title={isArchived ? "Restaurar del archivo" : "Archivar"}
+          >
+            {isArchived ? (
+              <ArchiveRestore className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+            ) : (
+              <Archive className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Badges row: wraps freely, never collides with actions */}
+      <div className="flex items-center gap-1.5 flex-wrap min-w-0 mb-2">
+        <Badge variant="outline" className={cn("text-xs max-w-full truncate", getTypeColor(alert.legislation_type))}>
+          {getTypeLabel(alert.legislation_type)}
+        </Badge>
+        {alert.impact_level && (
+          <Badge
+            variant="outline"
+            className={cn("text-xs max-w-full truncate", getImpactLevelInfo(alert.impact_level)?.color)}
+          >
+            {getImpactLevelInfo(alert.impact_level)?.label}
           </Badge>
-          {alert.impact_level && (
-            <Badge
-              variant="outline"
-              className={cn("text-xs", getImpactLevelInfo(alert.impact_level)?.color)}
-            >
-              {getImpactLevelInfo(alert.impact_level)?.label}
-            </Badge>
-          )}
-          {isBill && alert.legislation_id && (
-            <span className="text-xs text-primary font-mono font-medium">
-              {alert.legislation_id}
-            </span>
-          )}
-          {isArchived && daysRemaining !== null && (
-            <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border/50">
-              <Archive className="h-3 w-3 mr-1" />
-              {daysRemaining}d restantes
-            </Badge>
-          )}
-        </div>
+        )}
+        {isBill && alert.legislation_id && (
+          <span className="text-xs text-primary font-mono font-medium truncate max-w-full">
+            {alert.legislation_id}
+          </span>
+        )}
+        {isArchived && daysRemaining !== null && (
+          <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border/50">
+            <Archive className="h-3 w-3 mr-1" />
+            {daysRemaining}d restantes
+          </Badge>
+        )}
+      </div>
+
+      {/* Hidden legacy wrapper to keep diff minimal */}
+      <div className="hidden">
         <div className="flex items-center gap-1 shrink-0">
           {/* Commentary Status Badge (only when pinned) */}
           {isPinned && !isArchived && (
