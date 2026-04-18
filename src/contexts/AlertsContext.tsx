@@ -25,8 +25,33 @@ const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
 // Single-profile model: alerts are not pre-published to any client.
 // All alerts belong to the organization's single profile.
+const PINNED_STORAGE_KEY = "lawmeter:pinned-alerts";
+
+function loadPinnedIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function savePinnedIds(ids: Set<string>) {
+  try {
+    localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(Array.from(ids)));
+  } catch {
+    // ignore quota / private mode
+  }
+}
+
 function initializeAlerts(): PeruAlert[] {
-  return ALL_MOCK_ALERTS.map((alert) => ({ ...alert }));
+  const pinned = loadPinnedIds();
+  return ALL_MOCK_ALERTS.map((alert) => ({
+    ...alert,
+    is_pinned_for_publication: pinned.has(alert.id) ? true : !!alert.is_pinned_for_publication,
+  }));
 }
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
