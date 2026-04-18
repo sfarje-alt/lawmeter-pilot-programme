@@ -1,14 +1,15 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, ChevronRight, AlertCircle, Maximize2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Info, ChevronRight, AlertCircle, Maximize2, Calendar, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AnalyticsBlockProps {
@@ -25,11 +26,14 @@ interface AnalyticsBlockProps {
   className?: string;
   compact?: boolean;
   expandable?: boolean;
+  /** Optional render function for the expanded view. Receives a flag indicating expanded mode. Falls back to `children`. */
+  renderExpanded?: () => React.ReactNode;
 }
 
 /**
  * Base component for all analytics blocks.
  * Provides consistent structure: title, takeaway, chart area, footer with metadata.
+ * Expand button opens an immersive BI-style dialog with a much larger chart canvas.
  */
 export function AnalyticsBlock({
   title,
@@ -45,16 +49,17 @@ export function AnalyticsBlock({
   className,
   compact = false,
   expandable = true,
+  renderExpanded,
 }: AnalyticsBlockProps) {
   const [expanded, setExpanded] = React.useState(false);
 
   return (
     <>
       <Card className={cn(
-        "border-border/50 bg-card/50 backdrop-blur-sm",
+        "border-border/50 bg-card/50 backdrop-blur-sm transition-shadow hover:shadow-lg hover:shadow-primary/5",
         className
       )}>
-        <CardContent className={cn("p-0", compact ? "p-4" : "p-6")}>
+        <CardContent className={cn(compact ? "p-4" : "p-6")}>
           {/* Header */}
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -69,18 +74,25 @@ export function AnalyticsBlock({
                 </h3>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-1 flex-shrink-0">
               {expandable && !isEmpty && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                  onClick={() => setExpanded(true)}
-                >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                  <span className="sr-only">Ver más</span>
-                </Button>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        onClick={() => setExpanded(true)}
+                      >
+                        <Maximize2 className="h-3.5 w-3.5" />
+                        <span className="sr-only">Explorar a pantalla completa</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Explorar</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
@@ -88,16 +100,16 @@ export function AnalyticsBlock({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     >
                       <Info className="h-4 w-4" />
                       <span className="sr-only">Información</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent 
-                    side="top" 
-                    align="end" 
-                    sideOffset={8} 
+                  <TooltipContent
+                    side="top"
+                    align="end"
+                    sideOffset={8}
                     className="max-w-sm z-[100]"
                   >
                     <p className="text-sm">{infoTooltip}</p>
@@ -135,16 +147,22 @@ export function AnalyticsBlock({
             "text-xs text-muted-foreground"
           )}>
             <div className="flex items-center gap-2 flex-wrap">
-              <span>Período: {timeframe}</span>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {timeframe}
+              </span>
               <span className="text-border">•</span>
-              <span>{source}</span>
+              <span className="flex items-center gap-1">
+                <Database className="h-3 w-3" />
+                {source}
+              </span>
             </div>
-            
+
             {onDrilldown && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-primary hover:text-primary/80"
+                className="h-7 px-2 text-xs text-primary hover:text-primary/80 hover:bg-primary/10"
                 onClick={onDrilldown}
               >
                 Ver alertas
@@ -155,27 +173,72 @@ export function AnalyticsBlock({
         </CardContent>
       </Card>
 
-      {/* Expanded Dialog */}
+      {/* Expanded BI-style Dialog */}
       {expandable && (
         <Dialog open={expanded} onOpenChange={setExpanded}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                {icon}
-                {title}
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground">{takeaway}</p>
-            </DialogHeader>
-            <div className="min-h-[500px] py-4">
-              {children}
-            </div>
-            <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30">
-              <div className="flex items-center gap-2">
-                <span>Período: {timeframe}</span>
-                <span className="text-border">•</span>
-                <span>{source}</span>
+          <DialogContent
+            className={cn(
+              "max-w-[min(96vw,1400px)] w-[96vw] h-[92vh] max-h-[92vh]",
+              "p-0 gap-0 flex flex-col overflow-hidden bg-background"
+            )}
+          >
+            <DialogHeader className="px-6 py-4 border-b border-border bg-card/50 flex-shrink-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  {icon && (
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      {icon}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <DialogTitle className="text-xl font-semibold text-foreground">
+                      {title}
+                    </DialogTitle>
+                    <DialogDescription className="text-sm text-muted-foreground mt-1">
+                      {takeaway}
+                    </DialogDescription>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {timeframe}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <Database className="h-3 w-3" />
+                    {source}
+                  </Badge>
+                </div>
               </div>
-              <p className="text-xs italic">{infoTooltip}</p>
+            </DialogHeader>
+
+            {/* Expanded chart canvas — much larger */}
+            <div className="flex-1 overflow-auto px-8 py-6 bg-background">
+              <div className="h-full min-h-[500px] w-full">
+                {renderExpanded ? renderExpanded() : children}
+              </div>
+            </div>
+
+            {/* Footer with explanation + drilldown */}
+            <div className="flex items-center justify-between gap-4 px-6 py-3 border-t border-border bg-card/50 flex-shrink-0 text-xs">
+              <div className="flex items-start gap-2 text-muted-foreground max-w-2xl">
+                <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                <span>{infoTooltip}</span>
+              </div>
+              {onDrilldown && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    setExpanded(false);
+                    onDrilldown();
+                  }}
+                >
+                  Ver alertas
+                  <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -227,7 +290,7 @@ export function DataFreshnessIndicator({
     month: 'short',
     year: 'numeric',
   });
-  
+
   return (
     <div className={cn(
       "text-xs text-muted-foreground flex items-center gap-2",
