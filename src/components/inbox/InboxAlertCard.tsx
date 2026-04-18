@@ -79,7 +79,7 @@ export function InboxAlertCard({
     >
       {/* Header: Type Badge + Impact + ID + Actions */}
       <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
           <Badge variant="outline" className={cn("text-xs", getTypeColor(alert.legislation_type))}>
             {getTypeLabel(alert.legislation_type)}
           </Badge>
