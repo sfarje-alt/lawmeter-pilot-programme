@@ -1,106 +1,75 @@
 
 
-## Plan: Calendario como extensión de la Bandeja
+## Plan: Eliminar funcionalidades obsoletas y consolidar a un único perfil en TODA la plataforma
 
-### Problemas actuales del calendario
-1. Lee de `MOCK_BILLS`/`MOCK_REGULATIONS` directamente, no del `AlertsContext` → desincronizado con la Bandeja (no refleja archivado, pin, comentarios, cambios).
-2. Conserva lógica multi-cliente (filtro Cliente, badges con nombre del cliente, "Publicar al calendario del cliente") — incoherente con el modelo de una sola compañía.
-3. Filtros desalineados con la Bandeja: usa `risk_level` heurístico en vez de `impact_level`/`urgency_level` reales; faltan etiquetas, estado, búsqueda libre.
-4. El click navega fuera del calendario → no hay panel/drawer integrado para gestionar la alerta sin perder contexto.
-5. Sin jerarquía visual por impacto crítico ni señales de carga regulatoria (heatmap semanal).
-6. Sin capa analítica integrada (KPIs, semanas críticas, ventanas de riesgo).
+Combina los cambios anteriores con una limpieza global del selector/filtro de cliente en Reportes, Analíticas y Calendario.
 
-### Cambios propuestos
+---
 
-**1. Conectar al AlertsContext (fuente única de verdad)**
-- Reemplazar `MOCK_BILLS`/`MOCK_REGULATIONS` por `useAlerts().alerts`.
-- Excluir alertas archivadas por defecto (toggle "Mostrar archivadas").
-- Cualquier acción (archivar, fijar, comentario) hecha en el drawer del calendario se propaga vía contexto y aparece al instante en la Bandeja.
+### 1. Eliminar Probabilidad de Aprobación
+- `InboxAlertCard.tsx`: quitar import, cálculo y badge de probabilidad + ícono `TrendingUp` huérfano.
+- `AlertDetailDrawer.tsx`: quitar badge en header e ícono `TrendingUp` huérfano.
+- `peruAlertsMockData.ts`: borrar `approval_probability`, `getMockApprovalProbability`, `getApprovalProbabilityInfo`.
+- Borrar `src/components/inbox/ApprovalProbability.tsx`.
 
-**2. Limpiar terminología multi-cliente**
-- Remover filtro "Cliente", "Sector" hardcoded y "Tema" placeholder.
-- Reemplazar badges de "Cliente: X" por etiquetas/áreas afectadas.
-- Quitar botón "Publicar al calendario del cliente".
+### 2. Eliminar Plan de Acción
+En `AlertDetailDrawer.tsx`: borrar la sección "Action plan" completa, interface `ActionItem`, estados (`actions/newTask/newOwner/newDue`), funciones (`addAction/toggleAction/removeAction`) e íconos `ListChecks/Plus/Trash2` huérfanos.
 
-**3. Filtros sincronizados con la Bandeja**
-- Búsqueda libre (título, ID, autor, entidad).
-- Tipo de alerta: PL / Norma / Sesión.
-- Etapa legislativa (canónica, no heurística).
-- Etiquetas / áreas afectadas (multiselect).
-- Nivel de impacto: Positivo / Leve / Medio / Grave (usa `impact_level` real).
-- Urgencia: Baja / Media / Alta / Crítica.
-- Estado: Bandeja / Revisado / Publicado / Archivado.
-- Rango temporal personalizado (date pickers).
-- Botón "Limpiar filtros" + persistencia en `localStorage` (`calendar-filters-v2`).
+### 3. Consolidar a perfil único — Bandeja
+- `AppSidebar.tsx`: renombrar `"Perfiles"` → `"Perfil"`.
+- `Inbox.tsx`: borrar `selectedClientId`, `PublicationPanel`, `batchPublishPinned` y propagación de props relacionados.
+- `BillsInbox.tsx` / `RegulationsInbox.tsx`: quitar estado/filtro `clientIds`, columna cliente en filter bars, prop `onPublish`.
+- `KanbanColumn.tsx` / `InboxAlertCard.tsx`: quitar props `selectedClientId`/`hasCommentaryForClient`, badges "Publicado a Cliente X". El indicador de comentario se reduce a `¿hay expert_commentary?`.
+- `AlertDetailDrawer.tsx`: quitar prop `onPublish`, lógica `ClientCommentary`.
+- `AlertsContext.tsx`: eliminar `publishAlert`, `unpublishAlert`, `getPublishedAlertsForClient`, `hasCommentaryForClient`, `updateAlertCommentary`. Remover prepublicación a Backus/FarmaSalud en `initializeAlerts`.
+- Borrar `src/components/inbox/PublicationPanel.tsx`.
 
-**4. Reglas de Fecha (mantener y mejorar)**
-- Ingreso a etapa, Publicación, Entrada en vigor, Manual, Sesiones — toggles.
-- Persistencia en `localStorage`.
+### 4. Consolidar a perfil único — Sección Perfil
+`ClientsPage.tsx`: reemplazar lista + drawer + wizard por **formulario directo** del perfil único, con tabs (Datos básicos, Monitoreo, Etiquetas, Confirmación) reutilizando `Step1Basics/Step2Monitoring/Step3Tags/Step5Confirm`. Persistencia en `localStorage` (`lawmeter:company-profile`). Botón único "Guardar cambios". Sin crear/eliminar.
 
-**5. Jerarquía visual avanzada**
-- Color de pill por impacto: Grave (rojo), Medio (ámbar), Leve (gris), Positivo (verde) — alineado con tokens semánticos del sistema.
-- Borde izquierdo grueso + ícono de alerta para Grave + Urgencia Alta/Crítica (alertas críticas).
-- Badge numérico por día con tono según concentración.
+### 5. Consolidar a perfil único — Reportes
+- `ReportsPage.tsx`: eliminar selector/dropdown de cliente, listado por cliente y configuraciones por cliente. El reporte se genera para **el perfil único**.
+- Quitar columna "Cliente" en cualquier tabla y badges de cliente.
+- La configuración de reporte (frecuencia, métricas, "Incluir Analíticas") queda como **una sola configuración global**, persistida en `localStorage` (`lawmeter:report-config`).
+- Generación manual: PDF respeta el perfil único; remover paso de "seleccionar cliente" si existe en el flujo.
 
-**6. Heatmap de carga regulatoria**
-- En vista mensual, fondo de cada celda con intensidad proporcional a # eventos del día (escala 4 niveles).
-- En vista semanal, banner superior por día indicando "Carga: Baja/Media/Alta/Crítica".
-- Resaltar semanas con ≥ N alertas críticas con borde sutil de advertencia.
+### 6. Consolidar a perfil único — Analíticas
+- `LegalTeamAnalyticsDashboard.tsx` y filtros globales (`AnalyticsGlobalFilters.tsx`): eliminar dropdown/multiselect "Cliente" y cualquier agrupamiento por cliente.
+- En bloques que mostraban distribución por cliente (`ClientComparisonChart`, `ClientDistributionCharts`, `ClientImpactMatrix`, `ClientAlertTimelineChart`): **ocultar/retirar del dashboard** del equipo legal por irrelevancia. Mantener archivos para no romper imports residuales, pero quitar su registro en `blocks/index.ts` y en el layout por defecto.
+- `IndustryBenchmarkBlock`: se mantiene (compara contra industria, no entre clientes).
+- Quitar prop/filtro `clientIds` de `useBlockFilters` defaults y de cualquier bloque que lo use.
 
-**7. Panel lateral integrado (sin salir del calendario)**
-- Click en evento → abre `AlertDetailDrawer` existente (mismo de Bandeja) directamente sobre el calendario.
-- Soporta archivar, fijar, editar comentario experto, urgencia, impacto y etiquetas — todo refleja en Bandeja vía contexto.
-- Botón secundario "Abrir en Bandeja" para deep-link (mantener navegación opcional).
-- Para sesiones, mantener navegación a Sesiones (drawer no aplica).
+### 7. Consolidar a perfil único — Calendario
+- `AlertsCalendar.tsx` + `useCalendarFilters.ts`: eliminar filtro "Perfil/Cliente" y badges de cliente en eventos. El calendario muestra todas las alertas del perfil único.
+- Mantener resto de filtros (impacto, urgencia, etapa, etiquetas, búsqueda, reglas de fecha).
 
-**8. Panel de inteligencia temporal (KPIs)**
-Tarjeta superior con 4 KPIs del rango visible:
-- Total de alertas
-- Alertas críticas (Grave + Urgencia Alta/Crítica)
-- Semana de mayor concentración
-- Próximo deadline / entrada en vigor
-Más mini-bar chart de "alertas por semana" (sparkline) usando recharts.
+### 8. Limpieza transversal
+- `useClientUser.ts`: ya devuelve `isClientUser: false`. Eliminar entradas `client-*` del sidebar y rutas no usadas en `LawMeterDashboard.tsx`.
+- `MOCK_CLIENTS` / `mockClientProfiles.ts`: conservar solo como fuente del perfil único por defecto (no borrar para evitar romper imports).
 
-**9. Coherencia bidireccional**
-- Ya garantizada al usar `useAlerts()`. Cualquier cambio se observa por re-render del provider.
+---
 
-### Archivos a modificar/crear
-- `src/components/calendar/AlertsCalendar.tsx` — reescritura sustancial: contexto, filtros, drawer integrado, heatmap, KPIs.
-- `src/hooks/useCalendarFilters.ts` (nuevo) — hook con persistencia local de filtros y reglas de fecha.
-- `src/lib/calendarUtils.ts` (nuevo) — helpers: `convertAlertsToEvents`, `computeDayLoad`, `computeWeekLoad`, `getCriticalEvents`, `parseAlertDate`.
-- Reutilizar `AlertDetailDrawer` tal cual (sin modificar firma).
-
-### Diagrama de flujo
+### Diagrama
 
 ```text
-AlertsContext (fuente única)
-        │
-        ▼
-useCalendarFilters ──► filtros + reglas (localStorage)
-        │
-        ▼
-calendarUtils.convertAlertsToEvents
-        │
-        ▼
-┌─────────────────────────────────────────┐
-│ AlertsCalendar                          │
-│ ┌────────────┐  ┌─────────────────────┐ │
-│ │ KPIs +     │  │ Heatmap mes/semana  │ │
-│ │ sparkline  │  │ celdas con carga    │ │
-│ └────────────┘  └─────────────────────┘ │
-│        │                  │              │
-│        └─── click evento ─┘              │
-│                  ▼                       │
-│        AlertDetailDrawer (mismo Bandeja) │
-└─────────────────────────────────────────┘
-        │
-        ▼ (acciones: archivar, comentar, etc.)
-AlertsContext ─► Bandeja se actualiza en vivo
+ANTES                                    DESPUÉS
+──────────────────────────────────      ──────────────────────────────────
+Sidebar "Perfiles" (lista N)            Sidebar "Perfil" (1 formulario)
+Inbox: selector cliente + publish       Inbox: solo clasificar/archivar
+Drawer: publicar + plan acción          Drawer: comentario + archivar
+Card: badge probabilidad + clientes     Card: limpia, sin badges cliente
+Reportes: por-cliente + config N        Reportes: 1 config global
+Analíticas: filtro cliente + comparar   Analíticas: solo perfil único
+Calendario: filtro cliente              Calendario: sin filtro cliente
 ```
 
+### Archivos clave
+**Modificar**: `AppSidebar.tsx`, `Inbox.tsx`, `BillsInbox.tsx`, `RegulationsInbox.tsx`, `BillsFilterBar.tsx`, `RegulationsFilterBar.tsx`, `KanbanColumn.tsx`, `InboxAlertCard.tsx`, `AlertDetailDrawer.tsx`, `AlertsContext.tsx`, `peruAlertsMockData.ts`, `ClientsPage.tsx`, `ReportsPage.tsx`, `LegalTeamAnalyticsDashboard.tsx`, `AnalyticsGlobalFilters.tsx`, `analytics/blocks/index.ts`, `AlertsCalendar.tsx`, `useCalendarFilters.ts`, `LawMeterDashboard.tsx`.
+
+**Borrar**: `ApprovalProbability.tsx`, `PublicationPanel.tsx`.
+
 ### Reglas respetadas
-- Sin lógica multi-cliente, todo proviene del contexto único.
-- Sin duplicación de datos.
-- Drawer reutilizado de la Bandeja para paridad de experiencia.
-- UI en español, tokens semánticos del design system.
+- Sin lógica multi-cliente en ninguna sección de UI.
+- Sin duplicación de datos; reutiliza componentes Step1-5 y `AlertDetailDrawer` existentes.
+- UI en español, tokens semánticos.
 
