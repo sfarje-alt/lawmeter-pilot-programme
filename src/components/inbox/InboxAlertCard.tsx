@@ -246,49 +246,49 @@ export function InboxAlertCard({
       )}
 
       {/* Area Tags */}
-      <div className="flex items-center gap-1.5 flex-wrap mb-2">
-        <Tag className="h-3 w-3 text-muted-foreground" />
+      <div className="flex items-center gap-1.5 flex-wrap mb-2 min-w-0">
+        <Tag className="h-3 w-3 text-muted-foreground shrink-0" />
         {alert.affected_areas.slice(0, 2).map((area) => (
-          <Badge key={area} variant="secondary" className="text-xs bg-muted/50 py-0">
+          <Badge key={area} variant="secondary" className="text-xs bg-muted/50 py-0 max-w-full truncate inline-block">
             {area}
           </Badge>
         ))}
         {alert.affected_areas.length > 2 && (
-          <Badge variant="secondary" className="text-xs bg-muted/50 py-0">
+          <Badge variant="secondary" className="text-xs bg-muted/50 py-0 shrink-0">
             +{alert.affected_areas.length - 2}
           </Badge>
         )}
       </div>
 
       {/* Footer: Dates */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-border/30">
+      <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground pt-2 border-t border-border/30 min-w-0">
         {isBill ? (
           <>
             {alert.project_date && (
-              <div className="flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                <span>{formatDate(alert.project_date)}</span>
+              <div className="flex items-center gap-1 min-w-0">
+                <FileText className="h-3 w-3 shrink-0" />
+                <span className="truncate">{formatDate(alert.project_date)}</span>
               </div>
             )}
             {alert.stage_date && alert.stage_date !== alert.project_date && (
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{formatDate(alert.stage_date)}</span>
+              <div className="flex items-center gap-1 min-w-0">
+                <Clock className="h-3 w-3 shrink-0" />
+                <span className="truncate">{formatDate(alert.stage_date)}</span>
               </div>
             )}
           </>
         ) : (
           alert.publication_date && (
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              <span>{formatDate(alert.publication_date)}</span>
+            <div className="flex items-center gap-1 min-w-0">
+              <Clock className="h-3 w-3 shrink-0" />
+              <span className="truncate">{formatDate(alert.publication_date)}</span>
             </div>
           )
         )}
         {isArchived && alert.archived_at && (
-          <div className="flex items-center gap-1 ml-auto">
-            <Archive className="h-3 w-3" />
-            <span>Archivada {formatDate(alert.archived_at)}</span>
+          <div className="flex items-center gap-1 ml-auto min-w-0">
+            <Archive className="h-3 w-3 shrink-0" />
+            <span className="truncate">Archivada {formatDate(alert.archived_at)}</span>
           </div>
         )}
       </div>
