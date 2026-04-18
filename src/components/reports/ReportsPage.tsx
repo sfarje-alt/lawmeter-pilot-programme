@@ -211,7 +211,6 @@ type ScopeMode = "all_active" | "pinned" | "date_range";
 interface ScheduledReport {
   id: string;
   name: string;
-  profileIds: string[];
   scope: ScopeMode;
   frequency: "daily" | "weekly" | "monthly";
   time: string;
@@ -219,11 +218,25 @@ interface ScheduledReport {
   createdAt: string;
 }
 
+const PROFILE_STORAGE_KEY = "lawmeter:company-profile";
+
+function readCompanyName(): string {
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.legalName) return parsed.legalName;
+    }
+  } catch {
+    // ignore
+  }
+  return MOCK_CLIENT_PROFILES[0]?.legalName || "Mi Organización";
+}
+
 export function ReportsPage() {
   const { alerts } = useAlerts();
-  const profiles = MOCK_CLIENT_PROFILES;
+  const profileName = useMemo(() => readCompanyName(), []);
 
-  const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>(profiles[0]?.id ? [profiles[0].id] : []);
   const [scope, setScope] = useState<ScopeMode>("all_active");
   const [daysBack, setDaysBack] = useState(7);
   const [includeBills, setIncludeBills] = useState(true);
@@ -236,12 +249,6 @@ export function ReportsPage() {
   const [scheduleFrequency, setScheduleFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [scheduleTime, setScheduleTime] = useState("08:00");
   const [scheduleRecipients, setScheduleRecipients] = useState("");
-
-  const toggleProfile = (id: string) => {
-    setSelectedProfileIds(prev =>
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-    );
-  };
 
   const filteredAlerts = useMemo(() => {
     const cutoff = subDays(new Date(), daysBack);
@@ -268,28 +275,22 @@ export function ReportsPage() {
   const bills = filteredAlerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = filteredAlerts.filter(a => a.legislation_type === 'norma');
 
-  const profileNames = profiles
-    .filter(p => p.id && selectedProfileIds.includes(p.id))
-    .map(p => p.legalName)
-    .join(' · ') || 'Todos los perfiles';
-
   const dateLabel = scope === "all_active"
     ? "Todas las alertas activas"
     : scope === "pinned"
       ? "Alertas fijadas"
       : `Últimos ${daysBack} días`;
 
-  const canGenerate = selectedProfileIds.length > 0 && (includeBills || includeNorms) && filteredAlerts.length > 0;
+  const canGenerate = (includeBills || includeNorms) && filteredAlerts.length > 0;
 
   const handleSaveSchedule = () => {
-    if (!scheduleName.trim() || selectedProfileIds.length === 0) {
-      toast.error("Asigna un nombre y al menos un perfil al reporte programado.");
+    if (!scheduleName.trim()) {
+      toast.error("Asigna un nombre al reporte programado.");
       return;
     }
     const next: ScheduledReport = {
       id: crypto.randomUUID(),
       name: scheduleName.trim(),
-      profileIds: [...selectedProfileIds],
       scope,
       frequency: scheduleFrequency,
       time: scheduleTime,
@@ -312,7 +313,7 @@ export function ReportsPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Reportes</h1>
         <p className="text-muted-foreground">
-          Genera reportes manuales o prográmalos. Los reportes se construyen a partir de tus perfiles de monitoreo.
+          Genera reportes manuales o prográmalos para el perfil de tu organización.
         </p>
       </div>
 
@@ -325,34 +326,17 @@ export function ReportsPage() {
               Configuración del Reporte
             </CardTitle>
             <CardDescription>
-              Selecciona perfiles, alcance y contenido. Aplica tanto a descarga manual como a programación.
+              Define alcance y contenido. Aplica tanto a descarga manual como a programación.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Profile Selection */}
-            <div className="space-y-3">
-              <Label className="font-medium">Perfiles de Monitoreo</Label>
-              {profiles.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">
-                  Crea al menos un perfil de monitoreo para generar reportes.
-                </p>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-2">
-                  {profiles.map(profile => (
-                    <Label
-                      key={profile.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50"
-                    >
-                      <Checkbox
-                        checked={selectedProfileIds.includes(profile.id!)}
-                        onCheckedChange={() => toggleProfile(profile.id!)}
-                      />
-                      <Building2 className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{profile.legalName}</span>
-                    </Label>
-                  ))}
-                </div>
-              )}
+            {/* Organization label */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border border-border/50">
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">Organización</p>
+                <p className="text-sm font-medium truncate">{profileName}</p>
+              </div>
             </div>
 
             {/* Scope */}
@@ -438,15 +422,15 @@ export function ReportsPage() {
                 <div className="text-xs text-muted-foreground">Normas</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">{selectedProfileIds.length}</div>
-                <div className="text-xs text-muted-foreground">Perfiles</div>
+                <div className="text-2xl font-bold text-foreground">{filteredAlerts.length}</div>
+                <div className="text-xs text-muted-foreground">Total alertas</div>
               </div>
             </div>
 
             {/* Manual Download */}
             {canGenerate ? (
               <PDFDownloadLink
-                document={<ReportPDF alerts={filteredAlerts} profileName={profileNames} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
+                document={<ReportPDF alerts={filteredAlerts} profileName={profileName} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
                 fileName={`reporte-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
               >
                 {({ loading }) => (
@@ -459,7 +443,7 @@ export function ReportsPage() {
             ) : (
               <Button size="lg" className="w-full" disabled>
                 <Download className="h-4 w-4 mr-2" />
-                Selecciona perfil, contenido y al menos una alerta
+                Selecciona contenido y al menos una alerta
               </Button>
             )}
           </CardContent>
@@ -529,7 +513,6 @@ export function ReportsPage() {
                           {s.frequency === "daily" ? "Diario" : s.frequency === "weekly" ? "Semanal" : "Mensual"} · {s.time}
                         </p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          <Badge variant="outline" className="text-xs">{s.profileIds.length} perfil(es)</Badge>
                           <Badge variant="outline" className="text-xs">
                             {s.scope === "all_active" ? "Activas" : s.scope === "pinned" ? "Fijadas" : "Por fecha"}
                           </Badge>
