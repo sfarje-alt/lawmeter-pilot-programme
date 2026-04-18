@@ -54,13 +54,17 @@ export interface ClientProfile {
   // Step 3: Custom Tag Categories (flexible, replaces rigid Areas)
   tagCategories: TagCategory[];
 
-  // Step 4: Client users
-  clientUsers: ClientUser[];
-
-  // Step 5: Confirmations
+  // Step 4: Confirmations
   sourceAcknowledgement: boolean;
-  primaryContactId?: string;
   internalNotes?: string;
+
+  // AI classification criteria (REQUIRED for impact/urgency tagging)
+  highImpactCriteria: string;
+  highUrgencyCriteria: string;
+
+  // Deprecated — kept only to avoid breaking legacy serialized data
+  clientUsers?: ClientUser[];
+  primaryContactId?: string;
 
   // Meta
   status?: 'active' | 'inactive' | 'pending';
@@ -83,8 +87,7 @@ export const WIZARD_STEPS = [
   { id: 1, title: 'Datos', required: true },
   { id: 2, title: 'Monitoreo', required: true },
   { id: 3, title: 'Etiquetas', required: false },
-  { id: 4, title: 'Usuarios', required: true },
-  { id: 5, title: 'Confirmar', required: true },
+  { id: 4, title: 'Confirmar', required: true },
 ] as const;
 
 export const COMPANY_TYPES = [
@@ -179,9 +182,11 @@ export const DEFAULT_CLIENT_PROFILE: ClientProfile = {
   instrumentTypes: [],
   watchedCommissions: [],
   tagCategories: [],
-  clientUsers: [],
+  highImpactCriteria: '',
+  highUrgencyCriteria: '',
   sourceAcknowledgement: false,
   // Legacy defaults
+  clientUsers: [],
   affectedAreas: [],
   lawBranches: [],
   additionalEntities: [],
