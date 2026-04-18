@@ -15,3 +15,4 @@ export { EmergingTopicsBlock } from './EmergingTopicsBlock';
 export { ExposureBlock } from './ExposureBlock';
 export { EditorialResponseTimeBlock } from './EditorialResponseTimeBlock';
 export { AggregatedEntityMonitoringBlock } from './AggregatedEntityMonitoringBlock';
+export { PinnedArchivedBlock } from './PinnedArchivedBlock';

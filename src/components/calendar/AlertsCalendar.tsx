@@ -708,15 +708,13 @@ export function AlertsCalendar() {
                 const isCurrentMonth = day.getMonth() === currentDate.getMonth();
                 const load = computeDayLoad(filteredEvents, day);
                 const crit = computeDayCritical(filteredEvents, day);
-                const lvl = loadLevel(load, maxLoad);
                 return (
                   <div
                     key={day.toISOString()}
                     className={cn(
-                      "min-h-[110px] p-1 border border-border/20 rounded-md cursor-pointer hover:bg-muted/20 transition-colors relative",
-                      heatmapBg(lvl),
+                      "min-h-[110px] p-1 border border-border/20 rounded-md cursor-pointer hover:bg-muted/20 transition-colors relative bg-card",
                       !isCurrentMonth && "opacity-40",
-                      isToday(day) && "ring-1 ring-primary/40",
+                      isToday(day) && "ring-2 ring-primary",
                       selectedDate && isSameDay(day, selectedDate) && "ring-2 ring-primary",
                       crit > 0 && "border-[hsl(var(--destructive)/0.45)]"
                     )}
@@ -786,9 +784,8 @@ export function AlertsCalendar() {
                   <div key={day.toISOString()} className="space-y-2">
                     <div
                       className={cn(
-                        "text-center p-2 rounded-lg",
-                        heatmapBg(lvl),
-                        isToday(day) && "ring-1 ring-primary/40",
+                        "text-center p-2 rounded-lg bg-card",
+                        isToday(day) && "ring-2 ring-primary",
                         crit > 0 && "border border-[hsl(var(--destructive)/0.45)]"
                       )}
                     >

@@ -135,11 +135,11 @@ export const DEMO_EXPOSURE: RankingItem[] = [
   { id: "ex5", label: "Propiedad Intelectual", value: 6 },
 ];
 
-// Editorial Coverage (Internal)
+// Cobertura con Comentario Experto (Internal) — % alertas con expert_commentary
 export const DEMO_EDITORIAL_COVERAGE = {
-  totalCaptured: 83,
-  totalPublished: 52,
-  coverageRate: 62.7,
+  totalAlerts: 114,
+  withCommentary: 78,
+  coverageRate: 68.4,
   coverageTrend: [
     { date: "2025-11-03", value: 55 },
     { date: "2025-11-10", value: 60 },
@@ -151,46 +151,42 @@ export const DEMO_EDITORIAL_COVERAGE = {
     { date: "2025-12-22", value: 72 },
     { date: "2025-12-29", value: 60 },
     { date: "2026-01-05", value: 62 },
-    { date: "2026-01-12", value: 65 },
-    { date: "2026-01-19", value: 63 },
+    { date: "2026-01-12", value: 70 },
+    { date: "2026-01-19", value: 68 },
   ] as TimeSeriesDataPoint[],
 };
 
-// Editorial Response Time (Internal)
+// Tiempo Medio de Apertura (Internal) — horas entre creación y primera lectura
 export const DEMO_EDITORIAL_RESPONSE_TIME = {
-  avgHours: 18,
-  medianHours: 14,
+  avgHours: 6,
+  medianHours: 4,
   weeklyTrend: [
-    { date: "2025-11-03", value: 22, label: "22h" },
-    { date: "2025-11-10", value: 19, label: "19h" },
-    { date: "2025-11-17", value: 24, label: "24h" },
-    { date: "2025-11-24", value: 16, label: "16h" },
-    { date: "2025-12-01", value: 18, label: "18h" },
-    { date: "2025-12-08", value: 15, label: "15h" },
-    { date: "2025-12-15", value: 20, label: "20h" },
-    { date: "2025-12-22", value: 12, label: "12h" },
-    { date: "2025-12-29", value: 14, label: "14h" },
-    { date: "2026-01-05", value: 17, label: "17h" },
-    { date: "2026-01-12", value: 16, label: "16h" },
-    { date: "2026-01-19", value: 18, label: "18h" },
+    { date: "2025-11-03", value: 8, label: "8h" },
+    { date: "2025-11-10", value: 5, label: "5h" },
+    { date: "2025-11-17", value: 9, label: "9h" },
+    { date: "2025-11-24", value: 4, label: "4h" },
+    { date: "2025-12-01", value: 6, label: "6h" },
+    { date: "2025-12-08", value: 3, label: "3h" },
+    { date: "2025-12-15", value: 7, label: "7h" },
+    { date: "2025-12-22", value: 5, label: "5h" },
+    { date: "2025-12-29", value: 4, label: "4h" },
+    { date: "2026-01-05", value: 6, label: "6h" },
+    { date: "2026-01-12", value: 5, label: "5h" },
+    { date: "2026-01-19", value: 7, label: "7h" },
   ] as TimeSeriesDataPoint[],
 };
 
-// Operational Queue (Internal)
+// Cola de Revisión Pendiente (Internal) — alertas sin abrir / sin comentario / sin clasificar
 export const DEMO_OPERATIONAL_QUEUE = {
+  unread: 12,
+  withoutCommentary: 36,
+  withoutTags: 18,
+  totalActive: 114,
   byStage: [
     { stage: "EN COMISIÓN", count: 8, avgDaysInStage: 5 },
     { stage: "DICTAMEN", count: 4, avgDaysInStage: 3 },
     { stage: "Sin Estado", count: 3, avgDaysInStage: 7 },
   ],
-  byPriority: [
-    { priority: "Alta", count: 6 },
-    { priority: "Media", count: 11 },
-    { priority: "Baja", count: 6 },
-  ],
-  pendingReview: 15,
-  pendingPublish: 8,
-  totalInQueue: 23,
 };
 
 // Aggregated Entity Monitoring (Internal)
@@ -207,12 +203,22 @@ export const DEMO_AGGREGATED_ENTITIES: RankingItem[] = [
   { id: "ae10", label: "Acción Popular", value: 5 },
 ];
 
-// Service KPIs — calidad operativa del servicio (NO volumen de publicación)
+// KPIs de Uso — métricas reales de interacción del equipo con las alertas
 export const DEMO_SERVICE_KPIS: KPIMetric[] = [
-  { label: "Tiempo Medio de Revisión", value: "< 24h", icon: "clock" },
-  { label: "Cobertura con Comentario Experto", value: "92%", icon: "check-circle" },
-  { label: "Cumplimiento de SLA", value: "98%", icon: "activity" },
+  { label: "Alertas Revisadas", value: "102", icon: "check-circle" },
+  { label: "Comentarios Añadidos", value: "78", icon: "file-text" },
+  { label: "% Clasificadas", value: "84%", icon: "activity" },
+  { label: "% Con Tags", value: "76%", icon: "clock" },
 ];
+
+// Pin & Archive metrics (Internal)
+export const DEMO_PIN_ARCHIVE = {
+  totalAlerts: 114,
+  pinnedCount: 9,
+  archivedCount: 22,
+  pinnedRate: 7.9,    // % over active (114-22=92)
+  archivedRate: 19.3, // % over total historical (114)
+};
 
 // Industry Benchmark
 export const DEMO_INDUSTRY_BENCHMARK = {

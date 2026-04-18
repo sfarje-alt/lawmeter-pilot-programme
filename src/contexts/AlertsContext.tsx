@@ -25,8 +25,33 @@ const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
 // Single-profile model: alerts are not pre-published to any client.
 // All alerts belong to the organization's single profile.
+const PINNED_STORAGE_KEY = "lawmeter:pinned-alerts";
+
+function loadPinnedIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function savePinnedIds(ids: Set<string>) {
+  try {
+    localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(Array.from(ids)));
+  } catch {
+    // ignore quota / private mode
+  }
+}
+
 function initializeAlerts(): PeruAlert[] {
-  return ALL_MOCK_ALERTS.map((alert) => ({ ...alert }));
+  const pinned = loadPinnedIds();
+  return ALL_MOCK_ALERTS.map((alert) => ({
+    ...alert,
+    is_pinned_for_publication: pinned.has(alert.id) ? true : !!alert.is_pinned_for_publication,
+  }));
 }
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
@@ -43,26 +68,32 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Toggle pin for publication
+  // Toggle pin for publication (persisted to localStorage)
   const togglePinAlert = useCallback((alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
+    setAlerts((prev) => {
+      const next = prev.map((a) =>
         a.id === alertId
           ? { ...a, is_pinned_for_publication: !a.is_pinned_for_publication }
           : a
-      )
-    );
+      );
+      const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
+      savePinnedIds(pinnedIds);
+      return next;
+    });
   }, []);
 
   // Archive an alert
   const archiveAlert = useCallback((alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
+    setAlerts((prev) => {
+      const next = prev.map((a) =>
         a.id === alertId
           ? { ...a, archived_at: new Date().toISOString(), is_pinned_for_publication: false, updated_at: new Date().toISOString() }
           : a
-      )
-    );
+      );
+      const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
+      savePinnedIds(pinnedIds);
+      return next;
+    });
   }, []);
 
   // Restore an archived alert

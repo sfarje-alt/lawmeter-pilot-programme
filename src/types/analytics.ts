@@ -10,6 +10,7 @@ export type AnalyticsBlockKey =
   | 'editorial_coverage'
   | 'editorial_response_time'
   | 'operational_queue'
+  | 'pin_archive'
   | 'aggregated_entity_monitoring'
   // Client (shared with Legal Team)
   | 'impact_matrix'
@@ -137,11 +138,11 @@ export interface EditorialMetrics {
 }
 
 export interface OperationalQueueMetrics {
+  unread: number;
+  withoutCommentary: number;
+  withoutTags: number;
+  totalActive: number;
   byStage: { stage: string; count: number; avgDaysInStage: number }[];
-  byPriority: { priority: string; count: number }[];
-  pendingReview: number;
-  pendingPublish: number;
-  totalInQueue: number;
 }
 
 export interface ClientMetrics extends AggregatedMetrics {
@@ -202,27 +203,36 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
   },
   {
     key: 'editorial_coverage',
-    title: 'Cobertura Editorial',
-    takeaway: 'Proporción de alertas publicadas vs capturadas',
-    infoTooltip: 'Total de alertas monitorizadas vs publicadas a clientes. Mide la curación del equipo legal.',
+    title: 'Cobertura con Comentario Experto',
+    takeaway: 'Porcentaje de alertas con comentario experto',
+    infoTooltip: 'Total de alertas vs alertas con comentario experto. Mide la cobertura editorial del equipo.',
     visibility: 'internal',
     chartType: 'stacked_bar',
     defaultEnabled: true,
   },
   {
     key: 'editorial_response_time',
-    title: 'Tiempo de Respuesta Editorial',
-    takeaway: 'Tiempo promedio entre captura y publicación de comentario',
-    infoTooltip: 'Mide la velocidad del equipo para convertir actualizaciones oficiales en guías accionables.',
+    title: 'Tiempo Medio de Apertura',
+    takeaway: 'Horas promedio entre creación y primera lectura',
+    infoTooltip: 'Mide qué tan rápido el equipo abre y revisa las alertas tras su creación.',
     visibility: 'internal',
     chartType: 'line',
     defaultEnabled: true,
   },
   {
     key: 'operational_queue',
-    title: 'Cola Operativa',
-    takeaway: 'Distribución de trabajo pendiente por etapa y prioridad',
-    infoTooltip: 'Items en cada fase del proceso, tiempo promedio en cola, y alertas pendientes de revisión.',
+    title: 'Cola de Revisión Pendiente',
+    takeaway: 'Alertas activas sin abrir, sin comentario o sin clasificar',
+    infoTooltip: 'Trabajo pendiente del equipo: alertas que requieren apertura, comentario experto o etiquetado.',
+    visibility: 'internal',
+    chartType: 'kpi',
+    defaultEnabled: true,
+  },
+  {
+    key: 'pin_archive',
+    title: 'Pinneadas y Archivadas',
+    takeaway: 'Total y porcentaje de alertas pinneadas y archivadas',
+    infoTooltip: 'Mide cuántas alertas el usuario ha marcado como pinneadas o archivadas, con sus porcentajes.',
     visibility: 'internal',
     chartType: 'kpi',
     defaultEnabled: true,

@@ -337,51 +337,34 @@ export function getEditorialMetrics(filters: AnalyticsFilters): EditorialMetrics
 
 // Get operational queue metrics (for Legal Team only)
 export function getOperationalQueueMetrics(): OperationalQueueMetrics {
-  const pendingReview = ALL_MOCK_ALERTS.filter(a => a.status === 'inbox').length;
-  const reviewed = ALL_MOCK_ALERTS.filter(a => a.status === 'reviewed').length;
-  const pendingPublish = reviewed;
-  
-  // Count by stage
+  const active = ALL_MOCK_ALERTS.filter(a => !a.archived_at);
+  const unread = active.filter(a => a.status === 'inbox').length;
+  const withoutCommentary = active.filter(a => !a.expert_commentary || !a.expert_commentary.trim()).length;
+  const withoutTags = active.filter(a => !a.affected_areas || a.affected_areas.length === 0).length;
+
+  // Count by stage (active alerts only)
   const stageCounts: Record<string, { count: number; totalDays: number }> = {};
-  
-  ALL_MOCK_ALERTS
-    .filter(a => a.status !== 'declined' && a.status !== 'published')
-    .forEach(alert => {
-      const stage = alert.current_stage || 'Sin Estado';
-      if (!stageCounts[stage]) {
-        stageCounts[stage] = { count: 0, totalDays: 0 };
-      }
-      stageCounts[stage].count++;
-      stageCounts[stage].totalDays += Math.floor(Math.random() * 14) + 1;
-    });
-  
+  active.forEach(alert => {
+    const stage = alert.current_stage || 'Sin Estado';
+    if (!stageCounts[stage]) {
+      stageCounts[stage] = { count: 0, totalDays: 0 };
+    }
+    stageCounts[stage].count++;
+    stageCounts[stage].totalDays += Math.floor(Math.random() * 14) + 1;
+  });
+
   const byStage = Object.entries(stageCounts).map(([stage, data]) => ({
     stage,
     count: data.count,
     avgDaysInStage: Math.round(data.totalDays / data.count),
   }));
-  
-  // Count by priority
-  const priorityCounts: Record<string, number> = { Alta: 0, Media: 0, Baja: 0 };
-  ALL_MOCK_ALERTS
-    .filter(a => a.status !== 'declined' && a.status !== 'published')
-    .forEach(alert => {
-      const impact = getImpactLevel(alert);
-      const priority = impact === 'Grave' ? 'Alta' : impact === 'Medio' ? 'Media' : 'Baja';
-      priorityCounts[priority]++;
-    });
-  
-  const byPriority = Object.entries(priorityCounts).map(([priority, count]) => ({
-    priority,
-    count,
-  }));
-  
+
   return {
+    unread,
+    withoutCommentary,
+    withoutTags,
+    totalActive: active.length,
     byStage,
-    byPriority,
-    pendingReview,
-    pendingPublish,
-    totalInQueue: pendingReview + pendingPublish,
   };
 }
 
