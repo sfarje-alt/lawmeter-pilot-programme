@@ -84,13 +84,16 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
 
   // Archive an alert
   const archiveAlert = useCallback((alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
+    setAlerts((prev) => {
+      const next = prev.map((a) =>
         a.id === alertId
           ? { ...a, archived_at: new Date().toISOString(), is_pinned_for_publication: false, updated_at: new Date().toISOString() }
           : a
-      )
-    );
+      );
+      const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
+      savePinnedIds(pinnedIds);
+      return next;
+    });
   }, []);
 
   // Restore an archived alert
