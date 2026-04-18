@@ -68,15 +68,18 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Toggle pin for publication
+  // Toggle pin for publication (persisted to localStorage)
   const togglePinAlert = useCallback((alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((a) =>
+    setAlerts((prev) => {
+      const next = prev.map((a) =>
         a.id === alertId
           ? { ...a, is_pinned_for_publication: !a.is_pinned_for_publication }
           : a
-      )
-    );
+      );
+      const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
+      savePinnedIds(pinnedIds);
+      return next;
+    });
   }, []);
 
   // Archive an alert
