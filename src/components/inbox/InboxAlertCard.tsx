@@ -71,10 +71,8 @@ export function InboxAlertCard({
   return (
     <Card
       className={cn(
-        "p-3 bg-card/50 border-border/30 hover:bg-card/80 transition-all cursor-pointer group",
-        isPinned && !isArchived && "border-primary/50 bg-primary/5",
-        isPinned && hasCommentary && "ring-1 ring-[hsl(var(--success)/0.35)]",
-        isPinned && !hasCommentary && "ring-1 ring-[hsl(var(--warning)/0.35)]",
+        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group",
+        isPinned && !isArchived && "border-l-4 border-l-primary",
         isArchived && "opacity-70 border-dashed"
       )}
       onClick={onClick}
