@@ -238,16 +238,16 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
   const pendingCount = alertCounts.byStage.comision + alertCounts.byStage.pleno + alertCounts.byStage.tramite_final;
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Card className="glass-card border-border/30">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full min-w-0">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <InboxIcon className="h-4 w-4 text-primary" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{pendingCount}</div>
                 <div className="text-xs text-muted-foreground">Pendientes</div>
               </div>
@@ -255,13 +255,13 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-border/30">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
                 <Scale className="h-4 w-4 text-blue-400" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{alertCounts.byStage.comision}</div>
                 <div className="text-xs text-muted-foreground">En Comisión</div>
               </div>
@@ -269,13 +269,13 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-border/30">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-purple-500/10 shrink-0">
                 <Scale className="h-4 w-4 text-purple-400" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{alertCounts.byStage.pleno}</div>
                 <div className="text-xs text-muted-foreground">En Pleno</div>
               </div>
@@ -283,13 +283,13 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-border/30">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-500/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-orange-500/10 shrink-0">
                 <Scale className="h-4 w-4 text-orange-400" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{alertCounts.byStage.tramite_final}</div>
                 <div className="text-xs text-muted-foreground">Trámite Final</div>
               </div>
@@ -297,13 +297,13 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-border/30">
+        <Card className="glass-card border-border/30 min-w-0">
           <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <Pin className="h-4 w-4 text-primary" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold text-foreground">{pinnedCount}</div>
                 <div className="text-xs text-muted-foreground">Pineados</div>
               </div>
@@ -313,22 +313,24 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
       </div>
 
       {/* Filters */}
-      <BillsFilterBar
-        filters={filters}
-        onFiltersChange={setFilters}
-        availableParliamentaryGroups={availableParliamentaryGroups}
-        availableSectors={availableSectors}
-        availableStages={availableStages}
-        availableImpactLevels={availableImpactLevels}
-        availableAreas={availableAreas}
-        totalCount={alertCounts.total}
-        filteredCount={alertCounts.filtered}
-        pinnedCount={pinnedCount}
-        archivedCount={archivedCount}
-      />
+      <div className="w-full min-w-0">
+        <BillsFilterBar
+          filters={filters}
+          onFiltersChange={setFilters}
+          availableParliamentaryGroups={availableParliamentaryGroups}
+          availableSectors={availableSectors}
+          availableStages={availableStages}
+          availableImpactLevels={availableImpactLevels}
+          availableAreas={availableAreas}
+          totalCount={alertCounts.total}
+          filteredCount={alertCounts.filtered}
+          pinnedCount={pinnedCount}
+          archivedCount={archivedCount}
+        />
+      </div>
 
       {/* Kanban Board */}
-      <div className="flex gap-4 w-full min-w-0 items-stretch">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 w-full min-w-0 items-start">
         {BILLS_KANBAN_COLUMNS.map((column) => (
           <KanbanColumn
             key={column.id}
