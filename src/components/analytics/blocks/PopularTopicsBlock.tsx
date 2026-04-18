@@ -1,11 +1,14 @@
 import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
-import { getNeutralColor, getTrendColor } from "@/lib/analyticsColors";
-import { Hash, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { getNeutralColor } from "@/lib/analyticsColors";
+import { Hash } from "lucide-react";
 import { type PeruAlert } from "@/data/peruAlertsMockData";
-
-type RankingItemWithIds = { id: string; label: string; value: number; ids: string[] };
+import { useBlockFilters } from "@/hooks/useBlockFilters";
+import { applyAlertFilters } from "@/lib/blockFilterUtils";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 
 interface PopularTopicsBlockProps {
   alerts: PeruAlert[];
@@ -17,34 +20,28 @@ interface PopularTopicsBlockProps {
   demoData?: { id: string; label: string; value: number }[];
 }
 
-/**
- * Popular Topics Block - Ranking of most active legal areas/topics
- * Client-visible analytics block
- */
 export function PopularTopicsBlock({
   alerts,
   timeframe,
-  source = "Alertas publicadas",
+  source = "Alertas monitoreadas",
   maxItems = 7,
-  showTrends = false,
   onDrilldown,
-  demoData,
 }: PopularTopicsBlockProps) {
+  const filterState = useBlockFilters('popular_topics');
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedLabel, setSelectedLabel] = React.useState("");
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  const { displayData, total, remaining } = React.useMemo(() => {
-    if (demoData) {
-      const data = demoData.slice(0, maxItems).map(d => ({ ...d, ids: [] as string[] }));
-      return { displayData: data, total: demoData.reduce((s, d) => s + d.value, 0), remaining: Math.max(demoData.length - maxItems, 0) };
-    }
+  const filteredAlerts = React.useMemo(
+    () => applyAlertFilters(alerts, filterState.filters),
+    [alerts, filterState.filters]
+  );
 
+  const { displayData, total, remaining, fullData } = React.useMemo(() => {
     const topicGroups: Record<string, string[]> = {};
-    alerts.forEach(alert => {
+    filteredAlerts.forEach(alert => {
       alert.affected_areas?.forEach(area => {
-        if (!topicGroups[area]) topicGroups[area] = [];
-        topicGroups[area].push(alert.id);
+        (topicGroups[area] ||= []).push(alert.id);
       });
     });
     const allData = Object.entries(topicGroups)
@@ -52,15 +49,16 @@ export function PopularTopicsBlock({
       .sort((a, b) => b.value - a.value);
     return {
       displayData: allData.slice(0, maxItems),
-      total: alerts.length,
+      fullData: allData,
+      total: filteredAlerts.length,
       remaining: Math.max(allData.length - maxItems, 0),
     };
-  }, [alerts, maxItems, demoData]);
+  }, [filteredAlerts, maxItems]);
 
   const isEmpty = displayData.length === 0;
-
   const topTopic = displayData[0];
-  const takeaway = isEmpty 
+
+  const takeaway = isEmpty
     ? "No hay datos de temas en el período seleccionado"
     : `"${topTopic?.label || ''}" es el tema más activo con ${topTopic?.value || 0} alertas (${Math.round(((topTopic?.value || 0) / total) * 100)}%)`;
 
@@ -71,68 +69,115 @@ export function PopularTopicsBlock({
     onDrilldown?.(topic.ids);
   };
 
+  const renderList = (items: typeof displayData) => (
+    <div className="space-y-2">
+      {items.map((topic, index) => {
+        const percentage = total > 0 ? (topic.value / total) * 100 : 0;
+        return (
+          <button
+            key={topic.id}
+            onClick={() => handleTopicClick(topic)}
+            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+          >
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white flex-shrink-0"
+              style={{ backgroundColor: getNeutralColor(index) }}
+            >
+              {index + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium text-foreground truncate">
+                  {topic.label}
+                </span>
+                <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                  {topic.value}
+                </span>
+              </div>
+              <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${percentage}%`,
+                    backgroundColor: getNeutralColor(index),
+                  }}
+                />
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <>
       <AnalyticsBlock
         title="Temas Populares"
         takeaway={takeaway}
-        infoTooltip="Ranking de áreas legales/temas con mayor número de alertas publicadas. Los temas se derivan de las áreas de interés de cada alerta."
+        infoTooltip="Ranking de áreas legales/temas con mayor número de alertas. Los temas se derivan de las áreas de interés de cada alerta."
         timeframe={timeframe}
         source={source}
         isEmpty={isEmpty}
         icon={<Hash className="h-4 w-4 text-primary" />}
+        filterDimensions={['period', 'legislationType', 'impactLevels', 'search']}
+        filterState={filterState}
+        renderExpanded={() => (
+          <div className="overflow-auto">{renderList(fullData.slice(0, 20))}</div>
+        )}
+        renderDataTable={() => (
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Tema</TableHead>
+                  <TableHead className="text-right">Alertas</TableHead>
+                  <TableHead className="text-right">%</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fullData.map((row, i) => (
+                  <TableRow key={row.id} className="cursor-pointer" onClick={() => handleTopicClick(row)}>
+                    <TableCell className="tabular-nums text-muted-foreground">{i + 1}</TableCell>
+                    <TableCell className="font-medium">{row.label}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.value}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {Math.round((row.value / total) * 100)}%
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        renderInsights={() => (
+          <div className="space-y-3">
+            <InsightCard title="Tema dominante" body={takeaway} />
+            <InsightCard
+              title="Diversidad temática"
+              body={`${fullData.length} áreas/temas distintos aparecen en el rango filtrado.`}
+            />
+            {fullData.length >= 3 && (
+              <InsightCard
+                title="Concentración"
+                body={`Los 3 temas principales acumulan ${Math.round(
+                  (fullData.slice(0, 3).reduce((s, d) => s + d.value, 0) / total) * 100
+                )}% de las alertas.`}
+              />
+            )}
+          </div>
+        )}
       >
-        <div className="space-y-2">
-          {displayData.map((topic, index) => {
-            const percentage = total > 0 ? (topic.value / total) * 100 : 0;
-            
-            return (
-              <button 
-                key={topic.id}
-                onClick={() => handleTopicClick(topic)}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
-              >
-                {/* Rank */}
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white flex-shrink-0"
-                  style={{ backgroundColor: getNeutralColor(index) }}
-                >
-                  {index + 1}
-                </div>
-                
-                {/* Label and bar */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-foreground truncate">
-                      {topic.label}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                      {topic.value}
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${percentage}%`,
-                        backgroundColor: getNeutralColor(index),
-                      }}
-                    />
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-          
-          {remaining > 0 && (
-            <p className="text-xs text-muted-foreground text-center pt-2">
-              +{remaining} temas más
-            </p>
-          )}
-        </div>
+        {renderList(displayData)}
+
+        {remaining > 0 && (
+          <p className="text-xs text-muted-foreground text-center pt-2">
+            +{remaining} temas más
+          </p>
+        )}
       </AnalyticsBlock>
 
-      {/* Drilldown Sheet */}
       <AnalyticsDrilldownSheet
         open={drilldownOpen}
         onOpenChange={setDrilldownOpen}
@@ -141,5 +186,14 @@ export function PopularTopicsBlock({
         alertIds={selectedIds}
       />
     </>
+  );
+}
+
+function InsightCard({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="p-3 rounded-lg border border-border/60 bg-muted/20">
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="text-sm text-muted-foreground mt-0.5">{body}</p>
+    </div>
   );
 }
