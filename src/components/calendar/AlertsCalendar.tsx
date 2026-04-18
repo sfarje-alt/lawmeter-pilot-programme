@@ -1063,7 +1063,6 @@ export function AlertsCalendar() {
           setDrawerOpen(o);
           if (!o) setActiveAlert(null);
         }}
-        onPublish={(a, ids, comms) => publishAlert(a, ids, comms)}
         onUpdateExpertCommentary={(id, c) => updateSharedCommentary(id, c)}
         onArchive={(id) => archiveAlert(id)}
         onUnarchive={(id) => unarchiveAlert(id)}
