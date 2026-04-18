@@ -27,7 +27,7 @@ export function KanbanColumn({
   isArchiveView,
 }: KanbanColumnProps) {
   return (
-    <div className="flex flex-col flex-1 min-w-[320px] bg-card/30 rounded-lg border border-border/30">
+    <div className="flex flex-col flex-1 min-w-0 basis-0 bg-card/30 rounded-lg border border-border/30 overflow-hidden">
       {/* Column Header */}
       <div className="flex items-center gap-2 p-3 border-b border-border/30">
         <div className={`w-2 h-2 rounded-full ${color}`} />
@@ -38,8 +38,8 @@ export function KanbanColumn({
       </div>
 
       {/* Column Content */}
-      <ScrollArea className="flex-1 p-2">
-        <div className="flex flex-col gap-2">
+      <ScrollArea className="flex-1 p-2 w-full">
+        <div className="flex flex-col gap-2 w-full min-w-0">
           {alerts.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground text-sm">
               No hay alertas
