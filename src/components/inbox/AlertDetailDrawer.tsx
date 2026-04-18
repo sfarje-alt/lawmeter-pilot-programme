@@ -221,10 +221,10 @@ export function AlertDetailDrawer({
               </SheetTitle>
             </SheetHeader>
 
-            {/* AI disclaimer (in-drawer, blue, non-dismissible) */}
-            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
-              <AlertTriangle className="h-4 w-4 text-blue-300 shrink-0 mt-0.5" />
-              <p className="text-xs text-blue-100/90 leading-relaxed">
+            {/* AI disclaimer (in-drawer, blue, non-dismissible) — uses primary (HSL token) */}
+            <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
+              <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-xs text-primary-foreground/90 leading-relaxed [&]:text-foreground">
                 Análisis generado por IA. Valida el contenido y ajusta los campos antes de tomar decisiones.
               </p>
             </div>

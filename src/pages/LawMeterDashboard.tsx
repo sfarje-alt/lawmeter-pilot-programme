@@ -166,19 +166,19 @@ export default function LawMeterDashboard() {
             </div>
           </header>
 
-          {/* AI Disclaimer banner — dismissible */}
+          {/* AI Disclaimer banner — dismissible, uses primary (azul) HSL token */}
           {aiDisclaimerVisible && (
-            <div className="border-b border-blue-500/20 bg-blue-500/10 px-6 py-2 flex items-start gap-2">
-              <Info className="h-3.5 w-3.5 text-blue-300 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-blue-100/90 leading-relaxed flex-1">
-                <span className="font-semibold">Aviso:</span> Los análisis, resúmenes y clasificaciones generados por
+            <div className="border-b border-primary/30 bg-primary/10 px-6 py-2 flex items-start gap-2">
+              <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+              <p className="text-[11px] text-foreground/90 leading-relaxed flex-1">
+                <span className="font-semibold text-primary">Aviso:</span> Los análisis, resúmenes y clasificaciones generados por
                 inteligencia artificial son informativos y no constituyen asesoría legal. La validación final y la toma
                 de decisiones corresponden siempre al equipo interno de compliance.
               </p>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-5 w-5 text-blue-200/80 hover:text-blue-100 hover:bg-blue-500/20 shrink-0"
+                className="h-5 w-5 text-primary/80 hover:text-primary hover:bg-primary/20 shrink-0"
                 onClick={dismissAiDisclaimer}
                 aria-label="Ocultar aviso"
               >
