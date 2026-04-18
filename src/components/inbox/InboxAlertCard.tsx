@@ -160,65 +160,6 @@ export function InboxAlertCard({
         )}
       </div>
 
-      {/* Hidden legacy wrapper to keep diff minimal */}
-      <div className="hidden">
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Commentary Status Badge (only when pinned) */}
-          {isPinned && !isArchived && (
-            hasCommentary ? (
-              <Badge variant="secondary" className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1.5">
-                <CheckCircle2 className="h-3 w-3" />
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="text-xs bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)] py-0 px-1.5">
-                <AlertCircle className="h-3 w-3" />
-              </Badge>
-            )
-          )}
-          {alert.source_url && (
-            <button
-              onClick={handleLinkClick}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Ver documento original"
-            >
-              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
-            </button>
-          )}
-          {!isArchived && onTogglePin && (
-            <button
-              onClick={handlePinClick}
-              className={cn(
-                "p-1 rounded transition-colors",
-                isPinned
-                  ? "bg-primary/20 hover:bg-primary/30"
-                  : "hover:bg-white/10"
-              )}
-              title={isPinned ? "Quitar fijación" : "Fijar arriba"}
-            >
-              <Pin
-                className={cn(
-                  "h-3.5 w-3.5 transition-colors",
-                  isPinned ? "fill-primary text-primary" : "text-muted-foreground"
-                )}
-              />
-            </button>
-          )}
-          {(onArchive || onUnarchive) && (
-            <button
-              onClick={handleArchiveClick}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-              title={isArchived ? "Restaurar del archivo" : "Archivar"}
-            >
-              {isArchived ? (
-                <ArchiveRestore className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
-              ) : (
-                <Archive className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Title with Tooltip */}
       <TooltipProvider>
         <Tooltip>
