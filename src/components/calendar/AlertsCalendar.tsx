@@ -145,7 +145,7 @@ function heatmapBg(level: 0 | 1 | 2 | 3): string {
 
 export function AlertsCalendar() {
   const navigate = useNavigate();
-  const { alerts, archiveAlert, unarchiveAlert, updateSharedCommentary, publishAlert } = useAlerts();
+  const { alerts, archiveAlert, unarchiveAlert, updateSharedCommentary } = useAlerts();
 
   const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
