@@ -33,7 +33,7 @@ import {
   getDemoDataForClient,
 } from "@/lib/analyticsMockData";
 import type { AnalyticsFilters } from "@/types/analytics";
-import { MOCK_CLIENTS } from "@/data/peruAlertsMockData";
+
 import { ReportLayoutBuilder } from "@/components/reports/ReportLayoutBuilder";
 import { CLIENT_ANALYTICS_BLOCKS, ANALYTICS_BLOCK_REGISTRY, type AnalyticsBlockConfigExtended } from "@/types/analytics";
 
@@ -44,7 +44,6 @@ import { CLIENT_ANALYTICS_BLOCKS, ANALYTICS_BLOCK_REGISTRY, type AnalyticsBlockC
  */
 export function LegalTeamAnalyticsDashboard() {
   const [period, setPeriod] = React.useState<AnalyticsFilters['period']>('all_time');
-  const [selectedClientId, setSelectedClientId] = React.useState<string>('all');
   const [customizeOpen, setCustomizeOpen] = React.useState(false);
 
   // Load saved block order from localStorage
@@ -69,8 +68,8 @@ export function LegalTeamAnalyticsDashboard() {
 
   const freshness = DEMO_DATA_FRESHNESS;
 
-  // Get client-specific demo data
-  const demoData = React.useMemo(() => getDemoDataForClient(selectedClientId), [selectedClientId]);
+  // Aggregated demo data for the company
+  const demoData = React.useMemo(() => getDemoDataForClient('all'), []);
 
   const timeframeLabel = {
     'all_time': 'Todo el período',
@@ -91,9 +90,9 @@ export function LegalTeamAnalyticsDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+          <h1 className="text-2xl font-bold text-foreground">Analíticas</h1>
           <p className="text-sm text-muted-foreground">
-            Métricas operativas y de servicio — Demo Nov 2025 – Ene 2026
+            Inteligencia regulatoria — explora cada módulo, aplica filtros y guarda tu configuración.
           </p>
         </div>
         
@@ -108,20 +107,6 @@ export function LegalTeamAnalyticsDashboard() {
               <SelectItem value="last_30">Últimos 30 días</SelectItem>
               <SelectItem value="last_60">Últimos 60 días</SelectItem>
               <SelectItem value="last_90">Últimos 90 días</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Todos los clientes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los clientes</SelectItem>
-              {MOCK_CLIENTS.map(client => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
             </SelectContent>
           </Select>
 
