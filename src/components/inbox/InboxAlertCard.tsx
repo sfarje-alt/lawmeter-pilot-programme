@@ -176,17 +176,17 @@ export function InboxAlertCard({
 
       {/* Bill-specific: Author + Parliamentary Group */}
       {isBill && (
-        <div className="space-y-1 mb-2">
+        <div className="space-y-1 mb-2 min-w-0">
           {alert.author && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
               <User className="h-3 w-3 shrink-0" />
-              <span className="truncate">{alert.author}</span>
+              <span className="truncate min-w-0">{alert.author}</span>
             </div>
           )}
           {alert.parliamentary_group && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
               <Users className="h-3 w-3 shrink-0" />
-              <span className="truncate">{alert.parliamentary_group}</span>
+              <span className="truncate min-w-0">{alert.parliamentary_group}</span>
             </div>
           )}
         </div>
@@ -194,16 +194,16 @@ export function InboxAlertCard({
 
       {/* Norma-specific: Entity */}
       {!isBill && alert.entity && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2 min-w-0">
           <Building2 className="h-3 w-3 shrink-0" />
-          <span className="font-medium">{alert.entity}</span>
+          <span className="font-medium truncate min-w-0">{alert.entity}</span>
         </div>
       )}
 
       {/* Bill-specific: Current Stage */}
       {isBill && alert.current_stage && (
-        <div className="mb-2">
-          <Badge variant="secondary" className="text-xs bg-muted/50">
+        <div className="mb-2 min-w-0">
+          <Badge variant="secondary" className="text-xs bg-muted/50 max-w-full truncate inline-block">
             {alert.current_stage}
           </Badge>
         </div>
