@@ -6,7 +6,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Search, X, Pin, CalendarIcon, ChevronDown, Filter } from "lucide-react";
+import { Search, X, Pin, CalendarIcon, ChevronDown, Filter, Archive } from "lucide-react";
 import { RegulationsFilters } from "./RegulationsInbox";
 import { format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -25,6 +25,7 @@ interface RegulationsFilterBarProps {
   totalCount: number;
   filteredCount: number;
   pinnedCount: number;
+  archivedCount?: number;
 }
 
 const QUICK_DATE_OPTIONS = [
@@ -45,7 +46,8 @@ export function RegulationsFilterBar({
   availableClients,
   totalCount,
   filteredCount,
-  pinnedCount
+  pinnedCount,
+  archivedCount = 0,
 }: RegulationsFilterBarProps) {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
@@ -78,6 +80,7 @@ export function RegulationsFilterBar({
       dateFrom: undefined,
       dateTo: undefined,
       onlyPinned: false,
+      showArchived: false,
     });
   };
 
@@ -151,6 +154,22 @@ export function RegulationsFilterBar({
           {pinnedCount > 0 && (
             <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
               {pinnedCount}
+            </Badge>
+          )}
+        </Toggle>
+
+        {/* Archived Toggle */}
+        <Toggle
+          pressed={filters.showArchived}
+          onPressedChange={(pressed) => onFiltersChange({ ...filters, showArchived: pressed })}
+          className="gap-1.5 h-9 data-[state=on]:bg-muted data-[state=on]:text-foreground"
+          aria-label="Ver archivados"
+        >
+          <Archive className="h-4 w-4" />
+          <span className="hidden sm:inline text-sm">Archivados</span>
+          {archivedCount > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+              {archivedCount}
             </Badge>
           )}
         </Toggle>
