@@ -231,7 +231,7 @@ export function InboxAlertCard({
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default [&>*]:inline"
+                className="text-xs text-muted-foreground line-clamp-2 mb-2 italic border-l-2 border-primary/30 pl-2 cursor-default break-words [&>*]:inline"
                 dangerouslySetInnerHTML={{ __html: alert.expert_commentary }}
               />
             </TooltipTrigger>
