@@ -35,16 +35,16 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
   }), [alerts]);
 
   return (
-    <div className="w-full min-w-0 space-y-6">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex min-w-0 items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
+      <div className="flex items-center justify-between">
+        <div>
           <h1 className="text-2xl font-bold text-foreground">Alertas</h1>
           <p className="text-muted-foreground">
             Revisa, clasifica y gestiona las alertas regulatorias de tu organización
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3">
           <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
             Perú
           </Badge>
@@ -52,25 +52,25 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
       </div>
 
       {/* Tabs for Bills vs Regulations */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 bg-muted/30">
-          <TabsTrigger value="bills" className="flex items-center gap-2 data-[state=active]:bg-primary/20 min-w-0">
-            <Scale className="h-4 w-4 shrink-0" />
-            <span className="truncate">Proyectos de Ley</span>
-            <Badge variant="secondary" className="ml-1 text-xs shrink-0">
+          <TabsTrigger value="bills" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+            <Scale className="h-4 w-4" />
+            <span>Proyectos de Ley</span>
+            <Badge variant="secondary" className="ml-1 text-xs">
               {counts.bills}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="regulations" className="flex items-center gap-2 data-[state=active]:bg-primary/20 min-w-0">
-            <FileText className="h-4 w-4 shrink-0" />
-            <span className="truncate">Normas</span>
-            <Badge variant="secondary" className="ml-1 text-xs shrink-0">
+          <TabsTrigger value="regulations" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+            <FileText className="h-4 w-4" />
+            <span>Normas</span>
+            <Badge variant="secondary" className="ml-1 text-xs">
               {counts.regulations}
             </Badge>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="bills" className="mt-6 w-full min-w-0">
+        <TabsContent value="bills" className="mt-6">
           <BillsInbox
             alerts={alerts}
             onTogglePin={togglePinAlert}
@@ -81,7 +81,7 @@ export default function Inbox({ initialTab, initialAlertId }: InboxProps) {
           />
         </TabsContent>
 
-        <TabsContent value="regulations" className="mt-6 w-full min-w-0">
+        <TabsContent value="regulations" className="mt-6">
           <RegulationsInbox
             alerts={alerts}
             onTogglePin={togglePinAlert}

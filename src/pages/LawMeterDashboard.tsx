@@ -147,29 +147,30 @@ export default function LawMeterDashboard() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full min-w-0 bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-[hsl(220,40%,8%)] via-[hsl(220,45%,6%)] to-[hsl(220,50%,4%)]">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
           onSettingsOpen={() => setSettingsOpen(true)} 
         />
         
-        <SidebarInset className="bg-transparent min-w-0 w-full flex-1 overflow-hidden">
-          <header className="sticky top-0 z-10 flex h-12 min-w-0 items-center gap-4 border-b border-white/10 bg-[hsl(220,40%,8%)]/80 backdrop-blur-sm px-4">
-            <SidebarTrigger className="text-foreground hover:bg-white/10 shrink-0" />
-            <span className="text-sm font-medium text-muted-foreground truncate min-w-0">{getTabDisplayName()}</span>
+        <SidebarInset className="bg-transparent">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-4 border-b border-white/10 bg-[hsl(220,40%,8%)]/80 backdrop-blur-sm px-4">
+            <SidebarTrigger className="text-foreground hover:bg-white/10" />
+            <span className="text-sm font-medium text-muted-foreground">{getTabDisplayName()}</span>
 
-            <div className="ml-auto flex items-center gap-2 shrink-0">
+            <div className="ml-auto flex items-center gap-2">
               <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
                 Perú
               </Badge>
             </div>
           </header>
 
+          {/* AI Disclaimer banner — dismissible, uses primary (azul) HSL token */}
           {aiDisclaimerVisible && (
-            <div className="border-b border-primary/30 bg-primary/10 px-6 py-2 flex items-start gap-2 min-w-0">
+            <div className="border-b border-primary/30 bg-primary/10 px-6 py-2 flex items-start gap-2">
               <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-              <p className="text-[11px] text-foreground/90 leading-relaxed flex-1 min-w-0">
+              <p className="text-[11px] text-foreground/90 leading-relaxed flex-1">
                 <span className="font-semibold text-primary">Aviso:</span> Los análisis, resúmenes y clasificaciones generados por
                 inteligencia artificial son informativos y no constituyen asesoría legal. La validación final y la toma
                 de decisiones corresponden siempre al equipo interno de compliance.
@@ -186,10 +187,8 @@ export default function LawMeterDashboard() {
             </div>
           )}
 
-          <div className="flex-1 min-w-0 w-full overflow-x-hidden overflow-y-auto px-6 py-6">
-            <div className="w-full min-w-0 max-w-none">
-              {renderContent()}
-            </div>
+          <div className="flex-1 px-6 py-6 overflow-auto">
+            {renderContent()}
           </div>
         </SidebarInset>
 
