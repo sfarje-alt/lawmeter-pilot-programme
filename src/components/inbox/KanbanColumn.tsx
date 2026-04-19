@@ -38,8 +38,8 @@ export function KanbanColumn({
       </div>
 
       {/* Column Content */}
-      <ScrollArea className="flex-1 p-2 w-full">
-        <div className="flex flex-col gap-2 w-full min-w-0">
+      <ScrollArea className="flex-1 p-2 w-full [&>[data-radix-scroll-area-viewport]]:!block [&>[data-radix-scroll-area-viewport]>div]:!block [&>[data-radix-scroll-area-viewport]>div]:!w-full">
+        <div className="flex flex-col gap-2 w-full min-w-0 max-w-full">
           {alerts.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground text-sm">
               No hay alertas
