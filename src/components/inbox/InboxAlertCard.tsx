@@ -71,15 +71,15 @@ export function InboxAlertCard({
   return (
     <Card
       className={cn(
-        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group",
+        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full min-w-0 max-w-full overflow-hidden",
         isPinned && !isArchived && "border-l-4 border-l-primary",
         isArchived && "opacity-70 border-dashed"
       )}
       onClick={onClick}
     >
       {/* Header: Type Badge + Impact + ID + Actions */}
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
           <Badge variant="outline" className={cn("text-xs", getTypeColor(alert.legislation_type))}>
             {getTypeLabel(alert.legislation_type)}
           </Badge>
@@ -92,7 +92,7 @@ export function InboxAlertCard({
             </Badge>
           )}
           {isBill && alert.legislation_id && (
-            <span className="text-xs text-primary font-mono font-medium">
+            <span className="text-xs text-primary font-mono font-medium truncate max-w-full">
               {alert.legislation_id}
             </span>
           )}
