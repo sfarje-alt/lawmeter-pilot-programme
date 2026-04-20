@@ -267,22 +267,41 @@ function Section1ResumenLabels({
           {baseLabels.length === 0 && (
             <span className="text-xs text-muted-foreground">Sin clasificación derivable.</span>
           )}
-          {baseLabels.map((l) => (
-            <Badge
-              key={`${l.type}-${l.value}`}
-              variant="outline"
-              className={
-                l.type === 'bill'
-                  ? 'font-mono text-[11px] border-border/60 bg-background/40'
-                  : l.type === 'area'
-                    ? 'text-[11px] bg-muted/50'
-                    : 'text-[11px] bg-primary/10 text-primary border-primary/30'
-              }
-            >
-              {l.type === 'action' && <Gavel className="h-2.5 w-2.5 mr-1" />}
-              {l.value}
-            </Badge>
-          ))}
+          {baseLabels.map((l) => {
+            if (l.type === 'commission') {
+              return (
+                <Badge
+                  key={`${l.type}-${l.value}`}
+                  variant="outline"
+                  className="text-[11px] font-semibold border shadow-sm gap-1"
+                  style={{
+                    backgroundColor: commissionColor.bg,
+                    color: commissionColor.text,
+                    borderColor: commissionColor.ring,
+                  }}
+                >
+                  <Building2 className="h-2.5 w-2.5" style={{ color: commissionColor.text }} />
+                  {l.value}
+                </Badge>
+              );
+            }
+            return (
+              <Badge
+                key={`${l.type}-${l.value}`}
+                variant="outline"
+                className={
+                  l.type === 'bill'
+                    ? 'font-mono text-[11px] border-border/60 bg-background/40'
+                    : l.type === 'area'
+                      ? 'text-[11px] bg-muted/50'
+                      : 'text-[11px] bg-primary/10 text-primary border-primary/30'
+                }
+              >
+                {l.type === 'action' && <Gavel className="h-2.5 w-2.5 mr-1" />}
+                {l.value}
+              </Badge>
+            );
+          })}
         </div>
       </div>
 
