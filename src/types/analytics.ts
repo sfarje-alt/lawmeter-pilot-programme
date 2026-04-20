@@ -172,34 +172,7 @@ export interface IndustryBenchmark {
 
 // Block registry - defines all available analytics blocks
 export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
-  // Internal blocks (Legal Team only)
-  {
-    key: 'aggregated_regulatory_pulse',
-    title: 'Pulso Regulatorio Agregado',
-    takeaway: 'Tendencia del volumen legislativo/regulatorio en el período',
-    infoTooltip: 'Combina PLs y Normas por fecha oficial. Muestra aceleración o estabilización del entorno regulatorio.',
-    visibility: 'internal',
-    chartType: 'line',
-    defaultEnabled: true,
-  },
-  {
-    key: 'aggregated_alert_priority',
-    title: 'Prioridad de Alertas Agregada',
-    takeaway: 'Distribución de alertas por nivel de impacto y urgencia',
-    infoTooltip: 'Alertas clasificadas por impacto (Grave/Medio/Leve/Positivo) y urgencia agregadas para todos los clientes.',
-    visibility: 'internal',
-    chartType: 'bar',
-    defaultEnabled: true,
-  },
-  {
-    key: 'aggregated_alert_distribution',
-    title: 'Distribución de Alertas Agregada',
-    takeaway: 'Desglose de alertas por tipo, área y sector',
-    infoTooltip: 'Distribución de todas las alertas capturadas por tipo de legislación, área legal y sector económico.',
-    visibility: 'internal',
-    chartType: 'pie',
-    defaultEnabled: true,
-  },
+  // Internal blocks (Operaciones internas)
   {
     key: 'editorial_coverage',
     title: 'Cobertura con Comentario Experto',
@@ -237,14 +210,40 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     defaultEnabled: true,
   },
   {
-    key: 'aggregated_entity_monitoring',
-    title: 'Monitoreo de Entidades Agregado',
-    takeaway: 'Entidades y partidos políticos más activos',
-    infoTooltip: 'Ranking de reguladores y grupos parlamentarios por volumen de items capturados.',
+    key: 'reviewed_alerts',
+    title: 'Alertas Revisadas por Período',
+    takeaway: 'Volumen semanal de alertas abiertas por el equipo',
+    infoTooltip: 'Conteo de alertas que el equipo abrió y revisó al menos una vez, agrupado por semana.',
     visibility: 'internal',
     chartType: 'bar',
     defaultEnabled: true,
-    maxItems: 10,
+  },
+  {
+    key: 'detection_to_action_time',
+    title: 'Tiempo: detección → apertura / pin',
+    takeaway: 'Tiempos medios entre detección, apertura y pineo',
+    infoTooltip: 'Tiempo medio entre detección y primera apertura, y entre detección y pineo para publicación.',
+    visibility: 'internal',
+    chartType: 'bar',
+    defaultEnabled: true,
+  },
+  {
+    key: 'ai_usage',
+    title: 'Uso de IA: transcripción y chatbot',
+    takeaway: 'Alertas con transcripción solicitada y chatbot habilitado',
+    infoTooltip: 'Volumen de alertas que tuvieron transcripción solicitada y/o el chatbot habilitado.',
+    visibility: 'internal',
+    chartType: 'bar',
+    defaultEnabled: true,
+  },
+  {
+    key: 'reports_generated',
+    title: 'Reportes generados y alertas utilizadas',
+    takeaway: 'Reportes generados y alertas incluidas en cada uno',
+    infoTooltip: 'Volumen semanal de reportes generados y total de alertas utilizadas como contenido.',
+    visibility: 'internal',
+    chartType: 'line',
+    defaultEnabled: true,
   },
   
   // Client blocks (shared with Legal Team)
@@ -348,15 +347,6 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     visibility: 'both',
     chartType: 'kpi',
     defaultEnabled: true,
-  },
-  {
-    key: 'industry_benchmark',
-    title: 'Promedio de la Industria',
-    takeaway: 'Comparación con empresas similares del sector',
-    infoTooltip: 'Métricas agregadas y anonimizadas del sector. Requiere tamaño mínimo de cohorte.',
-    visibility: 'client',
-    chartType: 'bar',
-    defaultEnabled: false,
   },
 ];
 
