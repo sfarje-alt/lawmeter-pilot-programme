@@ -22,7 +22,6 @@ import {
   EmergingTopicsBlock,
   ExposureBlock,
   EditorialResponseTimeBlock,
-  AggregatedEntityMonitoringBlock,
   PinnedArchivedBlock,
 } from "./blocks";
 import {
@@ -32,6 +31,12 @@ import {
   SessionTopicsBlock,
   SessionRecurringBillsBlock,
 } from "./blocks/sessions";
+import {
+  DetectionToActionTimeBlock,
+  AIUsageBlock,
+  ReportsGeneratedBlock,
+  ReviewedAlertsBlock,
+} from "./blocks/ops";
 import {
   DEMO_EDITORIAL_COVERAGE,
   DEMO_OPERATIONAL_QUEUE,
