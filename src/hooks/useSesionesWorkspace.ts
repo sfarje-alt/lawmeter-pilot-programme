@@ -111,7 +111,7 @@ export function useSesionesWorkspace() {
             chatbot_state: (row.chatbot_state ?? 'no_solicitado') as SesionChatbotState,
           };
           if (row.legal_review) {
-            nextLegal[row.session_id] = row.legal_review as SesionLegalReview;
+            nextLegal[row.session_id] = row.legal_review as unknown as SesionLegalReview;
           }
         }
         setEditorial((prev) => ({ ...prev, ...nextEditorial }));
