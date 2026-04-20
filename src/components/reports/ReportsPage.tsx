@@ -316,7 +316,7 @@ const ReportPDF = ({
               <View key={b.key} style={styles.analyticsBlock} wrap={false}>
                 <Text style={styles.analyticsBlockTitle}>{b.title}</Text>
                 <Text style={styles.analyticsBlockMeta}>
-                  {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"} · {b.chartType}
+                  {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"}
                 </Text>
                 <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
               </View>
