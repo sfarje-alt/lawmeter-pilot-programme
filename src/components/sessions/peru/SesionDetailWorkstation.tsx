@@ -367,10 +367,9 @@ function SectionClasificatoriaIA({
   const fields = [
     { label: 'Etiquetas internas adicionales', multiline: false },
     { label: 'Impacto regulatorio', multiline: true },
+    { label: 'Urgencia', multiline: false },
     { label: 'Áreas afectadas', multiline: false },
     { label: 'Prioridad interna', multiline: false },
-    { label: 'Comentario regulatorio', multiline: true },
-    { label: 'Próximo paso sugerido', multiline: false },
   ];
 
   const [values, setValues] = useState<Record<string, string>>({});
