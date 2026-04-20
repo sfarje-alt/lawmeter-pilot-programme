@@ -3,8 +3,8 @@ import { AnalyticsBlock, ChartTooltip, AnalyticsDrilldownSheet } from "../shared
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
 import { TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
