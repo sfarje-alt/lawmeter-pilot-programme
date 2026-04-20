@@ -307,20 +307,8 @@ export function LegalTeamAnalyticsDashboard() {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {isEnabled('editorial_coverage') && (
-              <EditorialCoverageBlock
-                totalAlerts={DEMO_EDITORIAL_COVERAGE.totalAlerts}
-                withCommentary={DEMO_EDITORIAL_COVERAGE.withCommentary}
-                coverageRate={DEMO_EDITORIAL_COVERAGE.coverageRate}
-                coverageTrend={DEMO_EDITORIAL_COVERAGE.coverageTrend}
-                timeframe={timeframeLabel}
-              />
-            )}
             {isEnabled('editorial_response_time') && (
               <EditorialResponseTimeBlock timeframe={timeframeLabel} />
-            )}
-            {isEnabled('operational_queue') && (
-              <OperationalQueueBlock data={DEMO_OPERATIONAL_QUEUE} timeframe={timeframeLabel} />
             )}
             {isEnabled('pin_archive') && (
               <PinnedArchivedBlock timeframe={timeframeLabel} />
