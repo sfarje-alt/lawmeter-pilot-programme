@@ -681,21 +681,9 @@ function Section6ProcesamientoIA({
   onRequestTranscription: (id: string) => void;
   onRequestChatbot: (id: string) => void;
 }) {
-  const [search, setSearch] = useState('');
   const tState = session.transcription_state ?? 'no_solicitada';
   const cState = session.chatbot_state ?? 'no_solicitado';
-  const transcript = session.recording?.transcription_text;
   const r = session.recording;
-
-  const filteredTranscript = useMemo(() => {
-    if (!transcript) return '';
-    if (!search) return transcript;
-    const lines = transcript.split('\n');
-    return (
-      lines.filter((l) => l.toLowerCase().includes(search.toLowerCase())).join('\n') ||
-      transcript
-    );
-  }, [transcript, search]);
 
   return (
     <SectionShell
