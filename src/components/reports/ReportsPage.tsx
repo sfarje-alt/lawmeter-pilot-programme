@@ -148,6 +148,50 @@ const ReportPDF = ({
           </View>
         )}
 
+        {sessions.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ALERTAS DE SESIONES</Text>
+            {sessions.map(s => {
+              const tag =
+                s.is_pinned && s.is_follow_up
+                  ? 'Pineada · Seguimiento'
+                  : s.is_pinned
+                    ? 'Pineada'
+                    : s.is_follow_up
+                      ? 'En seguimiento'
+                      : 'Sesión';
+              const item = s.agenda_item;
+              const title = item ? `Ítem ${item.item_number} · ${item.title}` : (s.session_title ?? s.commission_name);
+              const bills = item?.bill_numbers?.length ? `Proyectos: ${item.bill_numbers.join(', ')}` : null;
+              const when = s.scheduled_date_text ?? (s.scheduled_at ? format(parseISO(s.scheduled_at), "dd/MM/yyyy HH:mm") : '');
+              return (
+                <View key={s.id} style={styles.alertCard}>
+                  <Text style={styles.alertTitle}>[{tag}] {title}</Text>
+                  <Text style={styles.alertMeta}>
+                    Comisión: {s.commission_name} · {when}
+                    {s.etiqueta_ia ? ` · Etiqueta: ${s.etiqueta_ia}` : ''}
+                    {s.impact_level ? ` · Impacto: ${s.impact_level}` : ''}
+                    {s.risk_level ? ` · Riesgo: ${s.risk_level}` : ''}
+                  </Text>
+                  {bills && <Text style={styles.alertMeta}>{bills}</Text>}
+                  {s.executive_summary && (
+                    <Text style={{ fontSize: 9, marginTop: 4 }}>{s.executive_summary}</Text>
+                  )}
+                  {s.recording?.video_url && (
+                    <Link src={s.recording.video_url} style={styles.sourceLink}>Grabación oficial (YouTube)</Link>
+                  )}
+                  {s.legal_review?.comentario_experto && (
+                    <View style={styles.commentary}>
+                      <Text style={styles.commentaryLabel}>COMENTARIO LEGAL:</Text>
+                      <Text>{s.legal_review.comentario_experto}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         <Text style={styles.footer}>
           Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
         </Text>
