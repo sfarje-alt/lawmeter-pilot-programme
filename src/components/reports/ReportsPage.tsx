@@ -164,6 +164,26 @@ const ReportPDF = ({
               const title = item ? `Ítem ${item.item_number} · ${item.title}` : (s.session_title ?? s.commission_name);
               const bills = item?.bill_numbers?.length ? `Proyectos: ${item.bill_numbers.join(', ')}` : null;
               const when = s.scheduled_date_text ?? (s.scheduled_at ? format(parseISO(s.scheduled_at), "dd/MM/yyyy HH:mm") : '');
+
+              // Resumen IA combinado: enrichment + transcripción + comentario experto.
+              // Para el prototipo, lo derivamos de los campos disponibles.
+              const aiSummaryParts: string[] = [];
+              if (s.executive_summary) aiSummaryParts.push(s.executive_summary);
+              if (s.preliminary_impact) aiSummaryParts.push(`Impacto: ${s.preliminary_impact}`);
+              if (s.suggested_next_step) aiSummaryParts.push(`Próximo paso: ${s.suggested_next_step}`);
+              if (s.recording?.transcription_text) {
+                const transcriptPreview = s.recording.transcription_text
+                  .replace(/\s+/g, ' ')
+                  .slice(0, 280);
+                aiSummaryParts.push(`Transcripción: ${transcriptPreview}…`);
+              }
+              if (s.legal_review?.comentario_experto) {
+                aiSummaryParts.push(`Comentario experto: ${s.legal_review.comentario_experto}`);
+              }
+              const aiSummary = aiSummaryParts.length > 0
+                ? aiSummaryParts.join(' • ')
+                : null;
+
               return (
                 <View key={s.id} style={styles.alertCard}>
                   <Text style={styles.alertTitle}>[{tag}] {title}</Text>
@@ -171,19 +191,15 @@ const ReportPDF = ({
                     Comisión: {s.commission_name} · {when}
                     {s.etiqueta_ia ? ` · Etiqueta: ${s.etiqueta_ia}` : ''}
                     {s.impact_level ? ` · Impacto: ${s.impact_level}` : ''}
-                    {s.risk_level ? ` · Riesgo: ${s.risk_level}` : ''}
                   </Text>
                   {bills && <Text style={styles.alertMeta}>{bills}</Text>}
-                  {s.executive_summary && (
-                    <Text style={{ fontSize: 9, marginTop: 4 }}>{s.executive_summary}</Text>
-                  )}
                   {s.recording?.video_url && (
                     <Link src={s.recording.video_url} style={styles.sourceLink}>Grabación oficial (YouTube)</Link>
                   )}
-                  {s.legal_review?.comentario_experto && (
+                  {aiSummary && (
                     <View style={styles.commentary}>
-                      <Text style={styles.commentaryLabel}>COMENTARIO LEGAL:</Text>
-                      <Text>{s.legal_review.comentario_experto}</Text>
+                      <Text style={styles.commentaryLabel}>RESUMEN IA (enrichment + transcripción + comentario):</Text>
+                      <Text>{aiSummary}</Text>
                     </View>
                   )}
                 </View>
