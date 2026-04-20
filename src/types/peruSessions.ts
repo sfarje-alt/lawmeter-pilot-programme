@@ -6,6 +6,53 @@ export interface SessionClientCommentary {
   commentary: string;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Sesiones · Modelo de alerta editorial (workspace single-profile)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SesionEditorialState =
+  | 'nueva'
+  | 'en_revision'
+  | 'pineada'
+  | 'en_seguimiento'
+  | 'archivada';
+
+export type SesionAgendaState = 'lista' | 'pendiente' | 'error';
+export type SesionVideoState = 'vinculado' | 'pendiente' | 'error';
+export type SesionTranscriptionState =
+  | 'no_solicitada'
+  | 'en_cola'
+  | 'procesando'
+  | 'lista'
+  | 'error';
+export type SesionChatbotState =
+  | 'no_solicitado'
+  | 'en_cola'
+  | 'procesando'
+  | 'listo'
+  | 'error';
+
+export type SesionRiskLevel = 'bajo' | 'medio' | 'alto';
+export type SesionUrgencyLevel = 'baja' | 'media' | 'alta';
+export type SesionImpactLevel = 'bajo' | 'medio' | 'medio_alto' | 'alto';
+
+export interface SesionAgendaItem {
+  item_number: string;
+  title: string;
+  thematic_area: string;
+  bill_numbers: string[];
+}
+
+export interface SesionLegalReview {
+  resumen_legal: string;
+  riesgo: string;
+  urgencia: string;
+  impacto: string;
+  areas_afectadas: string[];
+  proximos_pasos: string;
+  comentario_experto: string;
+}
+
 export interface PeruSession {
   id: string;
   external_session_id?: string;
@@ -17,23 +64,51 @@ export interface PeruSession {
   documents_url?: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'unknown';
   source_file_name?: string;
-  source: 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED' | 'DATABASE';
+  source: 'PERU_CONGRESS_COMMISSION_SESSIONS' | 'IMPORTED' | 'DATABASE' | 'PERU_CONGRESS_SYNC';
   jurisdiction: 'PERU' | 'Peru';
   created_at: string;
   updated_at?: string;
-  
+
   // Computed/joined fields
   is_recommended?: boolean;
   is_selected?: boolean;
   video_status?: VideoResolutionStatus;
   recording?: SessionRecording;
-  
-  // Editorial workflow fields (mirroring Inbox)
+
+  // Legacy editorial fields (kept for compatibility with publication flows)
   is_pinned_for_publication?: boolean;
   expert_commentary?: string;
   client_commentaries?: SessionClientCommentary[];
   published_to_clients?: string[];
   publication_status?: 'draft' | 'pinned' | 'published';
+
+  // ── Nuevo workflow editorial single-profile ────────────────────────────────
+  editorial_state?: SesionEditorialState;
+  is_pinned?: boolean;        // alias semántico de is_pinned_for_publication
+  is_follow_up?: boolean;     // independiente del pin
+  is_archived?: boolean;      // archivado manual
+
+  agenda_state?: SesionAgendaState;
+  video_state?: SesionVideoState;
+  transcription_state?: SesionTranscriptionState;
+  chatbot_state?: SesionChatbotState;
+
+  // Alerta hija derivada de un ítem de agenda
+  parent_session_id?: string;
+  agenda_item?: SesionAgendaItem;
+  etiqueta_ia?: string;
+  risk_level?: SesionRiskLevel;
+  urgency_level?: SesionUrgencyLevel;
+  impact_level?: SesionImpactLevel;
+
+  // Contenido legal/IA
+  executive_summary?: string;
+  why_it_matters?: string;
+  preliminary_impact?: string;
+  suggested_next_step?: string;
+
+  // Revisión legal editable
+  legal_review?: SesionLegalReview;
 }
 
 export interface SessionRecording {
