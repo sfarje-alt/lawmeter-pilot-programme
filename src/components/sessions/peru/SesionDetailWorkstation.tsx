@@ -299,32 +299,32 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
   const fields = [
     {
       label: 'Etiquetas internas adicionales',
-      placeholder: 'Pendiente de completar — sugiere desde el chatbot',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: false,
     },
     {
       label: 'Impacto regulatorio',
-      placeholder: 'Disponible con chatbot / transcripción',
+      placeholder: 'Se completa al solicitar la transcripción',
       multiline: true,
     },
     {
       label: 'Áreas afectadas',
-      placeholder: 'Pendiente — usa el chatbot para sugerencias',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: false,
     },
     {
       label: 'Prioridad interna',
-      placeholder: 'Definir manualmente o con apoyo del chatbot',
+      placeholder: 'Definir manualmente o esperar al enrichment',
       multiline: false,
     },
     {
       label: 'Comentario regulatorio',
-      placeholder: 'Se completará con la capa de análisis',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: true,
     },
     {
       label: 'Próximo paso sugerido',
-      placeholder: 'Pendiente — usa el chatbot para proponer próximos pasos',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: false,
     },
   ];
@@ -335,7 +335,7 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
     <SectionShell
       title="2 · Campos de enrichment"
       icon={<Sparkles className="h-3.5 w-3.5" />}
-      hint="Placeholders editables. Se llenan vía chatbot global o capa de análisis posterior."
+      hint="Se completan automáticamente al solicitar la transcripción (un solo acto). Editables manualmente."
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {fields.map((f) => (
