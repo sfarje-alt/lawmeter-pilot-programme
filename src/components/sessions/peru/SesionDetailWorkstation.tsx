@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Pin,
   PinOff,
@@ -145,19 +146,35 @@ export function SesionDetailWorkstation({
           </div>
         </div>
 
-        {/* Contenido — secciones en orden estricto */}
-        <div className="p-5 space-y-6">
-          <Section1ResumenLabels session={session} actionType={actionType} />
-          <Section2Enrichment session={session} />
-          <Section3InformacionGeneral session={session} />
-          <Section4SesionAgenda session={session} actionType={actionType} />
-          <Section5FuenteEvidencia session={session} />
-          <Section6ProcesamientoIA
-            session={session}
-            onRequestTranscription={onRequestTranscription}
-            onRequestChatbot={onRequestChatbot}
-          />
-        </div>
+        {/* Contenido — tabs: Contenido (secciones 1-5) vs Procesamiento IA */}
+        <Tabs defaultValue="contenido" className="px-5 pt-4 pb-5">
+          <TabsList className="grid grid-cols-2 w-full max-w-sm mb-4">
+            <TabsTrigger value="contenido" className="text-xs">
+              <FileText className="h-3.5 w-3.5 mr-1.5" />
+              Contenido
+            </TabsTrigger>
+            <TabsTrigger value="ia" className="text-xs">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Procesamiento IA
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="contenido" className="space-y-6 mt-0">
+            <Section1ResumenLabels session={session} actionType={actionType} />
+            <Section2Enrichment session={session} />
+            <Section3InformacionGeneral session={session} />
+            <Section4SesionAgenda session={session} actionType={actionType} />
+            <Section5FuenteEvidencia session={session} />
+          </TabsContent>
+
+          <TabsContent value="ia" className="space-y-6 mt-0">
+            <Section6ProcesamientoIA
+              session={session}
+              onRequestTranscription={onRequestTranscription}
+              onRequestChatbot={onRequestChatbot}
+            />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
@@ -282,32 +299,32 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
   const fields = [
     {
       label: 'Etiquetas internas adicionales',
-      placeholder: 'Pendiente de completar — sugiere desde el chatbot',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: false,
     },
     {
       label: 'Impacto regulatorio',
-      placeholder: 'Disponible con chatbot / transcripción',
+      placeholder: 'Se completa al solicitar la transcripción',
       multiline: true,
     },
     {
       label: 'Áreas afectadas',
-      placeholder: 'Pendiente — usa el chatbot para sugerencias',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: false,
     },
     {
       label: 'Prioridad interna',
-      placeholder: 'Definir manualmente o con apoyo del chatbot',
+      placeholder: 'Definir manualmente o esperar al enrichment',
       multiline: false,
     },
     {
       label: 'Comentario regulatorio',
-      placeholder: 'Se completará con la capa de análisis',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: true,
     },
     {
       label: 'Próximo paso sugerido',
-      placeholder: 'Pendiente — usa el chatbot para proponer próximos pasos',
+      placeholder: 'Se completa con la transcripción + enrichment',
       multiline: false,
     },
   ];
@@ -318,7 +335,7 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
     <SectionShell
       title="2 · Campos de enrichment"
       icon={<Sparkles className="h-3.5 w-3.5" />}
-      hint="Placeholders editables. Se llenan vía chatbot global o capa de análisis posterior."
+      hint="Se completan automáticamente al solicitar la transcripción (un solo acto). Editables manualmente."
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {fields.map((f) => (
@@ -588,11 +605,16 @@ function Section6ProcesamientoIA({
 
           {tState === 'no_solicitada' && (
             <div className="space-y-2 pt-1">
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5 text-[11px] text-foreground/85 leading-relaxed">
+                <strong className="text-primary">Importante:</strong> al solicitar la transcripción
+                también se genera el <strong>enrichment regulatorio</strong> (etiquetas, impacto, áreas
+                afectadas, comentario y próximo paso) en un solo acto. No es necesario pedirlo al chatbot.
+              </div>
               <p className="text-xs text-muted-foreground">
-                La transcripción no ha sido solicitada. Toma aproximadamente 20 minutos.
+                Tiempo estimado: ~20 minutos.
               </p>
               <Button size="sm" onClick={() => onRequestTranscription(session.id)}>
-                Solicitar transcripción
+                Solicitar transcripción + enrichment
               </Button>
             </div>
           )}

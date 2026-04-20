@@ -5,7 +5,6 @@
 // Chatbot global persistente.
 
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -234,7 +233,7 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           {/* LEFT — Bandeja */}
           <BandejaColumn
             label="Bandeja"
@@ -297,15 +296,15 @@ function BandejaColumn({
   emptyText: string;
 }) {
   return (
-    <div className="flex flex-col min-w-0 bg-card/30 rounded-lg border border-border/30 overflow-hidden">
-      <div className="flex items-center gap-2 p-3 border-b border-border/30">
+    <div className="flex flex-col min-w-0 bg-card/30 rounded-lg border border-border/30">
+      <div className="flex items-center gap-2 p-3 border-b border-border/30 sticky top-0 bg-card/80 backdrop-blur z-[1] rounded-t-lg">
         <div className={`w-2 h-2 rounded-full ${color}`} />
         <h3 className="text-sm font-medium text-foreground truncate">{label}</h3>
         <Badge variant="secondary" className="ml-auto text-xs">
           {alerts.length}
         </Badge>
       </div>
-      <ScrollArea className="flex-1 p-2 max-h-[calc(100vh-22rem)] [&>[data-radix-scroll-area-viewport]>div]:!block [&>[data-radix-scroll-area-viewport]>div]:!w-full">
+      <div className="p-2">
         <div className="flex flex-col gap-2 w-full min-w-0 max-w-full">
           {alerts.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground text-xs">
@@ -324,7 +323,7 @@ function BandejaColumn({
             ))
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
@@ -383,15 +382,15 @@ function PreparadasColumn({
   );
 
   return (
-    <div className="flex flex-col min-w-0 bg-card/30 rounded-lg border border-border/30 overflow-hidden">
-      <div className="flex items-center gap-2 p-3 border-b border-border/30">
+    <div className="flex flex-col min-w-0 bg-card/30 rounded-lg border border-border/30">
+      <div className="flex items-center gap-2 p-3 border-b border-border/30 sticky top-0 bg-card/80 backdrop-blur z-[1] rounded-t-lg">
         <Sparkles className="h-3.5 w-3.5 text-primary" />
         <h3 className="text-sm font-medium text-foreground truncate">Sesiones preparadas</h3>
         <Badge variant="secondary" className="ml-auto text-xs">
           {procesando.length + listas.length}
         </Badge>
       </div>
-      <ScrollArea className="flex-1 p-3 max-h-[calc(100vh-22rem)] [&>[data-radix-scroll-area-viewport]>div]:!block [&>[data-radix-scroll-area-viewport]>div]:!w-full">
+      <div className="p-3">
         <div className="flex flex-col gap-4">
           {renderGroup(
             'En procesamiento',
@@ -408,7 +407,7 @@ function PreparadasColumn({
             'No hay alertas listas.',
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
