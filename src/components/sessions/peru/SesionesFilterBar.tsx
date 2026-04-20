@@ -1,225 +1,443 @@
-// Filtros y chips rápidos para el workspace de Sesiones.
+// Filtros para Sesiones — replica el patrón compacto de BillsFilterBar:
+// search + Pin/Archive toggles + popover Fechas + Filtros colapsables (MultiSelect).
 
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Toggle } from '@/components/ui/toggle';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Search, X } from 'lucide-react';
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  MultiSelect,
+  type MultiSelectOption,
+} from '@/components/ui/multi-select';
+import {
+  Search,
+  X,
+  Pin,
+  CalendarIcon,
+  ChevronDown,
+  Filter,
+  Archive,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format, subDays } from 'date-fns';
+import { es } from 'date-fns/locale';
 import type { PeruSession } from '@/types/peruSessions';
-import { useMemo } from 'react';
 
+// ── Tipo de filtros ─────────────────────────────────────────────────────────
 export interface SesionesFilters {
   search: string;
-  commission: string;       // '' = todas
-  dateRange: 'all' | '7d' | '15d' | '30d';
-  aiState: 'all' | 'idle' | 'processing' | 'ready';
-  editorial: 'all' | 'nueva' | 'pineada' | 'en_seguimiento' | 'archivada';
-  tag: string;              // '' = todas
-  impact: 'all' | 'bajo' | 'medio' | 'medio_alto' | 'alto';
+  commissions: string[];
+  aiStates: string[];           // 'idle' | 'processing' | 'ready'
+  editorialStates: string[];    // 'nueva' | 'pineada' | 'en_seguimiento' | 'archivada'
+  videoStates: string[];        // 'pendiente' | 'vinculado' | 'error'
+  agendaStates: string[];       // 'pendiente' | 'lista' | 'error'
+  sources: string[];
+  impactLevels: string[];       // 'bajo' | 'medio' | 'medio_alto' | 'alto'
+  tags: string[];
+  dateFrom: Date | undefined;
+  dateTo: Date | undefined;
   onlyPinned: boolean;
-  onlyFollowUp: boolean;
+  showArchived: boolean;
 }
 
 export const DEFAULT_FILTERS: SesionesFilters = {
   search: '',
-  commission: '',
-  dateRange: 'all',
-  aiState: 'all',
-  editorial: 'all',
-  tag: '',
-  impact: 'all',
+  commissions: [],
+  aiStates: [],
+  editorialStates: [],
+  videoStates: [],
+  agendaStates: [],
+  sources: [],
+  impactLevels: [],
+  tags: [],
+  dateFrom: undefined,
+  dateTo: undefined,
   onlyPinned: false,
-  onlyFollowUp: false,
+  showArchived: false,
 };
+
+const QUICK_DATE_OPTIONS = [
+  { label: 'Últimos 7 días', days: 7 },
+  { label: 'Últimos 15 días', days: 15 },
+  { label: 'Últimos 30 días', days: 30 },
+  { label: 'Últimos 60 días', days: 60 },
+];
 
 interface Props {
   filters: SesionesFilters;
   onChange: (next: SesionesFilters) => void;
   sessions: PeruSession[];
+  pinnedCount: number;
+  archivedCount: number;
 }
 
-export function SesionesFilterBar({ filters, onChange, sessions }: Props) {
-  const commissions = useMemo(() => {
-    return Array.from(new Set(sessions.map((s) => s.commission_name))).sort();
+export function SesionesFilterBar({
+  filters,
+  onChange,
+  sessions,
+  pinnedCount,
+  archivedCount,
+}: Props) {
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+
+  // ── Opciones derivadas de los datos ───────────────────────────────────────
+  const commissionOptions: MultiSelectOption[] = useMemo(() => {
+    const set = new Set(sessions.map((s) => s.commission_name).filter(Boolean));
+    return Array.from(set)
+      .sort()
+      .map((c) => ({ value: c, label: c.length > 50 ? `${c.slice(0, 50)}…` : c }));
   }, [sessions]);
 
-  const tags = useMemo(() => {
-    return Array.from(
-      new Set(
-        sessions
-          .map((s) => s.etiqueta_ia)
-          .filter((x): x is string => !!x),
-      ),
-    ).sort();
+  const sourceOptions: MultiSelectOption[] = useMemo(() => {
+    const set = new Set(sessions.map((s) => s.source).filter(Boolean));
+    return Array.from(set).map((s) => ({ value: s, label: s }));
   }, [sessions]);
 
-  const update = <K extends keyof SesionesFilters>(key: K, value: SesionesFilters[K]) =>
-    onChange({ ...filters, [key]: value });
+  const tagOptions: MultiSelectOption[] = useMemo(() => {
+    const set = new Set(
+      sessions.map((s) => s.etiqueta_ia).filter((x): x is string => !!x),
+    );
+    return Array.from(set).sort().map((t) => ({ value: t, label: t }));
+  }, [sessions]);
 
-  const reset = () => onChange(DEFAULT_FILTERS);
+  const aiOptions: MultiSelectOption[] = [
+    { value: 'idle', label: 'No solicitada' },
+    { value: 'processing', label: 'Procesando' },
+    { value: 'ready', label: 'Lista' },
+  ];
 
-  const activeChips = [
-    filters.search && `"${filters.search}"`,
-    filters.commission,
-    filters.dateRange !== 'all' && `Últimos ${filters.dateRange.replace('d', ' días')}`,
-    filters.aiState !== 'all' && `IA: ${filters.aiState}`,
-    filters.editorial !== 'all' && `Editorial: ${filters.editorial}`,
-    filters.tag,
-    filters.impact !== 'all' && `Impacto: ${filters.impact}`,
-    filters.onlyPinned && 'Solo pineadas',
-    filters.onlyFollowUp && 'Solo seguimiento',
-  ].filter(Boolean);
+  const editorialOptions: MultiSelectOption[] = [
+    { value: 'nueva', label: 'Nueva' },
+    { value: 'pineada', label: 'Pineada' },
+    { value: 'en_seguimiento', label: 'En seguimiento' },
+    { value: 'archivada', label: 'Archivada' },
+  ];
+
+  const videoOptions: MultiSelectOption[] = [
+    { value: 'pendiente', label: 'Pendiente' },
+    { value: 'vinculado', label: 'Vinculado' },
+    { value: 'error', label: 'Error' },
+  ];
+
+  const agendaOptions: MultiSelectOption[] = [
+    { value: 'pendiente', label: 'Pendiente' },
+    { value: 'lista', label: 'Lista' },
+    { value: 'error', label: 'Error' },
+  ];
+
+  const impactOptions: MultiSelectOption[] = [
+    {
+      value: 'bajo',
+      label: 'Bajo',
+      icon: <div className="w-2 h-2 rounded-full bg-muted-foreground/60" />,
+    },
+    {
+      value: 'medio',
+      label: 'Medio',
+      icon: <div className="w-2 h-2 rounded-full bg-[hsl(var(--warning))]" />,
+    },
+    {
+      value: 'medio_alto',
+      label: 'Medio-alto',
+      icon: <div className="w-2 h-2 rounded-full bg-[hsl(var(--warning))]" />,
+    },
+    {
+      value: 'alto',
+      label: 'Alto',
+      icon: <div className="w-2 h-2 rounded-full bg-[hsl(var(--destructive))]" />,
+    },
+  ];
+
+  // ── Estado activo ─────────────────────────────────────────────────────────
+  const hasActiveFilters =
+    filters.search !== '' ||
+    filters.commissions.length > 0 ||
+    filters.aiStates.length > 0 ||
+    filters.editorialStates.length > 0 ||
+    filters.videoStates.length > 0 ||
+    filters.agendaStates.length > 0 ||
+    filters.sources.length > 0 ||
+    filters.impactLevels.length > 0 ||
+    filters.tags.length > 0 ||
+    filters.dateFrom !== undefined ||
+    filters.dateTo !== undefined ||
+    filters.onlyPinned;
+
+  const activeFilterCount =
+    (filters.commissions.length > 0 ? 1 : 0) +
+    (filters.aiStates.length > 0 ? 1 : 0) +
+    (filters.editorialStates.length > 0 ? 1 : 0) +
+    (filters.videoStates.length > 0 ? 1 : 0) +
+    (filters.agendaStates.length > 0 ? 1 : 0) +
+    (filters.sources.length > 0 ? 1 : 0) +
+    (filters.impactLevels.length > 0 ? 1 : 0) +
+    (filters.tags.length > 0 ? 1 : 0);
+
+  const clearFilters = () => onChange(DEFAULT_FILTERS);
+
+  const applyQuickDateFilter = (days: number) => {
+    const today = new Date();
+    const fromDate = subDays(today, days);
+    onChange({ ...filters, dateFrom: fromDate, dateTo: today });
+  };
 
   return (
     <div className="space-y-3">
-      {/* Línea principal */}
+      {/* ── Línea principal: search + toggles + popovers ─────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            placeholder="Buscar por comisión, ítem o tema..."
             value={filters.search}
-            onChange={(e) => update('search', e.target.value)}
-            placeholder="Buscar por comisión, ítem o tema…"
-            className="pl-8 bg-card/40 border-border/60"
+            onChange={(e) => onChange({ ...filters, search: e.target.value })}
+            className="pl-10 bg-muted/30 border-border/50 h-9"
           />
         </div>
 
-        <Select value={filters.commission || 'all'} onValueChange={(v) => update('commission', v === 'all' ? '' : v)}>
-          <SelectTrigger className="w-[200px] bg-card/40 border-border/60">
-            <SelectValue placeholder="Comisión" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las comisiones</SelectItem>
-            {commissions.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c.length > 40 ? `${c.slice(0, 40)}…` : c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Toggle
+          pressed={filters.onlyPinned}
+          onPressedChange={(pressed) => onChange({ ...filters, onlyPinned: pressed })}
+          className="gap-1.5 h-9 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+          aria-label="Solo pineadas"
+        >
+          <Pin className="h-4 w-4" />
+          <span className="hidden sm:inline text-sm">Pineadas</span>
+          {pinnedCount > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+              {pinnedCount}
+            </Badge>
+          )}
+        </Toggle>
 
-        <Select value={filters.dateRange} onValueChange={(v) => update('dateRange', v as SesionesFilters['dateRange'])}>
-          <SelectTrigger className="w-[150px] bg-card/40 border-border/60">
-            <SelectValue placeholder="Fecha" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todo el período</SelectItem>
-            <SelectItem value="7d">Últimos 7 días</SelectItem>
-            <SelectItem value="15d">Últimos 15 días</SelectItem>
-            <SelectItem value="30d">Últimos 30 días</SelectItem>
-          </SelectContent>
-        </Select>
+        <Toggle
+          pressed={filters.showArchived}
+          onPressedChange={(pressed) => onChange({ ...filters, showArchived: pressed })}
+          className="gap-1.5 h-9 data-[state=on]:bg-muted data-[state=on]:text-foreground"
+          aria-label="Ver archivadas"
+        >
+          <Archive className="h-4 w-4" />
+          <span className="hidden sm:inline text-sm">Archivadas</span>
+          {archivedCount > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+              {archivedCount}
+            </Badge>
+          )}
+        </Toggle>
 
-        <Select value={filters.aiState} onValueChange={(v) => update('aiState', v as SesionesFilters['aiState'])}>
-          <SelectTrigger className="w-[150px] bg-card/40 border-border/60">
-            <SelectValue placeholder="Estado IA" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Estado IA</SelectItem>
-            <SelectItem value="idle">No solicitada</SelectItem>
-            <SelectItem value="processing">Procesando</SelectItem>
-            <SelectItem value="ready">Lista</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={filters.editorial} onValueChange={(v) => update('editorial', v as SesionesFilters['editorial'])}>
-          <SelectTrigger className="w-[170px] bg-card/40 border-border/60">
-            <SelectValue placeholder="Estado editorial" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Editorial</SelectItem>
-            <SelectItem value="nueva">Nuevas</SelectItem>
-            <SelectItem value="pineada">Pineadas</SelectItem>
-            <SelectItem value="en_seguimiento">En seguimiento</SelectItem>
-            <SelectItem value="archivada">Archivadas</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {tags.length > 0 && (
-          <Select value={filters.tag || 'all'} onValueChange={(v) => update('tag', v === 'all' ? '' : v)}>
-            <SelectTrigger className="w-[180px] bg-card/40 border-border/60">
-              <SelectValue placeholder="Etiqueta" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las etiquetas</SelectItem>
-              {tags.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        <Select value={filters.impact} onValueChange={(v) => update('impact', v as SesionesFilters['impact'])}>
-          <SelectTrigger className="w-[150px] bg-card/40 border-border/60">
-            <SelectValue placeholder="Impacto" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Impacto</SelectItem>
-            <SelectItem value="bajo">Bajo</SelectItem>
-            <SelectItem value="medio">Medio</SelectItem>
-            <SelectItem value="medio_alto">Medio-alto</SelectItem>
-            <SelectItem value="alto">Alto</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Chips rápidos */}
-      <div className="flex flex-wrap items-center gap-2">
-        {(['7d', '15d', '30d'] as const).map((d) => (
-          <Button
-            key={d}
-            size="sm"
-            variant={filters.dateRange === d ? 'default' : 'outline'}
-            className="h-7 text-xs"
-            onClick={() => update('dateRange', filters.dateRange === d ? 'all' : d)}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'h-9 gap-1.5 bg-muted/30 border-border/50 text-sm',
+                (filters.dateFrom || filters.dateTo) && 'border-primary/50 bg-primary/10',
+              )}
+            >
+              <CalendarIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {filters.dateFrom && filters.dateTo
+                  ? `${format(filters.dateFrom, 'dd/MM', { locale: es })} - ${format(filters.dateTo, 'dd/MM', { locale: es })}`
+                  : filters.dateFrom
+                  ? `Desde ${format(filters.dateFrom, 'dd/MM', { locale: es })}`
+                  : filters.dateTo
+                  ? `Hasta ${format(filters.dateTo, 'dd/MM', { locale: es })}`
+                  : 'Fechas'}
+              </span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto p-0 z-50 bg-popover border border-border"
+            align="start"
           >
-            Últimos {d.replace('d', ' días')}
-          </Button>
-        ))}
-        <Button
-          size="sm"
-          variant={filters.onlyPinned ? 'default' : 'outline'}
-          className="h-7 text-xs"
-          onClick={() => update('onlyPinned', !filters.onlyPinned)}
-        >
-          Solo pineadas
-        </Button>
-        <Button
-          size="sm"
-          variant={filters.onlyFollowUp ? 'default' : 'outline'}
-          className="h-7 text-xs"
-          onClick={() => update('onlyFollowUp', !filters.onlyFollowUp)}
-        >
-          Solo seguimiento
-        </Button>
+            <div className="p-3 space-y-3">
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground mb-2">
+                  Acceso rápido
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {QUICK_DATE_OPTIONS.map((option) => (
+                    <Button
+                      key={option.days}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => applyQuickDateFilter(option.days)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <div className="text-xs font-medium text-muted-foreground mb-2">
+                  Rango personalizado
+                </div>
+                <div className="flex gap-2">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Desde</div>
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateFrom}
+                      onSelect={(date) => onChange({ ...filters, dateFrom: date })}
+                      locale={es}
+                      className="rounded-md border pointer-events-auto bg-background"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Hasta</div>
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateTo}
+                      onSelect={(date) => onChange({ ...filters, dateTo: date })}
+                      locale={es}
+                      className="rounded-md border pointer-events-auto bg-background"
+                    />
+                  </div>
+                </div>
+              </div>
+              {(filters.dateFrom || filters.dateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() =>
+                    onChange({ ...filters, dateFrom: undefined, dateTo: undefined })
+                  }
+                >
+                  Limpiar fechas
+                </Button>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
 
-        {activeChips.length > 0 && (
-          <Button size="sm" variant="ghost" className="h-7 text-xs ml-auto" onClick={reset}>
-            <X className="h-3 w-3 mr-1" />
-            Limpiar filtros
+        <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'h-9 gap-1.5 bg-muted/30 border-border/50 text-sm',
+                activeFilterCount > 0 && 'border-primary/50 bg-primary/10',
+              )}
+            >
+              <Filter className="h-4 w-4" />
+              <span className="hidden sm:inline">Filtros</span>
+              {activeFilterCount > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="ml-1 h-5 px-1.5 text-xs bg-primary/20 text-primary"
+                >
+                  {activeFilterCount}
+                </Badge>
+              )}
+              <ChevronDown
+                className={cn(
+                  'h-3 w-3 transition-transform',
+                  filtersExpanded && 'rotate-180',
+                )}
+              />
+            </Button>
+          </CollapsibleTrigger>
+        </Collapsible>
+
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-9 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Limpiar
           </Button>
         )}
       </div>
+
+      {/* ── Filtros colapsables (MultiSelect) ────────────────────────────── */}
+      <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
+        <CollapsibleContent>
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-t border-border/30">
+            <MultiSelect
+              options={commissionOptions}
+              selected={filters.commissions}
+              onChange={(commissions) => onChange({ ...filters, commissions })}
+              placeholder="Comisión: Todas"
+              className="w-[200px]"
+            />
+            <MultiSelect
+              options={aiOptions}
+              selected={filters.aiStates}
+              onChange={(aiStates) => onChange({ ...filters, aiStates })}
+              placeholder="Estado IA: Todos"
+              className="w-[170px]"
+            />
+            <MultiSelect
+              options={editorialOptions}
+              selected={filters.editorialStates}
+              onChange={(editorialStates) => onChange({ ...filters, editorialStates })}
+              placeholder="Editorial: Todos"
+              className="w-[180px]"
+            />
+            <MultiSelect
+              options={videoOptions}
+              selected={filters.videoStates}
+              onChange={(videoStates) => onChange({ ...filters, videoStates })}
+              placeholder="Video: Todos"
+              className="w-[150px]"
+            />
+            <MultiSelect
+              options={agendaOptions}
+              selected={filters.agendaStates}
+              onChange={(agendaStates) => onChange({ ...filters, agendaStates })}
+              placeholder="Agenda: Todas"
+              className="w-[150px]"
+            />
+            <MultiSelect
+              options={sourceOptions}
+              selected={filters.sources}
+              onChange={(sources) => onChange({ ...filters, sources })}
+              placeholder="Fuente: Todas"
+              className="w-[180px]"
+            />
+            <MultiSelect
+              options={impactOptions}
+              selected={filters.impactLevels}
+              onChange={(impactLevels) => onChange({ ...filters, impactLevels })}
+              placeholder="Impacto: Todos"
+              className="w-[160px]"
+            />
+            {tagOptions.length > 0 && (
+              <MultiSelect
+                options={tagOptions}
+                selected={filters.tags}
+                onChange={(tags) => onChange({ ...filters, tags })}
+                placeholder="Etiqueta IA: Todas"
+                className="w-[180px]"
+              />
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
 
-// Aplica filtros a la lista
+// ── Aplicación de filtros sobre la lista ──────────────────────────────────
 export function applySesionesFilters(
   sessions: PeruSession[],
   filters: SesionesFilters,
 ): PeruSession[] {
-  const now = Date.now();
-  const days =
-    filters.dateRange === '7d' ? 7 : filters.dateRange === '15d' ? 15 : filters.dateRange === '30d' ? 30 : null;
-
   return sessions.filter((s) => {
     // Search
     if (filters.search) {
@@ -238,33 +456,72 @@ export function applySesionesFilters(
       if (!hay.includes(q)) return false;
     }
 
-    if (filters.commission && s.commission_name !== filters.commission) return false;
+    // Pinned
+    if (filters.onlyPinned && !s.is_pinned) return false;
 
-    if (days != null) {
-      if (!s.scheduled_at) return false;
-      const ts = new Date(s.scheduled_at).getTime();
-      const diff = (now - ts) / (1000 * 60 * 60 * 24);
-      if (Math.abs(diff) > days) return false;
+    // Comisión
+    if (filters.commissions.length > 0 && !filters.commissions.includes(s.commission_name)) {
+      return false;
     }
 
-    if (filters.aiState !== 'all') {
+    // Estado IA
+    if (filters.aiStates.length > 0) {
       const t = s.transcription_state ?? 'no_solicitada';
       const c = s.chatbot_state ?? 'no_solicitado';
-      const isProcessing = ['en_cola', 'procesando'].includes(t) || ['en_cola', 'procesando'].includes(c);
+      const isProcessing =
+        ['en_cola', 'procesando'].includes(t) || ['en_cola', 'procesando'].includes(c);
       const isReady = t === 'lista' || c === 'listo';
-      if (filters.aiState === 'processing' && !isProcessing) return false;
-      if (filters.aiState === 'ready' && !isReady) return false;
-      if (filters.aiState === 'idle' && (isProcessing || isReady)) return false;
+      const matched =
+        (filters.aiStates.includes('processing') && isProcessing) ||
+        (filters.aiStates.includes('ready') && isReady) ||
+        (filters.aiStates.includes('idle') && !isProcessing && !isReady);
+      if (!matched) return false;
     }
 
-    if (filters.editorial !== 'all') {
-      if ((s.editorial_state ?? 'nueva') !== filters.editorial) return false;
+    // Editorial
+    if (filters.editorialStates.length > 0) {
+      const state = s.editorial_state ?? 'nueva';
+      if (!filters.editorialStates.includes(state)) return false;
     }
 
-    if (filters.tag && s.etiqueta_ia !== filters.tag) return false;
-    if (filters.impact !== 'all' && s.impact_level !== filters.impact) return false;
-    if (filters.onlyPinned && !s.is_pinned) return false;
-    if (filters.onlyFollowUp && !s.is_follow_up) return false;
+    // Video
+    if (filters.videoStates.length > 0) {
+      const v = s.video_state ?? 'pendiente';
+      if (!filters.videoStates.includes(v)) return false;
+    }
+
+    // Agenda
+    if (filters.agendaStates.length > 0) {
+      const a = s.agenda_state ?? 'pendiente';
+      if (!filters.agendaStates.includes(a)) return false;
+    }
+
+    // Fuente
+    if (filters.sources.length > 0 && !filters.sources.includes(s.source)) {
+      return false;
+    }
+
+    // Impacto
+    if (filters.impactLevels.length > 0) {
+      if (!s.impact_level || !filters.impactLevels.includes(s.impact_level)) return false;
+    }
+
+    // Etiqueta IA
+    if (filters.tags.length > 0) {
+      if (!s.etiqueta_ia || !filters.tags.includes(s.etiqueta_ia)) return false;
+    }
+
+    // Fechas
+    if (filters.dateFrom || filters.dateTo) {
+      if (!s.scheduled_at) return false;
+      const date = new Date(s.scheduled_at);
+      if (filters.dateFrom && date < filters.dateFrom) return false;
+      if (filters.dateTo) {
+        const endOfDay = new Date(filters.dateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (date > endOfDay) return false;
+      }
+    }
 
     return true;
   });
