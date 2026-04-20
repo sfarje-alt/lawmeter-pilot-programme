@@ -29,7 +29,6 @@ import {
   TrendingUp,
   PieChart,
   Grid3X3,
-  Target,
   Activity,
   Users,
   Layers,
@@ -39,6 +38,10 @@ import {
   LayoutTemplate,
   Save,
   RotateCcw,
+  Clock,
+  Bot,
+  FileBarChart,
+  Eye as EyeIcon,
 } from "lucide-react";
 import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
 import {
@@ -61,14 +64,14 @@ const blockIcons: Record<string, React.ElementType> = {
   emerging_topics: TrendingUp,
   exposure: Shield,
   service_kpis: Gauge,
-  industry_benchmark: Target,
   editorial_coverage: Layers,
   editorial_response_time: Activity,
   operational_queue: BarChart3,
-  aggregated_entity_monitoring: Users,
-  aggregated_regulatory_pulse: Activity,
-  aggregated_alert_priority: TrendingUp,
-  aggregated_alert_distribution: PieChart,
+  pin_archive: Shield,
+  reviewed_alerts: EyeIcon,
+  detection_to_action_time: Clock,
+  ai_usage: Bot,
+  reports_generated: FileBarChart,
 };
 
 interface SortableBlockItemProps {
