@@ -172,30 +172,12 @@ export interface IndustryBenchmark {
 export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
   // Internal blocks (Operaciones internas)
   {
-    key: 'editorial_coverage',
-    title: 'Cobertura con Comentario Experto',
-    takeaway: 'Porcentaje de alertas con comentario experto',
-    infoTooltip: 'Total de alertas vs alertas con comentario experto. Mide la cobertura editorial del equipo.',
-    visibility: 'internal',
-    chartType: 'stacked_bar',
-    defaultEnabled: true,
-  },
-  {
     key: 'editorial_response_time',
     title: 'Tiempo Medio de Apertura',
     takeaway: 'Horas promedio entre creación y primera lectura',
     infoTooltip: 'Mide qué tan rápido el equipo abre y revisa las alertas tras su creación.',
     visibility: 'internal',
     chartType: 'line',
-    defaultEnabled: true,
-  },
-  {
-    key: 'operational_queue',
-    title: 'Cola de Revisión Pendiente',
-    takeaway: 'Alertas activas sin abrir, sin comentario o sin clasificar',
-    infoTooltip: 'Trabajo pendiente del equipo: alertas que requieren apertura, comentario experto o etiquetado.',
-    visibility: 'internal',
-    chartType: 'kpi',
     defaultEnabled: true,
   },
   {
