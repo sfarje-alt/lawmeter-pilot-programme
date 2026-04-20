@@ -3,15 +3,15 @@
 export type AnalyticsVisibility = 'internal' | 'client' | 'both';
 
 export type AnalyticsBlockKey = 
-  // Internal (Legal Team only)
-  | 'aggregated_regulatory_pulse'
-  | 'aggregated_alert_priority'
-  | 'aggregated_alert_distribution'
+  // Internal (Legal Team only) — operations
   | 'editorial_coverage'
   | 'editorial_response_time'
   | 'operational_queue'
   | 'pin_archive'
-  | 'aggregated_entity_monitoring'
+  | 'reviewed_alerts'
+  | 'detection_to_action_time'
+  | 'ai_usage'
+  | 'reports_generated'
   // Client (shared with Legal Team)
   | 'impact_matrix'
   | 'regulatory_pulse'
@@ -23,8 +23,7 @@ export type AnalyticsBlockKey =
   | 'popular_topics'
   | 'emerging_topics'
   | 'exposure'
-  | 'service_kpis'
-  | 'industry_benchmark';
+  | 'service_kpis';
 
 export interface AnalyticsBlockDefinition {
   key: AnalyticsBlockKey;
