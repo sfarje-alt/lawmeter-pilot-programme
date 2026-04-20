@@ -11,6 +11,8 @@ import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Link } from "@
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
+import { useSesionesWorkspace } from "@/hooks/useSesionesWorkspace";
+import type { PeruSession } from "@/types/peruSessions";
 import {
   FileDown,
   Building2,
@@ -23,6 +25,7 @@ import {
   Filter,
   Clock,
   BarChart3,
+  Video,
 } from "lucide-react";
 import { format, subDays, parseISO, isAfter, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
