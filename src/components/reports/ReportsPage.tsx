@@ -7,7 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PDFDownloadLink, pdf, Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
+import {
+  PDFDownloadLink,
+  pdf,
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Link,
+  Svg,
+  Path,
+  Rect,
+  Line as SvgLine,
+  Circle,
+  G,
+  Polyline,
+} from "@react-pdf/renderer";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
