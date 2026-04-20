@@ -1,5 +1,6 @@
 // Chips reutilizables para el workspace de Sesiones.
-// Todos los colores usan tokens semánticos (tailwind.config.ts).
+// Todos los colores usan tokens semánticos puros (warning, success, primary, destructive)
+// definidos en index.css y tailwind.config.ts.
 
 import { cn } from '@/lib/utils';
 import { Loader2, CheckCircle2, AlertTriangle, Circle, Clock } from 'lucide-react';
@@ -27,8 +28,8 @@ const EDITORIAL_CLASSES: Record<SesionEditorialState, string> = {
   nueva: 'bg-muted/40 text-muted-foreground border-border',
   en_revision: 'bg-primary/10 text-primary border-primary/30',
   pineada: 'bg-primary text-primary-foreground border-transparent',
-  en_seguimiento: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-  archivada: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
+  en_seguimiento: 'bg-warning/15 text-warning border-warning/40',
+  archivada: 'bg-muted/60 text-muted-foreground border-border',
 };
 
 export function EditorialChip({ state }: { state: SesionEditorialState }) {
@@ -48,10 +49,10 @@ export function EditorialChip({ state }: { state: SesionEditorialState }) {
 type ProcessTone = 'idle' | 'queue' | 'processing' | 'ready' | 'error';
 
 const TONE_CLASSES: Record<ProcessTone, string> = {
-  idle: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-  queue: 'bg-slate-500/15 text-slate-200 border-slate-500/40',
-  processing: 'bg-blue-500/15 text-blue-300 border-blue-500/40',
-  ready: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+  idle: 'bg-muted/40 text-muted-foreground border-border',
+  queue: 'bg-muted/60 text-foreground/70 border-border',
+  processing: 'bg-primary/15 text-primary border-primary/40',
+  ready: 'bg-success/15 text-success border-success/40',
   error: 'bg-destructive/15 text-destructive border-destructive/40',
 };
 
@@ -138,8 +139,8 @@ export function RiskChip({ level }: { level: SesionRiskLevel }) {
     level === 'alto'
       ? 'bg-destructive/15 text-destructive border-destructive/40'
       : level === 'medio'
-        ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
-        : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
+        ? 'bg-warning/15 text-warning border-warning/40'
+        : 'bg-success/15 text-success border-success/40';
   return (
     <span className={cn('inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border', cls)}>
       Riesgo: {level === 'alto' ? 'Alto' : level === 'medio' ? 'Medio' : 'Bajo'}
@@ -152,8 +153,8 @@ export function UrgencyChip({ level }: { level: SesionUrgencyLevel }) {
     level === 'alta'
       ? 'bg-destructive/15 text-destructive border-destructive/40'
       : level === 'media'
-        ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
-        : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
+        ? 'bg-warning/15 text-warning border-warning/40'
+        : 'bg-success/15 text-success border-success/40';
   return (
     <span className={cn('inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border', cls)}>
       Urgencia: {level === 'alta' ? 'Alta' : level === 'media' ? 'Media' : 'Baja'}
@@ -166,10 +167,10 @@ export function ImpactChip({ level }: { level: SesionImpactLevel }) {
     level === 'alto'
       ? 'bg-destructive/20 text-destructive border-destructive/50'
       : level === 'medio_alto'
-        ? 'bg-orange-500/15 text-orange-300 border-orange-500/40'
+        ? 'bg-destructive/10 text-destructive border-destructive/30'
         : level === 'medio'
-          ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
-          : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
+          ? 'bg-warning/15 text-warning border-warning/40'
+          : 'bg-success/15 text-success border-success/40';
   const label =
     level === 'alto'
       ? 'Alto'
