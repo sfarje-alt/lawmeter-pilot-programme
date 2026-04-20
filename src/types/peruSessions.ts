@@ -14,7 +14,6 @@ export type SesionEditorialState =
   | 'nueva'
   | 'en_revision'
   | 'pineada'
-  | 'en_seguimiento'
   | 'archivada';
 
 export type SesionAgendaState = 'lista' | 'pendiente' | 'error';
@@ -85,8 +84,12 @@ export interface PeruSession {
   // ── Nuevo workflow editorial single-profile ────────────────────────────────
   editorial_state?: SesionEditorialState;
   is_pinned?: boolean;        // alias semántico de is_pinned_for_publication
-  is_follow_up?: boolean;     // independiente del pin
+  /** @deprecated estado eliminado del flujo editorial */
+  is_follow_up?: boolean;
   is_archived?: boolean;      // archivado manual
+
+  // Análisis acumulado del chatbot sobre esta sesión (se actualiza con cada interacción)
+  chatbot_summary?: string;
 
   agenda_state?: SesionAgendaState;
   video_state?: SesionVideoState;
