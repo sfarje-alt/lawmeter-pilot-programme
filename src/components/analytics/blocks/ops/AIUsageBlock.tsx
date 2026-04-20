@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AnalyticsBlock, ChartTooltip } from "../shared";
+import { AnalyticsBlock, ChartTooltip } from "../../shared";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
 import { Bot, FileAudio } from "lucide-react";
 import {
