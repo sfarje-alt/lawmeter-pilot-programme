@@ -755,30 +755,10 @@ function Section6ProcesamientoIA({
             </div>
           )}
 
-          {tState === 'lista' && transcript && (
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2 text-sm text-success">
-                <CheckCircle2 className="h-4 w-4" />
-                Transcripción lista
-              </div>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar en la transcripción…"
-                  className="pl-8 h-8 text-xs"
-                />
-              </div>
-              <div className="rounded-md bg-background/50 border border-border/50 p-3 max-h-64 overflow-y-auto text-xs whitespace-pre-wrap text-foreground/85">
-                {filteredTranscript}
-              </div>
-            </div>
-          )}
-
-          {tState === 'lista' && !transcript && (
-            <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
-              No hay transcripción disponible cargada en este prototipo.
+          {tState === 'lista' && (
+            <div className="flex items-center gap-2 text-sm text-success pt-1">
+              <CheckCircle2 className="h-4 w-4" />
+              Transcripción lista — disponible en la pestaña <strong>Transcripción</strong>.
             </div>
           )}
         </div>
