@@ -358,49 +358,72 @@ function Section1ResumenLabels({
   );
 }
 
-// ── 2. Campos de enrichment (placeholders editables) ───────────────────────
-function Section2Enrichment({ session }: { session: PeruSession }) {
+// ── Clasificatoria IA (3er tab) — desbloqueada al completar transcripción ──
+function SectionClasificatoriaIA({
+  session,
+  unlocked,
+  commissionColor,
+}: {
+  session: PeruSession;
+  unlocked: boolean;
+  commissionColor: { bg: string; ring: string; text: string };
+}) {
   const fields = [
-    {
-      label: 'Etiquetas internas adicionales',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: false,
-    },
-    {
-      label: 'Impacto regulatorio',
-      placeholder: 'Se completa al solicitar la transcripción',
-      multiline: true,
-    },
-    {
-      label: 'Áreas afectadas',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: false,
-    },
-    {
-      label: 'Prioridad interna',
-      placeholder: 'Definir manualmente o esperar al enrichment',
-      multiline: false,
-    },
-    {
-      label: 'Comentario regulatorio',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: true,
-    },
-    {
-      label: 'Próximo paso sugerido',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: false,
-    },
+    { label: 'Etiquetas internas adicionales', multiline: false },
+    { label: 'Impacto regulatorio', multiline: true },
+    { label: 'Áreas afectadas', multiline: false },
+    { label: 'Prioridad interna', multiline: false },
+    { label: 'Comentario regulatorio', multiline: true },
+    { label: 'Próximo paso sugerido', multiline: false },
   ];
 
   const [values, setValues] = useState<Record<string, string>>({});
 
+  if (!unlocked) {
+    return (
+      <SectionShell
+        title="Clasificatoria IA"
+        icon={<Sparkles className="h-3.5 w-3.5" />}
+        hint="Esta capa se libera automáticamente cuando se completa la transcripción. La IA analiza la sesión y la clasifica."
+      >
+        <div
+          className="rounded-md border-2 border-dashed p-5 text-center space-y-2"
+          style={{ borderColor: commissionColor.ring, backgroundColor: `${commissionColor.bg}10` }}
+        >
+          <Sparkles
+            className="h-8 w-8 mx-auto"
+            style={{ color: commissionColor.bg }}
+          />
+          <p className="text-sm font-semibold text-foreground">
+            Pendiente de transcripción
+          </p>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            Solicita la transcripción desde la pestaña <strong>Procesamiento IA</strong>.
+            Una vez lista, la IA analizará el contenido y completará automáticamente
+            etiquetas, impacto regulatorio, áreas afectadas, comentario y próximo paso.
+          </p>
+        </div>
+      </SectionShell>
+    );
+  }
+
   return (
     <SectionShell
-      title="2 · Campos de enrichment"
+      title="Clasificatoria IA"
       icon={<Sparkles className="h-3.5 w-3.5" />}
-      hint="Se completan automáticamente al solicitar la transcripción (un solo acto). Editables manualmente."
+      hint="Generada por IA a partir de la transcripción. Editable por el equipo legal."
     >
+      <div
+        className="rounded-md border p-2.5 mb-3 text-[11px] flex items-center gap-2"
+        style={{
+          backgroundColor: `${commissionColor.bg}15`,
+          borderColor: commissionColor.ring,
+          color: 'hsl(var(--foreground))',
+        }}
+      >
+        <CheckCircle2 className="h-3.5 w-3.5" style={{ color: commissionColor.bg }} />
+        Clasificación generada a partir de la transcripción de la sesión.
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {fields.map((f) => (
           <div
@@ -416,8 +439,8 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
                 onChange={(e) =>
                   setValues((p) => ({ ...p, [f.label]: e.target.value }))
                 }
-                placeholder={f.placeholder}
-                className="text-xs min-h-[60px] bg-muted/20 border-dashed border-border/50"
+                placeholder="Generado por IA — editable"
+                className="text-xs min-h-[60px] bg-muted/20"
               />
             ) : (
               <Input
@@ -425,8 +448,8 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
                 onChange={(e) =>
                   setValues((p) => ({ ...p, [f.label]: e.target.value }))
                 }
-                placeholder={f.placeholder}
-                className="h-8 text-xs bg-muted/20 border-dashed border-border/50"
+                placeholder="Generado por IA — editable"
+                className="h-8 text-xs bg-muted/20"
               />
             )}
           </div>
