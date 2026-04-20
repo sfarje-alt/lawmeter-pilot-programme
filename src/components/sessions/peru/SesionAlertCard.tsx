@@ -1,5 +1,6 @@
 // Tarjeta minimal de Sesión — mismo lenguaje visual que la bandeja de Alertas Regulatorias.
-// Solo muestra datos source-backed (JSON sesión + markdown agenda).
+// Solo muestra clasificación source-backed y estados operativos clave.
+// Sin chips de Agenda lista / Video vinculado (eso vive en Fuente y evidencia).
 // Acciones: Pin / Archivar.
 
 import { Card } from '@/components/ui/card';
@@ -10,16 +11,11 @@ import {
   ArchiveRestore,
   Building2,
   Clock,
-  FileText,
   Tag,
+  Gavel,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  AgendaChip,
-  ChatbotChip,
-  TranscriptionChip,
-  VideoChip,
-} from './SesionChips';
+import { ChatbotChip, TranscriptionChip } from './SesionChips';
 import type { PeruSession } from '@/types/peruSessions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -32,6 +28,17 @@ interface Props {
   onOpen: (s: PeruSession) => void;
 }
 
+// Detecta el tipo de actuación parlamentaria desde el texto del ítem.
+function detectActionType(title: string): string | null {
+  const t = title.toLowerCase();
+  if (t.includes('votación') && t.includes('debate')) return 'Debate y votación';
+  if (t.includes('votación')) return 'Votación';
+  if (t.includes('debate')) return 'Debate';
+  if (t.includes('predictamen')) return 'Predictamen';
+  if (t.includes('presentación') || t.includes('sustentar')) return 'Presentación';
+  return null;
+}
+
 export function SesionAlertCard({
   session,
   isUnread,
@@ -42,6 +49,7 @@ export function SesionAlertCard({
   const item = session.agenda_item;
   const isPinned = !!session.is_pinned;
   const isArchived = !!session.is_archived;
+  const actionType = item ? detectActionType(item.title) : null;
 
   const dateLabel = session.scheduled_at
     ? format(new Date(session.scheduled_at), "d MMM yyyy · HH:mm 'h'", { locale: es })
@@ -61,7 +69,6 @@ export function SesionAlertCard({
     <Card
       className={cn(
         'p-3 border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full min-w-0 max-w-full overflow-hidden',
-        // Bandeja: brillo sutil tipo "correo no abierto" cuando es nueva.
         isUnread && !isArchived
           ? 'bg-gradient-to-br from-primary/[0.08] via-card to-card border-l-2 border-l-primary/60 shadow-[inset_0_1px_0_0_hsl(var(--primary)/0.12)]'
           : 'bg-card',
@@ -78,9 +85,12 @@ export function SesionAlertCard({
               Ítem {item.item_number}
             </Badge>
           )}
-          <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground border-border/60">
-            {session.source}
-          </Badge>
+          {actionType && (
+            <Badge variant="secondary" className="text-[10px] py-0 bg-muted/50 text-muted-foreground">
+              <Gavel className="h-2.5 w-2.5 mr-1" />
+              {actionType}
+            </Badge>
+          )}
           {isUnread && !isArchived && (
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" aria-label="Nueva" />
           )}
@@ -128,7 +138,7 @@ export function SesionAlertCard({
         <span className="truncate">Comisión de {session.commission_name}</span>
       </div>
 
-      {/* Área temática + bills (de la agenda) */}
+      {/* Materia temática + proyectos vinculados */}
       {(item?.thematic_area || (item?.bill_numbers?.length ?? 0) > 0) && (
         <div className="flex items-center gap-1.5 flex-wrap mb-2">
           {item?.thematic_area && (
@@ -150,26 +160,18 @@ export function SesionAlertCard({
         </div>
       )}
 
-      {/* Chips de estado de proceso (workflow operativo) */}
+      {/* Solo chips de IA (transcripción + chatbot) */}
       <div className="flex items-center gap-1 flex-wrap mb-2">
-        <AgendaChip state={session.agenda_state ?? 'lista'} />
-        <VideoChip state={session.video_state ?? 'pendiente'} />
         <TranscriptionChip state={session.transcription_state ?? 'no_solicitada'} />
         <ChatbotChip state={session.chatbot_state ?? 'no_solicitado'} />
       </div>
 
-      {/* Footer — fecha + source file */}
+      {/* Footer — fecha */}
       <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-border/30">
         <div className="flex items-center gap-1">
           <Clock className="h-3 w-3" />
           <span>{dateLabel}</span>
         </div>
-        {session.source_file_name && (
-          <div className="flex items-center gap-1 ml-auto truncate min-w-0">
-            <FileText className="h-3 w-3 shrink-0" />
-            <span className="truncate font-mono text-[10px]">{session.source_file_name}</span>
-          </div>
-        )}
       </div>
     </Card>
   );

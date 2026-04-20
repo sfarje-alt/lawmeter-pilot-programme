@@ -1,7 +1,8 @@
 // Chatbot global persistente para el workspace de Sesiones.
 // Lee SOLO de las alertas habilitadas (chatbot_state === 'listo').
 // Responde a partir de metadata + agenda + transcripción cuando exista.
-// Es UI prototipo: las respuestas son simuladas a partir de los campos source-backed.
+// Ofrece quick prompts para enrichment, transcripción y agenda.
+// Es UI prototipo: respuestas derivadas estrictamente de campos source-backed.
 
 import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
@@ -9,6 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
 import {
   Sparkles,
   Send,
@@ -28,11 +35,35 @@ interface ChatMessage {
   content: string;
 }
 
-const SUGGESTED = [
-  '¿Qué proyectos están en agenda?',
-  '¿Qué sesiones tienen transcripción lista?',
-  'Resumen de los ítems de la sesión',
-];
+// Prompts agrupados por intención
+const PROMPTS = {
+  enrichment: [
+    'Sugerir etiquetas para esta alerta',
+    'Agregar etiquetas internas',
+    'Proponer impacto regulatorio',
+    'Sugerir áreas afectadas',
+    'Redactar comentario regulatorio',
+    'Sugerir próximo paso',
+  ],
+  transcription: [
+    'Resumir la transcripción',
+    'Extraer puntos clave de la transcripción',
+    '¿Qué se dijo sobre el proyecto?',
+    '¿Qué compromisos o anuncios aparecen?',
+  ],
+  agenda: [
+    'Explicar este punto del orden del día',
+    '¿Qué proyectos están vinculados a este ítem?',
+    'Comparar este ítem con otros del orden del día',
+    '¿Qué tipo de actuación parlamentaria es esta?',
+  ],
+  scope: [
+    '¿Qué alertas están habilitadas para chatbot?',
+    '¿Qué alertas ya están listas para usar con IA?',
+    'Comparar las alertas habilitadas',
+    'Resumir todas las alertas listas',
+  ],
+};
 
 export function SesionesGlobalChatbot({ sessions }: Props) {
   const [open, setOpen] = useState(false);
@@ -62,8 +93,27 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
     setDraft('');
   };
 
+  const renderPromptGroup = (label: string, list: string[]) => (
+    <div className="space-y-1.5">
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {list.map((p) => (
+          <button
+            key={p}
+            onClick={() => send(p)}
+            className="text-[10.5px] px-2 py-1 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors text-left"
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-[360px] max-w-[calc(100vw-2rem)]">
+    <div className="fixed bottom-4 right-4 z-40 w-[380px] max-w-[calc(100vw-2rem)]">
       <Card className="bg-card/95 backdrop-blur border-border/60 shadow-xl overflow-hidden">
         {/* Header */}
         <button
@@ -94,17 +144,36 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
 
         {open && (
           <div className="border-t border-border/50">
-            {/* Helper */}
-            <div className="px-4 py-2 bg-muted/30 border-b border-border/50">
+            {/* Helper / scope */}
+            <div className="px-4 py-2 bg-muted/30 border-b border-border/50 space-y-1">
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Responde solo a partir de las alertas habilitadas. Las respuestas
-                mejoran cuando existe transcripción cargada.
+                Responde solo a partir de las alertas habilitadas. Mejora cuando hay
+                transcripción cargada.
               </p>
+              {enabled.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {enabled.map((s) => (
+                    <Badge
+                      key={s.id}
+                      variant="outline"
+                      className="text-[10px] font-mono border-border/60"
+                      title={
+                        s.transcription_state === 'lista'
+                          ? 'con transcripción'
+                          : 'solo metadata + agenda'
+                      }
+                    >
+                      Ítem {s.agenda_item?.item_number ?? '—'}
+                      {s.transcription_state === 'lista' ? ' · T' : ''}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Mensajes */}
-            <ScrollArea className="h-[280px]">
-              <div className="p-4 space-y-3">
+            <ScrollArea className="h-[300px]">
+              <div className="p-3 space-y-3">
                 {messages.length === 0 && (
                   <div className="space-y-3">
                     {enabled.length === 0 ? (
@@ -112,25 +181,38 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                         <MessageSquare className="h-5 w-5 mx-auto mb-2 opacity-50" />
                         No hay alertas habilitadas para chatbot.
                         <br />
-                        Habilita una desde la pestaña <strong>IA</strong> de cualquier sesión.
+                        Habilita una desde la sección{' '}
+                        <strong>Procesamiento IA</strong>.
                       </div>
                     ) : (
-                      <>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">
-                          Sugerencias
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {SUGGESTED.map((s) => (
-                            <button
-                              key={s}
-                              onClick={() => send(s)}
-                              className="text-[11px] px-2 py-1 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors"
-                            >
-                              {s}
-                            </button>
-                          ))}
-                        </div>
-                      </>
+                      <Tabs defaultValue="enrichment">
+                        <TabsList className="grid grid-cols-4 h-7 bg-muted/40">
+                          <TabsTrigger value="enrichment" className="text-[10px] px-1">
+                            Enrichment
+                          </TabsTrigger>
+                          <TabsTrigger value="transcription" className="text-[10px] px-1">
+                            Transcripción
+                          </TabsTrigger>
+                          <TabsTrigger value="agenda" className="text-[10px] px-1">
+                            Agenda
+                          </TabsTrigger>
+                          <TabsTrigger value="scope" className="text-[10px] px-1">
+                            Alertas
+                          </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="enrichment" className="mt-2">
+                          {renderPromptGroup('Para enriquecer la alerta', PROMPTS.enrichment)}
+                        </TabsContent>
+                        <TabsContent value="transcription" className="mt-2">
+                          {renderPromptGroup('Sobre la transcripción', PROMPTS.transcription)}
+                        </TabsContent>
+                        <TabsContent value="agenda" className="mt-2">
+                          {renderPromptGroup('Sobre el orden del día', PROMPTS.agenda)}
+                        </TabsContent>
+                        <TabsContent value="scope" className="mt-2">
+                          {renderPromptGroup('Estado de las alertas', PROMPTS.scope)}
+                        </TabsContent>
+                      </Tabs>
                     )}
                   </div>
                 )}
@@ -179,25 +261,6 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                 <Send className="h-3.5 w-3.5" />
               </Button>
             </form>
-
-            {enabled.length > 0 && (
-              <div className="px-3 py-2 border-t border-border/50 bg-muted/20">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
-                  Alertas habilitadas
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {enabled.map((s) => (
-                    <Badge
-                      key={s.id}
-                      variant="outline"
-                      className="text-[10px] font-mono border-border/60"
-                    >
-                      Ítem {s.agenda_item?.item_number ?? '—'}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </Card>
@@ -212,33 +275,83 @@ function buildAnswer(
   withTranscript: PeruSession[],
 ): string {
   if (enabled.length === 0) {
-    return 'No hay alertas habilitadas para chatbot. Habilita al menos una sesión desde su pestaña IA.';
+    return 'No hay alertas habilitadas para chatbot. Habilita al menos una sesión desde su sección de Procesamiento IA.';
   }
 
   const q = question.toLowerCase();
   const lines: string[] = [];
 
-  if (q.includes('proyecto') || q.includes('bill')) {
-    const bills = new Set<string>();
-    enabled.forEach((s) => s.agenda_item?.bill_numbers?.forEach((b) => bills.add(b)));
-    if (bills.size === 0) return 'Las alertas habilitadas no tienen proyectos vinculados en su agenda.';
-    lines.push('Proyectos vinculados a las alertas habilitadas:');
-    bills.forEach((b) => lines.push(`• ${b}`));
-    return lines.join('\n');
-  }
-
-  if (q.includes('transcripción') || q.includes('transcripcion')) {
-    if (withTranscript.length === 0) {
-      return 'Ninguna alerta habilitada tiene transcripción cargada en este momento.';
-    }
-    lines.push(`${withTranscript.length} alerta(s) con transcripción lista:`);
-    withTranscript.forEach((s) =>
-      lines.push(`• Ítem ${s.agenda_item?.item_number ?? '—'} — ${s.commission_name}`),
+  // Enrichment helpers
+  if (q.includes('etiqueta') || q.includes('label') || q.includes('clasifi')) {
+    lines.push('Etiquetas sugeridas a partir de la agenda source-backed:');
+    enabled.forEach((s) => {
+      const it = s.agenda_item;
+      if (!it) return;
+      const tags = [it.thematic_area, ...(it.bill_numbers ?? [])].filter(Boolean);
+      lines.push(`• Ítem ${it.item_number} → ${tags.join(' · ')}`);
+    });
+    lines.push('');
+    lines.push(
+      'Sugerencia: tipos de actuación (Debate, Votación, Predictamen, Presentación) se infieren del título del ítem.',
     );
     return lines.join('\n');
   }
 
-  if (q.includes('resumen') || q.includes('agenda') || q.includes('item') || q.includes('ítem')) {
+  if (q.includes('impacto') || q.includes('regulatorio')) {
+    return [
+      'No puedo inferir impacto regulatorio sin enrichment cargado.',
+      '',
+      'Lo que sí está disponible para apoyar el análisis:',
+      ...enabled.map(
+        (s) =>
+          `• Ítem ${s.agenda_item?.item_number ?? '—'} · ${s.agenda_item?.thematic_area ?? '—'} · proyectos: ${s.agenda_item?.bill_numbers?.join(', ') || '—'}`,
+      ),
+    ].join('\n');
+  }
+
+  if (q.includes('área') || q.includes('areas')) {
+    const areas = new Set<string>();
+    enabled.forEach((s) => s.agenda_item?.thematic_area && areas.add(s.agenda_item.thematic_area));
+    if (areas.size === 0) return 'Sin áreas temáticas en las alertas habilitadas.';
+    lines.push('Áreas temáticas presentes en las alertas habilitadas:');
+    areas.forEach((a) => lines.push(`• ${a}`));
+    return lines.join('\n');
+  }
+
+  if (q.includes('próximo') || q.includes('proximo') || q.includes('paso') || q.includes('comentario')) {
+    return [
+      'Sugerencia editorial basada en estado actual:',
+      ...enabled.map((s) => {
+        const t = s.transcription_state ?? 'no_solicitada';
+        const action =
+          t === 'lista'
+            ? 'revisar la transcripción y redactar comentario regulatorio'
+            : t === 'procesando' || t === 'en_cola'
+              ? 'esperar la transcripción para enriquecer'
+              : 'solicitar transcripción para análisis profundo';
+        return `• Ítem ${s.agenda_item?.item_number ?? '—'} → ${action}`;
+      }),
+    ].join('\n');
+  }
+
+  // Transcription
+  if (q.includes('transcripción') || q.includes('transcripcion') || q.includes('resumir') || q.includes('compromiso')) {
+    if (withTranscript.length === 0) {
+      return 'Ninguna alerta habilitada tiene transcripción cargada en este momento.';
+    }
+    lines.push(`${withTranscript.length} alerta(s) con transcripción lista:`);
+    withTranscript.forEach((s) => {
+      const it = s.agenda_item;
+      lines.push(`• Ítem ${it?.item_number ?? '—'} — ${it?.title ?? ''}`);
+      const text = s.recording?.transcription_text ?? '';
+      const preview = text.split('\n').slice(0, 2).join(' ').slice(0, 220);
+      if (preview) lines.push(`  ${preview}…`);
+    });
+    return lines.join('\n');
+  }
+
+  // Agenda / orden del día
+  if (q.includes('agenda') || q.includes('orden') || q.includes('ítem') || q.includes('item') || q.includes('explicar')) {
     lines.push('Ítems de agenda en las alertas habilitadas:');
     enabled.forEach((s) => {
       const it = s.agenda_item;
@@ -250,7 +363,30 @@ function buildAnswer(
     return lines.join('\n');
   }
 
-  // Respuesta por defecto: enumerar contexto disponible
+  // Bills
+  if (q.includes('proyecto') || q.includes('bill')) {
+    const bills = new Set<string>();
+    enabled.forEach((s) => s.agenda_item?.bill_numbers?.forEach((b) => bills.add(b)));
+    if (bills.size === 0) return 'Las alertas habilitadas no tienen proyectos vinculados en su agenda.';
+    lines.push('Proyectos vinculados a las alertas habilitadas:');
+    bills.forEach((b) => lines.push(`• ${b}`));
+    return lines.join('\n');
+  }
+
+  // Scope: qué está habilitado / listo
+  if (q.includes('habilitad') || q.includes('listas') || q.includes('estado')) {
+    lines.push(
+      `${enabled.length} alerta(s) habilitada(s) para chatbot · ${withTranscript.length} con transcripción.`,
+    );
+    enabled.forEach((s) =>
+      lines.push(
+        `• Ítem ${s.agenda_item?.item_number ?? '—'} — transcripción: ${s.transcription_state ?? 'no_solicitada'}`,
+      ),
+    );
+    return lines.join('\n');
+  }
+
+  // Default
   lines.push(
     `Tengo contexto de ${enabled.length} alerta(s) habilitada(s)` +
       (withTranscript.length > 0
@@ -259,7 +395,7 @@ function buildAnswer(
   );
   lines.push('');
   lines.push(
-    'Puedo responder sobre: ítems de agenda, proyectos vinculados, comisión, fechas y estado de transcripción/chatbot.',
+    'Puedo ayudar con: enrichment (etiquetas, impacto, comentarios), transcripción, orden del día y estado de las alertas.',
   );
   return lines.join('\n');
 }

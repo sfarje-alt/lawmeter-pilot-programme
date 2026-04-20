@@ -1,14 +1,21 @@
-// Workspace de Sesiones — mismo patrón visual que la bandeja de Alertas Regulatorias.
-// Layout: kanban de 3 columnas (Nuevas / Procesando IA / Listas) usando KanbanColumn.
-// Acciones por alerta: Pin / Archivar.
-// Toggle "Archivadas" muestra una vista única (grid) de archivadas.
-// Chatbot global persistente en la esquina inferior derecha.
+// Workspace de Sesiones — bandeja editorial con dos columnas:
+//   LEFT  · Bandeja                       (todas las alertas activas)
+//   RIGHT · Sesiones preparadas           (En procesamiento + Listas)
+// Pineadas flotan arriba en cualquier columna. Archivadas se ven con el toggle.
+// Chatbot global persistente.
 
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Inbox as InboxIcon, Pin, Sparkles, CheckCircle2, Mail } from 'lucide-react';
+import {
+  Inbox as InboxIcon,
+  Pin,
+  Sparkles,
+  CheckCircle2,
+  Mail,
+  Loader2,
+} from 'lucide-react';
 import { useSesionesWorkspace } from '@/hooks/useSesionesWorkspace';
 import {
   SesionesFilterBar,
@@ -24,14 +31,6 @@ import type { PeruSession } from '@/types/peruSessions';
 interface Props {
   initialSessionId?: string | null;
 }
-
-type SessionKanbanStage = 'nuevas' | 'procesando' | 'listas';
-
-const KANBAN_COLUMNS: { id: SessionKanbanStage; label: string; color: string }[] = [
-  { id: 'nuevas', label: 'Nuevas', color: 'bg-primary' },
-  { id: 'procesando', label: 'Procesando IA', color: 'bg-blue-500' },
-  { id: 'listas', label: 'Listas', color: 'bg-success' },
-];
 
 export function SesionesWorkspace({ initialSessionId }: Props) {
   const {
@@ -78,7 +77,6 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
     [visibleSessions, filters],
   );
 
-  // Counts globales
   const archivedCount = useMemo(
     () => sessions.filter((s) => s.is_archived).length,
     [sessions],
@@ -98,31 +96,25 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
       return db - da;
     });
 
-  // ── Agrupación por columna kanban ────────────────────────────────────────
-  const alertsByStage = useMemo(() => {
-    const grouped: Record<SessionKanbanStage, PeruSession[]> = {
-      nuevas: [],
-      procesando: [],
-      listas: [],
-    };
+  const isProcessing = (s: PeruSession) => {
+    const t = s.transcription_state ?? 'no_solicitada';
+    const c = s.chatbot_state ?? 'no_solicitado';
+    return ['en_cola', 'procesando'].includes(t) || ['en_cola', 'procesando'].includes(c);
+  };
+  const isReady = (s: PeruSession) => {
+    const t = s.transcription_state ?? 'no_solicitada';
+    const c = s.chatbot_state ?? 'no_solicitado';
+    return t === 'lista' || c === 'listo';
+  };
 
-    filtered.forEach((s) => {
-      const t = s.transcription_state ?? 'no_solicitada';
-      const c = s.chatbot_state ?? 'no_solicitado';
-      const isProcessing =
-        ['en_cola', 'procesando'].includes(t) || ['en_cola', 'procesando'].includes(c);
-      const isReady = t === 'lista' || c === 'listo';
-
-      if (isReady) grouped.listas.push(s);
-      else if (isProcessing) grouped.procesando.push(s);
-      else grouped.nuevas.push(s);
-    });
-
-    (Object.keys(grouped) as SessionKanbanStage[]).forEach((k) => {
-      grouped[k] = sortAlerts(grouped[k]);
-    });
-
-    return grouped;
+  // ── Agrupación por columna ────────────────────────────────────────────────
+  const grouped = useMemo(() => {
+    // Bandeja = todas las alertas activas (no archivadas)
+    const bandeja = sortAlerts(filtered);
+    // Sesiones preparadas = procesando + listas (subconjunto de la bandeja)
+    const procesando = sortAlerts(filtered.filter(isProcessing));
+    const listas = sortAlerts(filtered.filter((s) => isReady(s) && !isProcessing(s)));
+    return { bandeja, procesando, listas };
   }, [filtered, openedIds]);
 
   const handleOpen = (s: PeruSession) => {
@@ -135,12 +127,11 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
     [visibleSessions, openedIds],
   );
 
-  // Vista archivadas (grid)
   const archivedView = filters.showArchived;
 
   return (
     <div className="space-y-4">
-      {/* ── KPI Cards (mismo diseño que BillsInbox) ─────────────────────── */}
+      {/* ── KPI Cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="glass-card border-border/30">
           <CardContent className="pt-3 pb-3">
@@ -173,8 +164,8 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
         <Card className="glass-card border-border/30">
           <CardContent className="pt-3 pb-3">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Sparkles className="h-4 w-4 text-blue-400" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Loader2 className="h-4 w-4 text-primary" />
               </div>
               <div>
                 <div className="text-xl font-bold text-foreground">{stats.processingAI}</div>
@@ -213,7 +204,7 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
         </Card>
       </div>
 
-      {/* ── Filtros (mismo patrón compacto que BillsFilterBar) ──────────── */}
+      {/* ── Filtros ─────────────────────────────────────────────────────── */}
       <SesionesFilterBar
         filters={filters}
         onChange={setFilters}
@@ -222,7 +213,7 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
         archivedCount={archivedCount}
       />
 
-      {/* ── Kanban 3 columnas (o grid de archivadas) ───────────────────── */}
+      {/* ── Layout 2 columnas (o vista de archivadas) ───────────────────── */}
       {archivedView ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filtered.length === 0 ? (
@@ -243,19 +234,28 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
           )}
         </div>
       ) : (
-        <div className="flex gap-4 w-full">
-          {KANBAN_COLUMNS.map((col) => (
-            <SessionKanbanColumn
-              key={col.id}
-              label={col.label}
-              color={col.color}
-              alerts={alertsByStage[col.id]}
-              openedIds={openedIds}
-              onAlertClick={handleOpen}
-              onTogglePin={togglePin}
-              onArchive={archiveSession}
-            />
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* LEFT — Bandeja */}
+          <BandejaColumn
+            label="Bandeja"
+            color="bg-primary"
+            alerts={grouped.bandeja}
+            openedIds={openedIds}
+            onAlertClick={handleOpen}
+            onTogglePin={togglePin}
+            onArchive={archiveSession}
+            emptyText="Bandeja vacía. Las nuevas sesiones aparecerán aquí."
+          />
+
+          {/* RIGHT — Sesiones preparadas (2 secciones internas) */}
+          <PreparadasColumn
+            procesando={grouped.procesando}
+            listas={grouped.listas}
+            openedIds={openedIds}
+            onAlertClick={handleOpen}
+            onTogglePin={togglePin}
+            onArchive={archiveSession}
+          />
         </div>
       )}
 
@@ -276,8 +276,8 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
   );
 }
 
-// ── Columna kanban (réplica de KanbanColumn de Inbox) ─────────────────────
-function SessionKanbanColumn({
+// ── Columna Bandeja ─────────────────────────────────────────────────────────
+function BandejaColumn({
   label,
   color,
   alerts,
@@ -285,6 +285,7 @@ function SessionKanbanColumn({
   onAlertClick,
   onTogglePin,
   onArchive,
+  emptyText,
 }: {
   label: string;
   color: string;
@@ -293,10 +294,10 @@ function SessionKanbanColumn({
   onAlertClick: (s: PeruSession) => void;
   onTogglePin: (id: string) => void;
   onArchive: (id: string) => void;
+  emptyText: string;
 }) {
   return (
-    <div className="flex flex-col flex-1 min-w-0 basis-0 bg-card/30 rounded-lg border border-border/30 overflow-hidden">
-      {/* Header */}
+    <div className="flex flex-col min-w-0 bg-card/30 rounded-lg border border-border/30 overflow-hidden">
       <div className="flex items-center gap-2 p-3 border-b border-border/30">
         <div className={`w-2 h-2 rounded-full ${color}`} />
         <h3 className="text-sm font-medium text-foreground truncate">{label}</h3>
@@ -304,18 +305,16 @@ function SessionKanbanColumn({
           {alerts.length}
         </Badge>
       </div>
-
-      {/* Content */}
-      <ScrollArea className="flex-1 p-2 w-full [&>[data-radix-scroll-area-viewport]]:!block [&>[data-radix-scroll-area-viewport]>div]:!block [&>[data-radix-scroll-area-viewport]>div]:!w-full">
+      <ScrollArea className="flex-1 p-2 max-h-[calc(100vh-22rem)] [&>[data-radix-scroll-area-viewport]>div]:!block [&>[data-radix-scroll-area-viewport]>div]:!w-full">
         <div className="flex flex-col gap-2 w-full min-w-0 max-w-full">
           {alerts.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground text-sm">
-              No hay sesiones
+            <div className="p-6 text-center text-muted-foreground text-xs">
+              {emptyText}
             </div>
           ) : (
             alerts.map((s) => (
               <SesionAlertCard
-                key={`${s.id}-${s.updated_at ?? ''}`}
+                key={`bandeja-${s.id}-${s.updated_at ?? ''}`}
                 session={s}
                 isUnread={!openedIds.has(s.id)}
                 onTogglePin={onTogglePin}
@@ -323,6 +322,90 @@ function SessionKanbanColumn({
                 onOpen={onAlertClick}
               />
             ))
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+// ── Columna Sesiones preparadas (2 secciones internas) ─────────────────────
+function PreparadasColumn({
+  procesando,
+  listas,
+  openedIds,
+  onAlertClick,
+  onTogglePin,
+  onArchive,
+}: {
+  procesando: PeruSession[];
+  listas: PeruSession[];
+  openedIds: Set<string>;
+  onAlertClick: (s: PeruSession) => void;
+  onTogglePin: (id: string) => void;
+  onArchive: (id: string) => void;
+}) {
+  const renderGroup = (
+    title: string,
+    icon: React.ReactNode,
+    color: string,
+    alerts: PeruSession[],
+    emptyText: string,
+  ) => (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <div className={`w-2 h-2 rounded-full ${color}`} />
+        {icon}
+        <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">{title}</h4>
+        <Badge variant="secondary" className="ml-auto text-[10px] h-5">
+          {alerts.length}
+        </Badge>
+      </div>
+      <div className="flex flex-col gap-2">
+        {alerts.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground text-xs rounded-md border border-dashed border-border/40 bg-muted/10">
+            {emptyText}
+          </div>
+        ) : (
+          alerts.map((s) => (
+            <SesionAlertCard
+              key={`prep-${s.id}-${s.updated_at ?? ''}`}
+              session={s}
+              isUnread={!openedIds.has(s.id)}
+              onTogglePin={onTogglePin}
+              onArchive={onArchive}
+              onOpen={onAlertClick}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col min-w-0 bg-card/30 rounded-lg border border-border/30 overflow-hidden">
+      <div className="flex items-center gap-2 p-3 border-b border-border/30">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        <h3 className="text-sm font-medium text-foreground truncate">Sesiones preparadas</h3>
+        <Badge variant="secondary" className="ml-auto text-xs">
+          {procesando.length + listas.length}
+        </Badge>
+      </div>
+      <ScrollArea className="flex-1 p-3 max-h-[calc(100vh-22rem)] [&>[data-radix-scroll-area-viewport]>div]:!block [&>[data-radix-scroll-area-viewport]>div]:!w-full">
+        <div className="flex flex-col gap-4">
+          {renderGroup(
+            'En procesamiento',
+            <Loader2 className="h-3 w-3 text-primary" />,
+            'bg-primary',
+            procesando,
+            'No hay alertas en procesamiento.',
+          )}
+          {renderGroup(
+            'Listas',
+            <CheckCircle2 className="h-3 w-3 text-success" />,
+            'bg-success',
+            listas,
+            'No hay alertas listas.',
           )}
         </div>
       </ScrollArea>
