@@ -1,11 +1,13 @@
 // Hook de workspace editorial para Sesiones (single-profile).
-// Capa por encima de `usePeruSessions` que añade estado editorial
-// (pin, follow-up, archivo) e independiza estados de IA (transcripción / chatbot).
-// Usa demo seed cuando no hay datos en BD y persiste estado editorial en localStorage.
+// Persiste el estado editorial (pin, follow-up, archivado, IA, revisión legal)
+// en Supabase (tabla `session_editorial_state`) cuando hay usuario autenticado,
+// y cae a localStorage como fallback (modo demo / no autenticado).
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { usePeruSessions } from './usePeruSessions';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { SESIONES_DEMO_ALERTS } from '@/data/sesionesDemoAlerts';
 import type {
   PeruSession,
@@ -68,6 +70,8 @@ function makeEntry(session: PeruSession): EditorialEntry {
 
 export function useSesionesWorkspace() {
   const base = usePeruSessions();
+  const { user } = useAuth();
+  const userId = user?.id;
 
   const [editorial, setEditorial] = useState<EditorialMap>(() =>
     readJSON<EditorialMap>(LS_EDITORIAL, {}),
@@ -75,8 +79,52 @@ export function useSesionesWorkspace() {
   const [legal, setLegal] = useState<LegalMap>(() =>
     readJSON<LegalMap>(LS_LEGAL, {}),
   );
+  const hydratedRef = useRef(false);
 
-  // Persistir
+  // Hidratar desde Supabase cuando hay usuario
+  useEffect(() => {
+    if (!userId) {
+      hydratedRef.current = false;
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('session_editorial_state')
+        .select('*')
+        .eq('user_id', userId);
+      if (cancelled) return;
+      if (error) {
+        console.warn('[Sesiones] No se pudo cargar estado editorial:', error.message);
+        return;
+      }
+      if (data) {
+        const nextEditorial: EditorialMap = {};
+        const nextLegal: LegalMap = {};
+        for (const row of data) {
+          nextEditorial[row.session_id] = {
+            is_pinned: !!row.is_pinned,
+            is_follow_up: !!row.is_follow_up,
+            is_archived: !!row.is_archived,
+            editorial_state: (row.editorial_state ?? 'nueva') as SesionEditorialState,
+            transcription_state: (row.transcription_state ?? 'no_solicitada') as SesionTranscriptionState,
+            chatbot_state: (row.chatbot_state ?? 'no_solicitado') as SesionChatbotState,
+          };
+          if (row.legal_review) {
+            nextLegal[row.session_id] = row.legal_review as unknown as SesionLegalReview;
+          }
+        }
+        setEditorial((prev) => ({ ...prev, ...nextEditorial }));
+        setLegal((prev) => ({ ...prev, ...nextLegal }));
+      }
+      hydratedRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  // Persistir local siempre (fallback offline / demo)
   useEffect(() => writeJSON(LS_EDITORIAL, editorial), [editorial]);
   useEffect(() => writeJSON(LS_LEGAL, legal), [legal]);
 
@@ -102,6 +150,31 @@ export function useSesionesWorkspace() {
     });
   }, [baseSessions, editorial, legal]);
 
+  // Upsert en Supabase (silencioso, no bloqueante)
+  const upsertRemote = useCallback(
+    async (sessionId: string, entry: EditorialEntry, legalReview?: SesionLegalReview) => {
+      if (!userId) return;
+      const payload = {
+        session_id: sessionId,
+        user_id: userId,
+        is_pinned: entry.is_pinned,
+        is_follow_up: entry.is_follow_up,
+        is_archived: entry.is_archived,
+        editorial_state: deriveEditorialState(entry),
+        transcription_state: entry.transcription_state,
+        chatbot_state: entry.chatbot_state,
+        ...(legalReview !== undefined ? { legal_review: legalReview as any } : {}),
+      };
+      const { error } = await supabase
+        .from('session_editorial_state')
+        .upsert(payload, { onConflict: 'session_id,user_id' });
+      if (error) {
+        console.warn('[Sesiones] No se pudo persistir estado:', error.message);
+      }
+    },
+    [userId],
+  );
+
   // Mutadores
   const mutate = useCallback(
     (sessionId: string, partial: Partial<EditorialEntry>) => {
@@ -111,10 +184,13 @@ export function useSesionesWorkspace() {
           makeEntry(
             sessions.find((s) => s.id === sessionId) ?? ({ id: sessionId } as PeruSession),
           );
-        return { ...prev, [sessionId]: { ...current, ...partial } };
+        const next = { ...current, ...partial };
+        // Persistir en background
+        upsertRemote(sessionId, next, legal[sessionId]);
+        return { ...prev, [sessionId]: next };
       });
     },
-    [sessions],
+    [sessions, upsertRemote, legal],
   );
 
   const togglePin = useCallback(
@@ -157,8 +233,6 @@ export function useSesionesWorkspace() {
       sessionId: string,
       kind: 'transcription' | 'chatbot',
     ) => {
-      const queueState = kind === 'transcription' ? 'en_cola' : 'en_cola';
-      const processing = kind === 'transcription' ? 'procesando' : 'procesando';
       const ready = kind === 'transcription' ? 'lista' : 'listo';
 
       const apply = (state: string) =>
@@ -166,14 +240,13 @@ export function useSesionesWorkspace() {
           ? { transcription_state: state as SesionTranscriptionState }
           : { chatbot_state: state as SesionChatbotState });
 
-      apply(queueState);
+      apply('en_cola');
       toast.success(
         kind === 'transcription'
           ? 'Transcripción en cola · ~20 min'
           : 'Chatbot en cola · ~20 min',
       );
-      // Demo: avanzar estados rápidamente para que el usuario vea feedback
-      setTimeout(() => apply(processing), 1200);
+      setTimeout(() => apply('procesando'), 1200);
       setTimeout(() => apply(ready), 4500);
     },
     [mutate],
@@ -192,8 +265,12 @@ export function useSesionesWorkspace() {
   const updateLegalReview = useCallback(
     (sessionId: string, review: SesionLegalReview) => {
       setLegal((prev) => ({ ...prev, [sessionId]: review }));
+      // Persistir junto al estado editorial actual
+      const entry = editorial[sessionId] ??
+        makeEntry(sessions.find((s) => s.id === sessionId) ?? ({ id: sessionId } as PeruSession));
+      upsertRemote(sessionId, entry, review);
     },
-    [],
+    [editorial, sessions, upsertRemote],
   );
 
   // KPIs

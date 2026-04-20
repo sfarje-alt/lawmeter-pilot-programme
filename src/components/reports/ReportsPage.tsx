@@ -11,6 +11,8 @@ import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Link } from "@
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
+import { useSesionesWorkspace } from "@/hooks/useSesionesWorkspace";
+import type { PeruSession } from "@/types/peruSessions";
 import {
   FileDown,
   Building2,
@@ -23,6 +25,7 @@ import {
   Filter,
   Clock,
   BarChart3,
+  Video,
 } from "lucide-react";
 import { format, subDays, parseISO, isAfter, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
@@ -53,11 +56,13 @@ const ReportPDF = ({
   profileName,
   dateLabel,
   includeAnalytics,
+  sessions,
 }: {
   alerts: PeruAlert[];
   profileName: string;
   dateLabel: string;
   includeAnalytics: boolean;
+  sessions: PeruSession[];
 }) => {
   const bills = alerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = alerts.filter(a => a.legislation_type === 'norma');
@@ -140,6 +145,50 @@ const ReportPDF = ({
                 {norm.source_url && <Link src={norm.source_url} style={styles.sourceLink}>Fuente Oficial</Link>}
               </View>
             ))}
+          </View>
+        )}
+
+        {sessions.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ALERTAS DE SESIONES</Text>
+            {sessions.map(s => {
+              const tag =
+                s.is_pinned && s.is_follow_up
+                  ? 'Pineada · Seguimiento'
+                  : s.is_pinned
+                    ? 'Pineada'
+                    : s.is_follow_up
+                      ? 'En seguimiento'
+                      : 'Sesión';
+              const item = s.agenda_item;
+              const title = item ? `Ítem ${item.item_number} · ${item.title}` : (s.session_title ?? s.commission_name);
+              const bills = item?.bill_numbers?.length ? `Proyectos: ${item.bill_numbers.join(', ')}` : null;
+              const when = s.scheduled_date_text ?? (s.scheduled_at ? format(parseISO(s.scheduled_at), "dd/MM/yyyy HH:mm") : '');
+              return (
+                <View key={s.id} style={styles.alertCard}>
+                  <Text style={styles.alertTitle}>[{tag}] {title}</Text>
+                  <Text style={styles.alertMeta}>
+                    Comisión: {s.commission_name} · {when}
+                    {s.etiqueta_ia ? ` · Etiqueta: ${s.etiqueta_ia}` : ''}
+                    {s.impact_level ? ` · Impacto: ${s.impact_level}` : ''}
+                    {s.risk_level ? ` · Riesgo: ${s.risk_level}` : ''}
+                  </Text>
+                  {bills && <Text style={styles.alertMeta}>{bills}</Text>}
+                  {s.executive_summary && (
+                    <Text style={{ fontSize: 9, marginTop: 4 }}>{s.executive_summary}</Text>
+                  )}
+                  {s.recording?.video_url && (
+                    <Link src={s.recording.video_url} style={styles.sourceLink}>Grabación oficial (YouTube)</Link>
+                  )}
+                  {s.legal_review?.comentario_experto && (
+                    <View style={styles.commentary}>
+                      <Text style={styles.commentaryLabel}>COMENTARIO LEGAL:</Text>
+                      <Text>{s.legal_review.comentario_experto}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
         )}
 
@@ -235,6 +284,7 @@ function readCompanyName(): string {
 
 export function ReportsPage() {
   const { alerts } = useAlerts();
+  const { sessions: allSessions } = useSesionesWorkspace();
   const profileName = useMemo(() => readCompanyName(), []);
 
   const [scope, setScope] = useState<ScopeMode>("all_active");
@@ -274,6 +324,17 @@ export function ReportsPage() {
     });
   }, [alerts, scope, daysBack, includeBills, includeNorms]);
 
+  // Sesiones a incluir según los toggles (excluye archivadas)
+  const filteredSessions = useMemo<PeruSession[]>(() => {
+    if (!includeSesionesPinned && !includeSesionesFollowUp) return [];
+    return allSessions.filter((s) => {
+      if (s.is_archived) return false;
+      const byPin = includeSesionesPinned && s.is_pinned;
+      const byFollow = includeSesionesFollowUp && s.is_follow_up;
+      return byPin || byFollow;
+    });
+  }, [allSessions, includeSesionesPinned, includeSesionesFollowUp]);
+
   const bills = filteredAlerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = filteredAlerts.filter(a => a.legislation_type === 'norma');
 
@@ -283,7 +344,8 @@ export function ReportsPage() {
       ? "Alertas fijadas"
       : `Últimos ${daysBack} días`;
 
-  const canGenerate = (includeBills || includeNorms) && filteredAlerts.length > 0;
+  const canGenerate =
+    ((includeBills || includeNorms) && filteredAlerts.length > 0) || filteredSessions.length > 0;
 
   const handleSaveSchedule = () => {
     if (!scheduleName.trim()) {
@@ -416,7 +478,7 @@ export function ReportsPage() {
             {/* Sesiones — bulk include */}
             <div className="space-y-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
               <Label className="font-medium flex items-center gap-2">
-                <Pin className="h-4 w-4 text-primary" /> Alertas de Sesiones
+                <Video className="h-4 w-4 text-primary" /> Alertas de Sesiones
               </Label>
               <p className="text-xs text-muted-foreground">
                 Incluye en bloque las alertas de Sesiones según su estado editorial. Las marcas se hacen desde la sección Sesiones.
@@ -424,13 +486,28 @@ export function ReportsPage() {
               <div className="flex flex-wrap gap-4">
                 <Label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={includeSesionesPinned} onCheckedChange={(v) => setIncludeSesionesPinned(!!v)} />
-                  <span className="text-sm">Incluir sesiones pineadas</span>
+                  <span className="text-sm">
+                    Pineadas
+                    <Badge variant="outline" className="ml-2 text-[10px]">
+                      {allSessions.filter((s) => !s.is_archived && s.is_pinned).length}
+                    </Badge>
+                  </span>
                 </Label>
                 <Label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={includeSesionesFollowUp} onCheckedChange={(v) => setIncludeSesionesFollowUp(!!v)} />
-                  <span className="text-sm">Incluir sesiones en seguimiento</span>
+                  <span className="text-sm">
+                    En seguimiento
+                    <Badge variant="outline" className="ml-2 text-[10px]">
+                      {allSessions.filter((s) => !s.is_archived && s.is_follow_up).length}
+                    </Badge>
+                  </span>
                 </Label>
               </div>
+              {filteredSessions.length > 0 && (
+                <p className="text-[11px] text-primary/80">
+                  ✓ Se incluirán {filteredSessions.length} alerta{filteredSessions.length === 1 ? '' : 's'} de sesiones en el PDF.
+                </p>
+              )}
             </div>
 
             {/* Preview */}
@@ -452,7 +529,7 @@ export function ReportsPage() {
             {/* Manual Download */}
             {canGenerate ? (
               <PDFDownloadLink
-                document={<ReportPDF alerts={filteredAlerts} profileName={profileName} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
+                document={<ReportPDF alerts={filteredAlerts} sessions={filteredSessions} profileName={profileName} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
                 fileName={`reporte-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
               >
                 {({ loading }) => (
