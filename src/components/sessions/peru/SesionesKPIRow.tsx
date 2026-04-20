@@ -1,13 +1,12 @@
-// KPI row del workspace de Sesiones (4 principales + 1 secundario).
+// KPI row del workspace de Sesiones (4 principales).
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Pin, Eye, Brain, FileDown } from 'lucide-react';
+import { Calendar, Pin, Brain, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SesionesKPIRowProps {
   total: number;
   pinned: number;
-  followUp: number;
   processingAI: number;
   eligibleForReport: number;
 }
@@ -59,15 +58,13 @@ function KPI({ label, value, icon: Icon, tone, hint, secondary }: KPIProps) {
 export function SesionesKPIRow({
   total,
   pinned,
-  followUp,
   processingAI,
   eligibleForReport,
 }: SesionesKPIRowProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <KPI label="Total sesiones" value={total} icon={Calendar} tone="neutral" />
       <KPI label="Pineadas" value={pinned} icon={Pin} tone="primary" />
-      <KPI label="En seguimiento" value={followUp} icon={Eye} tone="amber" />
       <KPI label="Procesando IA" value={processingAI} icon={Brain} tone="blue" />
       <KPI
         label="Elegibles para reporte"
@@ -75,7 +72,7 @@ export function SesionesKPIRow({
         icon={FileDown}
         tone="emerald"
         secondary
-        hint="Pineadas + seguimiento"
+        hint="Pineadas activas"
       />
     </div>
   );
