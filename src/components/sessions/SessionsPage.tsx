@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Video } from 'lucide-react';
-import { PeruSessionsSection } from './peru/PeruSessionsSection';
+import { SesionesWorkspace } from './peru/SesionesWorkspace';
 import { CountryFlag } from '@/components/shared/CountryFlag';
 
 export interface SessionsPageProps {
@@ -36,8 +36,8 @@ export function SessionsPage({ className, initialSessionId }: SessionsPageProps)
         </div>
       </div>
 
-      {/* Peru Sessions Content */}
-      <PeruSessionsSection initialSessionId={initialSessionId} />
+      {/* Workspace */}
+      <SesionesWorkspace initialSessionId={initialSessionId} />
     </div>
   );
 }

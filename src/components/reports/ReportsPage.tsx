@@ -242,6 +242,8 @@ export function ReportsPage() {
   const [includeBills, setIncludeBills] = useState(true);
   const [includeNorms, setIncludeNorms] = useState(true);
   const [includeAnalytics, setIncludeAnalytics] = useState(true);
+  const [includeSesionesPinned, setIncludeSesionesPinned] = useState(true);
+  const [includeSesionesFollowUp, setIncludeSesionesFollowUp] = useState(false);
 
   // Schedules (in-memory)
   const [schedules, setSchedules] = useState<ScheduledReport[]>([]);
@@ -409,6 +411,26 @@ export function ReportsPage() {
               <p className="text-xs text-muted-foreground">
                 Si activas “Incluir Analíticas”, el PDF añade una página final con indicadores agregados (impacto, urgencia, etapas y cobertura editorial) del rango seleccionado.
               </p>
+            </div>
+
+            {/* Sesiones — bulk include */}
+            <div className="space-y-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
+              <Label className="font-medium flex items-center gap-2">
+                <Pin className="h-4 w-4 text-primary" /> Alertas de Sesiones
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Incluye en bloque las alertas de Sesiones según su estado editorial. Las marcas se hacen desde la sección Sesiones.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={includeSesionesPinned} onCheckedChange={(v) => setIncludeSesionesPinned(!!v)} />
+                  <span className="text-sm">Incluir sesiones pineadas</span>
+                </Label>
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={includeSesionesFollowUp} onCheckedChange={(v) => setIncludeSesionesFollowUp(!!v)} />
+                  <span className="text-sm">Incluir sesiones en seguimiento</span>
+                </Label>
+              </div>
             </div>
 
             {/* Preview */}
