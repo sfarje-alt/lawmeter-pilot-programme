@@ -56,11 +56,13 @@ const ReportPDF = ({
   profileName,
   dateLabel,
   includeAnalytics,
+  sessions,
 }: {
   alerts: PeruAlert[];
   profileName: string;
   dateLabel: string;
   includeAnalytics: boolean;
+  sessions: PeruSession[];
 }) => {
   const bills = alerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = alerts.filter(a => a.legislation_type === 'norma');
