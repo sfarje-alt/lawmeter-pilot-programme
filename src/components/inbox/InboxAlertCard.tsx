@@ -20,6 +20,8 @@ interface InboxAlertCardProps {
   onArchive?: (alertId: string) => void;
   onUnarchive?: (alertId: string) => void;
   isArchiveView?: boolean;
+  /** Si es true, la card recibe un brillo sutil tipo "correo no abierto". */
+  isUnread?: boolean;
 }
 
 export function InboxAlertCard({
@@ -29,6 +31,7 @@ export function InboxAlertCard({
   onArchive,
   onUnarchive,
   isArchiveView,
+  isUnread,
 }: InboxAlertCardProps) {
   const isBill = alert.legislation_type === "proyecto_de_ley";
   const isPinned = alert.is_pinned_for_publication;
@@ -71,7 +74,11 @@ export function InboxAlertCard({
   return (
     <Card
       className={cn(
-        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full min-w-0 max-w-full overflow-hidden",
+        "p-3 border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full min-w-0 max-w-full overflow-hidden",
+        // Bandeja: brillo sutil tipo "correo no abierto" cuando es nueva.
+        isUnread && !isArchived
+          ? "bg-gradient-to-br from-primary/[0.08] via-card to-card border-l-2 border-l-primary/60 shadow-[inset_0_1px_0_0_hsl(var(--primary)/0.12)]"
+          : "bg-card",
         isPinned && !isArchived && "border-l-4 border-l-primary",
         isArchived && "opacity-70 border-dashed"
       )}
