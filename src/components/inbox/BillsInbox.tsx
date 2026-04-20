@@ -6,6 +6,7 @@ import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
 import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES } from "@/data/peruAlertsMockData";
+import { useReadAlerts } from "@/hooks/useReadAlerts";
 
 interface BillsInboxProps {
   alerts: PeruAlert[];
@@ -35,6 +36,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
+  const { isRead, markAsRead } = useReadAlerts();
   const [filters, setFilters] = useState<BillsFilters>({
     search: "",
     areas: [],
@@ -231,9 +233,15 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
   }), [billAlerts, filteredAlerts, alertsByStage]);
 
   const handleAlertClick = (alert: PeruAlert) => {
+    markAsRead(alert.id);
     setSelectedAlert(alert);
     setDrawerOpen(true);
   };
+
+  // Set de ids no leídas (vista actual)
+  const unreadIds = useMemo(() => {
+    return new Set(billAlerts.filter((a) => !isRead(a.id)).map((a) => a.id));
+  }, [billAlerts, isRead]);
 
   const pendingCount = alertCounts.byStage.comision + alertCounts.byStage.pleno + alertCounts.byStage.tramite_final;
 
