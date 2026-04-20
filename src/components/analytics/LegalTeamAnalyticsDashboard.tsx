@@ -22,7 +22,6 @@ import {
   EmergingTopicsBlock,
   ExposureBlock,
   EditorialResponseTimeBlock,
-  AggregatedEntityMonitoringBlock,
   PinnedArchivedBlock,
 } from "./blocks";
 import {
@@ -32,6 +31,12 @@ import {
   SessionTopicsBlock,
   SessionRecurringBillsBlock,
 } from "./blocks/sessions";
+import {
+  DetectionToActionTimeBlock,
+  AIUsageBlock,
+  ReportsGeneratedBlock,
+  ReviewedAlertsBlock,
+} from "./blocks/ops";
 import {
   DEMO_EDITORIAL_COVERAGE,
   DEMO_OPERATIONAL_QUEUE,
@@ -319,6 +324,18 @@ export function LegalTeamAnalyticsDashboard() {
             )}
             {isEnabled('pin_archive') && (
               <PinnedArchivedBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('reviewed_alerts') && (
+              <ReviewedAlertsBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('detection_to_action_time') && (
+              <DetectionToActionTimeBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('ai_usage') && (
+              <AIUsageBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('reports_generated') && (
+              <ReportsGeneratedBlock timeframe={timeframeLabel} />
             )}
           </div>
         </CollapsibleAnalyticsSection>
