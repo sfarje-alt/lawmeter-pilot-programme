@@ -152,29 +152,33 @@ export function SesionDetailWorkstation({
           </div>
         </div>
 
-        {/* Contenido — 3 tabs: Contenido / Clasificatoria IA / Procesamiento IA */}
+        {/* Contenido — 4 tabs: Contenido / Procesamiento IA / Clasificatoria IA / Transcripción */}
         <Tabs defaultValue="contenido" className="px-5 pt-4 pb-5">
-          <TabsList className="grid grid-cols-3 w-full max-w-xl mb-4">
+          <TabsList className="grid grid-cols-4 w-full mb-4">
             <TabsTrigger value="contenido" className="text-xs">
               <FileText className="h-3.5 w-3.5 mr-1.5" />
               Contenido
             </TabsTrigger>
+            <TabsTrigger value="ia" className="text-xs">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Procesamiento IA
+            </TabsTrigger>
+            <TabsTrigger value="clasificatoria" className="text-xs">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Clasificatoria IA
+            </TabsTrigger>
             <TabsTrigger
-              value="clasificatoria"
+              value="transcripcion"
               className="text-xs"
               disabled={!classificationUnlocked}
               title={
                 classificationUnlocked
-                  ? 'Clasificatoria IA disponible'
-                  : 'Se desbloquea al completar la transcripción'
+                  ? 'Transcripción disponible'
+                  : 'Se desbloquea cuando la transcripción esté lista'
               }
             >
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Clasificatoria IA
-            </TabsTrigger>
-            <TabsTrigger value="ia" className="text-xs">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Procesamiento IA
+              <FileText className="h-3.5 w-3.5 mr-1.5" />
+              Transcripción
             </TabsTrigger>
           </TabsList>
 
@@ -189,6 +193,14 @@ export function SesionDetailWorkstation({
             <Section5FuenteEvidencia session={session} />
           </TabsContent>
 
+          <TabsContent value="ia" className="space-y-6 mt-0">
+            <Section6ProcesamientoIA
+              session={session}
+              onRequestTranscription={onRequestTranscription}
+              onRequestChatbot={onRequestChatbot}
+            />
+          </TabsContent>
+
           <TabsContent value="clasificatoria" className="space-y-6 mt-0">
             <SectionClasificatoriaIA
               session={session}
@@ -197,12 +209,8 @@ export function SesionDetailWorkstation({
             />
           </TabsContent>
 
-          <TabsContent value="ia" className="space-y-6 mt-0">
-            <Section6ProcesamientoIA
-              session={session}
-              onRequestTranscription={onRequestTranscription}
-              onRequestChatbot={onRequestChatbot}
-            />
+          <TabsContent value="transcripcion" className="space-y-6 mt-0">
+            <SectionTranscripcion session={session} />
           </TabsContent>
         </Tabs>
       </SheetContent>
