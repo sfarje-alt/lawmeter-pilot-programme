@@ -390,32 +390,11 @@ export function SesionesFilterBar({
               className="w-[180px]"
             />
             <MultiSelect
-              options={videoOptions}
-              selected={filters.videoStates}
-              onChange={(videoStates) => onChange({ ...filters, videoStates })}
-              placeholder="Video: Todos"
-              className="w-[150px]"
-            />
-            <MultiSelect
-              options={agendaOptions}
-              selected={filters.agendaStates}
-              onChange={(agendaStates) => onChange({ ...filters, agendaStates })}
-              placeholder="Agenda: Todas"
-              className="w-[150px]"
-            />
-            <MultiSelect
               options={sourceOptions}
               selected={filters.sources}
               onChange={(sources) => onChange({ ...filters, sources })}
               placeholder="Fuente: Todas"
               className="w-[180px]"
-            />
-            <MultiSelect
-              options={impactOptions}
-              selected={filters.impactLevels}
-              onChange={(impactLevels) => onChange({ ...filters, impactLevels })}
-              placeholder="Impacto: Todos"
-              className="w-[160px]"
             />
             {tagOptions.length > 0 && (
               <MultiSelect
