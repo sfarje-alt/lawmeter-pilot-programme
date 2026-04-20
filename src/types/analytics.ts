@@ -4,9 +4,7 @@ export type AnalyticsVisibility = 'internal' | 'client' | 'both';
 
 export type AnalyticsBlockKey = 
   // Internal (Legal Team only) — operations
-  | 'editorial_coverage'
   | 'editorial_response_time'
-  | 'operational_queue'
   | 'pin_archive'
   | 'reviewed_alerts'
   | 'detection_to_action_time'
