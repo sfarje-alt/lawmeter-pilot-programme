@@ -770,6 +770,51 @@ export type Database = {
           },
         ]
       }
+      session_editorial_state: {
+        Row: {
+          chatbot_state: string
+          created_at: string
+          editorial_state: string
+          id: string
+          is_archived: boolean
+          is_follow_up: boolean
+          is_pinned: boolean
+          legal_review: Json | null
+          session_id: string
+          transcription_state: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chatbot_state?: string
+          created_at?: string
+          editorial_state?: string
+          id?: string
+          is_archived?: boolean
+          is_follow_up?: boolean
+          is_pinned?: boolean
+          legal_review?: Json | null
+          session_id: string
+          transcription_state?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chatbot_state?: string
+          created_at?: string
+          editorial_state?: string
+          id?: string
+          is_archived?: boolean
+          is_follow_up?: boolean
+          is_pinned?: boolean
+          legal_review?: Json | null
+          session_id?: string
+          transcription_state?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       session_recordings: {
         Row: {
           analysis_result: Json | null
