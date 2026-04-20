@@ -11,7 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { IMPACT_LEVELS, type ImpactLevel } from '@/data/peruAlertsMockData';
 import {
   Pin,
   PinOff,
@@ -354,7 +357,14 @@ function Section1ResumenLabels({
   );
 }
 
-// ── Clasificatoria IA — siempre visible, banner según estado ──────────────
+// ── Clasificatoria IA — misma lógica que Alertas Regulatorias ─────────────
+const URGENCY_OPTIONS = [
+  { value: 'low', label: 'Baja' },
+  { value: 'medium', label: 'Media' },
+  { value: 'high', label: 'Alta' },
+  { value: 'critical', label: 'Crítica' },
+];
+
 function SectionClasificatoriaIA({
   session,
   unlocked,
@@ -364,79 +374,97 @@ function SectionClasificatoriaIA({
   unlocked: boolean;
   commissionColor: { bg: string; ring: string; text: string };
 }) {
-  const fields = [
-    { label: 'Etiquetas internas adicionales', multiline: false },
-    { label: 'Impacto regulatorio', multiline: true },
-    { label: 'Urgencia', multiline: false },
-    { label: 'Áreas afectadas', multiline: false },
-    { label: 'Prioridad interna', multiline: false },
-  ];
-
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
+  const [urgency, setUrgency] = useState<string>('medium');
+  const [tagsText, setTagsText] = useState<string>(
+    session.agenda_item?.thematic_area ?? ''
+  );
 
   return (
     <SectionShell
-      title="Clasificatoria IA"
-      icon={<Sparkles className="h-3.5 w-3.5" />}
+      title="Clasificación interna"
+      icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
       hint={
         unlocked
           ? 'Generada por IA a partir de la transcripción. Editable por el equipo legal.'
-          : 'Estos son los campos que la IA completará automáticamente cuando la transcripción esté lista. Puedes adelantar valores manualmente.'
+          : 'La IA completará estos campos automáticamente cuando la transcripción esté lista. Puedes adelantar valores manualmente.'
       }
     >
-      {!unlocked ? (
+      {!unlocked && (
         <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 mb-3 text-[11px] text-muted-foreground flex items-start gap-2">
           <Sparkles className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
           <span>
             <strong className="text-foreground">Pendiente de transcripción.</strong>{' '}
-            Solicita la transcripción desde <strong>Procesamiento IA</strong>. La IA
-            completará estos campos automáticamente al finalizar.
+            Solicita la transcripción desde <strong>Procesamiento IA</strong>.
           </span>
         </div>
-      ) : (
-        <div className="rounded-md border border-success/30 bg-success/10 p-2.5 mb-3 text-[11px] flex items-center gap-2 text-foreground">
-          <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-          Clasificación generada a partir de la transcripción de la sesión.
-        </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {fields.map((f) => (
-          <div
-            key={f.label}
-            className={f.multiline ? 'md:col-span-2 space-y-1' : 'space-y-1'}
-          >
-            <label className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
-              {f.label}
-            </label>
-            {f.multiline ? (
-              <Textarea
-                value={values[f.label] ?? ''}
-                onChange={(e) =>
-                  setValues((p) => ({ ...p, [f.label]: e.target.value }))
-                }
-                placeholder={
-                  unlocked
-                    ? 'Generado por IA — editable'
-                    : 'Pendiente de transcripción · puedes adelantar manualmente'
-                }
-                className="text-xs min-h-[60px] bg-muted/20"
-              />
-            ) : (
-              <Input
-                value={values[f.label] ?? ''}
-                onChange={(e) =>
-                  setValues((p) => ({ ...p, [f.label]: e.target.value }))
-                }
-                placeholder={
-                  unlocked
-                    ? 'Generado por IA — editable'
-                    : 'Pendiente de transcripción · puedes adelantar manualmente'
-                }
-                className="h-8 text-xs bg-muted/20"
-              />
-            )}
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Impacto</Label>
+            <Select value={impact} onValueChange={(v) => setImpact(v as ImpactLevel)}>
+              <SelectTrigger className="bg-muted/30 border-border/50">
+                <SelectValue placeholder="Seleccionar..." />
+              </SelectTrigger>
+              <SelectContent>
+                {IMPACT_LEVELS.map((lvl) => (
+                  <SelectItem key={lvl.value} value={lvl.value}>
+                    {lvl.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        ))}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Urgencia</Label>
+            <Select value={urgency} onValueChange={setUrgency}>
+              <SelectTrigger className="bg-muted/30 border-border/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {URGENCY_OPTIONS.map((u) => (
+                  <SelectItem key={u.value} value={u.value}>
+                    {u.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-primary" />
+            Etiquetas (asignadas automáticamente por IA según el perfil)
+          </Label>
+          <Input
+            value={tagsText}
+            onChange={(e) => setTagsText(e.target.value)}
+            placeholder="p. ej. Salud, Datos personales, Tributario"
+            className="bg-muted/30 border-border/50"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            La IA sugiere etiquetas basadas en las etiquetas configuradas en el perfil.
+            Puedes editarlas si necesitas ajustar.
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {tagsText
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+              .map((t, i) => (
+                <Badge
+                  key={`${t}-${i}`}
+                  variant="outline"
+                  className="bg-primary/10 border-primary/30 text-primary"
+                >
+                  {t}
+                </Badge>
+              ))}
+          </div>
+        </div>
       </div>
     </SectionShell>
   );
