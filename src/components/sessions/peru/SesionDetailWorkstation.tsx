@@ -465,6 +465,24 @@ function SectionClasificatoriaIA({
               ))}
           </div>
         </div>
+
+        {/* Análisis acumulado del chatbot — se actualiza con cada interacción */}
+        <div className="space-y-1.5 pt-3 border-t border-border/30">
+          <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-primary" />
+            Análisis del chatbot (se actualiza con cada interacción)
+          </Label>
+          {session.chatbot_summary?.trim() ? (
+            <div className="rounded-md border border-border/50 bg-background/50 p-3 text-xs whitespace-pre-wrap text-foreground/85 max-h-64 overflow-y-auto">
+              {session.chatbot_summary}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              Aún no hay interacciones del chatbot sobre esta sesión. Cada pregunta y
+              respuesta del asistente quedará registrada aquí y se incluirá en el reporte.
+            </p>
+          )}
+        </div>
       </div>
     </SectionShell>
   );

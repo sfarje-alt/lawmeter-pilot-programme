@@ -30,6 +30,7 @@ import type { PeruSession } from '@/types/peruSessions';
 
 interface Props {
   sessions: PeruSession[];
+  onInteraction?: (sessionId: string, snippet: string) => void;
 }
 
 interface ChatMessage {
@@ -65,7 +66,7 @@ const MAX_W = 880;
 const MIN_H = 280;
 const MAX_H = 720;
 
-export function SesionesGlobalChatbot({ sessions }: Props) {
+export function SesionesGlobalChatbot({ sessions, onInteraction }: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -122,12 +123,20 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
   const send = (text: string) => {
     const q = text.trim();
     if (!q) return;
+    const answer = buildAnswer(q, enabled, withTranscript);
     setMessages((prev) => [
       ...prev,
       { role: 'user', content: q },
-      { role: 'assistant', content: buildAnswer(q, enabled, withTranscript) },
+      { role: 'assistant', content: answer },
     ]);
     setDraft('');
+    // Acumular el intercambio en el chatbot_summary de cada sesión habilitada,
+    // para que el reporte y el tab "Clasificatoria IA" reflejen el análisis vivo.
+    if (onInteraction) {
+      const stamp = new Date().toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
+      const snippet = `[${stamp}] P: ${q}\nR: ${answer}`;
+      enabled.forEach((s) => onInteraction(s.id, snippet));
+    }
   };
 
   const renderPromptGroup = (label: string, list: string[]) => (
