@@ -320,9 +320,6 @@ export function LegalTeamAnalyticsDashboard() {
             {isEnabled('pin_archive') && (
               <PinnedArchivedBlock timeframe={timeframeLabel} />
             )}
-            {isEnabled('aggregated_entity_monitoring') && (
-              <AggregatedEntityMonitoringBlock timeframe={timeframeLabel} />
-            )}
           </div>
         </CollapsibleAnalyticsSection>
       </div>
