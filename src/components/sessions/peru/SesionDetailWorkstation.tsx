@@ -146,19 +146,35 @@ export function SesionDetailWorkstation({
           </div>
         </div>
 
-        {/* Contenido — secciones en orden estricto */}
-        <div className="p-5 space-y-6">
-          <Section1ResumenLabels session={session} actionType={actionType} />
-          <Section2Enrichment session={session} />
-          <Section3InformacionGeneral session={session} />
-          <Section4SesionAgenda session={session} actionType={actionType} />
-          <Section5FuenteEvidencia session={session} />
-          <Section6ProcesamientoIA
-            session={session}
-            onRequestTranscription={onRequestTranscription}
-            onRequestChatbot={onRequestChatbot}
-          />
-        </div>
+        {/* Contenido — tabs: Contenido (secciones 1-5) vs Procesamiento IA */}
+        <Tabs defaultValue="contenido" className="px-5 pt-4 pb-5">
+          <TabsList className="grid grid-cols-2 w-full max-w-sm mb-4">
+            <TabsTrigger value="contenido" className="text-xs">
+              <FileText className="h-3.5 w-3.5 mr-1.5" />
+              Contenido
+            </TabsTrigger>
+            <TabsTrigger value="ia" className="text-xs">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Procesamiento IA
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="contenido" className="space-y-6 mt-0">
+            <Section1ResumenLabels session={session} actionType={actionType} />
+            <Section2Enrichment session={session} />
+            <Section3InformacionGeneral session={session} />
+            <Section4SesionAgenda session={session} actionType={actionType} />
+            <Section5FuenteEvidencia session={session} />
+          </TabsContent>
+
+          <TabsContent value="ia" className="space-y-6 mt-0">
+            <Section6ProcesamientoIA
+              session={session}
+              onRequestTranscription={onRequestTranscription}
+              onRequestChatbot={onRequestChatbot}
+            />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
