@@ -134,7 +134,21 @@ export function RegulatoryPulseBlock({
 
   const renderChart = (data: typeof filteredData, breakdown: boolean) => (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
+      <AreaChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
+        <defs>
+          <linearGradient id="pulseBills" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={ANALYTICS_COLORS.legislationType.bills} stopOpacity={0.5} />
+            <stop offset="100%" stopColor={ANALYTICS_COLORS.legislationType.bills} stopOpacity={0.05} />
+          </linearGradient>
+          <linearGradient id="pulseRegs" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={ANALYTICS_COLORS.legislationType.regulations} stopOpacity={0.5} />
+            <stop offset="100%" stopColor={ANALYTICS_COLORS.legislationType.regulations} stopOpacity={0.05} />
+          </linearGradient>
+          <linearGradient id="pulseTotal" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={ANALYTICS_COLORS.chart.primary} stopOpacity={0.5} />
+            <stop offset="100%" stopColor={ANALYTICS_COLORS.chart.primary} stopOpacity={0.05} />
+          </linearGradient>
+        </defs>
         <CartesianGrid strokeDasharray="3 3" stroke={ANALYTICS_COLORS.chart.grid} vertical={false} />
         <XAxis
           dataKey="date"
@@ -160,21 +174,24 @@ export function RegulatoryPulseBlock({
         />
         {breakdown ? (
           <>
-            {(activeType === 'all' || activeType === 'bills') && (
-              <Line type="monotone" dataKey="bills" name="Proyectos de Ley"
-                stroke={ANALYTICS_COLORS.legislationType.bills} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-            )}
             {(activeType === 'all' || activeType === 'regulations') && (
-              <Line type="monotone" dataKey="regulations" name="Normas"
-                stroke={ANALYTICS_COLORS.legislationType.regulations} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+              <Area type="monotone" dataKey="regulations" name="Normas" stackId="1"
+                stroke={ANALYTICS_COLORS.legislationType.regulations} strokeWidth={2}
+                fill="url(#pulseRegs)" activeDot={{ r: 4 }} />
+            )}
+            {(activeType === 'all' || activeType === 'bills') && (
+              <Area type="monotone" dataKey="bills" name="Proyectos de Ley" stackId="1"
+                stroke={ANALYTICS_COLORS.legislationType.bills} strokeWidth={2}
+                fill="url(#pulseBills)" activeDot={{ r: 4 }} />
             )}
             <Legend wrapperStyle={{ fontSize: '11px' }} iconType="line" />
           </>
         ) : (
-          <Line type="monotone" dataKey="total" name="Alertas"
-            stroke={ANALYTICS_COLORS.chart.primary} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+          <Area type="monotone" dataKey="total" name="Alertas"
+            stroke={ANALYTICS_COLORS.chart.primary} strokeWidth={2}
+            fill="url(#pulseTotal)" activeDot={{ r: 4 }} />
         )}
-      </LineChart>
+      </AreaChart>
     </ResponsiveContainer>
   );
 
