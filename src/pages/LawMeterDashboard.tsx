@@ -37,15 +37,7 @@ export default function LawMeterDashboard() {
   const [activeTab, setActiveTab] = useState(""); 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showDailyPopup, setShowDailyPopup] = useState(false);
-  const [aiDisclaimerVisible, setAiDisclaimerVisible] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem("lm:hide-ai-disclaimer") !== "1";
-  });
 
-  const dismissAiDisclaimer = () => {
-    setAiDisclaimerVisible(false);
-    try { localStorage.setItem("lm:hide-ai-disclaimer", "1"); } catch {}
-  };
 
   // Get URL parameters for navigation from calendar
   const sectionParam = searchParams.get('section');
