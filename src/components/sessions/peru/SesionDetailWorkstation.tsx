@@ -34,6 +34,7 @@ import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChatbotChip, TranscriptionChip } from './SesionChips';
+import { getCommissionColor } from './commissionColors';
 import type { PeruSession } from '@/types/peruSessions';
 
 interface Props {
@@ -78,35 +79,52 @@ export function SesionDetailWorkstation({
   const dateLabel = session.scheduled_at
     ? format(new Date(session.scheduled_at), "d 'de' MMMM yyyy · HH:mm 'h'", { locale: es })
     : session.scheduled_date_text ?? 'Fecha por confirmar';
+  const commissionColor = getCommissionColor(session.commission_name);
+  const tState = session.transcription_state ?? 'no_solicitada';
+  const classificationUnlocked = tState === 'lista';
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-3xl p-0 overflow-y-auto bg-background">
-        {/* Header sticky */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/50">
+      <SheetContent
+        className="w-full sm:max-w-3xl p-0 overflow-y-auto bg-background"
+        style={{ borderLeft: `4px solid ${commissionColor.bg}` }}
+      >
+        {/* Header sticky con accent del color de la comisión */}
+        <div
+          className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/50"
+          style={{ boxShadow: `inset 4px 0 0 0 ${commissionColor.bg}` }}
+        >
           <div className="p-5 space-y-3">
             <div className="flex items-start gap-2">
-              {item?.item_number && (
-                <span className="inline-flex items-center justify-center px-2 h-6 rounded bg-primary/15 text-primary text-xs font-mono font-semibold shrink-0 mt-0.5">
-                  Ítem {item.item_number}
-                </span>
-              )}
+              <Badge
+                variant="outline"
+                className="text-[10px] uppercase tracking-wide bg-primary/10 text-primary border-primary/30 shrink-0 mt-0.5"
+              >
+                Sesiones
+              </Badge>
               <h2 className="text-lg font-semibold text-foreground leading-snug">
                 {item?.title ?? session.session_title}
               </h2>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Building2 className="h-3.5 w-3.5" />
+            {/* Bubble de comisión con color identificable */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border shadow-sm"
+                style={{
+                  backgroundColor: commissionColor.bg,
+                  color: commissionColor.text,
+                  borderColor: commissionColor.ring,
+                }}
+              >
+                <Building2 className="h-3.5 w-3.5" style={{ color: commissionColor.text }} />
                 Comisión de {session.commission_name}
               </span>
-              <span>·</span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {dateLabel}
               </span>
-              <Badge variant="outline" className="text-[10px] font-mono ml-1">
+              <Badge variant="outline" className="text-[10px] font-mono">
                 {session.source}
               </Badge>
             </div>
@@ -146,12 +164,25 @@ export function SesionDetailWorkstation({
           </div>
         </div>
 
-        {/* Contenido — tabs: Contenido (secciones 1-5) vs Procesamiento IA */}
+        {/* Contenido — 3 tabs: Contenido / Clasificatoria IA / Procesamiento IA */}
         <Tabs defaultValue="contenido" className="px-5 pt-4 pb-5">
-          <TabsList className="grid grid-cols-2 w-full max-w-sm mb-4">
+          <TabsList className="grid grid-cols-3 w-full max-w-xl mb-4">
             <TabsTrigger value="contenido" className="text-xs">
               <FileText className="h-3.5 w-3.5 mr-1.5" />
               Contenido
+            </TabsTrigger>
+            <TabsTrigger
+              value="clasificatoria"
+              className="text-xs"
+              disabled={!classificationUnlocked}
+              title={
+                classificationUnlocked
+                  ? 'Clasificatoria IA disponible'
+                  : 'Se desbloquea al completar la transcripción'
+              }
+            >
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Clasificatoria IA
             </TabsTrigger>
             <TabsTrigger value="ia" className="text-xs">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
@@ -160,11 +191,22 @@ export function SesionDetailWorkstation({
           </TabsList>
 
           <TabsContent value="contenido" className="space-y-6 mt-0">
-            <Section1ResumenLabels session={session} actionType={actionType} />
-            <Section2Enrichment session={session} />
+            <Section1ResumenLabels
+              session={session}
+              actionType={actionType}
+              commissionColor={commissionColor}
+            />
             <Section3InformacionGeneral session={session} />
             <Section4SesionAgenda session={session} actionType={actionType} />
             <Section5FuenteEvidencia session={session} />
+          </TabsContent>
+
+          <TabsContent value="clasificatoria" className="space-y-6 mt-0">
+            <SectionClasificatoriaIA
+              session={session}
+              unlocked={classificationUnlocked}
+              commissionColor={commissionColor}
+            />
           </TabsContent>
 
           <TabsContent value="ia" className="space-y-6 mt-0">
@@ -184,20 +226,23 @@ export function SesionDetailWorkstation({
 function Section1ResumenLabels({
   session,
   actionType,
+  commissionColor,
 }: {
   session: PeruSession;
   actionType: string | null;
+  commissionColor: { bg: string; ring: string; text: string };
 }) {
   const item = session.agenda_item;
 
   // Labels prefijados solo desde clasificación source-backed
   const baseLabels = useMemo(() => {
-    const arr: { value: string; type: 'action' | 'area' | 'bill' }[] = [];
+    const arr: { value: string; type: 'commission' | 'action' | 'area' | 'bill' }[] = [];
+    arr.push({ value: `Comisión de ${session.commission_name}`, type: 'commission' });
     if (actionType) arr.push({ value: actionType, type: 'action' });
     if (item?.thematic_area) arr.push({ value: item.thematic_area, type: 'area' });
     item?.bill_numbers?.forEach((b) => arr.push({ value: b, type: 'bill' }));
     return arr;
-  }, [actionType, item]);
+  }, [actionType, item, session.commission_name]);
 
   const [customLabels, setCustomLabels] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
@@ -222,22 +267,41 @@ function Section1ResumenLabels({
           {baseLabels.length === 0 && (
             <span className="text-xs text-muted-foreground">Sin clasificación derivable.</span>
           )}
-          {baseLabels.map((l) => (
-            <Badge
-              key={`${l.type}-${l.value}`}
-              variant="outline"
-              className={
-                l.type === 'bill'
-                  ? 'font-mono text-[11px] border-border/60 bg-background/40'
-                  : l.type === 'area'
-                    ? 'text-[11px] bg-muted/50'
-                    : 'text-[11px] bg-primary/10 text-primary border-primary/30'
-              }
-            >
-              {l.type === 'action' && <Gavel className="h-2.5 w-2.5 mr-1" />}
-              {l.value}
-            </Badge>
-          ))}
+          {baseLabels.map((l) => {
+            if (l.type === 'commission') {
+              return (
+                <Badge
+                  key={`${l.type}-${l.value}`}
+                  variant="outline"
+                  className="text-[11px] font-semibold border shadow-sm gap-1"
+                  style={{
+                    backgroundColor: commissionColor.bg,
+                    color: commissionColor.text,
+                    borderColor: commissionColor.ring,
+                  }}
+                >
+                  <Building2 className="h-2.5 w-2.5" style={{ color: commissionColor.text }} />
+                  {l.value}
+                </Badge>
+              );
+            }
+            return (
+              <Badge
+                key={`${l.type}-${l.value}`}
+                variant="outline"
+                className={
+                  l.type === 'bill'
+                    ? 'font-mono text-[11px] border-border/60 bg-background/40'
+                    : l.type === 'area'
+                      ? 'text-[11px] bg-muted/50'
+                      : 'text-[11px] bg-primary/10 text-primary border-primary/30'
+                }
+              >
+                {l.type === 'action' && <Gavel className="h-2.5 w-2.5 mr-1" />}
+                {l.value}
+              </Badge>
+            );
+          })}
         </div>
       </div>
 
@@ -294,49 +358,72 @@ function Section1ResumenLabels({
   );
 }
 
-// ── 2. Campos de enrichment (placeholders editables) ───────────────────────
-function Section2Enrichment({ session }: { session: PeruSession }) {
+// ── Clasificatoria IA (3er tab) — desbloqueada al completar transcripción ──
+function SectionClasificatoriaIA({
+  session,
+  unlocked,
+  commissionColor,
+}: {
+  session: PeruSession;
+  unlocked: boolean;
+  commissionColor: { bg: string; ring: string; text: string };
+}) {
   const fields = [
-    {
-      label: 'Etiquetas internas adicionales',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: false,
-    },
-    {
-      label: 'Impacto regulatorio',
-      placeholder: 'Se completa al solicitar la transcripción',
-      multiline: true,
-    },
-    {
-      label: 'Áreas afectadas',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: false,
-    },
-    {
-      label: 'Prioridad interna',
-      placeholder: 'Definir manualmente o esperar al enrichment',
-      multiline: false,
-    },
-    {
-      label: 'Comentario regulatorio',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: true,
-    },
-    {
-      label: 'Próximo paso sugerido',
-      placeholder: 'Se completa con la transcripción + enrichment',
-      multiline: false,
-    },
+    { label: 'Etiquetas internas adicionales', multiline: false },
+    { label: 'Impacto regulatorio', multiline: true },
+    { label: 'Áreas afectadas', multiline: false },
+    { label: 'Prioridad interna', multiline: false },
+    { label: 'Comentario regulatorio', multiline: true },
+    { label: 'Próximo paso sugerido', multiline: false },
   ];
 
   const [values, setValues] = useState<Record<string, string>>({});
 
+  if (!unlocked) {
+    return (
+      <SectionShell
+        title="Clasificatoria IA"
+        icon={<Sparkles className="h-3.5 w-3.5" />}
+        hint="Esta capa se libera automáticamente cuando se completa la transcripción. La IA analiza la sesión y la clasifica."
+      >
+        <div
+          className="rounded-md border-2 border-dashed p-5 text-center space-y-2"
+          style={{ borderColor: commissionColor.ring, backgroundColor: `${commissionColor.bg}10` }}
+        >
+          <Sparkles
+            className="h-8 w-8 mx-auto"
+            style={{ color: commissionColor.bg }}
+          />
+          <p className="text-sm font-semibold text-foreground">
+            Pendiente de transcripción
+          </p>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            Solicita la transcripción desde la pestaña <strong>Procesamiento IA</strong>.
+            Una vez lista, la IA analizará el contenido y completará automáticamente
+            etiquetas, impacto regulatorio, áreas afectadas, comentario y próximo paso.
+          </p>
+        </div>
+      </SectionShell>
+    );
+  }
+
   return (
     <SectionShell
-      title="2 · Campos de enrichment"
+      title="Clasificatoria IA"
       icon={<Sparkles className="h-3.5 w-3.5" />}
-      hint="Se completan automáticamente al solicitar la transcripción (un solo acto). Editables manualmente."
+      hint="Generada por IA a partir de la transcripción. Editable por el equipo legal."
     >
+      <div
+        className="rounded-md border p-2.5 mb-3 text-[11px] flex items-center gap-2"
+        style={{
+          backgroundColor: `${commissionColor.bg}15`,
+          borderColor: commissionColor.ring,
+          color: 'hsl(var(--foreground))',
+        }}
+      >
+        <CheckCircle2 className="h-3.5 w-3.5" style={{ color: commissionColor.bg }} />
+        Clasificación generada a partir de la transcripción de la sesión.
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {fields.map((f) => (
           <div
@@ -352,8 +439,8 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
                 onChange={(e) =>
                   setValues((p) => ({ ...p, [f.label]: e.target.value }))
                 }
-                placeholder={f.placeholder}
-                className="text-xs min-h-[60px] bg-muted/20 border-dashed border-border/50"
+                placeholder="Generado por IA — editable"
+                className="text-xs min-h-[60px] bg-muted/20"
               />
             ) : (
               <Input
@@ -361,8 +448,8 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
                 onChange={(e) =>
                   setValues((p) => ({ ...p, [f.label]: e.target.value }))
                 }
-                placeholder={f.placeholder}
-                className="h-8 text-xs bg-muted/20 border-dashed border-border/50"
+                placeholder="Generado por IA — editable"
+                className="h-8 text-xs bg-muted/20"
               />
             )}
           </div>
@@ -376,7 +463,7 @@ function Section2Enrichment({ session }: { session: PeruSession }) {
 function Section3InformacionGeneral({ session }: { session: PeruSession }) {
   return (
     <SectionShell
-      title="3 · Información general"
+      title="2 · Información general"
       icon={<FileText className="h-3.5 w-3.5" />}
     >
       <div className="grid grid-cols-2 gap-3 text-xs">
@@ -409,7 +496,7 @@ function Section4SesionAgenda({
 
   return (
     <SectionShell
-      title="4 · Sesión y orden del día"
+      title="3 · Sesión y orden del día"
       icon={<Gavel className="h-3.5 w-3.5" />}
     >
       {!item ? (
@@ -470,7 +557,7 @@ function Section5FuenteEvidencia({ session }: { session: PeruSession }) {
   const r = session.recording;
   return (
     <SectionShell
-      title="5 · Fuente y evidencia"
+      title="4 · Fuente y evidencia"
       icon={<ExternalLink className="h-3.5 w-3.5" />}
     >
       <div className="space-y-4">
@@ -570,7 +657,7 @@ function Section6ProcesamientoIA({
 
   return (
     <SectionShell
-      title="6 · Procesamiento IA"
+      title="Procesamiento IA"
       icon={<Sparkles className="h-3.5 w-3.5" />}
     >
       <div className="space-y-5">
