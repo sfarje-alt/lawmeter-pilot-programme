@@ -605,11 +605,16 @@ function Section6ProcesamientoIA({
 
           {tState === 'no_solicitada' && (
             <div className="space-y-2 pt-1">
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5 text-[11px] text-foreground/85 leading-relaxed">
+                <strong className="text-primary">Importante:</strong> al solicitar la transcripción
+                también se genera el <strong>enrichment regulatorio</strong> (etiquetas, impacto, áreas
+                afectadas, comentario y próximo paso) en un solo acto. No es necesario pedirlo al chatbot.
+              </div>
               <p className="text-xs text-muted-foreground">
-                La transcripción no ha sido solicitada. Toma aproximadamente 20 minutos.
+                Tiempo estimado: ~20 minutos.
               </p>
               <Button size="sm" onClick={() => onRequestTranscription(session.id)}>
-                Solicitar transcripción
+                Solicitar transcripción + enrichment
               </Button>
             </div>
           )}
