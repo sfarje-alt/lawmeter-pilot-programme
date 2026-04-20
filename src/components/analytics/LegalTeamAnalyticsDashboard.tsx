@@ -325,6 +325,18 @@ export function LegalTeamAnalyticsDashboard() {
             {isEnabled('pin_archive') && (
               <PinnedArchivedBlock timeframe={timeframeLabel} />
             )}
+            {isEnabled('reviewed_alerts') && (
+              <ReviewedAlertsBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('detection_to_action_time') && (
+              <DetectionToActionTimeBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('ai_usage') && (
+              <AIUsageBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('reports_generated') && (
+              <ReportsGeneratedBlock timeframe={timeframeLabel} />
+            )}
           </div>
         </CollapsibleAnalyticsSection>
       </div>
