@@ -85,15 +85,9 @@ export function SesionDetailWorkstation({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        className="w-full sm:max-w-3xl p-0 overflow-y-auto bg-background"
-        style={{ borderLeft: `4px solid ${commissionColor.bg}` }}
-      >
-        {/* Header sticky con accent del color de la comisión */}
-        <div
-          className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/50"
-          style={{ boxShadow: `inset 4px 0 0 0 ${commissionColor.bg}` }}
-        >
+      <SheetContent className="w-full sm:max-w-3xl p-0 overflow-y-auto bg-background">
+        {/* Header sticky */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/50">
           <div className="p-5 space-y-3">
             <div className="flex items-start gap-2">
               <Badge
@@ -107,24 +101,18 @@ export function SesionDetailWorkstation({
               </h2>
             </div>
 
-            {/* Bubble de comisión con color identificable */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border shadow-sm"
-                style={{
-                  backgroundColor: commissionColor.bg,
-                  color: commissionColor.text,
-                  borderColor: commissionColor.ring,
-                }}
-              >
-                <Building2 className="h-3.5 w-3.5" style={{ color: commissionColor.text }} />
+            {/* Comisión + fecha + source — discretos */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Building2 className="h-3.5 w-3.5" />
                 Comisión de {session.commission_name}
               </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span>·</span>
+              <span className="flex items-center gap-1">
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {dateLabel}
               </span>
-              <Badge variant="outline" className="text-[10px] font-mono">
+              <Badge variant="outline" className="text-[10px] font-mono ml-1">
                 {session.source}
               </Badge>
             </div>
@@ -164,29 +152,33 @@ export function SesionDetailWorkstation({
           </div>
         </div>
 
-        {/* Contenido — 3 tabs: Contenido / Clasificatoria IA / Procesamiento IA */}
+        {/* Contenido — 4 tabs: Contenido / Procesamiento IA / Clasificatoria IA / Transcripción */}
         <Tabs defaultValue="contenido" className="px-5 pt-4 pb-5">
-          <TabsList className="grid grid-cols-3 w-full max-w-xl mb-4">
+          <TabsList className="grid grid-cols-4 w-full mb-4">
             <TabsTrigger value="contenido" className="text-xs">
               <FileText className="h-3.5 w-3.5 mr-1.5" />
               Contenido
             </TabsTrigger>
+            <TabsTrigger value="ia" className="text-xs">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Procesamiento IA
+            </TabsTrigger>
+            <TabsTrigger value="clasificatoria" className="text-xs">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Clasificatoria IA
+            </TabsTrigger>
             <TabsTrigger
-              value="clasificatoria"
+              value="transcripcion"
               className="text-xs"
               disabled={!classificationUnlocked}
               title={
                 classificationUnlocked
-                  ? 'Clasificatoria IA disponible'
-                  : 'Se desbloquea al completar la transcripción'
+                  ? 'Transcripción disponible'
+                  : 'Se desbloquea cuando la transcripción esté lista'
               }
             >
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Clasificatoria IA
-            </TabsTrigger>
-            <TabsTrigger value="ia" className="text-xs">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Procesamiento IA
+              <FileText className="h-3.5 w-3.5 mr-1.5" />
+              Transcripción
             </TabsTrigger>
           </TabsList>
 
@@ -201,6 +193,14 @@ export function SesionDetailWorkstation({
             <Section5FuenteEvidencia session={session} />
           </TabsContent>
 
+          <TabsContent value="ia" className="space-y-6 mt-0">
+            <Section6ProcesamientoIA
+              session={session}
+              onRequestTranscription={onRequestTranscription}
+              onRequestChatbot={onRequestChatbot}
+            />
+          </TabsContent>
+
           <TabsContent value="clasificatoria" className="space-y-6 mt-0">
             <SectionClasificatoriaIA
               session={session}
@@ -209,12 +209,8 @@ export function SesionDetailWorkstation({
             />
           </TabsContent>
 
-          <TabsContent value="ia" className="space-y-6 mt-0">
-            <Section6ProcesamientoIA
-              session={session}
-              onRequestTranscription={onRequestTranscription}
-              onRequestChatbot={onRequestChatbot}
-            />
+          <TabsContent value="transcripcion" className="space-y-6 mt-0">
+            <SectionTranscripcion session={session} />
           </TabsContent>
         </Tabs>
       </SheetContent>
@@ -358,7 +354,7 @@ function Section1ResumenLabels({
   );
 }
 
-// ── Clasificatoria IA (3er tab) — desbloqueada al completar transcripción ──
+// ── Clasificatoria IA — siempre visible, banner según estado ──────────────
 function SectionClasificatoriaIA({
   session,
   unlocked,
@@ -379,51 +375,31 @@ function SectionClasificatoriaIA({
 
   const [values, setValues] = useState<Record<string, string>>({});
 
-  if (!unlocked) {
-    return (
-      <SectionShell
-        title="Clasificatoria IA"
-        icon={<Sparkles className="h-3.5 w-3.5" />}
-        hint="Esta capa se libera automáticamente cuando se completa la transcripción. La IA analiza la sesión y la clasifica."
-      >
-        <div
-          className="rounded-md border-2 border-dashed p-5 text-center space-y-2"
-          style={{ borderColor: commissionColor.ring, backgroundColor: `${commissionColor.bg}10` }}
-        >
-          <Sparkles
-            className="h-8 w-8 mx-auto"
-            style={{ color: commissionColor.bg }}
-          />
-          <p className="text-sm font-semibold text-foreground">
-            Pendiente de transcripción
-          </p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Solicita la transcripción desde la pestaña <strong>Procesamiento IA</strong>.
-            Una vez lista, la IA analizará el contenido y completará automáticamente
-            etiquetas, impacto regulatorio, áreas afectadas, comentario y próximo paso.
-          </p>
-        </div>
-      </SectionShell>
-    );
-  }
-
   return (
     <SectionShell
       title="Clasificatoria IA"
       icon={<Sparkles className="h-3.5 w-3.5" />}
-      hint="Generada por IA a partir de la transcripción. Editable por el equipo legal."
+      hint={
+        unlocked
+          ? 'Generada por IA a partir de la transcripción. Editable por el equipo legal.'
+          : 'Estos son los campos que la IA completará automáticamente cuando la transcripción esté lista. Puedes adelantar valores manualmente.'
+      }
     >
-      <div
-        className="rounded-md border p-2.5 mb-3 text-[11px] flex items-center gap-2"
-        style={{
-          backgroundColor: `${commissionColor.bg}15`,
-          borderColor: commissionColor.ring,
-          color: 'hsl(var(--foreground))',
-        }}
-      >
-        <CheckCircle2 className="h-3.5 w-3.5" style={{ color: commissionColor.bg }} />
-        Clasificación generada a partir de la transcripción de la sesión.
-      </div>
+      {!unlocked ? (
+        <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 mb-3 text-[11px] text-muted-foreground flex items-start gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+          <span>
+            <strong className="text-foreground">Pendiente de transcripción.</strong>{' '}
+            Solicita la transcripción desde <strong>Procesamiento IA</strong>. La IA
+            completará estos campos automáticamente al finalizar.
+          </span>
+        </div>
+      ) : (
+        <div className="rounded-md border border-success/30 bg-success/10 p-2.5 mb-3 text-[11px] flex items-center gap-2 text-foreground">
+          <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+          Clasificación generada a partir de la transcripción de la sesión.
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {fields.map((f) => (
           <div
@@ -439,7 +415,11 @@ function SectionClasificatoriaIA({
                 onChange={(e) =>
                   setValues((p) => ({ ...p, [f.label]: e.target.value }))
                 }
-                placeholder="Generado por IA — editable"
+                placeholder={
+                  unlocked
+                    ? 'Generado por IA — editable'
+                    : 'Pendiente de transcripción · puedes adelantar manualmente'
+                }
                 className="text-xs min-h-[60px] bg-muted/20"
               />
             ) : (
@@ -448,12 +428,74 @@ function SectionClasificatoriaIA({
                 onChange={(e) =>
                   setValues((p) => ({ ...p, [f.label]: e.target.value }))
                 }
-                placeholder="Generado por IA — editable"
+                placeholder={
+                  unlocked
+                    ? 'Generado por IA — editable'
+                    : 'Pendiente de transcripción · puedes adelantar manualmente'
+                }
                 className="h-8 text-xs bg-muted/20"
               />
             )}
           </div>
         ))}
+      </div>
+    </SectionShell>
+  );
+}
+
+// ── Transcripción (4to tab) — solo visible cuando está lista ──────────────
+function SectionTranscripcion({ session }: { session: PeruSession }) {
+  const [search, setSearch] = useState('');
+  const transcript = session.recording?.transcription_text;
+  const r = session.recording;
+
+  const filteredTranscript = useMemo(() => {
+    if (!transcript) return '';
+    if (!search) return transcript;
+    const lines = transcript.split('\n');
+    return (
+      lines.filter((l) => l.toLowerCase().includes(search.toLowerCase())).join('\n') ||
+      transcript
+    );
+  }, [transcript, search]);
+
+  if (!transcript) {
+    return (
+      <SectionShell
+        title="Transcripción"
+        icon={<FileText className="h-3.5 w-3.5" />}
+      >
+        <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground text-center">
+          No hay transcripción disponible cargada en este prototipo.
+        </div>
+      </SectionShell>
+    );
+  }
+
+  return (
+    <SectionShell
+      title="Transcripción"
+      icon={<FileText className="h-3.5 w-3.5" />}
+      hint="Texto completo generado por la IA. Buscable."
+    >
+      <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+        <Field label="transcription_status" value={r?.transcription_status ?? 'lista'} mono />
+        <Field label="transcription_tier" value={(r as any)?.transcription_tier ?? '—'} mono />
+        <Field label="transcription_chars" value={(r as any)?.transcription_chars ?? transcript.length} mono />
+        <Field label="transcribed_at" value={fmt((r as any)?.transcribed_at)} />
+      </div>
+
+      <div className="relative mb-2">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar en la transcripción…"
+          className="pl-8 h-8 text-xs"
+        />
+      </div>
+      <div className="rounded-md bg-background/50 border border-border/50 p-3 max-h-[480px] overflow-y-auto text-xs whitespace-pre-wrap text-foreground/85">
+        {filteredTranscript}
       </div>
     </SectionShell>
   );
@@ -639,21 +681,9 @@ function Section6ProcesamientoIA({
   onRequestTranscription: (id: string) => void;
   onRequestChatbot: (id: string) => void;
 }) {
-  const [search, setSearch] = useState('');
   const tState = session.transcription_state ?? 'no_solicitada';
   const cState = session.chatbot_state ?? 'no_solicitado';
-  const transcript = session.recording?.transcription_text;
   const r = session.recording;
-
-  const filteredTranscript = useMemo(() => {
-    if (!transcript) return '';
-    if (!search) return transcript;
-    const lines = transcript.split('\n');
-    return (
-      lines.filter((l) => l.toLowerCase().includes(search.toLowerCase())).join('\n') ||
-      transcript
-    );
-  }, [transcript, search]);
 
   return (
     <SectionShell
@@ -713,30 +743,10 @@ function Section6ProcesamientoIA({
             </div>
           )}
 
-          {tState === 'lista' && transcript && (
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2 text-sm text-success">
-                <CheckCircle2 className="h-4 w-4" />
-                Transcripción lista
-              </div>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar en la transcripción…"
-                  className="pl-8 h-8 text-xs"
-                />
-              </div>
-              <div className="rounded-md bg-background/50 border border-border/50 p-3 max-h-64 overflow-y-auto text-xs whitespace-pre-wrap text-foreground/85">
-                {filteredTranscript}
-              </div>
-            </div>
-          )}
-
-          {tState === 'lista' && !transcript && (
-            <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
-              No hay transcripción disponible cargada en este prototipo.
+          {tState === 'lista' && (
+            <div className="flex items-center gap-2 text-sm text-success pt-1">
+              <CheckCircle2 className="h-4 w-4" />
+              Transcripción lista — disponible en la pestaña <strong>Transcripción</strong>.
             </div>
           )}
         </div>

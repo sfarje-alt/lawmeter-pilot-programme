@@ -132,15 +132,15 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
 
   const renderPromptGroup = (label: string, list: string[]) => (
     <div className="space-y-1.5">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1.5">
         {list.map((p) => (
           <button
             key={p}
             onClick={() => send(p)}
-            className="text-[11px] px-2 py-1 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors text-left"
+            className="text-xs px-2.5 py-1.5 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors text-left"
           >
             {p}
           </button>
@@ -275,7 +275,7 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                   <div
                     key={i}
                     className={cn(
-                      'rounded-md px-3 py-2 text-xs whitespace-pre-wrap',
+                      'rounded-md px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap',
                       m.role === 'user'
                         ? 'bg-primary/15 text-foreground ml-8'
                         : 'bg-muted/40 text-foreground/90 mr-8',
@@ -304,15 +304,15 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                     : 'Pregunta sobre las sesiones habilitadas…'
                 }
                 disabled={enabled.length === 0}
-                className="h-8 text-xs"
+                className="h-9 text-sm"
               />
               <Button
                 type="submit"
                 size="sm"
-                className="h-8 px-2"
+                className="h-9 px-2.5"
                 disabled={enabled.length === 0 || !draft.trim()}
               >
-                <Send className="h-3.5 w-3.5" />
+                <Send className="h-4 w-4" />
               </Button>
             </form>
           </div>
