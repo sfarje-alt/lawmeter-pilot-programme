@@ -36,7 +36,8 @@ export interface SesionesFilters {
   search: string;
   commissions: string[];
   aiStates: string[];           // 'idle' | 'processing' | 'ready'
-  editorialStates: string[];    // 'nueva' | 'pineada' | 'en_seguimiento' | 'archivada'
+  /** @deprecated estado eliminado del flujo editorial */
+  editorialStates: string[];
   videoStates: string[];        // 'pendiente' | 'vinculado' | 'error'
   agendaStates: string[];       // 'pendiente' | 'lista' | 'error'
   sources: string[];
@@ -114,12 +115,8 @@ export function SesionesFilterBar({
     { value: 'ready', label: 'Lista' },
   ];
 
-  const editorialOptions: MultiSelectOption[] = [
-    { value: 'nueva', label: 'Nueva' },
-    { value: 'pineada', label: 'Pineada' },
-    { value: 'en_seguimiento', label: 'En seguimiento' },
-    { value: 'archivada', label: 'Archivada' },
-  ];
+  // (Filtro 'editorialOptions' eliminado: el estado "en seguimiento" ya no existe
+  // y "Pineadas" / "Archivadas" se controlan con los toggles principales.)
 
   const videoOptions: MultiSelectOption[] = [
     { value: 'pendiente', label: 'Pendiente' },
@@ -161,7 +158,6 @@ export function SesionesFilterBar({
     filters.search !== '' ||
     filters.commissions.length > 0 ||
     filters.aiStates.length > 0 ||
-    filters.editorialStates.length > 0 ||
     filters.videoStates.length > 0 ||
     filters.agendaStates.length > 0 ||
     filters.sources.length > 0 ||
@@ -174,7 +170,6 @@ export function SesionesFilterBar({
   const activeFilterCount =
     (filters.commissions.length > 0 ? 1 : 0) +
     (filters.aiStates.length > 0 ? 1 : 0) +
-    (filters.editorialStates.length > 0 ? 1 : 0) +
     (filters.videoStates.length > 0 ? 1 : 0) +
     (filters.agendaStates.length > 0 ? 1 : 0) +
     (filters.sources.length > 0 ? 1 : 0) +
@@ -382,13 +377,8 @@ export function SesionesFilterBar({
               placeholder="Estado IA: Todos"
               className="w-[170px]"
             />
-            <MultiSelect
-              options={editorialOptions}
-              selected={filters.editorialStates}
-              onChange={(editorialStates) => onChange({ ...filters, editorialStates })}
-              placeholder="Editorial: Todos"
-              className="w-[180px]"
-            />
+            {/* Filtro 'Editorial' eliminado — el estado "en seguimiento" ya no existe
+                y los estados "Pineada" / "Archivada" se controlan con los toggles principales. */}
             <MultiSelect
               options={sourceOptions}
               selected={filters.sources}
@@ -457,11 +447,7 @@ export function applySesionesFilters(
       if (!matched) return false;
     }
 
-    // Editorial
-    if (filters.editorialStates.length > 0) {
-      const state = s.editorial_state ?? 'nueva';
-      if (!filters.editorialStates.includes(state)) return false;
-    }
+    // Editorial filter removed — "en seguimiento" no longer exists.
 
     // Video
     if (filters.videoStates.length > 0) {

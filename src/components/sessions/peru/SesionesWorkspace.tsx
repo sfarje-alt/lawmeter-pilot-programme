@@ -41,6 +41,7 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
     archiveSession,
     requestTranscription,
     requestChatbot,
+    appendChatbotSummary,
   } = useSesionesWorkspace();
 
   const [filters, setFilters] = useState<SesionesFilters>(DEFAULT_FILTERS);
@@ -270,7 +271,7 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
       />
 
       {/* Chatbot global persistente */}
-      <SesionesGlobalChatbot sessions={sessions} />
+      <SesionesGlobalChatbot sessions={sessions} onInteraction={appendChatbotSummary} />
     </div>
   );
 }
