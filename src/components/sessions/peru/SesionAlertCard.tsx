@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChatbotChip, TranscriptionChip } from './SesionChips';
-import { getCommissionColor } from './commissionColors';
 import type { PeruSession } from '@/types/peruSessions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -51,7 +50,6 @@ export function SesionAlertCard({
   const isPinned = !!session.is_pinned;
   const isArchived = !!session.is_archived;
   const actionType = item ? detectActionType(item.title) : null;
-  const commissionColor = getCommissionColor(session.commission_name);
 
   const dateLabel = session.scheduled_at
     ? format(new Date(session.scheduled_at), "d MMM yyyy · HH:mm 'h'", { locale: es })
@@ -132,20 +130,10 @@ export function SesionAlertCard({
         {item?.title ?? session.session_title ?? 'Sesión sin título'}
       </h4>
 
-      {/* Comisión — bubble clasificatoria con color único, texto blanco */}
-      <div className="flex items-center gap-1.5 mb-2 min-w-0">
-        <span
-          className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-full text-[11px] font-semibold border shadow-sm"
-          style={{
-            backgroundColor: commissionColor.bg,
-            color: commissionColor.text,
-            borderColor: commissionColor.ring,
-          }}
-          title={`Comisión de ${session.commission_name}`}
-        >
-          <Building2 className="h-3 w-3 shrink-0" style={{ color: commissionColor.text }} />
-          <span className="truncate">Comisión de {session.commission_name}</span>
-        </span>
+      {/* Comisión — texto discreto */}
+      <div className="flex items-center gap-1.5 mb-2 min-w-0 text-xs text-muted-foreground">
+        <Building2 className="h-3 w-3 shrink-0 opacity-70" />
+        <span className="truncate">Comisión de {session.commission_name}</span>
       </div>
 
       {/* Materia temática + proyectos vinculados */}
