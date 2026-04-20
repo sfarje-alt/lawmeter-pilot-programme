@@ -22,11 +22,11 @@ const LS_LEGAL = 'lawmeter:sesiones:legal-review';
 
 interface EditorialEntry {
   is_pinned: boolean;
-  is_follow_up: boolean;
   is_archived: boolean;
   editorial_state: SesionEditorialState;
   transcription_state: SesionTranscriptionState;
   chatbot_state: SesionChatbotState;
+  chatbot_summary?: string;
 }
 
 type EditorialMap = Record<string, EditorialEntry>;
@@ -53,18 +53,17 @@ function writeJSON(key: string, value: unknown) {
 function deriveEditorialState(entry: EditorialEntry): SesionEditorialState {
   if (entry.is_archived) return 'archivada';
   if (entry.is_pinned) return 'pineada';
-  if (entry.is_follow_up) return 'en_seguimiento';
   return entry.editorial_state === 'en_revision' ? 'en_revision' : 'nueva';
 }
 
 function makeEntry(session: PeruSession): EditorialEntry {
   return {
     is_pinned: !!(session.is_pinned ?? session.is_pinned_for_publication),
-    is_follow_up: !!session.is_follow_up,
     is_archived: !!session.is_archived,
     editorial_state: session.editorial_state ?? 'nueva',
     transcription_state: session.transcription_state ?? 'no_solicitada',
     chatbot_state: session.chatbot_state ?? 'no_solicitado',
+    chatbot_summary: session.chatbot_summary,
   };
 }
 
@@ -110,15 +109,16 @@ export function useSesionesWorkspace() {
         const nextEditorial: EditorialMap = {};
         const nextLegal: LegalMap = {};
         for (const row of data) {
+          const meta = (row.legal_review as any) ?? {};
           nextEditorial[row.session_id] = {
             is_pinned: !!row.is_pinned,
-            is_follow_up: !!row.is_follow_up,
             is_archived: !!row.is_archived,
             editorial_state: (row.editorial_state ?? 'nueva') as SesionEditorialState,
             transcription_state: (row.transcription_state ?? 'no_solicitada') as SesionTranscriptionState,
             chatbot_state: (row.chatbot_state ?? 'no_solicitado') as SesionChatbotState,
+            chatbot_summary: typeof meta?.__chatbot_summary === 'string' ? meta.__chatbot_summary : undefined,
           };
-          if (row.legal_review) {
+          if (row.legal_review && Object.keys(meta).some((k) => k !== '__chatbot_summary')) {
             nextLegal[row.session_id] = row.legal_review as unknown as SesionLegalReview;
           }
         }
@@ -148,11 +148,12 @@ export function useSesionesWorkspace() {
         ...s,
         is_pinned: entry.is_pinned,
         is_pinned_for_publication: entry.is_pinned,
-        is_follow_up: entry.is_follow_up,
+        is_follow_up: false,
         is_archived: entry.is_archived,
         editorial_state,
         transcription_state: entry.transcription_state,
         chatbot_state: entry.chatbot_state,
+        chatbot_summary: entry.chatbot_summary ?? s.chatbot_summary,
         legal_review: legal[s.id] ?? s.legal_review,
       } satisfies PeruSession;
     });
@@ -162,16 +163,21 @@ export function useSesionesWorkspace() {
   const upsertRemote = useCallback(
     async (sessionId: string, entry: EditorialEntry, legalReview?: SesionLegalReview) => {
       if (!userId) return;
+      // Empaquetamos el resumen del chatbot dentro de legal_review (jsonb) para no requerir migración.
+      const legalPayload =
+        legalReview !== undefined || entry.chatbot_summary !== undefined
+          ? { ...(legalReview ?? {}), __chatbot_summary: entry.chatbot_summary ?? null }
+          : undefined;
       const payload = {
         session_id: sessionId,
         user_id: userId,
         is_pinned: entry.is_pinned,
-        is_follow_up: entry.is_follow_up,
+        is_follow_up: false,
         is_archived: entry.is_archived,
         editorial_state: deriveEditorialState(entry),
         transcription_state: entry.transcription_state,
         chatbot_state: entry.chatbot_state,
-        ...(legalReview !== undefined ? { legal_review: legalReview as any } : {}),
+        ...(legalPayload !== undefined ? { legal_review: legalPayload as any } : {}),
       };
       const { error } = await supabase
         .from('session_editorial_state')
@@ -211,16 +217,6 @@ export function useSesionesWorkspace() {
     [sessions, mutate],
   );
 
-  const toggleFollowUp = useCallback(
-    (sessionId: string) => {
-      const s = sessions.find((x) => x.id === sessionId);
-      const next = !s?.is_follow_up;
-      mutate(sessionId, { is_follow_up: next, is_archived: false });
-      toast.success(next ? 'Marcada para seguimiento' : 'Seguimiento removido');
-    },
-    [sessions, mutate],
-  );
-
   const archiveSession = useCallback(
     (sessionId: string) => {
       const s = sessions.find((x) => x.id === sessionId);
@@ -228,9 +224,26 @@ export function useSesionesWorkspace() {
       mutate(sessionId, {
         is_archived: next,
         is_pinned: next ? false : s?.is_pinned ?? false,
-        is_follow_up: next ? false : s?.is_follow_up ?? false,
       });
       toast.success(next ? 'Sesión archivada' : 'Sesión restaurada');
+    },
+    [sessions, mutate],
+  );
+
+  /** Acumula/actualiza el resumen del chatbot para una sesión.
+   * Se llama desde el chatbot global cada vez que el usuario interactúa con
+   * una alerta habilitada, de forma que el "Análisis IA" del reporte y del
+   * tab Clasificatoria IA se mantengan actualizados.
+   */
+  const appendChatbotSummary = useCallback(
+    (sessionId: string, snippet: string) => {
+      const trimmed = snippet.trim();
+      if (!trimmed) return;
+      const s = sessions.find((x) => x.id === sessionId);
+      const previous = s?.chatbot_summary?.trim() ?? '';
+      // Limitar tamaño total para evitar crecimiento ilimitado
+      const merged = (previous ? `${previous}\n\n${trimmed}` : trimmed).slice(-4000);
+      mutate(sessionId, { chatbot_summary: merged });
     },
     [sessions, mutate],
   );
@@ -287,7 +300,6 @@ export function useSesionesWorkspace() {
     return {
       total: visible.length,
       pinned: visible.filter((s) => s.is_pinned).length,
-      followUp: visible.filter((s) => s.is_follow_up).length,
       processingAI: visible.filter(
         (s) =>
           s.transcription_state === 'procesando' ||
@@ -295,7 +307,7 @@ export function useSesionesWorkspace() {
           s.chatbot_state === 'procesando' ||
           s.chatbot_state === 'en_cola',
       ).length,
-      eligibleForReport: visible.filter((s) => s.is_pinned || s.is_follow_up).length,
+      eligibleForReport: visible.filter((s) => s.is_pinned).length,
       readyForReview: visible.filter(
         (s) => s.transcription_state === 'lista' && s.chatbot_state === 'listo',
       ).length,
@@ -310,10 +322,10 @@ export function useSesionesWorkspace() {
     openedIds,
     markOpened,
     togglePin,
-    toggleFollowUp,
     archiveSession,
     requestTranscription,
     requestChatbot,
     updateLegalReview,
+    appendChatbotSummary,
   };
 }

@@ -20,7 +20,6 @@ const EDITORIAL_LABELS: Record<SesionEditorialState, string> = {
   nueva: 'Nueva',
   en_revision: 'En revisión',
   pineada: 'Pineada',
-  en_seguimiento: 'En seguimiento',
   archivada: 'Archivada',
 };
 
@@ -28,7 +27,6 @@ const EDITORIAL_CLASSES: Record<SesionEditorialState, string> = {
   nueva: 'bg-muted/40 text-muted-foreground border-border',
   en_revision: 'bg-primary/10 text-primary border-primary/30',
   pineada: 'bg-primary text-primary-foreground border-transparent',
-  en_seguimiento: 'bg-warning/15 text-warning border-warning/40',
   archivada: 'bg-muted/60 text-muted-foreground border-border',
 };
 

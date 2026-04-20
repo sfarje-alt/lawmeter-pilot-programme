@@ -2,10 +2,10 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pin, Eye, Archive, Sparkles, FileText } from 'lucide-react';
+import { Pin, Archive, Sparkles, FileText } from 'lucide-react';
 
 interface EmptyProps {
-  variant: 'pinned' | 'follow_up' | 'archived' | 'all' | 'transcription' | 'chatbot';
+  variant: 'pinned' | 'archived' | 'all' | 'transcription' | 'chatbot';
   onAction?: () => void;
   actionLabel?: string;
 }
@@ -19,12 +19,6 @@ const COPY: Record<
     title: 'No hay sesiones pineadas',
     description:
       'Marca como pineada una alerta que quieras destacar para el próximo reporte regulatorio.',
-  },
-  follow_up: {
-    icon: Eye,
-    title: 'No hay sesiones en seguimiento',
-    description:
-      'Da seguimiento a las alertas que requieren monitoreo continuo durante el ciclo legislativo.',
   },
   archived: {
     icon: Archive,
