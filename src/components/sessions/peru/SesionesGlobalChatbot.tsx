@@ -132,15 +132,15 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
 
   const renderPromptGroup = (label: string, list: string[]) => (
     <div className="space-y-1.5">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1.5">
         {list.map((p) => (
           <button
             key={p}
             onClick={() => send(p)}
-            className="text-[11px] px-2 py-1 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors text-left"
+            className="text-xs px-2.5 py-1.5 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors text-left"
           >
             {p}
           </button>
