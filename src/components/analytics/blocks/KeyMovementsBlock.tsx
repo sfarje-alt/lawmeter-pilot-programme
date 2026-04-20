@@ -117,7 +117,7 @@ export function KeyMovementsBlock({
       source={source}
       isEmpty={isEmpty}
       icon={<Sparkles className="h-4 w-4 text-primary" />}
-      filterDimensions={['period', 'search']}
+      filterDimensions={['legislationType', 'impactLevels', 'search']}
       filterState={filterState}
       renderExpanded={() => (
         <div className="space-y-4">

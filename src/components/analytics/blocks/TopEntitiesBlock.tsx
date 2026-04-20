@@ -98,7 +98,7 @@ export function TopEntitiesBlock({
         source={source}
         isEmpty={isEmpty}
         icon={<Building2 className="h-4 w-4 text-primary" />}
-        filterDimensions={['period', 'legislationType', 'impactLevels', 'search']}
+        filterDimensions={['legislationType', 'impactLevels', 'search']}
         filterState={filterState}
         renderExpanded={() => (
           <div className="h-full w-full">{renderChart(fullData.slice(0, 20))}</div>

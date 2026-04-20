@@ -103,39 +103,7 @@ export function BlockFilterPanel({
         Filtros
       </div>
 
-      {dimensions.includes('period') && (
-        <div className="flex flex-col gap-1 min-w-[180px]">
-          <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Período</Label>
-          <Select
-            value={filters.period || 'inherit'}
-            onValueChange={(v) => setFilter('period', v as BlockFilters['period'])}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PERIOD_OPTIONS.map(o => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {showCustomDate && (
-        <>
-          <DateField
-            label="Desde"
-            value={filters.customDateFrom}
-            onChange={(v) => setFilter('customDateFrom', v)}
-          />
-          <DateField
-            label="Hasta"
-            value={filters.customDateTo}
-            onChange={(v) => setFilter('customDateTo', v)}
-          />
-        </>
-      )}
+      {/* Período se controla desde el filtro global del dashboard, no por bloque */}
 
       {dimensions.includes('legislationType') && (
         <div className="flex flex-col gap-1 min-w-[160px]">

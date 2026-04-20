@@ -156,7 +156,7 @@ export function AlertDistributionBlock({
         source={source}
         isEmpty={isEmpty}
         icon={<PieChartIcon className="h-4 w-4 text-primary" />}
-        filterDimensions={['period', 'legislationType', 'impactLevels', 'search']}
+        filterDimensions={['legislationType', 'impactLevels', 'search']}
         filterState={filterState}
         renderExpanded={() => (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">

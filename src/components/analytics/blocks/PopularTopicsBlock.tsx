@@ -120,7 +120,7 @@ export function PopularTopicsBlock({
         source={source}
         isEmpty={isEmpty}
         icon={<Hash className="h-4 w-4 text-primary" />}
-        filterDimensions={['period', 'legislationType', 'impactLevels', 'search']}
+        filterDimensions={['legislationType', 'impactLevels', 'search']}
         filterState={filterState}
         renderExpanded={() => (
           <div className="overflow-auto">{renderList(fullData.slice(0, 20))}</div>

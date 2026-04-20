@@ -107,7 +107,7 @@ export function EditorialResponseTimeBlock({
       source={source}
       isEmpty={isEmpty}
       icon={<Eye className="h-4 w-4 text-primary" />}
-      filterDimensions={['period']}
+      filterDimensions={[]}
       filterState={filterState}
       renderExpanded={() => (
         <div className="h-full w-full">{renderChart(false)}</div>

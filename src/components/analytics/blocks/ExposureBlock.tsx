@@ -149,7 +149,7 @@ export function ExposureBlock({
         source={source}
         isEmpty={isEmpty}
         icon={<Shield className="h-4 w-4 text-primary" />}
-        filterDimensions={['search', 'impactLevels']}
+        filterDimensions={['legislationType', 'impactLevels', 'search']}
         filterState={filterState}
         renderExpanded={() => (
           <div className="h-full w-full overflow-auto">{renderBars(filteredData, false)}</div>
