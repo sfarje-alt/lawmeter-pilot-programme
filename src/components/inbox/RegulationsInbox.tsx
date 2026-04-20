@@ -5,6 +5,7 @@ import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { RegulationsFilterBar } from "./RegulationsFilterBar";
 import { InboxAlertCard } from "./InboxAlertCard";
 import { PeruAlert } from "@/data/peruAlertsMockData";
+import { useReadAlerts } from "@/hooks/useReadAlerts";
 
 interface RegulationsInboxProps {
   alerts: PeruAlert[];
@@ -31,6 +32,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
+  const { isRead, markAsRead } = useReadAlerts();
   const [filters, setFilters] = useState<RegulationsFilters>({
     search: "",
     areas: [],
@@ -173,6 +175,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
   }), [regulationAlerts, filteredAlerts]);
 
   const handleAlertClick = (alert: PeruAlert) => {
+    markAsRead(alert.id);
     setSelectedAlert(alert);
     setDrawerOpen(true);
   };
@@ -257,6 +260,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
               onArchive={onArchive}
               onUnarchive={onUnarchive}
               isArchiveView={filters.showArchived}
+              isUnread={!isRead(alert.id)}
             />
           ))
         )}
