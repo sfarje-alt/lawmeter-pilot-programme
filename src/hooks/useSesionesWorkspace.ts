@@ -79,6 +79,14 @@ export function useSesionesWorkspace() {
   const [legal, setLegal] = useState<LegalMap>(() =>
     readJSON<LegalMap>(LS_LEGAL, {}),
   );
+  const [openedIdsArr, setOpenedIdsArr] = useState<string[]>(() =>
+    readJSON<string[]>('lawmeter:sesiones:opened', ['demo-sesion-5-2', 'demo-sesion-5-3', 'demo-sesion-5-4']),
+  );
+  useEffect(() => writeJSON('lawmeter:sesiones:opened', openedIdsArr), [openedIdsArr]);
+  const openedIds = useMemo(() => new Set(openedIdsArr), [openedIdsArr]);
+  const markOpened = useCallback((id: string) => {
+    setOpenedIdsArr((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  }, []);
   const hydratedRef = useRef(false);
 
   // Hidratar desde Supabase cuando hay usuario
@@ -299,6 +307,8 @@ export function useSesionesWorkspace() {
     sessions,
     isLoading: base.isLoading,
     stats,
+    openedIds,
+    markOpened,
     togglePin,
     toggleFollowUp,
     archiveSession,

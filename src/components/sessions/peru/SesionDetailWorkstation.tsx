@@ -1,75 +1,57 @@
-// SesionDetailWorkstation — Sheet con header sticky + 5 tabs.
+// SesionDetailWorkstation — Sheet con header sticky + 4 tabs.
+// Tabs: Resumen · Orden del día · Video y fuente · IA.
+// Sin tab de Revisión legal. Sin "Dar seguimiento". Solo Pin / Archivar.
+// Solo muestra datos source-backed; los enriquecimientos se reservan como placeholders.
 
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Pin,
   PinOff,
-  Eye,
-  EyeOff,
   Archive,
+  ArchiveRestore,
   ExternalLink,
   Sparkles,
   Loader2,
   CheckCircle2,
   Search,
-  FileDown,
   Building2,
   Calendar as CalendarIcon,
+  FileText,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import {
   AgendaChip,
   ChatbotChip,
   EditorialChip,
-  EtiquetaIAChip,
-  ImpactChip,
-  RiskChip,
   TranscriptionChip,
-  UrgencyChip,
   VideoChip,
 } from './SesionChips';
-import { SesionesEmptyState } from './SesionesEmptyStates';
-import { ReportesConnector } from './ReportesConnector';
-import type { PeruSession, SesionLegalReview } from '@/types/peruSessions';
+import type { PeruSession } from '@/types/peruSessions';
 
 interface Props {
   session: PeruSession | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTogglePin: (id: string) => void;
-  onToggleFollowUp: (id: string) => void;
   onArchive: (id: string) => void;
   onRequestTranscription: (id: string) => void;
   onRequestChatbot: (id: string) => void;
-  onUpdateLegalReview: (id: string, review: SesionLegalReview) => void;
 }
-
-const SUGGESTED_PROMPTS = [
-  'Resume lo discutido',
-  '¿Qué riesgos regulatorios aparecen?',
-  '¿Qué temas podrían impactar a la compañía?',
-  '¿Qué proyectos fueron debatidos?',
-];
 
 export function SesionDetailWorkstation({
   session,
   open,
   onOpenChange,
   onTogglePin,
-  onToggleFollowUp,
   onArchive,
   onRequestTranscription,
   onRequestChatbot,
-  onUpdateLegalReview,
 }: Props) {
   if (!session) {
     return (
@@ -130,21 +112,25 @@ export function SesionDetailWorkstation({
                 variant={session.is_pinned ? 'default' : 'outline'}
                 onClick={() => onTogglePin(session.id)}
               >
-                {session.is_pinned ? <PinOff className="h-3.5 w-3.5 mr-1" /> : <Pin className="h-3.5 w-3.5 mr-1" />}
+                {session.is_pinned ? (
+                  <PinOff className="h-3.5 w-3.5 mr-1" />
+                ) : (
+                  <Pin className="h-3.5 w-3.5 mr-1" />
+                )}
                 {session.is_pinned ? 'Quitar pin' : 'Pin'}
               </Button>
-              <Button
-                size="sm"
-                variant={session.is_follow_up ? 'secondary' : 'outline'}
-                className={cn(session.is_follow_up && 'bg-amber-500/20 text-amber-200 hover:bg-amber-500/30')}
-                onClick={() => onToggleFollowUp(session.id)}
-              >
-                {session.is_follow_up ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
-                {session.is_follow_up ? 'Quitar seguimiento' : 'Dar seguimiento'}
-              </Button>
               <Button size="sm" variant="ghost" onClick={() => onArchive(session.id)}>
-                <Archive className="h-3.5 w-3.5 mr-1" />
-                {session.is_archived ? 'Restaurar' : 'Archivar'}
+                {session.is_archived ? (
+                  <>
+                    <ArchiveRestore className="h-3.5 w-3.5 mr-1" />
+                    Restaurar
+                  </>
+                ) : (
+                  <>
+                    <Archive className="h-3.5 w-3.5 mr-1" />
+                    Archivar
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -153,12 +139,11 @@ export function SesionDetailWorkstation({
         {/* Tabs */}
         <div className="p-5">
           <Tabs defaultValue="resumen">
-            <TabsList className="grid grid-cols-5 bg-muted/40">
+            <TabsList className="grid grid-cols-4 bg-muted/40">
               <TabsTrigger value="resumen">Resumen</TabsTrigger>
               <TabsTrigger value="agenda">Orden del día</TabsTrigger>
               <TabsTrigger value="video">Video y fuente</TabsTrigger>
               <TabsTrigger value="ia">IA</TabsTrigger>
-              <TabsTrigger value="legal">Revisión legal</TabsTrigger>
             </TabsList>
 
             <TabsContent value="resumen" className="mt-4">
@@ -177,17 +162,7 @@ export function SesionDetailWorkstation({
                 onRequestChatbot={onRequestChatbot}
               />
             </TabsContent>
-            <TabsContent value="legal" className="mt-4">
-              <TabLegal session={session} onUpdate={onUpdateLegalReview} />
-            </TabsContent>
           </Tabs>
-
-          <div className="mt-6">
-            <ReportesConnector
-              pinned={session.is_pinned ? 1 : 0}
-              followUp={session.is_follow_up ? 1 : 0}
-            />
-          </div>
         </div>
       </SheetContent>
     </Sheet>
@@ -196,31 +171,62 @@ export function SesionDetailWorkstation({
 
 // ── Tab Resumen ──────────────────────────────────────────────────────────────
 function TabResumen({ session }: { session: PeruSession }) {
+  const r = session.recording;
   return (
     <div className="space-y-4 text-sm">
-      <Section title="Resumen ejecutivo">
-        <p className="text-foreground/90 leading-relaxed">
-          {session.executive_summary ?? 'Sin resumen disponible.'}
-        </p>
+      <Section title="Metadata de la sesión">
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <Field label="external_id" value={session.external_session_id} mono />
+          <Field label="status" value={session.status} />
+          <Field label="commission_name" value={session.commission_name} />
+          <Field label="scheduled_date_text" value={session.scheduled_date_text} />
+          <Field label="source" value={session.source} mono />
+          <Field label="source_file_name" value={session.source_file_name} mono />
+          <Field label="created_at" value={fmt(session.created_at)} />
+          <Field label="updated_at" value={fmt(session.updated_at)} />
+        </div>
+        {session.session_title && (
+          <div className="mt-3">
+            <Field label="session_title" value={session.session_title} block />
+          </div>
+        )}
       </Section>
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        {session.etiqueta_ia && <EtiquetaIAChip label={session.etiqueta_ia} />}
-        {session.impact_level && <ImpactChip level={session.impact_level} />}
-        {session.urgency_level && <UrgencyChip level={session.urgency_level} />}
-        {session.risk_level && <RiskChip level={session.risk_level} />}
-      </div>
-
-      <Section title="Por qué importa">
-        <p className="text-foreground/90 leading-relaxed">
-          {session.why_it_matters ?? '—'}
-        </p>
+      <Section title="Estado de workflow">
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <Field label="agenda" value={session.agenda_state ?? '—'} />
+          <Field label="video" value={session.video_state ?? '—'} />
+          <Field label="transcription" value={session.transcription_state ?? '—'} />
+          <Field label="chatbot" value={session.chatbot_state ?? '—'} />
+          {r?.transcription_status && (
+            <Field label="recording.transcription_status" value={r.transcription_status} mono />
+          )}
+          {r?.analysis_status && (
+            <Field label="recording.analysis_status" value={r.analysis_status} mono />
+          )}
+          {r?.analyzed_at && <Field label="recording.analyzed_at" value={fmt(r.analyzed_at)} />}
+        </div>
       </Section>
 
-      <Section title="Próximo paso sugerido">
-        <p className="text-foreground/90 leading-relaxed">
-          {session.suggested_next_step ?? '—'}
-        </p>
+      <Section title="Análisis enriquecido">
+        <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-4 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            No hay resumen enriquecido todavía.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Esta sesión solo cuenta con metadata estructurada y agenda. El análisis
+            adicional aparecerá cuando exista transcripción o cuando se ejecute la
+            capa de análisis.
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <Badge variant="outline" className="text-[11px] text-muted-foreground border-border/60">
+              Clasificación IA: pendiente
+            </Badge>
+            <Badge variant="outline" className="text-[11px] text-muted-foreground border-border/60">
+              Comentario regulatorio: disponible con análisis posterior
+            </Badge>
+          </div>
+        </div>
       </Section>
     </div>
   );
@@ -229,88 +235,113 @@ function TabResumen({ session }: { session: PeruSession }) {
 // ── Tab Agenda ───────────────────────────────────────────────────────────────
 function TabAgenda({ session }: { session: PeruSession }) {
   const item = session.agenda_item;
-  if (!item) return <SesionesEmptyState variant="all" />;
+  if (!item) {
+    return (
+      <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+        Sin ítem de agenda asociado a esta sesión.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border/50 bg-card/40 p-4 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <span className="inline-flex items-center px-2 h-5 rounded bg-primary/15 text-primary text-[11px] font-mono font-semibold">
-              Ítem {item.item_number}
-            </span>
-            <h3 className="font-semibold text-foreground text-sm">{item.title}</h3>
-          </div>
-          {session.impact_level && <ImpactChip level={session.impact_level} />}
+        <div className="flex items-start gap-2">
+          <span className="inline-flex items-center px-2 h-5 rounded bg-primary/15 text-primary text-[11px] font-mono font-semibold shrink-0 mt-0.5">
+            Ítem {item.item_number}
+          </span>
+          <h3 className="font-semibold text-foreground text-sm leading-snug">{item.title}</h3>
         </div>
 
-        {item.thematic_area && (
-          <Badge variant="outline" className="text-[11px]">
-            Área: {item.thematic_area}
-          </Badge>
-        )}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {item.thematic_area && (
+            <Badge variant="outline" className="text-[11px]">
+              Área: {item.thematic_area}
+            </Badge>
+          )}
+          {detectActionType(item.title) && (
+            <Badge variant="secondary" className="text-[11px] bg-muted/50">
+              {detectActionType(item.title)}
+            </Badge>
+          )}
+        </div>
 
         {item.bill_numbers.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="space-y-1.5">
             <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
-              Proyectos:
+              Proyectos vinculados
             </span>
-            {item.bill_numbers.map((b) => (
-              <Badge key={b} variant="outline" className="font-mono text-[11px]">
-                {b}
-              </Badge>
-            ))}
+            <div className="flex flex-wrap gap-1.5">
+              {item.bill_numbers.map((b) => (
+                <Badge
+                  key={b}
+                  variant="outline"
+                  className="font-mono text-[11px] border-border/60 bg-background/40"
+                >
+                  {b}
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
+      </div>
 
-        <p className="text-sm text-foreground/85 leading-relaxed">
-          {session.preliminary_impact ?? session.executive_summary ?? '—'}
-        </p>
+      <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-4 text-xs text-muted-foreground">
+        Solo se muestra contenido directamente derivable del título y los proyectos
+        listados en la agenda. Resúmenes y análisis aparecerán cuando exista
+        transcripción o capa de análisis.
       </div>
     </div>
   );
 }
 
-// ── Tab Video ────────────────────────────────────────────────────────────────
+// ── Tab Video y fuente ───────────────────────────────────────────────────────
 function TabVideo({ session }: { session: PeruSession }) {
   const r = session.recording;
   return (
     <div className="space-y-4 text-sm">
-      <Section title="Fuente oficial">
-        {session.agenda_url ? (
-          <a
-            href={session.agenda_url}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-primary hover:underline text-sm"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Abrir agenda oficial
-          </a>
-        ) : (
-          <p className="text-muted-foreground">Sin enlace oficial registrado.</p>
+      <Section title="Agenda oficial">
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <Field label="agenda_url" value={session.agenda_url} link />
+          <Field label="documents_url" value={session.documents_url} link />
+          <Field label="source" value={session.source} mono />
+          <Field label="source_file_name" value={session.source_file_name} mono />
+        </div>
+        {session.agenda_url && (
+          <Button asChild size="sm" variant="outline" className="mt-3">
+            <a href={session.agenda_url} target="_blank" rel="noreferrer">
+              <ExternalLink className="h-3.5 w-3.5 mr-1" />
+              Abrir agenda oficial
+            </a>
+          </Button>
         )}
       </Section>
 
-      <Section title="Grabación YouTube">
-        {r?.video_url ? (
+      <Section title="Grabación (recording)">
+        {r ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <Field label="Proveedor" value={r.provider} />
-              <Field label="Canal" value={r.channel_name} />
-              <Field label="Confianza" value={r.resolution_confidence ?? '—'} />
-              <Field label="Método" value={r.resolution_method ?? '—'} />
+              <Field label="recording.provider" value={r.provider} mono />
+              <Field label="recording.channel_name" value={r.channel_name} />
+              <Field label="recording.channel_id" value={r.channel_id} mono />
+              <Field label="recording.video_id" value={r.video_id} mono />
+              <Field label="recording.resolution_confidence" value={r.resolution_confidence} mono />
+              <Field label="recording.resolution_method" value={r.resolution_method} mono />
+              <Field label="recording.resolved_at" value={fmt(r.resolved_at)} />
+              <Field label="recording.last_error" value={r.last_error ?? '—'} />
             </div>
-            <Field label="Título esperado" value={r.expected_title ?? '—'} />
-            <Button asChild size="sm" variant="outline">
-              <a href={r.video_url} target="_blank" rel="noreferrer">
-                <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                Abrir video
-              </a>
-            </Button>
+            <Field label="recording.expected_title" value={r.expected_title ?? '—'} block />
+            {r.video_url && (
+              <Button asChild size="sm" variant="outline">
+                <a href={r.video_url} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                  Abrir video en YouTube
+                </a>
+              </Button>
+            )}
           </div>
         ) : (
-          <p className="text-muted-foreground">Video pendiente de vincular.</p>
+          <p className="text-muted-foreground text-xs">Sin grabación registrada.</p>
         )}
       </Section>
     </div>
@@ -333,9 +364,13 @@ function TabIA({
   const transcript = session.recording?.transcription_text;
 
   const filteredTranscript = useMemo(() => {
-    if (!transcript || !search) return transcript;
-    return transcript;
+    if (!transcript) return '';
+    if (!search) return transcript;
+    const lines = transcript.split('\n');
+    return lines.filter((l) => l.toLowerCase().includes(search.toLowerCase())).join('\n') || transcript;
   }, [transcript, search]);
+
+  const r = session.recording;
 
   return (
     <div className="space-y-5">
@@ -349,8 +384,16 @@ function TabIA({
           <TranscriptionChip state={tState} />
         </div>
 
+        {/* Metadata source-backed */}
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <Field label="transcription_status" value={r?.transcription_status ?? tState} mono />
+          <Field label="transcription_tier" value={(r as any)?.transcription_tier ?? '—'} mono />
+          <Field label="transcription_chars" value={(r as any)?.transcription_chars ?? '—'} mono />
+          <Field label="transcribed_at" value={fmt((r as any)?.transcribed_at)} />
+        </div>
+
         {tState === 'no_solicitada' && (
-          <div className="space-y-2">
+          <div className="space-y-2 pt-1">
             <p className="text-sm text-muted-foreground">
               La transcripción no ha sido solicitada. Toma aproximadamente 20 minutos.
             </p>
@@ -361,15 +404,15 @@ function TabIA({
         )}
 
         {(tState === 'en_cola' || tState === 'procesando') && (
-          <div className="flex items-center gap-2 text-sm text-blue-300">
+          <div className="flex items-center gap-2 text-sm text-primary">
             <Loader2 className="h-4 w-4 animate-spin" />
             {tState === 'en_cola' ? 'En cola · ~20 min' : 'Procesando · ~20 min'}
           </div>
         )}
 
         {tState === 'lista' && transcript && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-emerald-300">
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center gap-2 text-sm text-success">
               <CheckCircle2 className="h-4 w-4" />
               Transcripción lista
             </div>
@@ -387,50 +430,45 @@ function TabIA({
             </div>
           </div>
         )}
+
+        {tState === 'lista' && !transcript && (
+          <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
+            Hay metadata de transcripción pero el texto no está cargado en este prototipo.
+          </div>
+        )}
       </div>
 
-      {/* Módulo Chatbot */}
+      {/* Módulo Chatbot global */}
       <div className="rounded-lg border border-border/50 bg-card/40 p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            Chatbot de la sesión
+            Habilitar para chatbot global
           </h3>
           <ChatbotChip state={cState} />
         </div>
 
-        {cState === 'no_solicitado' && (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              El chatbot no ha sido preparado. Toma aproximadamente 20 minutos.
-            </p>
-            <Button size="sm" onClick={() => onRequestChatbot(session.id)}>
-              Preparar chatbot
-            </Button>
-          </div>
-        )}
+        <p className="text-xs text-muted-foreground">
+          El asistente de Sesiones es <strong>global</strong>: responde sobre todas las
+          alertas habilitadas. Habilita esta sesión para que el chatbot pueda leer
+          su metadata, agenda y transcripción cuando esté disponible.
+        </p>
 
+        {cState === 'no_solicitado' && (
+          <Button size="sm" onClick={() => onRequestChatbot(session.id)}>
+            Habilitar para chatbot
+          </Button>
+        )}
         {(cState === 'en_cola' || cState === 'procesando') && (
-          <div className="flex items-center gap-2 text-sm text-blue-300">
+          <div className="flex items-center gap-2 text-sm text-primary">
             <Loader2 className="h-4 w-4 animate-spin" />
             {cState === 'en_cola' ? 'En cola · ~20 min' : 'Procesando · ~20 min'}
           </div>
         )}
-
         {cState === 'listo' && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-emerald-300">
-              <CheckCircle2 className="h-4 w-4" />
-              Chatbot listo
-            </div>
-            <p className="text-xs text-muted-foreground">Prompts sugeridos:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {SUGGESTED_PROMPTS.map((p) => (
-                <Badge key={p} variant="outline" className="text-[11px] cursor-pointer hover:bg-primary/10">
-                  {p}
-                </Badge>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 text-sm text-success">
+            <CheckCircle2 className="h-4 w-4" />
+            Habilitada para el chatbot global
           </div>
         )}
       </div>
@@ -438,109 +476,69 @@ function TabIA({
   );
 }
 
-// ── Tab Legal ────────────────────────────────────────────────────────────────
-function TabLegal({
-  session,
-  onUpdate,
-}: {
-  session: PeruSession;
-  onUpdate: (id: string, review: SesionLegalReview) => void;
-}) {
-  const [draft, setDraft] = useState<SesionLegalReview>(
-    session.legal_review ?? {
-      resumen_legal: '',
-      riesgo: '',
-      urgencia: '',
-      impacto: '',
-      areas_afectadas: [],
-      proximos_pasos: '',
-      comentario_experto: '',
-    },
-  );
-
-  // Auto-save con debounce
-  useEffect(() => {
-    const t = setTimeout(() => onUpdate(session.id, draft), 600);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft]);
-
-  const set = <K extends keyof SesionLegalReview>(k: K, v: SesionLegalReview[K]) =>
-    setDraft((prev) => ({ ...prev, [k]: v }));
-
-  return (
-    <div className="space-y-4 text-sm">
-      <FormField label="Resumen legal">
-        <Textarea rows={3} value={draft.resumen_legal} onChange={(e) => set('resumen_legal', e.target.value)} />
-      </FormField>
-
-      <div className="grid grid-cols-3 gap-3">
-        <FormField label="Riesgo">
-          <Input value={draft.riesgo} onChange={(e) => set('riesgo', e.target.value)} />
-        </FormField>
-        <FormField label="Urgencia">
-          <Input value={draft.urgencia} onChange={(e) => set('urgencia', e.target.value)} />
-        </FormField>
-        <FormField label="Impacto">
-          <Input value={draft.impacto} onChange={(e) => set('impacto', e.target.value)} />
-        </FormField>
-      </div>
-
-      <FormField label="Áreas afectadas (separadas por coma)">
-        <Input
-          value={draft.areas_afectadas.join(', ')}
-          onChange={(e) =>
-            set(
-              'areas_afectadas',
-              e.target.value
-                .split(',')
-                .map((s) => s.trim())
-                .filter(Boolean),
-            )
-          }
-        />
-      </FormField>
-
-      <FormField label="Próximos pasos">
-        <Textarea rows={2} value={draft.proximos_pasos} onChange={(e) => set('proximos_pasos', e.target.value)} />
-      </FormField>
-
-      <FormField label="Comentario experto">
-        <Textarea rows={4} value={draft.comentario_experto} onChange={(e) => set('comentario_experto', e.target.value)} />
-      </FormField>
-
-      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-        <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-        Auto-guardado al editar.
-      </p>
-    </div>
-  );
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── helpers ─────────────────────────────────────────────────────────────────
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <h4 className="text-xs uppercase tracking-wide text-muted-foreground font-medium">{title}</h4>
-      {children}
+    <div className="space-y-2">
+      <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
+        {title}
+      </h4>
+      <div className="rounded-lg border border-border/50 bg-card/40 p-4">{children}</div>
     </div>
   );
 }
 
-function Field({ label, value }: { label: string; value?: string | null }) {
+function Field({
+  label,
+  value,
+  mono,
+  block,
+  link,
+}: {
+  label: string;
+  value?: string | number | null;
+  mono?: boolean;
+  block?: boolean;
+  link?: boolean;
+}) {
+  const v = value === null || value === undefined || value === '' ? '—' : String(value);
   return (
-    <div>
-      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="text-xs text-foreground break-words">{value ?? '—'}</p>
+    <div className={block ? 'col-span-2 space-y-0.5' : 'space-y-0.5'}>
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground/80">{label}</div>
+      {link && v !== '—' ? (
+        <a
+          href={v}
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary hover:underline text-xs break-all inline-flex items-center gap-1"
+        >
+          <FileText className="h-3 w-3" />
+          {v}
+        </a>
+      ) : (
+        <div className={mono ? 'text-xs font-mono text-foreground/85 break-all' : 'text-xs text-foreground/90 break-words'}>
+          {v}
+        </div>
+      )}
     </div>
   );
 }
 
-function FormField({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <Label className="text-xs">{label}</Label>
-      {children}
-    </div>
-  );
+function fmt(date?: string | null): string | undefined {
+  if (!date) return undefined;
+  try {
+    return format(new Date(date), "d MMM yyyy · HH:mm", { locale: es });
+  } catch {
+    return date;
+  }
+}
+
+function detectActionType(title: string): string | null {
+  const t = title.toLowerCase();
+  if (t.includes('votación') && t.includes('debate')) return 'Debate y votación';
+  if (t.includes('votación')) return 'Votación';
+  if (t.includes('debate')) return 'Debate';
+  if (t.includes('predictamen')) return 'Predictamen';
+  if (t.includes('presentación') || t.includes('sustentar')) return 'Presentación';
+  return null;
 }
