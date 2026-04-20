@@ -5,4 +5,5 @@ export { AnalyticsDrilldownSheet } from './AnalyticsDrilldownSheet';
 export { ChartTooltip, CHART_CURSOR } from './ChartTooltip';
 export { BlockFilterPanel } from './BlockFilterPanel';
 export type { FilterDimension } from './BlockFilterPanel';
+export { CollapsibleAnalyticsSection } from './CollapsibleAnalyticsSection';
 
