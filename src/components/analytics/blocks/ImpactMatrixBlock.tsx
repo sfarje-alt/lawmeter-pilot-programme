@@ -173,7 +173,7 @@ export function ImpactMatrixBlock({
         source={source}
         isEmpty={isEmpty}
         icon={<Grid3x3 className="h-4 w-4 text-primary" />}
-        filterDimensions={['period', 'legislationType', 'impactLevels', 'search']}
+        filterDimensions={['legislationType', 'impactLevels', 'search']}
         filterState={filterState}
         renderExpanded={() => (
           <div className="max-w-3xl mx-auto py-4">{renderMatrix(true)}</div>

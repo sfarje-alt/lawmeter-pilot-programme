@@ -97,7 +97,7 @@ export function EmergingTopicsBlock({
       source={source}
       isEmpty={isEmpty}
       icon={<Zap className="h-4 w-4 text-primary" />}
-      filterDimensions={['search']}
+      filterDimensions={['legislationType', 'impactLevels', 'search']}
       filterState={filterState}
       renderExpanded={() => (
         <div className="h-full w-full overflow-auto">{renderTopicList(filteredData, false)}</div>
