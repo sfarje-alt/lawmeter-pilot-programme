@@ -412,3 +412,80 @@ export function DataFreshnessIndicator({
     </div>
   );
 }
+
+/**
+ * Compact indicator shown in the minimized card header when the user has
+ * customized this block's filters. Hovering shows the active filters list.
+ */
+function ActiveFiltersIndicator({ filters }: { filters: BlockFilters }) {
+  const items = summarizeActiveFilters(filters);
+  if (items.length === 0) return null;
+  return (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className="flex items-center gap-1 h-5 px-1.5 rounded-md bg-primary/10 text-primary text-[10px] font-medium cursor-default"
+            role="status"
+            aria-label={`${items.length} filtros activos`}
+          >
+            <Filter className="h-3 w-3" />
+            <span className="tabular-nums">{items.length}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" align="end" className="max-w-xs">
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-semibold">Filtros activos</p>
+            <ul className="space-y-1">
+              {items.map((it) => (
+                <li key={it.label} className="text-xs flex justify-between gap-3">
+                  <span className="text-muted-foreground">{it.label}:</span>
+                  <span className="font-medium text-foreground">{it.value}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[10px] text-muted-foreground italic pt-1">
+              Tu configuración se guarda automáticamente.
+            </p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function summarizeActiveFilters(f: BlockFilters): { label: string; value: string }[] {
+  const out: { label: string; value: string }[] = [];
+  if (f.legislationType && f.legislationType !== 'all') {
+    out.push({
+      label: 'Tipo',
+      value: f.legislationType === 'bills' ? 'Proyectos de Ley' : 'Normas',
+    });
+  }
+  if (f.impactLevels && f.impactLevels.length > 0) {
+    const map: Record<string, string> = { grave: 'Grave', medio: 'Medio', leve: 'Leve', positivo: 'Positivo' };
+    out.push({
+      label: 'Impacto',
+      value: f.impactLevels.map((v) => map[v] ?? v).join(', '),
+    });
+  }
+  if (f.status && f.status !== 'all') {
+    const map: Record<string, string> = {
+      inbox: 'Bandeja',
+      reviewing: 'En revisión',
+      published: 'Publicadas',
+      archived: 'Archivadas',
+    };
+    out.push({ label: 'Estado', value: map[f.status] ?? f.status });
+  }
+  if (f.tags && f.tags.length > 0) {
+    out.push({ label: 'Etiquetas', value: `${f.tags.length} seleccionadas` });
+  }
+  if (f.profileId && f.profileId !== 'all') {
+    out.push({ label: 'Perfil', value: f.profileId });
+  }
+  if (f.search && f.search.trim().length > 0) {
+    out.push({ label: 'Buscar', value: `"${f.search.trim()}"` });
+  }
+  return out;
+}
