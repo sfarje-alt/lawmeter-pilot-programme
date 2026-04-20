@@ -16,8 +16,6 @@ import {
   AlertPriorityBlock,
   ServiceKPIsBlock,
   PopularTopicsBlock,
-  EditorialCoverageBlock,
-  OperationalQueueBlock,
   KeyMovementsBlock,
   EmergingTopicsBlock,
   ExposureBlock,
