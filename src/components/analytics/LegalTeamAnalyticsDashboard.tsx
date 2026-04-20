@@ -36,8 +36,6 @@ import {
   ReviewedAlertsBlock,
 } from "./blocks/ops";
 import {
-  DEMO_EDITORIAL_COVERAGE,
-  DEMO_OPERATIONAL_QUEUE,
   DEMO_DATA_FRESHNESS,
   getDemoDataForClient,
 } from "@/lib/analyticsMockData";
