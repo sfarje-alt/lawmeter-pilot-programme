@@ -16,7 +16,7 @@ import { LegalTeamAnalyticsDashboard } from "@/components/analytics/LegalTeamAna
 import { ReportsPage } from "@/components/reports/ReportsPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Info, X } from "lucide-react";
+import { Eye } from "lucide-react";
 import Inbox from "@/pages/Inbox";
 
 // Client Portal Components
