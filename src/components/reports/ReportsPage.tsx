@@ -514,7 +514,7 @@ export function ReportsPage() {
             {/* Manual Download */}
             {canGenerate ? (
               <PDFDownloadLink
-                document={<ReportPDF alerts={filteredAlerts} profileName={profileName} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
+                document={<ReportPDF alerts={filteredAlerts} sessions={filteredSessions} profileName={profileName} dateLabel={dateLabel} includeAnalytics={includeAnalytics} />}
                 fileName={`reporte-${format(new Date(), 'yyyy-MM-dd')}.pdf`}
               >
                 {({ loading }) => (
