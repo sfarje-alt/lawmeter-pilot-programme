@@ -152,54 +152,47 @@ const ReportPDF = ({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>ALERTAS DE SESIONES</Text>
             {sessions.map(s => {
-              const tag =
-                s.is_pinned && s.is_follow_up
-                  ? 'Pineada · Seguimiento'
-                  : s.is_pinned
-                    ? 'Pineada'
-                    : s.is_follow_up
-                      ? 'En seguimiento'
-                      : 'Sesión';
               const item = s.agenda_item;
               const title = item ? `Ítem ${item.item_number} · ${item.title}` : (s.session_title ?? s.commission_name);
-              const bills = item?.bill_numbers?.length ? `Proyectos: ${item.bill_numbers.join(', ')}` : null;
+              const billsLine = item?.bill_numbers?.length ? `Proyectos: ${item.bill_numbers.join(', ')}` : null;
               const when = s.scheduled_date_text ?? (s.scheduled_at ? format(parseISO(s.scheduled_at), "dd/MM/yyyy HH:mm") : '');
 
-              // Resumen IA combinado: enrichment + transcripción + comentario experto.
-              // Para el prototipo, lo derivamos de los campos disponibles.
-              const aiSummaryParts: string[] = [];
-              if (s.executive_summary) aiSummaryParts.push(s.executive_summary);
-              if (s.preliminary_impact) aiSummaryParts.push(`Impacto: ${s.preliminary_impact}`);
-              if (s.suggested_next_step) aiSummaryParts.push(`Próximo paso: ${s.suggested_next_step}`);
-              if (s.recording?.transcription_text) {
-                const transcriptPreview = s.recording.transcription_text
-                  .replace(/\s+/g, ' ')
-                  .slice(0, 280);
-                aiSummaryParts.push(`Transcripción: ${transcriptPreview}…`);
-              }
-              if (s.legal_review?.comentario_experto) {
-                aiSummaryParts.push(`Comentario experto: ${s.legal_review.comentario_experto}`);
-              }
-              const aiSummary = aiSummaryParts.length > 0
-                ? aiSummaryParts.join(' • ')
-                : null;
+              // Clasificatoria IA (impacto / urgencia / etiquetas)
+              const classificationParts: string[] = [];
+              if (s.impact_level) classificationParts.push(`Impacto: ${s.impact_level}`);
+              if (s.urgency_level) classificationParts.push(`Urgencia: ${s.urgency_level}`);
+              if (s.etiqueta_ia) classificationParts.push(`Etiqueta: ${s.etiqueta_ia}`);
+              const classificationLine = classificationParts.join(' · ');
+
+              // Resumen / análisis del chatbot — se actualiza con cada interacción.
+              const chatbotSummary = s.chatbot_summary?.trim();
+
+              // Resumen ejecutivo proveniente de la transcripción/enrichment.
+              const executiveSummary = s.executive_summary?.trim();
 
               return (
                 <View key={s.id} style={styles.alertCard}>
-                  <Text style={styles.alertTitle}>[{tag}] {title}</Text>
+                  <Text style={styles.alertTitle}>[Pineada] {title}</Text>
                   <Text style={styles.alertMeta}>
                     Comisión: {s.commission_name} · {when}
-                    {s.etiqueta_ia ? ` · Etiqueta: ${s.etiqueta_ia}` : ''}
-                    {s.impact_level ? ` · Impacto: ${s.impact_level}` : ''}
                   </Text>
-                  {bills && <Text style={styles.alertMeta}>{bills}</Text>}
+                  {billsLine && <Text style={styles.alertMeta}>{billsLine}</Text>}
+                  {classificationLine && (
+                    <Text style={styles.alertMeta}>Clasificatoria IA · {classificationLine}</Text>
+                  )}
                   {s.recording?.video_url && (
                     <Link src={s.recording.video_url} style={styles.sourceLink}>Grabación oficial (YouTube)</Link>
                   )}
-                  {aiSummary && (
+                  {executiveSummary && (
                     <View style={styles.commentary}>
-                      <Text style={styles.commentaryLabel}>RESUMEN IA (enrichment + transcripción + comentario):</Text>
-                      <Text>{aiSummary}</Text>
+                      <Text style={styles.commentaryLabel}>RESUMEN:</Text>
+                      <Text>{executiveSummary}</Text>
+                    </View>
+                  )}
+                  {chatbotSummary && (
+                    <View style={styles.commentary}>
+                      <Text style={styles.commentaryLabel}>ANÁLISIS DEL CHATBOT (interacciones):</Text>
+                      <Text>{chatbotSummary}</Text>
                     </View>
                   )}
                 </View>
@@ -309,7 +302,6 @@ export function ReportsPage() {
   const [includeNorms, setIncludeNorms] = useState(true);
   const [includeAnalytics, setIncludeAnalytics] = useState(true);
   const [includeSesionesPinned, setIncludeSesionesPinned] = useState(true);
-  const [includeSesionesFollowUp, setIncludeSesionesFollowUp] = useState(false);
 
   // Schedules (in-memory)
   const [schedules, setSchedules] = useState<ScheduledReport[]>([]);
@@ -340,16 +332,11 @@ export function ReportsPage() {
     });
   }, [alerts, scope, daysBack, includeBills, includeNorms]);
 
-  // Sesiones a incluir según los toggles (excluye archivadas)
+  // Sesiones a incluir según el toggle (excluye archivadas) — solo pineadas.
   const filteredSessions = useMemo<PeruSession[]>(() => {
-    if (!includeSesionesPinned && !includeSesionesFollowUp) return [];
-    return allSessions.filter((s) => {
-      if (s.is_archived) return false;
-      const byPin = includeSesionesPinned && s.is_pinned;
-      const byFollow = includeSesionesFollowUp && s.is_follow_up;
-      return byPin || byFollow;
-    });
-  }, [allSessions, includeSesionesPinned, includeSesionesFollowUp]);
+    if (!includeSesionesPinned) return [];
+    return allSessions.filter((s) => !s.is_archived && s.is_pinned);
+  }, [allSessions, includeSesionesPinned]);
 
   const bills = filteredAlerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = filteredAlerts.filter(a => a.legislation_type === 'norma');
@@ -491,13 +478,14 @@ export function ReportsPage() {
               </p>
             </div>
 
-            {/* Sesiones — bulk include */}
+            {/* Sesiones — bulk include (solo pineadas) */}
             <div className="space-y-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
               <Label className="font-medium flex items-center gap-2">
                 <Video className="h-4 w-4 text-primary" /> Alertas de Sesiones
               </Label>
               <p className="text-xs text-muted-foreground">
-                Incluye en bloque las alertas de Sesiones según su estado editorial. Las marcas se hacen desde la sección Sesiones.
+                Incluye en bloque las sesiones <strong>pineadas</strong>. Cada alerta llega al PDF
+                con su Clasificatoria IA y el análisis acumulado del chatbot.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Label className="flex items-center gap-2 cursor-pointer">
@@ -506,15 +494,6 @@ export function ReportsPage() {
                     Pineadas
                     <Badge variant="outline" className="ml-2 text-[10px]">
                       {allSessions.filter((s) => !s.is_archived && s.is_pinned).length}
-                    </Badge>
-                  </span>
-                </Label>
-                <Label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={includeSesionesFollowUp} onCheckedChange={(v) => setIncludeSesionesFollowUp(!!v)} />
-                  <span className="text-sm">
-                    En seguimiento
-                    <Badge variant="outline" className="ml-2 text-[10px]">
-                      {allSessions.filter((s) => !s.is_archived && s.is_follow_up).length}
                     </Badge>
                   </span>
                 </Label>
