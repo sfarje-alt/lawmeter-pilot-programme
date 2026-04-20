@@ -13,6 +13,8 @@ interface KanbanColumnProps {
   onArchive?: (alertId: string) => void;
   onUnarchive?: (alertId: string) => void;
   isArchiveView?: boolean;
+  /** Conjunto de ids de alertas no leídas (estilo "correo no abierto"). */
+  unreadIds?: Set<string>;
 }
 
 export function KanbanColumn({
@@ -25,6 +27,7 @@ export function KanbanColumn({
   onArchive,
   onUnarchive,
   isArchiveView,
+  unreadIds,
 }: KanbanColumnProps) {
   return (
     <div className="flex flex-col flex-1 min-w-0 basis-0 bg-card/30 rounded-lg border border-border/30 overflow-hidden">
@@ -54,6 +57,7 @@ export function KanbanColumn({
                 onArchive={onArchive}
                 onUnarchive={onUnarchive}
                 isArchiveView={isArchiveView}
+                isUnread={unreadIds ? !unreadIds.has(alert.id) : false}
               />
             ))
           )}
