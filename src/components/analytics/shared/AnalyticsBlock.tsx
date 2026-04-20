@@ -20,6 +20,7 @@ import {
   BarChart3,
   Table as TableIcon,
   Sparkles,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BlockFilters } from "@/hooks/useBlockFilters";
