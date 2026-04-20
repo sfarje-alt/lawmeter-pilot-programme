@@ -284,6 +284,7 @@ function readCompanyName(): string {
 
 export function ReportsPage() {
   const { alerts } = useAlerts();
+  const { sessions: allSessions } = useSesionesWorkspace();
   const profileName = useMemo(() => readCompanyName(), []);
 
   const [scope, setScope] = useState<ScopeMode>("all_active");
@@ -323,6 +324,17 @@ export function ReportsPage() {
     });
   }, [alerts, scope, daysBack, includeBills, includeNorms]);
 
+  // Sesiones a incluir según los toggles (excluye archivadas)
+  const filteredSessions = useMemo<PeruSession[]>(() => {
+    if (!includeSesionesPinned && !includeSesionesFollowUp) return [];
+    return allSessions.filter((s) => {
+      if (s.is_archived) return false;
+      const byPin = includeSesionesPinned && s.is_pinned;
+      const byFollow = includeSesionesFollowUp && s.is_follow_up;
+      return byPin || byFollow;
+    });
+  }, [allSessions, includeSesionesPinned, includeSesionesFollowUp]);
+
   const bills = filteredAlerts.filter(a => a.legislation_type === 'proyecto_de_ley');
   const norms = filteredAlerts.filter(a => a.legislation_type === 'norma');
 
@@ -332,7 +344,8 @@ export function ReportsPage() {
       ? "Alertas fijadas"
       : `Últimos ${daysBack} días`;
 
-  const canGenerate = (includeBills || includeNorms) && filteredAlerts.length > 0;
+  const canGenerate =
+    ((includeBills || includeNorms) && filteredAlerts.length > 0) || filteredSessions.length > 0;
 
   const handleSaveSchedule = () => {
     if (!scheduleName.trim()) {
