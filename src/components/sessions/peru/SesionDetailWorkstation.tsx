@@ -226,20 +226,23 @@ export function SesionDetailWorkstation({
 function Section1ResumenLabels({
   session,
   actionType,
+  commissionColor,
 }: {
   session: PeruSession;
   actionType: string | null;
+  commissionColor: { bg: string; ring: string; text: string };
 }) {
   const item = session.agenda_item;
 
   // Labels prefijados solo desde clasificación source-backed
   const baseLabels = useMemo(() => {
-    const arr: { value: string; type: 'action' | 'area' | 'bill' }[] = [];
+    const arr: { value: string; type: 'commission' | 'action' | 'area' | 'bill' }[] = [];
+    arr.push({ value: `Comisión de ${session.commission_name}`, type: 'commission' });
     if (actionType) arr.push({ value: actionType, type: 'action' });
     if (item?.thematic_area) arr.push({ value: item.thematic_area, type: 'area' });
     item?.bill_numbers?.forEach((b) => arr.push({ value: b, type: 'bill' }));
     return arr;
-  }, [actionType, item]);
+  }, [actionType, item, session.commission_name]);
 
   const [customLabels, setCustomLabels] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
