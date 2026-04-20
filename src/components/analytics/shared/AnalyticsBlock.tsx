@@ -147,9 +147,7 @@ export function AnalyticsBlock({
 
             <div className="flex items-center gap-1 flex-shrink-0">
               {filterState?.isCustomized && (
-                <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                  Personalizado
-                </Badge>
+                <ActiveFiltersIndicator filters={filterState.filters} />
               )}
               {expandable && !isEmpty && (
                 <TooltipProvider delayDuration={100}>
