@@ -463,7 +463,7 @@ function SectionClasificatoriaIA({
 function Section3InformacionGeneral({ session }: { session: PeruSession }) {
   return (
     <SectionShell
-      title="3 · Información general"
+      title="2 · Información general"
       icon={<FileText className="h-3.5 w-3.5" />}
     >
       <div className="grid grid-cols-2 gap-3 text-xs">
@@ -496,7 +496,7 @@ function Section4SesionAgenda({
 
   return (
     <SectionShell
-      title="4 · Sesión y orden del día"
+      title="3 · Sesión y orden del día"
       icon={<Gavel className="h-3.5 w-3.5" />}
     >
       {!item ? (
@@ -557,7 +557,7 @@ function Section5FuenteEvidencia({ session }: { session: PeruSession }) {
   const r = session.recording;
   return (
     <SectionShell
-      title="5 · Fuente y evidencia"
+      title="4 · Fuente y evidencia"
       icon={<ExternalLink className="h-3.5 w-3.5" />}
     >
       <div className="space-y-4">
@@ -657,7 +657,7 @@ function Section6ProcesamientoIA({
 
   return (
     <SectionShell
-      title="6 · Procesamiento IA"
+      title="Procesamiento IA"
       icon={<Sparkles className="h-3.5 w-3.5" />}
     >
       <div className="space-y-5">
