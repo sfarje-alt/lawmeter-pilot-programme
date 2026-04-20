@@ -1,15 +1,16 @@
 // Chatbot global persistente para el workspace de Sesiones.
 // Lee SOLO de las alertas habilitadas (chatbot_state === 'listo').
 // Responde a partir de metadata + agenda + transcripción cuando exista.
-// Ofrece quick prompts para enrichment, transcripción y agenda.
-// Es UI prototipo: respuestas derivadas estrictamente de campos source-backed.
+// IMPORTANTE: el enrichment se genera junto con la transcripción (un solo acto),
+// por lo que NO es responsabilidad del chatbot. El chatbot solo ayuda a
+// interpretar lo que ya está cargado: agenda, transcripción y estado.
+// Panel redimensionable (ancho + alto) por el usuario.
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Tabs,
   TabsList,
@@ -22,6 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
   MessageSquare,
+  GripHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PeruSession } from '@/types/peruSessions';
@@ -35,16 +37,9 @@ interface ChatMessage {
   content: string;
 }
 
-// Prompts agrupados por intención
+// Prompts agrupados por intención. Sin tab "Enrichment": el enrichment se
+// genera con la transcripción, no se pide al chatbot.
 const PROMPTS = {
-  enrichment: [
-    'Sugerir etiquetas para esta alerta',
-    'Agregar etiquetas internas',
-    'Proponer impacto regulatorio',
-    'Sugerir áreas afectadas',
-    'Redactar comentario regulatorio',
-    'Sugerir próximo paso',
-  ],
   transcription: [
     'Resumir la transcripción',
     'Extraer puntos clave de la transcripción',
@@ -65,10 +60,52 @@ const PROMPTS = {
   ],
 };
 
+const MIN_W = 360;
+const MAX_W = 880;
+const MIN_H = 280;
+const MAX_H = 720;
+
 export function SesionesGlobalChatbot({ sessions }: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Tamaño persistente
+  const [size, setSize] = useState<{ w: number; h: number }>(() => {
+    try {
+      const raw = localStorage.getItem('sesiones-chatbot-size');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { w: 520, h: 520 };
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('sesiones-chatbot-size', JSON.stringify(size));
+    } catch {}
+  }, [size]);
+
+  // Resizers
+  const startRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+  const cornerRef = useRef<HTMLDivElement>(null);
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, y: e.clientY, w: size.w, h: size.h };
+    const onMove = (ev: MouseEvent) => {
+      const s = startRef.current;
+      if (!s) return;
+      // Crece hacia arriba/izquierda (panel anclado en bottom-right)
+      const nextW = Math.min(MAX_W, Math.max(MIN_W, s.w + (s.x - ev.clientX)));
+      const nextH = Math.min(MAX_H, Math.max(MIN_H, s.h + (s.y - ev.clientY)));
+      setSize({ w: nextW, h: nextH });
+    };
+    const onUp = () => {
+      startRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   const enabled = useMemo(
     () => sessions.filter((s) => s.chatbot_state === 'listo' && !s.is_archived),
@@ -103,7 +140,7 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
           <button
             key={p}
             onClick={() => send(p)}
-            className="text-[10.5px] px-2 py-1 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors text-left"
+            className="text-[11px] px-2 py-1 rounded-md border border-border/60 bg-background/40 hover:bg-primary/10 hover:border-primary/40 transition-colors text-left"
           >
             {p}
           </button>
@@ -112,13 +149,34 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
     </div>
   );
 
+  // Cuando está cerrado se reduce a la barra del header
+  const collapsedH = 56;
+  const panelStyle = open
+    ? { width: `${size.w}px`, height: `${size.h}px` }
+    : { width: '380px', height: `${collapsedH}px` };
+
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-[380px] max-w-[calc(100vw-2rem)]">
-      <Card className="bg-card/95 backdrop-blur border-border/60 shadow-xl overflow-hidden">
+    <div
+      className="fixed bottom-4 right-4 z-40 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]"
+      style={panelStyle}
+    >
+      <Card className="bg-card/95 backdrop-blur border-border/60 shadow-xl overflow-hidden h-full flex flex-col relative">
+        {/* Resizer en la esquina superior izquierda (crece hacia arriba/izquierda) */}
+        {open && (
+          <div
+            ref={cornerRef}
+            onMouseDown={startResize}
+            title="Arrastra para redimensionar"
+            className="absolute top-0 left-0 z-20 w-5 h-5 cursor-nwse-resize flex items-center justify-center group"
+          >
+            <GripHorizontal className="h-3 w-3 text-muted-foreground/60 group-hover:text-primary rotate-45" />
+          </div>
+        )}
+
         {/* Header */}
         <button
           onClick={() => setOpen((v) => !v)}
-          className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-primary/10 hover:bg-primary/15 transition-colors"
+          className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-primary/10 hover:bg-primary/15 transition-colors shrink-0"
         >
           <div className="flex items-center gap-2 min-w-0">
             <div className="p-1.5 rounded-md bg-primary/20">
@@ -143,12 +201,14 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
         </button>
 
         {open && (
-          <div className="border-t border-border/50">
+          <div className="flex-1 min-h-0 flex flex-col border-t border-border/50">
             {/* Helper / scope */}
-            <div className="px-4 py-2 bg-muted/30 border-b border-border/50 space-y-1">
+            <div className="px-4 py-2 bg-muted/30 border-b border-border/50 space-y-1 shrink-0">
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Responde solo a partir de las alertas habilitadas. Mejora cuando hay
-                transcripción cargada.
+                Responde a partir de las alertas habilitadas (agenda + transcripción).
+                <span className="block text-[10.5px] text-muted-foreground/80">
+                  El enrichment regulatorio se genera junto con la transcripción y no se pide aquí.
+                </span>
               </p>
               {enabled.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-1">
@@ -171,8 +231,8 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
               )}
             </div>
 
-            {/* Mensajes */}
-            <ScrollArea className="h-[300px]">
+            {/* Mensajes (ocupan todo el alto restante) */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
               <div className="p-3 space-y-3">
                 {messages.length === 0 && (
                   <div className="space-y-3">
@@ -181,15 +241,12 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                         <MessageSquare className="h-5 w-5 mx-auto mb-2 opacity-50" />
                         No hay alertas habilitadas para chatbot.
                         <br />
-                        Habilita una desde la sección{' '}
-                        <strong>Procesamiento IA</strong>.
+                        Habilita una desde la pestaña{' '}
+                        <strong>Procesamiento IA</strong> del detalle de la alerta.
                       </div>
                     ) : (
-                      <Tabs defaultValue="enrichment">
-                        <TabsList className="grid grid-cols-4 h-7 bg-muted/40">
-                          <TabsTrigger value="enrichment" className="text-[10px] px-1">
-                            Enrichment
-                          </TabsTrigger>
+                      <Tabs defaultValue="transcription">
+                        <TabsList className="grid grid-cols-3 h-7 bg-muted/40">
                           <TabsTrigger value="transcription" className="text-[10px] px-1">
                             Transcripción
                           </TabsTrigger>
@@ -200,9 +257,6 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                             Alertas
                           </TabsTrigger>
                         </TabsList>
-                        <TabsContent value="enrichment" className="mt-2">
-                          {renderPromptGroup('Para enriquecer la alerta', PROMPTS.enrichment)}
-                        </TabsContent>
                         <TabsContent value="transcription" className="mt-2">
                           {renderPromptGroup('Sobre la transcripción', PROMPTS.transcription)}
                         </TabsContent>
@@ -231,7 +285,7 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Input */}
             <form
@@ -239,7 +293,7 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
                 e.preventDefault();
                 send(draft);
               }}
-              className="flex items-center gap-1.5 p-2 border-t border-border/50 bg-background/60"
+              className="flex items-center gap-1.5 p-2 border-t border-border/50 bg-background/60 shrink-0"
             >
               <Input
                 value={draft}
@@ -269,75 +323,56 @@ export function SesionesGlobalChatbot({ sessions }: Props) {
 }
 
 // Prototipo: respuestas derivadas estrictamente de los campos source-backed.
+// Sin enrichment: si el usuario pide etiquetas/impacto/comentarios, se le
+// redirige a solicitar la transcripción (que ya genera el enrichment).
 function buildAnswer(
   question: string,
   enabled: PeruSession[],
   withTranscript: PeruSession[],
 ): string {
   if (enabled.length === 0) {
-    return 'No hay alertas habilitadas para chatbot. Habilita al menos una sesión desde su sección de Procesamiento IA.';
+    return 'No hay alertas habilitadas para chatbot. Habilítalas desde la pestaña Procesamiento IA del detalle de cada alerta.';
   }
 
   const q = question.toLowerCase();
   const lines: string[] = [];
 
-  // Enrichment helpers
-  if (q.includes('etiqueta') || q.includes('label') || q.includes('clasifi')) {
-    lines.push('Etiquetas sugeridas a partir de la agenda source-backed:');
-    enabled.forEach((s) => {
-      const it = s.agenda_item;
-      if (!it) return;
-      const tags = [it.thematic_area, ...(it.bill_numbers ?? [])].filter(Boolean);
-      lines.push(`• Ítem ${it.item_number} → ${tags.join(' · ')}`);
-    });
-    lines.push('');
-    lines.push(
-      'Sugerencia: tipos de actuación (Debate, Votación, Predictamen, Presentación) se infieren del título del ítem.',
-    );
-    return lines.join('\n');
-  }
+  // Redirección: el enrichment NO se pide al chatbot
+  const isEnrichmentAsk =
+    q.includes('etiqueta') ||
+    q.includes('label') ||
+    q.includes('clasifi') ||
+    q.includes('impacto') ||
+    q.includes('regulatorio') ||
+    q.includes('área') ||
+    q.includes('areas') ||
+    q.includes('próximo') ||
+    q.includes('proximo') ||
+    q.includes('paso') ||
+    q.includes('comentario');
 
-  if (q.includes('impacto') || q.includes('regulatorio')) {
+  if (isEnrichmentAsk) {
     return [
-      'No puedo inferir impacto regulatorio sin enrichment cargado.',
+      'El enrichment regulatorio (etiquetas, impacto, áreas afectadas, comentario, próximo paso)',
+      'se genera automáticamente junto con la transcripción, en un solo acto.',
       '',
-      'Lo que sí está disponible para apoyar el análisis:',
-      ...enabled.map(
-        (s) =>
-          `• Ítem ${s.agenda_item?.item_number ?? '—'} · ${s.agenda_item?.thematic_area ?? '—'} · proyectos: ${s.agenda_item?.bill_numbers?.join(', ') || '—'}`,
-      ),
-    ].join('\n');
-  }
-
-  if (q.includes('área') || q.includes('areas')) {
-    const areas = new Set<string>();
-    enabled.forEach((s) => s.agenda_item?.thematic_area && areas.add(s.agenda_item.thematic_area));
-    if (areas.size === 0) return 'Sin áreas temáticas en las alertas habilitadas.';
-    lines.push('Áreas temáticas presentes en las alertas habilitadas:');
-    areas.forEach((a) => lines.push(`• ${a}`));
-    return lines.join('\n');
-  }
-
-  if (q.includes('próximo') || q.includes('proximo') || q.includes('paso') || q.includes('comentario')) {
-    return [
-      'Sugerencia editorial basada en estado actual:',
-      ...enabled.map((s) => {
-        const t = s.transcription_state ?? 'no_solicitada';
-        const action =
-          t === 'lista'
-            ? 'revisar la transcripción y redactar comentario regulatorio'
-            : t === 'procesando' || t === 'en_cola'
-              ? 'esperar la transcripción para enriquecer'
-              : 'solicitar transcripción para análisis profundo';
-        return `• Ítem ${s.agenda_item?.item_number ?? '—'} → ${action}`;
-      }),
+      'Aquí no se solicita: pídelo desde la pestaña "Procesamiento IA" → "Solicitar transcripción".',
+      'Cuando la transcripción esté lista, los campos de enrichment aparecerán completados en la alerta.',
     ].join('\n');
   }
 
   // Transcription
-  if (q.includes('transcripción') || q.includes('transcripcion') || q.includes('resumir') || q.includes('compromiso')) {
+  if (
+    q.includes('transcripción') ||
+    q.includes('transcripcion') ||
+    q.includes('resumir') ||
+    q.includes('compromiso') ||
+    q.includes('punto') ||
+    q.includes('proyecto') ||
+    q.includes('anuncio')
+  ) {
     if (withTranscript.length === 0) {
-      return 'Ninguna alerta habilitada tiene transcripción cargada en este momento.';
+      return 'Ninguna alerta habilitada tiene transcripción cargada en este momento. Solicítala desde la pestaña Procesamiento IA.';
     }
     lines.push(`${withTranscript.length} alerta(s) con transcripción lista:`);
     withTranscript.forEach((s) => {
@@ -351,7 +386,15 @@ function buildAnswer(
   }
 
   // Agenda / orden del día
-  if (q.includes('agenda') || q.includes('orden') || q.includes('ítem') || q.includes('item') || q.includes('explicar')) {
+  if (
+    q.includes('agenda') ||
+    q.includes('orden') ||
+    q.includes('ítem') ||
+    q.includes('item') ||
+    q.includes('explicar') ||
+    q.includes('actuación') ||
+    q.includes('actuacion')
+  ) {
     lines.push('Ítems de agenda en las alertas habilitadas:');
     enabled.forEach((s) => {
       const it = s.agenda_item;
@@ -374,7 +417,7 @@ function buildAnswer(
   }
 
   // Scope: qué está habilitado / listo
-  if (q.includes('habilitad') || q.includes('listas') || q.includes('estado')) {
+  if (q.includes('habilitad') || q.includes('listas') || q.includes('estado') || q.includes('comparar')) {
     lines.push(
       `${enabled.length} alerta(s) habilitada(s) para chatbot · ${withTranscript.length} con transcripción.`,
     );
@@ -395,7 +438,7 @@ function buildAnswer(
   );
   lines.push('');
   lines.push(
-    'Puedo ayudar con: enrichment (etiquetas, impacto, comentarios), transcripción, orden del día y estado de las alertas.',
+    'Puedo ayudar con: transcripción, orden del día y estado de las alertas. El enrichment se entrega junto con la transcripción.',
   );
   return lines.join('\n');
 }

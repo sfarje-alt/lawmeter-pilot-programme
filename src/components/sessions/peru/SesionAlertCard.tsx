@@ -77,14 +77,12 @@ export function SesionAlertCard({
       )}
       onClick={() => onOpen(session)}
     >
-      {/* Header — ítem + acciones */}
+      {/* Header — tag Sesiones + acciones */}
       <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
-          {item?.item_number && (
-            <Badge variant="outline" className="text-xs font-mono bg-primary/10 text-primary border-primary/30">
-              Ítem {item.item_number}
-            </Badge>
-          )}
+          <Badge variant="outline" className="text-[10px] uppercase tracking-wide bg-primary/10 text-primary border-primary/30">
+            Sesiones
+          </Badge>
           {actionType && (
             <Badge variant="secondary" className="text-[10px] py-0 bg-muted/50 text-muted-foreground">
               <Gavel className="h-2.5 w-2.5 mr-1" />
@@ -132,10 +130,15 @@ export function SesionAlertCard({
         {item?.title ?? session.session_title ?? 'Sesión sin título'}
       </h4>
 
-      {/* Comisión */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2 min-w-0">
-        <Building2 className="h-3 w-3 shrink-0" />
-        <span className="truncate">Comisión de {session.commission_name}</span>
+      {/* Comisión — bubble discreto con color */}
+      <div className="flex items-center gap-1.5 mb-2 min-w-0">
+        <span
+          className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-full text-[11px] font-medium bg-accent/40 text-accent-foreground border border-accent/60"
+          title={`Comisión de ${session.commission_name}`}
+        >
+          <Building2 className="h-3 w-3 shrink-0 opacity-70" />
+          <span className="truncate">Comisión de {session.commission_name}</span>
+        </span>
       </div>
 
       {/* Materia temática + proyectos vinculados */}
