@@ -85,15 +85,9 @@ export function SesionDetailWorkstation({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        className="w-full sm:max-w-3xl p-0 overflow-y-auto bg-background"
-        style={{ borderLeft: `4px solid ${commissionColor.bg}` }}
-      >
-        {/* Header sticky con accent del color de la comisión */}
-        <div
-          className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/50"
-          style={{ boxShadow: `inset 4px 0 0 0 ${commissionColor.bg}` }}
-        >
+      <SheetContent className="w-full sm:max-w-3xl p-0 overflow-y-auto bg-background">
+        {/* Header sticky */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/50">
           <div className="p-5 space-y-3">
             <div className="flex items-start gap-2">
               <Badge
@@ -107,24 +101,18 @@ export function SesionDetailWorkstation({
               </h2>
             </div>
 
-            {/* Bubble de comisión con color identificable */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border shadow-sm"
-                style={{
-                  backgroundColor: commissionColor.bg,
-                  color: commissionColor.text,
-                  borderColor: commissionColor.ring,
-                }}
-              >
-                <Building2 className="h-3.5 w-3.5" style={{ color: commissionColor.text }} />
+            {/* Comisión + fecha + source — discretos */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Building2 className="h-3.5 w-3.5" />
                 Comisión de {session.commission_name}
               </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span>·</span>
+              <span className="flex items-center gap-1">
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {dateLabel}
               </span>
-              <Badge variant="outline" className="text-[10px] font-mono">
+              <Badge variant="outline" className="text-[10px] font-mono ml-1">
                 {session.source}
               </Badge>
             </div>
