@@ -478,7 +478,7 @@ export function ReportsPage() {
             {/* Sesiones — bulk include */}
             <div className="space-y-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
               <Label className="font-medium flex items-center gap-2">
-                <Pin className="h-4 w-4 text-primary" /> Alertas de Sesiones
+                <Video className="h-4 w-4 text-primary" /> Alertas de Sesiones
               </Label>
               <p className="text-xs text-muted-foreground">
                 Incluye en bloque las alertas de Sesiones según su estado editorial. Las marcas se hacen desde la sección Sesiones.
@@ -486,13 +486,28 @@ export function ReportsPage() {
               <div className="flex flex-wrap gap-4">
                 <Label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={includeSesionesPinned} onCheckedChange={(v) => setIncludeSesionesPinned(!!v)} />
-                  <span className="text-sm">Incluir sesiones pineadas</span>
+                  <span className="text-sm">
+                    Pineadas
+                    <Badge variant="outline" className="ml-2 text-[10px]">
+                      {allSessions.filter((s) => !s.is_archived && s.is_pinned).length}
+                    </Badge>
+                  </span>
                 </Label>
                 <Label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={includeSesionesFollowUp} onCheckedChange={(v) => setIncludeSesionesFollowUp(!!v)} />
-                  <span className="text-sm">Incluir sesiones en seguimiento</span>
+                  <span className="text-sm">
+                    En seguimiento
+                    <Badge variant="outline" className="ml-2 text-[10px]">
+                      {allSessions.filter((s) => !s.is_archived && s.is_follow_up).length}
+                    </Badge>
+                  </span>
                 </Label>
               </div>
+              {filteredSessions.length > 0 && (
+                <p className="text-[11px] text-primary/80">
+                  ✓ Se incluirán {filteredSessions.length} alerta{filteredSessions.length === 1 ? '' : 's'} de sesiones en el PDF.
+                </p>
+              )}
             </div>
 
             {/* Preview */}
