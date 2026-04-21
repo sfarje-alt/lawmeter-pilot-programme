@@ -85,6 +85,16 @@ interface BasePeruAlert {
   legislation_summary?: string | null; // "Resumen/Comentario"
 }
 
+// Family of the legislative state — drives badge color in cards.
+export type StateFamily = "comision" | "pleno" | "tramite_final" | "publicada" | "archivada";
+
+// Identified date entry produced by the AI pipeline.
+export interface KeyDate {
+  fecha: string;
+  rol: string;
+  contexto?: string;
+}
+
 // Full interface with publication workflow fields
 export interface PeruAlert extends BasePeruAlert {
   is_pinned_for_publication: boolean;  // Whether this alert is marked for publication / pinned to top
@@ -96,6 +106,26 @@ export interface PeruAlert extends BasePeruAlert {
   approval_probability?: number;
   /** Attachments uploaded by users alongside the expert commentary. */
   attachments?: AttachedFileMetaRef[];
+
+  // ---- New fields backed by the real DB schema (ai_analysis + extras) ----
+  /** Numeric AI impact score 0-100 (from ai_analysis.impacto). */
+  impacto_score?: number;
+  /** Numeric AI urgency score 0-100 (from ai_analysis.urgencia). */
+  urgencia_score?: number;
+  /** AI rationale bullet points (from ai_analysis.racional). */
+  rationale?: string[];
+  /** AI-extracted key dates (deadlines, vigencia, sesion, etc.). */
+  key_dates?: KeyDate[];
+  /** Family of the legislative state (drives badge styling). */
+  state_family?: StateFamily;
+  /** Previous state — used in trazabilidad section. */
+  previous_stage?: string | null;
+  /** True when the latest ingest detected a state change. */
+  is_state_change?: boolean;
+  /** Norma reference number (e.g. "Resolución SBS 01116-2026"). */
+  reference_number?: string;
+  /** Source identifier (e.g. "El Peruano", "Congreso"). */
+  fuente?: string;
 }
 
 /** Forward-declared shape so that PeruAlert can reference it before AttachedFileMeta is exported. */
