@@ -70,17 +70,35 @@ export function LegalTeamAnalyticsDashboard() {
   const [opsAIState, setOpsAIState] = React.useState<string>("all");
 
   const [blockOrder, setBlockOrder] = React.useState<AnalyticsBlockConfigExtended[]>(() => {
+    const buildDefault = () =>
+      ANALYTICS_BLOCK_REGISTRY.map((block, index) => ({
+        ...block,
+        order: index,
+        enabled: block.defaultEnabled,
+        renderPDF: block.defaultEnabled,
+        renderDashboard: true,
+      }));
+
     try {
       const saved = localStorage.getItem('analytics-dashboard-layout-v2');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: AnalyticsBlockConfigExtended[] = JSON.parse(saved);
+        // Merge with registry so newly added blocks (e.g. sessions) appear, and
+        // each saved entry is enriched with current metadata (title/section/etc.).
+        const byKey = new Map(parsed.map((b) => [b.key, b]));
+        return ANALYTICS_BLOCK_REGISTRY.map((block, index) => {
+          const prev = byKey.get(block.key);
+          return {
+            ...block,
+            order: prev?.order ?? index,
+            enabled: prev?.enabled ?? block.defaultEnabled,
+            renderPDF: prev?.renderPDF ?? block.defaultEnabled,
+            renderDashboard: prev?.renderDashboard ?? true,
+          };
+        });
+      }
     } catch {}
-    return ANALYTICS_BLOCK_REGISTRY.map((block, index) => ({
-      ...block,
-      order: index,
-      enabled: block.defaultEnabled,
-      renderPDF: block.defaultEnabled,
-      renderDashboard: true,
-    }));
+    return buildDefault();
   });
 
   const handleBlockOrderChange = (newBlocks: AnalyticsBlockConfigExtended[]) => {
