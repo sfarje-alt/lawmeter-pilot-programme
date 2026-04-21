@@ -19,6 +19,10 @@ import {
   AlertTriangle,
   Archive,
   ArchiveRestore,
+  TrendingUp,
+  History,
+  CalendarClock,
+  Link2,
 } from "lucide-react";
 import {
   PeruAlert,
@@ -27,6 +31,7 @@ import {
   IMPACT_LEVELS,
   ImpactLevel,
   getArchiveDaysRemaining,
+  getStateFamilyStyle,
 } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -121,8 +126,25 @@ export function AlertDetailDrawer({
                     {getTypeLabel(alert.legislation_type)}
                   </Badge>
                   {isBill && alert.current_stage && (
-                    <Badge variant="secondary" className="text-sm">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-sm",
+                        getStateFamilyStyle(alert.state_family ?? "comision"),
+                      )}
+                    >
                       {alert.current_stage}
+                    </Badge>
+                  )}
+                  {!isBill && alert.entity && (
+                    <Badge variant="outline" className="text-sm bg-emerald-500/15 text-emerald-400 border-emerald-500/35">
+                      <Building2 className="h-3.5 w-3.5 mr-1" />
+                      {alert.entity}
+                    </Badge>
+                  )}
+                  {alert.reference_number && !isBill && (
+                    <Badge variant="outline" className="text-sm font-mono">
+                      {alert.reference_number}
                     </Badge>
                   )}
                   {isArchived && archiveDaysRemaining !== null && (

@@ -4,7 +4,9 @@ import {
   AttachedFileMetaRef,
   ImpactLevel,
   STAGE_TO_KANBAN,
+  getStateFamily,
   purgeOldArchivedAlerts,
+  KeyDate,
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +64,20 @@ function normalizeType(t: string | null): "proyecto_de_ley" | "norma" | null {
   return null;
 }
 
+/** Derive an ImpactLevel label from a numeric AI impact score (0-100). */
+function deriveImpactLevel(score: number | null | undefined, fallback?: string | null): ImpactLevel {
+  if (typeof score === "number" && !Number.isNaN(score)) {
+    if (score >= 70) return "grave";
+    if (score >= 40) return "medio";
+    if (score >= 15) return "leve";
+    return "leve";
+  }
+  if (fallback === "grave" || fallback === "medio" || fallback === "leve" || fallback === "positivo") {
+    return fallback;
+  }
+  return "medio";
+}
+
 /** Map DB row to PeruAlert shape used across the UI. */
 function mapDbRowToAlert(
   row: any,
@@ -73,27 +89,38 @@ function mapDbRowToAlert(
   const type = normalizeType(row.legislation_type);
   if (!type) return null;
 
-  const ui = (row.ai_analysis?.ui_extras ?? {}) as Record<string, any>;
+  const ai = (row.ai_analysis ?? {}) as Record<string, any>;
+  const ui = (ai.ui_extras ?? {}) as Record<string, any>;
   const sourceRef = (ui.source_ref ?? {}) as Record<string, any>;
 
-  // Resolve kanban_stage
-  let kanban = ui.kanban_stage as PeruAlert["kanban_stage"] | undefined;
-  if (!kanban || !["comision", "pleno", "tramite_final", "publicado", "archivado"].includes(kanban)) {
-    if (type === "norma") {
-      kanban = "publicado";
-    } else {
-      const stageKey = String(row.estado_actual ?? "").toUpperCase();
-      kanban = STAGE_TO_KANBAN[stageKey] ?? "comision";
-    }
+  // Resolve kanban_stage — Publicado/Archivado mapean a tramite_final por regla.
+  let kanban: PeruAlert["kanban_stage"];
+  if (type === "norma") {
+    kanban = "publicado";
+  } else {
+    const stageKey = String(row.estado_actual ?? "").trim().toUpperCase();
+    kanban = STAGE_TO_KANBAN[stageKey] ?? "comision";
   }
 
-  const impact = (ui.impact_level as ImpactLevel | undefined) ?? "medio";
+  // State family — drives badge color (independent of kanban column).
+  const family = getStateFamily(row.estado_actual);
+
+  // Impact level: prefer numeric AI score, fallback to ui_extras label.
+  const impactoScore = typeof ai.impacto === "number" ? ai.impacto : null;
+  const urgenciaScore = typeof ai.urgencia === "number" ? ai.urgencia : null;
+  const impact = deriveImpactLevel(impactoScore, ui.impact_level);
+
+  const rationale: string[] = Array.isArray(ai.racional) ? ai.racional.filter((r: unknown): r is string => typeof r === "string") : [];
+  const keyDates: KeyDate[] = Array.isArray(ai.fechas_identificadas)
+    ? ai.fechas_identificadas.filter((d: any) => d && typeof d.fecha === "string" && typeof d.rol === "string")
+    : [];
 
   // Title fallback for safety
   const title =
     row.legislation_title ||
     row.sumilla ||
     row.codigo ||
+    row.reference_number ||
     "Sin título";
 
   return {
@@ -131,6 +158,17 @@ function mapDbRowToAlert(
     archived_at: archivedMap[row.id] ?? null,
     approval_probability: ui.approval_probability ?? undefined,
     attachments: attachmentsMap[row.id] ?? [],
+
+    // ---- New fields backed by ai_analysis + DB extras ----
+    impacto_score: impactoScore ?? undefined,
+    urgencia_score: urgenciaScore ?? undefined,
+    rationale,
+    key_dates: keyDates,
+    state_family: family,
+    previous_stage: row.estado_anterior ?? null,
+    is_state_change: !!row.es_cambio_estado,
+    reference_number: row.reference_number ?? undefined,
+    fuente: row.fuente ?? undefined,
   };
 }
 

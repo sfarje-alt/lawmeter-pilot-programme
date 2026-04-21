@@ -85,6 +85,16 @@ interface BasePeruAlert {
   legislation_summary?: string | null; // "Resumen/Comentario"
 }
 
+// Family of the legislative state — drives badge color in cards.
+export type StateFamily = "comision" | "pleno" | "tramite_final" | "publicada" | "archivada";
+
+// Identified date entry produced by the AI pipeline.
+export interface KeyDate {
+  fecha: string;
+  rol: string;
+  contexto?: string;
+}
+
 // Full interface with publication workflow fields
 export interface PeruAlert extends BasePeruAlert {
   is_pinned_for_publication: boolean;  // Whether this alert is marked for publication / pinned to top
@@ -96,6 +106,26 @@ export interface PeruAlert extends BasePeruAlert {
   approval_probability?: number;
   /** Attachments uploaded by users alongside the expert commentary. */
   attachments?: AttachedFileMetaRef[];
+
+  // ---- New fields backed by the real DB schema (ai_analysis + extras) ----
+  /** Numeric AI impact score 0-100 (from ai_analysis.impacto). */
+  impacto_score?: number;
+  /** Numeric AI urgency score 0-100 (from ai_analysis.urgencia). */
+  urgencia_score?: number;
+  /** AI rationale bullet points (from ai_analysis.racional). */
+  rationale?: string[];
+  /** AI-extracted key dates (deadlines, vigencia, sesion, etc.). */
+  key_dates?: KeyDate[];
+  /** Family of the legislative state (drives badge styling). */
+  state_family?: StateFamily;
+  /** Previous state — used in trazabilidad section. */
+  previous_stage?: string | null;
+  /** True when the latest ingest detected a state change. */
+  is_state_change?: boolean;
+  /** Norma reference number (e.g. "Resolución SBS 01116-2026"). */
+  reference_number?: string;
+  /** Source identifier (e.g. "El Peruano", "Congreso"). */
+  fuente?: string;
 }
 
 /** Forward-declared shape so that PeruAlert can reference it before AttachedFileMeta is exported. */
@@ -206,19 +236,124 @@ export const ENTITIES = [
   "Congreso de la República",
 ];
 
-// Stage mapping for bills
+// Stage mapping for bills — based on the official "Guía para las columnas".
+// Publicado / Vigente y Archivado / Retirado NO son columnas: la card se queda
+// en Trámite Final (última columna decisoria) y el badge de la card muestra
+// el estado_actual exacto con su color de familia.
 export const STAGE_TO_KANBAN: Record<string, PeruAlert["kanban_stage"]> = {
+  // --- Comisión / Consulta ---
   "PRESENTADO": "comision",
   "EN COMISIÓN": "comision",
-  "DICTAMEN": "pleno",
+  "EN COMISION": "comision",
+  "DICTAMEN": "comision",
+  "RETORNA A COMISIÓN": "comision",
+  "RETORNA A COMISION": "comision",
+  "EN CONSULTA PÚBLICA": "comision",
+  "EN CONSULTA PUBLICA": "comision",
+  "CONSULTA PÚBLICA": "comision",
+  "CONSULTA PUBLICA": "comision",
+  "PREPUBLICACIÓN": "comision",
+  "PREPUBLICACION": "comision",
+  "RECEPCIÓN DE APORTES": "comision",
+  "RECEPCION DE APORTES": "comision",
+
+  // --- Pleno ---
+  "ORDEN DEL DÍA": "pleno",
+  "ORDEN DEL DIA": "pleno",
   "EN AGENDA DEL PLENO": "pleno",
+  "AGENDA DEL PLENO": "pleno",
+  "APROBADO 1ERA. VOTACIÓN": "pleno",
+  "APROBADO 1ERA. VOTACION": "pleno",
+  "APROBADO 1RA VOTACIÓN": "pleno",
+  "APROBADO PRIMERA VOTACIÓN": "pleno",
+  "EN RECONSIDERACIÓN": "pleno",
+  "EN RECONSIDERACION": "pleno",
+  "ACLARACIÓN": "pleno",
+  "ACLARACION": "pleno",
+  "EN CUARTO INTERMEDIO": "pleno",
+  "PENDIENTE 2DA. VOTACIÓN": "pleno",
+  "PENDIENTE 2DA. VOTACION": "pleno",
+  "PENDIENTE SEGUNDA VOTACIÓN": "pleno",
+
+  // --- Trámite Final (decisión tomada, pendiente de formalización) ---
   "APROBADO": "tramite_final",
   "AUTÓGRAFA": "tramite_final",
-  "LEY PUBLICADA": "publicado",
-  "PUBLICADO": "publicado",
-  "ARCHIVADO": "archivado",
-  "RETIRADO": "archivado",
+  "AUTOGRAFA": "tramite_final",
+  "PENDIENTE DE PROMULGACIÓN": "tramite_final",
+  "PENDIENTE DE PROMULGACION": "tramite_final",
+  "EN FIRMA": "tramite_final",
+  "EN REFRENDO": "tramite_final",
+  "REMITIDO PARA PUBLICACIÓN": "tramite_final",
+  "REMITIDO PARA PUBLICACION": "tramite_final",
+
+  // --- Publicado / Vigente → se queda en Trámite Final ---
+  "PUBLICADA EN EL DIARIO OFICIAL EL PERUANO": "tramite_final",
+  "PUBLICADO": "tramite_final",
+  "PUBLICADA": "tramite_final",
+  "LEY PUBLICADA": "tramite_final",
+  "VIGENTE": "tramite_final",
+
+  // --- Archivado / Retirado → se queda en Trámite Final ---
+  "RETIRADO POR SU AUTOR": "tramite_final",
+  "RETIRADO": "tramite_final",
+  "AL ARCHIVO": "tramite_final",
+  "ARCHIVADO": "tramite_final",
+  "DECRETO DE ARCHIVO": "tramite_final",
+  "RECHAZADO": "tramite_final",
 };
+
+/** Returns the family of a legislative state — used to color the badge. */
+export function getStateFamily(stage: string | null | undefined): StateFamily {
+  if (!stage) return "comision";
+  const s = String(stage).trim().toUpperCase();
+  if (
+    s.includes("PUBLICAD") ||
+    s.includes("VIGENTE") ||
+    s === "LEY PUBLICADA"
+  ) return "publicada";
+  if (
+    s.includes("RETIRAD") ||
+    s.includes("ARCHIV") ||
+    s === "RECHAZADO" ||
+    s === "AL ARCHIVO" ||
+    s === "DECRETO DE ARCHIVO"
+  ) return "archivada";
+  if (
+    s === "APROBADO" ||
+    s.includes("AUTÓGRAFA") || s.includes("AUTOGRAFA") ||
+    s.includes("PROMULGAC") ||
+    s === "EN FIRMA" ||
+    s === "EN REFRENDO" ||
+    s.includes("REMITIDO PARA PUBLIC")
+  ) return "tramite_final";
+  if (
+    s.includes("ORDEN DEL D") ||
+    s.includes("AGENDA DEL PLENO") ||
+    s.includes("VOTACI") ||
+    s.includes("RECONSIDERAC") ||
+    s.includes("ACLARAC") ||
+    s.includes("CUARTO INTERMEDIO")
+  ) return "pleno";
+  // default → comision (incluye DICTAMEN, EN COMISIÓN, CONSULTA PÚBLICA, etc.)
+  return "comision";
+}
+
+/** Tailwind classes per state family — uses HSL semantic tokens. */
+export function getStateFamilyStyle(family: StateFamily): string {
+  switch (family) {
+    case "publicada":
+      return "bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)]";
+    case "archivada":
+      return "bg-muted/50 text-muted-foreground border-border/50";
+    case "tramite_final":
+      return "bg-orange-500/15 text-orange-400 border-orange-500/35";
+    case "pleno":
+      return "bg-purple-500/15 text-purple-400 border-purple-500/35";
+    case "comision":
+    default:
+      return "bg-blue-500/15 text-blue-400 border-blue-500/35";
+  }
+}
 
 // Original columns (keep for backwards compatibility)
 export const KANBAN_COLUMNS = [
@@ -229,9 +364,9 @@ export const KANBAN_COLUMNS = [
   { id: "archivado", label: "Archivado / Retirado", color: "bg-gray-500" },
 ];
 
-// Columns for Bills Inbox (legislative process only - no archivado)
+// Columns for Bills Inbox (3 columns — Publicado/Archivado se quedan en Trámite Final)
 export const BILLS_KANBAN_COLUMNS = [
-  { id: "comision", label: "Comisión", color: "bg-blue-500" },
+  { id: "comision", label: "Comisión / Consulta", color: "bg-blue-500" },
   { id: "pleno", label: "Pleno", color: "bg-purple-500" },
   { id: "tramite_final", label: "Trámite Final", color: "bg-orange-500" },
 ];
