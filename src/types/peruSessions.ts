@@ -52,6 +52,13 @@ export interface SesionLegalReview {
   comentario_experto: string;
 }
 
+export interface SesionChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
 export interface PeruSession {
   id: string;
   external_session_id?: string;
@@ -88,8 +95,10 @@ export interface PeruSession {
   is_follow_up?: boolean;
   is_archived?: boolean;      // archivado manual
 
-  // Análisis acumulado del chatbot sobre esta sesión (se actualiza con cada interacción)
+  /** @deprecated reemplazado por chat_history; se sigue derivando para compatibilidad con Reportes legacy */
   chatbot_summary?: string;
+  /** Historial de chat interno por alerta (Q&A persistente) */
+  chat_history?: SesionChatMessage[];
 
   agenda_state?: SesionAgendaState;
   video_state?: SesionVideoState;

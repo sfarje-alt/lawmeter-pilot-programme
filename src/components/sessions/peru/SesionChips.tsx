@@ -131,6 +131,22 @@ export function ChatbotChip({ state }: { state: SesionChatbotState }) {
   return <ProcessChip prefix="Chatbot" label={m.label} tone={m.tone} />;
 }
 
+/** Chip único para el flujo en cadena de Análisis IA.
+ * Deriva su estado de transcription_state (canónico) ya que ambos
+ * (transcripción + chatbot) avanzan en sincronía con `requestAIAnalysis`.
+ */
+export function AIAnalysisChip({ state }: { state: SesionTranscriptionState }) {
+  const map: Record<SesionTranscriptionState, { label: string; tone: ProcessTone }> = {
+    no_solicitada: { label: 'Analizar IA', tone: 'idle' },
+    en_cola: { label: 'En cola', tone: 'queue' },
+    procesando: { label: 'Procesando', tone: 'processing' },
+    lista: { label: 'Listo', tone: 'ready' },
+    error: { label: 'Error', tone: 'error' },
+  };
+  const m = map[state];
+  return <ProcessChip prefix="Análisis IA" label={m.label} tone={m.tone} />;
+}
+
 // ── Riesgo / Urgencia / Impacto ─────────────────────────────────────────────
 export function RiskChip({ level }: { level: SesionRiskLevel }) {
   const cls =

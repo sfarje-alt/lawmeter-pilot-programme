@@ -15,7 +15,7 @@ import {
   Gavel,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ChatbotChip, TranscriptionChip } from './SesionChips';
+import { AIAnalysisChip } from './SesionChips';
 import type { PeruSession } from '@/types/peruSessions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -158,10 +158,9 @@ export function SesionAlertCard({
         </div>
       )}
 
-      {/* Solo chips de IA (transcripción + chatbot) */}
+      {/* Chip único de Análisis IA (transcripción + chat avanzan juntos) */}
       <div className="flex items-center gap-1 flex-wrap mb-2">
-        <TranscriptionChip state={session.transcription_state ?? 'no_solicitada'} />
-        <ChatbotChip state={session.chatbot_state ?? 'no_solicitado'} />
+        <AIAnalysisChip state={session.transcription_state ?? 'no_solicitada'} />
       </div>
 
       {/* Footer — fecha */}

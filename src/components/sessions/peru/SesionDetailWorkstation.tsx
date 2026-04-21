@@ -36,8 +36,9 @@ import {
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChatbotChip, TranscriptionChip } from './SesionChips';
+import { ChatbotChip, TranscriptionChip, AIAnalysisChip } from './SesionChips';
 import { getCommissionColor } from './commissionColors';
+import { SesionInternalChat } from './SesionInternalChat';
 import type { PeruSession } from '@/types/peruSessions';
 
 interface Props {
@@ -46,8 +47,12 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onTogglePin: (id: string) => void;
   onArchive: (id: string) => void;
-  onRequestTranscription: (id: string) => void;
-  onRequestChatbot: (id: string) => void;
+  onRequestAIAnalysis: (id: string) => void;
+  onAppendChatMessage: (
+    sessionId: string,
+    message: { role: 'user' | 'assistant'; content: string },
+  ) => void;
+  onClearChatHistory: (sessionId: string) => void;
 }
 
 function detectActionType(title: string): string | null {
@@ -66,8 +71,9 @@ export function SesionDetailWorkstation({
   onOpenChange,
   onTogglePin,
   onArchive,
-  onRequestTranscription,
-  onRequestChatbot,
+  onRequestAIAnalysis,
+  onAppendChatMessage,
+  onClearChatHistory,
 }: Props) {
   if (!session) {
     return (
@@ -121,8 +127,7 @@ export function SesionDetailWorkstation({
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              <TranscriptionChip state={session.transcription_state ?? 'no_solicitada'} />
-              <ChatbotChip state={session.chatbot_state ?? 'no_solicitado'} />
+              <AIAnalysisChip state={session.transcription_state ?? 'no_solicitada'} />
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-2">
@@ -155,9 +160,9 @@ export function SesionDetailWorkstation({
           </div>
         </div>
 
-        {/* Contenido — 4 tabs: Contenido / Procesamiento IA / Clasificatoria IA / Transcripción */}
+        {/* 3 tabs: Contenido / Procesamiento IA / Clasificatoria IA + Chat */}
         <Tabs defaultValue="contenido" className="px-5 pt-4 pb-5">
-          <TabsList className="grid grid-cols-4 w-full mb-4">
+          <TabsList className="grid grid-cols-3 w-full mb-4">
             <TabsTrigger value="contenido" className="text-xs">
               <FileText className="h-3.5 w-3.5 mr-1.5" />
               Contenido
@@ -168,20 +173,7 @@ export function SesionDetailWorkstation({
             </TabsTrigger>
             <TabsTrigger value="clasificatoria" className="text-xs">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Clasificatoria IA
-            </TabsTrigger>
-            <TabsTrigger
-              value="transcripcion"
-              className="text-xs"
-              disabled={!classificationUnlocked}
-              title={
-                classificationUnlocked
-                  ? 'Transcripción disponible'
-                  : 'Se desbloquea cuando la transcripción esté lista'
-              }
-            >
-              <FileText className="h-3.5 w-3.5 mr-1.5" />
-              Transcripción
+              Clasificatoria + Chat
             </TabsTrigger>
           </TabsList>
 
@@ -199,8 +191,7 @@ export function SesionDetailWorkstation({
           <TabsContent value="ia" className="space-y-6 mt-0">
             <Section6ProcesamientoIA
               session={session}
-              onRequestTranscription={onRequestTranscription}
-              onRequestChatbot={onRequestChatbot}
+              onRequestAIAnalysis={onRequestAIAnalysis}
             />
           </TabsContent>
 
@@ -209,11 +200,9 @@ export function SesionDetailWorkstation({
               session={session}
               unlocked={classificationUnlocked}
               commissionColor={commissionColor}
+              onAppendChatMessage={onAppendChatMessage}
+              onClearChatHistory={onClearChatHistory}
             />
-          </TabsContent>
-
-          <TabsContent value="transcripcion" className="space-y-6 mt-0">
-            <SectionTranscripcion session={session} />
           </TabsContent>
         </Tabs>
       </SheetContent>
@@ -369,10 +358,17 @@ function SectionClasificatoriaIA({
   session,
   unlocked,
   commissionColor,
+  onAppendChatMessage,
+  onClearChatHistory,
 }: {
   session: PeruSession;
   unlocked: boolean;
   commissionColor: { bg: string; ring: string; text: string };
+  onAppendChatMessage: (
+    sessionId: string,
+    message: { role: 'user' | 'assistant'; content: string },
+  ) => void;
+  onClearChatHistory: (sessionId: string) => void;
 }) {
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
   const [urgency, setUrgency] = useState<string>('medium');
@@ -466,22 +462,14 @@ function SectionClasificatoriaIA({
           </div>
         </div>
 
-        {/* Análisis acumulado del chatbot — se actualiza con cada interacción */}
-        <div className="space-y-1.5 pt-3 border-t border-border/30">
-          <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-primary" />
-            Análisis del chatbot (se actualiza con cada interacción)
-          </Label>
-          {session.chatbot_summary?.trim() ? (
-            <div className="rounded-md border border-border/50 bg-background/50 p-3 text-xs whitespace-pre-wrap text-foreground/85 max-h-64 overflow-y-auto">
-              {session.chatbot_summary}
-            </div>
-          ) : (
-            <p className="text-[11px] text-muted-foreground">
-              Aún no hay interacciones del chatbot sobre esta sesión. Cada pregunta y
-              respuesta del asistente quedará registrada aquí y se incluirá en el reporte.
-            </p>
-          )}
+        {/* Chat interno de la alerta — historial persistente */}
+        <div className="space-y-2 pt-3 border-t border-border/30">
+          <SesionInternalChat
+            session={session}
+            unlocked={unlocked}
+            onAppendMessage={onAppendChatMessage}
+            onClearHistory={onClearChatHistory}
+          />
         </div>
       </div>
     </SectionShell>
@@ -716,16 +704,67 @@ function Section5FuenteEvidencia({ session }: { session: PeruSession }) {
   );
 }
 
-// ── 6. Procesamiento IA ────────────────────────────────────────────────────
+// ── 6. Procesamiento IA — flujo en cadena con un solo botón ────────────────
 function Section6ProcesamientoIA({
   session,
-  onRequestTranscription,
-  onRequestChatbot,
+  onRequestAIAnalysis,
 }: {
   session: PeruSession;
-  onRequestTranscription: (id: string) => void;
-  onRequestChatbot: (id: string) => void;
+  onRequestAIAnalysis: (id: string) => void;
 }) {
+  const tState = session.transcription_state ?? 'no_solicitada';
+  const inFlight = tState === 'en_cola' || tState === 'procesando';
+  const ready = tState === 'lista';
+
+  return (
+    <SectionShell
+      title="Procesamiento IA"
+      icon={<Sparkles className="h-3.5 w-3.5" />}
+      hint="Un solo paso: la IA analiza la sesión, genera la clasificatoria y habilita el chat interno de la alerta."
+    >
+      <div className="rounded-md border border-border/40 bg-card/40 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Analizar con IA
+          </h3>
+          <AIAnalysisChip state={tState} />
+        </div>
+
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Este paso genera la <strong>clasificatoria IA completa</strong> (impacto, urgencia,
+          etiquetas, áreas afectadas) y habilita el <strong>chat interno</strong> de esta alerta.
+          La transcripción se procesa internamente y no se expone.
+        </p>
+
+        {tState === 'no_solicitada' && (
+          <div className="space-y-2 pt-1">
+            <p className="text-[11px] text-muted-foreground">Tiempo estimado: ~20 minutos.</p>
+            <Button size="sm" onClick={() => onRequestAIAnalysis(session.id)}>
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Analizar con IA
+            </Button>
+          </div>
+        )}
+
+        {inFlight && (
+          <div className="flex items-center gap-2 text-sm text-primary pt-1">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {tState === 'en_cola' ? 'En cola · ~20 min' : 'Procesando · ~20 min'}
+          </div>
+        )}
+
+        {ready && (
+          <div className="flex items-center gap-2 text-sm text-success pt-1">
+            <CheckCircle2 className="h-4 w-4" />
+            Análisis listo. Conversa con esta alerta desde la pestaña{' '}
+            <strong>Clasificatoria + Chat</strong>.
+          </div>
+        )}
+      </div>
+    </SectionShell>
+  );
+}
   const tState = session.transcription_state ?? 'no_solicitada';
   const cState = session.chatbot_state ?? 'no_solicitado';
   const r = session.recording;

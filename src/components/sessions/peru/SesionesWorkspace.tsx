@@ -24,7 +24,7 @@ import {
 } from './SesionesFilterBar';
 import { SesionAlertCard } from './SesionAlertCard';
 import { SesionDetailWorkstation } from './SesionDetailWorkstation';
-import { SesionesGlobalChatbot } from './SesionesGlobalChatbot';
+
 import type { PeruSession } from '@/types/peruSessions';
 
 interface Props {
@@ -39,9 +39,9 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
     markOpened,
     togglePin,
     archiveSession,
-    requestTranscription,
-    requestChatbot,
-    appendChatbotSummary,
+    requestAIAnalysis,
+    appendChatMessage,
+    clearChatHistory,
   } = useSesionesWorkspace();
 
   const [filters, setFilters] = useState<SesionesFilters>(DEFAULT_FILTERS);
@@ -266,12 +266,10 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
         onOpenChange={(o) => !o && setOpenSession(null)}
         onTogglePin={togglePin}
         onArchive={archiveSession}
-        onRequestTranscription={requestTranscription}
-        onRequestChatbot={requestChatbot}
+        onRequestAIAnalysis={requestAIAnalysis}
+        onAppendChatMessage={appendChatMessage}
+        onClearChatHistory={clearChatHistory}
       />
-
-      {/* Chatbot global persistente */}
-      <SesionesGlobalChatbot sessions={sessions} onInteraction={appendChatbotSummary} />
     </div>
   );
 }
