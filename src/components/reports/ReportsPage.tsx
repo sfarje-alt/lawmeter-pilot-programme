@@ -178,8 +178,6 @@ const LABEL_COLOR = "#718096";
 
 interface SeriesPoint { label: string; value: number; }
 
-import type { AnalyticsBlockDefinition } from "@/types/analytics";
-
 /** Derives a representative series for a block from the report's data slice. */
 function computeBlockSeries(
   block: AnalyticsBlockConfigExtended,
