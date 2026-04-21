@@ -148,7 +148,13 @@ function mapDbRowToAlert(
 
     // Regulation-specific
     entity: row.entity ?? ui.entity ?? undefined,
-    publication_date: row.fecha_publicacion ?? ui.publication_date ?? undefined,
+    publication_date:
+      row.fecha_publicacion
+      ?? ui.publication_date
+      ?? sourceRef.date
+      ?? sourceRef.fecha_publicacion
+      ?? keyDates.find((d) => ["publicacion", "publicación", "publication", "published"].includes(String(d.rol).toLowerCase()))?.fecha
+      ?? undefined,
     legislation_summary: row.legislation_summary ?? row.sumilla ?? null,
 
     // Workflow
