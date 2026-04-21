@@ -17,7 +17,10 @@ import {
   Link,
   Image as PDFImage,
 } from "@react-pdf/renderer";
-import { captureAnalyticsSnapshots } from "./captureAnalyticsSnapshots";
+import {
+  captureAnalyticsSnapshots,
+  type AnalyticsSnapshot,
+} from "./captureAnalyticsSnapshots";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
@@ -253,18 +256,63 @@ const styles = StyleSheet.create({
   },
   analyticsTitle: { fontSize: 32, fontFamily: "Helvetica-Bold", color: COLORS.brand, marginBottom: 8 },
   analyticsLead: { fontSize: 11, color: COLORS.inkMuted, lineHeight: 1.55, maxWidth: 420 },
-  analyticsImagePage: { padding: 0, backgroundColor: COLORS.surface },
-  analyticsImage: { width: "100%", height: "auto" },
+  analyticsImagePage: {
+    paddingTop: 24,
+    paddingBottom: 56,
+    paddingHorizontal: 24,
+    backgroundColor: COLORS.surface,
+  },
+  analyticsImageWrap: {
+    borderWidth: 1,
+    borderColor: COLORS.borderSoft,
+    borderRadius: 6,
+  },
 });
 
-// (Analytics in PDF are now embedded as HD snapshots — see analyticsImages prop.)
+const ANALYTICS_PAGE_WIDTH_PT = 595.28;
+const ANALYTICS_PAGE_HEIGHT_PT = 841.89;
+const ANALYTICS_PAGE_PADDING_X_PT = 24;
+const ANALYTICS_PAGE_PADDING_TOP_PT = 24;
+const ANALYTICS_PAGE_PADDING_BOTTOM_PT = 56;
+const ANALYTICS_SECTION_GAP_PT = 10;
+const ANALYTICS_CONTENT_WIDTH_PT = ANALYTICS_PAGE_WIDTH_PT - ANALYTICS_PAGE_PADDING_X_PT * 2;
+const ANALYTICS_CONTENT_HEIGHT_PT = ANALYTICS_PAGE_HEIGHT_PT - ANALYTICS_PAGE_PADDING_TOP_PT - ANALYTICS_PAGE_PADDING_BOTTOM_PT;
 
+function getAnalyticsImageHeightPt(image: AnalyticsSnapshot) {
+  return ANALYTICS_CONTENT_WIDTH_PT * (image.height / image.width);
+}
+
+function paginateAnalyticsSnapshots(images: AnalyticsSnapshot[]): AnalyticsSnapshot[][] {
+  const pages: AnalyticsSnapshot[][] = [];
+  let current: AnalyticsSnapshot[] = [];
+  let usedHeight = 0;
+
+  images.forEach((image) => {
+    const imageHeight = getAnalyticsImageHeightPt(image);
+    const nextHeight = current.length === 0
+      ? imageHeight
+      : usedHeight + ANALYTICS_SECTION_GAP_PT + imageHeight;
+
+    if (current.length > 0 && nextHeight > ANALYTICS_CONTENT_HEIGHT_PT) {
+      pages.push(current);
+      current = [image];
+      usedHeight = imageHeight;
+      return;
+    }
+
+    current.push(image);
+    usedHeight = nextHeight;
+  });
+
+  if (current.length > 0) pages.push(current);
+  return pages;
+}
 
 interface PDFProps {
   alerts: PeruAlert[];
   sessions: PeruSession[];
-  /** HD analytics snapshots (PNG data URLs), one per page. */
-  analyticsImages: string[];
+  /** HD analytics snapshots with explicit dimensions for PDF pagination. */
+  analyticsImages: AnalyticsSnapshot[];
   source: SourceMode;
   inclusion: InclusionMode;
   includeAnalytics: boolean;
