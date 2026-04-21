@@ -36,8 +36,9 @@ import {
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChatbotChip, TranscriptionChip } from './SesionChips';
+import { ChatbotChip, TranscriptionChip, AIAnalysisChip } from './SesionChips';
 import { getCommissionColor } from './commissionColors';
+import { SesionInternalChat } from './SesionInternalChat';
 import type { PeruSession } from '@/types/peruSessions';
 
 interface Props {
@@ -46,8 +47,12 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onTogglePin: (id: string) => void;
   onArchive: (id: string) => void;
-  onRequestTranscription: (id: string) => void;
-  onRequestChatbot: (id: string) => void;
+  onRequestAIAnalysis: (id: string) => void;
+  onAppendChatMessage: (
+    sessionId: string,
+    message: { role: 'user' | 'assistant'; content: string },
+  ) => void;
+  onClearChatHistory: (sessionId: string) => void;
 }
 
 function detectActionType(title: string): string | null {
@@ -66,8 +71,9 @@ export function SesionDetailWorkstation({
   onOpenChange,
   onTogglePin,
   onArchive,
-  onRequestTranscription,
-  onRequestChatbot,
+  onRequestAIAnalysis,
+  onAppendChatMessage,
+  onClearChatHistory,
 }: Props) {
   if (!session) {
     return (
