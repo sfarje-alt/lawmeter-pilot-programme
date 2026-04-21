@@ -448,6 +448,7 @@ export interface AnalyticsBlockConfigExtended extends AnalyticsBlockConfig {
   takeaway: string;
   infoTooltip: string;
   visibility: AnalyticsVisibility;
+  section: AnalyticsSection;
   renderPDF: boolean;
   renderDashboard: boolean;
 }
@@ -463,6 +464,15 @@ export const CLIENT_ANALYTICS_BLOCKS: AnalyticsBlockConfigExtended[] = ANALYTICS
     takeaway: block.takeaway,
     infoTooltip: block.infoTooltip,
     visibility: block.visibility,
+    section: block.section,
     renderPDF: block.defaultEnabled,
     renderDashboard: true,
   }));
+
+// Section labels for grouping in the customizer
+export const ANALYTICS_SECTION_LABELS: Record<AnalyticsSection, string> = {
+  general: 'General',
+  bills: 'Proyectos de ley y normas',
+  sessions: 'Sesiones del Congreso',
+  ops: 'Operaciones internas',
+};
