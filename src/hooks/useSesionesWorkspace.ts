@@ -257,63 +257,77 @@ export function useSesionesWorkspace() {
     [sessions, mutate],
   );
 
-  /** Acumula/actualiza el resumen del chatbot para una sesión.
-   * Se llama desde el chatbot global cada vez que el usuario interactúa con
-   * una alerta habilitada, de forma que el "Análisis IA" del reporte y del
-   * tab Clasificatoria IA se mantengan actualizados.
-   */
+  /** @deprecated Reemplazado por appendChatMessage; se mantiene por compat con el chatbot global eliminado. */
   const appendChatbotSummary = useCallback(
     (sessionId: string, snippet: string) => {
       const trimmed = snippet.trim();
       if (!trimmed) return;
       const s = sessions.find((x) => x.id === sessionId);
       const previous = s?.chatbot_summary?.trim() ?? '';
-      // Limitar tamaño total para evitar crecimiento ilimitado
       const merged = (previous ? `${previous}\n\n${trimmed}` : trimmed).slice(-4000);
       mutate(sessionId, { chatbot_summary: merged });
     },
     [sessions, mutate],
   );
 
-  // Acciones IA — simulan ciclo en cola → procesando → lista
-  const startAIJob = useCallback(
-    (
-      sessionId: string,
-      kind: 'transcription' | 'chatbot',
-    ) => {
-      const ready = kind === 'transcription' ? 'lista' : 'listo';
+  /** Agrega un mensaje al historial de chat interno de la alerta.
+   * Mantiene últimos 50 mensajes y refresca chatbot_summary derivado para Reportes legacy.
+   */
+  const appendChatMessage = useCallback(
+    (sessionId: string, message: Omit<SesionChatMessage, 'id' | 'created_at'> & Partial<Pick<SesionChatMessage, 'id' | 'created_at'>>) => {
+      const s = sessions.find((x) => x.id === sessionId);
+      const previous = s?.chat_history ?? [];
+      const full: SesionChatMessage = {
+        id: message.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        role: message.role,
+        content: message.content,
+        created_at: message.created_at ?? new Date().toISOString(),
+      };
+      const next = [...previous, full].slice(-50);
+      mutate(sessionId, {
+        chat_history: next,
+        chatbot_summary: deriveSummaryFromChat(next),
+      });
+    },
+    [sessions, mutate],
+  );
 
-      const apply = (state: string) =>
-        mutate(sessionId, kind === 'transcription'
-          ? { transcription_state: state as SesionTranscriptionState }
-          : { chatbot_state: state as SesionChatbotState });
-
-      apply('en_cola');
-      toast.success(
-        kind === 'transcription'
-          ? 'Transcripción en cola · ~20 min'
-          : 'Chatbot en cola · ~20 min',
-      );
-      setTimeout(() => apply('procesando'), 1200);
-      setTimeout(() => apply(ready), 4500);
+  const clearChatHistory = useCallback(
+    (sessionId: string) => {
+      mutate(sessionId, { chat_history: [], chatbot_summary: undefined });
     },
     [mutate],
   );
 
-  const requestTranscription = useCallback(
-    (sessionId: string) => startAIJob(sessionId, 'transcription'),
-    [startAIJob],
+  /** Análisis IA en cadena: dispara transcripción + chatbot a la vez.
+   * Estados internos avanzan en sincronía: en_cola → procesando → (lista/listo).
+   * La transcripción NO se expone al usuario; solo habilita el chat interno.
+   */
+  const requestAIAnalysis = useCallback(
+    (sessionId: string) => {
+      const apply = (
+        tState: SesionTranscriptionState,
+        cState: SesionChatbotState,
+      ) => mutate(sessionId, { transcription_state: tState, chatbot_state: cState });
+
+      apply('en_cola', 'en_cola');
+      toast.success('Análisis IA en cola · ~20 min');
+      setTimeout(() => apply('procesando', 'procesando'), 1200);
+      setTimeout(() => {
+        apply('lista', 'listo');
+        toast.success('Análisis IA listo. Ya puedes conversar con la alerta.');
+      }, 4500);
+    },
+    [mutate],
   );
 
-  const requestChatbot = useCallback(
-    (sessionId: string) => startAIJob(sessionId, 'chatbot'),
-    [startAIJob],
-  );
+  // Aliases legacy (algunos consumidores aún los referencian)
+  const requestTranscription = requestAIAnalysis;
+  const requestChatbot = requestAIAnalysis;
 
   const updateLegalReview = useCallback(
     (sessionId: string, review: SesionLegalReview) => {
       setLegal((prev) => ({ ...prev, [sessionId]: review }));
-      // Persistir junto al estado editorial actual
       const entry = editorial[sessionId] ??
         makeEntry(sessions.find((s) => s.id === sessionId) ?? ({ id: sessionId } as PeruSession));
       upsertRemote(sessionId, entry, review);
@@ -321,7 +335,6 @@ export function useSesionesWorkspace() {
     [editorial, sessions, upsertRemote],
   );
 
-  // KPIs
   const stats = useMemo(() => {
     const visible = sessions.filter((s) => !s.is_archived);
     return {
@@ -350,9 +363,12 @@ export function useSesionesWorkspace() {
     markOpened,
     togglePin,
     archiveSession,
+    requestAIAnalysis,
     requestTranscription,
     requestChatbot,
     updateLegalReview,
     appendChatbotSummary,
+    appendChatMessage,
+    clearChatHistory,
   };
 }
