@@ -160,9 +160,9 @@ export function SesionDetailWorkstation({
           </div>
         </div>
 
-        {/* Contenido — 4 tabs: Contenido / Procesamiento IA / Clasificatoria IA / Transcripción */}
+        {/* 3 tabs: Contenido / Procesamiento IA / Clasificatoria IA + Chat */}
         <Tabs defaultValue="contenido" className="px-5 pt-4 pb-5">
-          <TabsList className="grid grid-cols-4 w-full mb-4">
+          <TabsList className="grid grid-cols-3 w-full mb-4">
             <TabsTrigger value="contenido" className="text-xs">
               <FileText className="h-3.5 w-3.5 mr-1.5" />
               Contenido
@@ -173,20 +173,7 @@ export function SesionDetailWorkstation({
             </TabsTrigger>
             <TabsTrigger value="clasificatoria" className="text-xs">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Clasificatoria IA
-            </TabsTrigger>
-            <TabsTrigger
-              value="transcripcion"
-              className="text-xs"
-              disabled={!classificationUnlocked}
-              title={
-                classificationUnlocked
-                  ? 'Transcripción disponible'
-                  : 'Se desbloquea cuando la transcripción esté lista'
-              }
-            >
-              <FileText className="h-3.5 w-3.5 mr-1.5" />
-              Transcripción
+              Clasificatoria + Chat
             </TabsTrigger>
           </TabsList>
 
@@ -204,8 +191,7 @@ export function SesionDetailWorkstation({
           <TabsContent value="ia" className="space-y-6 mt-0">
             <Section6ProcesamientoIA
               session={session}
-              onRequestTranscription={onRequestTranscription}
-              onRequestChatbot={onRequestChatbot}
+              onRequestAIAnalysis={onRequestAIAnalysis}
             />
           </TabsContent>
 
@@ -214,11 +200,9 @@ export function SesionDetailWorkstation({
               session={session}
               unlocked={classificationUnlocked}
               commissionColor={commissionColor}
+              onAppendChatMessage={onAppendChatMessage}
+              onClearChatHistory={onClearChatHistory}
             />
-          </TabsContent>
-
-          <TabsContent value="transcripcion" className="space-y-6 mt-0">
-            <SectionTranscripcion session={session} />
           </TabsContent>
         </Tabs>
       </SheetContent>
