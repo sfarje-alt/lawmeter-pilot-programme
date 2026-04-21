@@ -5,6 +5,8 @@ import {
   AttachedFileMetaRef,
   purgeOldArchivedAlerts,
 } from "@/data/peruAlertsMockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { isEmptyDataOrg, setCurrentOrgEmptyFlag } from "@/lib/orgDataIsolation";
 
 interface AlertsContextType {
   alerts: PeruAlert[];
