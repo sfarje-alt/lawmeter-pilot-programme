@@ -66,7 +66,18 @@ function makeEntry(session: PeruSession): EditorialEntry {
     transcription_state: session.transcription_state ?? 'no_solicitada',
     chatbot_state: session.chatbot_state ?? 'no_solicitado',
     chatbot_summary: session.chatbot_summary,
+    chat_history: session.chat_history,
   };
+}
+
+function deriveSummaryFromChat(history: SesionChatMessage[] | undefined): string | undefined {
+  if (!history || history.length === 0) return undefined;
+  const stamp = (m: SesionChatMessage) =>
+    new Date(m.created_at).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
+  return history
+    .map((m) => `[${stamp(m)}] ${m.role === 'user' ? 'P' : 'R'}: ${m.content}`)
+    .join('\n\n')
+    .slice(-6000);
 }
 
 export function useSesionesWorkspace() {
