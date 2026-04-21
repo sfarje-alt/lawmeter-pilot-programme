@@ -9,6 +9,7 @@ import { usePeruSessions } from './usePeruSessions';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { SESIONES_DEMO_ALERTS } from '@/data/sesionesDemoAlerts';
+import { isEmptyDataOrg } from '@/lib/orgDataIsolation';
 import type {
   PeruSession,
   SesionChatbotState,
@@ -82,8 +83,9 @@ function deriveSummaryFromChat(history: SesionChatMessage[] | undefined): string
 
 export function useSesionesWorkspace() {
   const base = usePeruSessions();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const userId = user?.id;
+  const isEmpty = isEmptyDataOrg(profile?.organization_id);
 
   const [editorial, setEditorial] = useState<EditorialMap>(() =>
     readJSON<EditorialMap>(LS_EDITORIAL, {}),
@@ -157,6 +159,7 @@ export function useSesionesWorkspace() {
   // Combinar sesiones reales + demo (demo si BD viene vacía)
   const baseSessions = base.allSessions;
   const sessions = useMemo<PeruSession[]>(() => {
+    if (isEmpty) return [];
     const real = baseSessions.length > 0 ? baseSessions : SESIONES_DEMO_ALERTS;
     return real.map((s) => {
       const stored = editorial[s.id];
@@ -177,7 +180,7 @@ export function useSesionesWorkspace() {
         legal_review: legal[s.id] ?? s.legal_review,
       } satisfies PeruSession;
     });
-  }, [baseSessions, editorial, legal]);
+  }, [baseSessions, editorial, legal, isEmpty]);
 
   // Upsert en Supabase (silencioso, no bloqueante)
   const upsertRemote = useCallback(

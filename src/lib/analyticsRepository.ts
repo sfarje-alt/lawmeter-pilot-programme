@@ -2,6 +2,7 @@
 // Centralizes all analytics calculations combining public data, temporal evolution, and editorial layer
 
 import { ALL_MOCK_ALERTS, type PeruAlert } from '@/data/peruAlertsMockData';
+import { isCurrentOrgEmpty } from '@/lib/orgDataIsolation';
 import type {
   AnalyticsFilters,
   AggregatedMetrics,
@@ -16,6 +17,12 @@ import type {
   FunnelStage,
   KPIMetric,
 } from '@/types/analytics';
+
+// Devuelve dataset vacío para organizaciones piloto (Betsson, etc.) que aún
+// no tienen data sincronizada — caso contrario devuelve los mocks.
+function getMockAlerts(): PeruAlert[] {
+  return isCurrentOrgEmpty() ? [] : ALL_MOCK_ALERTS;
+}
 
 // Helper to parse date strings (DD/MM/YYYY format)
 function parseDate(dateStr: string | undefined | null): Date | null {
@@ -174,7 +181,7 @@ export function getAggregatedMetrics(
   filters: AnalyticsFilters,
   userType: 'admin' | 'client' = 'admin'
 ): AggregatedMetrics {
-  const filtered = filterAlerts(ALL_MOCK_ALERTS, filters, {
+  const filtered = filterAlerts(getMockAlerts(), filters, {
     onlyPublished: userType === 'client',
   });
   
@@ -258,7 +265,7 @@ export function getAggregatedMetrics(
 
 // Get editorial metrics (for Legal Team only)
 export function getEditorialMetrics(filters: AnalyticsFilters): EditorialMetrics {
-  const allAlerts = filterAlerts(ALL_MOCK_ALERTS, filters);
+  const allAlerts = filterAlerts(getMockAlerts(), filters);
   const publishedAlerts = allAlerts.filter(a => a.status === 'published');
   
   // Calculate response times (mock calculation)
@@ -337,7 +344,7 @@ export function getEditorialMetrics(filters: AnalyticsFilters): EditorialMetrics
 
 // Get operational queue metrics (for Legal Team only)
 export function getOperationalQueueMetrics(): OperationalQueueMetrics {
-  const active = ALL_MOCK_ALERTS.filter(a => !a.archived_at);
+  const active = getMockAlerts().filter(a => !a.archived_at);
   const unread = active.filter(a => a.status === 'inbox').length;
   const withoutCommentary = active.filter(a => !a.expert_commentary || !a.expert_commentary.trim()).length;
   const withoutTags = active.filter(a => !a.affected_areas || a.affected_areas.length === 0).length;
@@ -375,7 +382,7 @@ export function getClientMetrics(
   filters: AnalyticsFilters
 ): ClientMetrics {
   const aggregated = getAggregatedMetrics(filters, 'client');
-  const clientAlerts = filterAlerts(ALL_MOCK_ALERTS, filters, {
+  const clientAlerts = filterAlerts(getMockAlerts(), filters, {
     onlyPublished: true,
     clientId,
   });
