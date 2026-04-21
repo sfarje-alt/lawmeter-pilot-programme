@@ -3,16 +3,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  ExternalLink, 
-  Calendar, 
-  User, 
-  Building2, 
+import {
+  ExternalLink,
+  Calendar,
+  User,
+  Building2,
   FileText,
   Users,
   Clock,
   Eye,
-  Lightbulb
+  Lightbulb,
+  CalendarClock,
+  TrendingUp,
+  Link2,
 } from "lucide-react";
 import { PeruAlert, getTypeLabel, getTypeColor } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
@@ -157,6 +160,101 @@ export function ClientAlertDetailDrawer({ alert, open, onOpenChange, clientId }:
                 </div>
                 <Separator className="bg-border/30" />
               </>
+            )}
+
+            {/* Identified dates — flexible list */}
+            {alert.key_dates && alert.key_dates.length > 0 && (
+              <>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CalendarClock className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Fechas identificadas
+                    </h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {alert.key_dates.map((kd, i) => {
+                      const role = String(kd.rol ?? "").toLowerCase();
+                      const isPub = ["publicacion", "publicación", "published", "publication"].includes(role);
+                      const isPlazo = ["plazo", "vencimiento", "deadline"].includes(role);
+                      const isVig = role.startsWith("vigencia") || role === "entrada_vigor";
+                      const roleStyle = isPub
+                        ? "bg-blue-500/15 text-blue-400 border-blue-500/35"
+                        : isPlazo
+                          ? "bg-orange-500/15 text-orange-400 border-orange-500/35"
+                          : isVig
+                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/35"
+                            : "bg-muted/40 text-muted-foreground border-border/40";
+                      let formatted = kd.fecha;
+                      try {
+                        formatted = format(new Date(kd.fecha), "dd MMM yyyy", { locale: es });
+                      } catch {
+                        // keep raw
+                      }
+                      const isFuture = (() => {
+                        try {
+                          return new Date(kd.fecha).getTime() > Date.now();
+                        } catch {
+                          return false;
+                        }
+                      })();
+                      return (
+                        <li
+                          key={`${kd.fecha}-${kd.rol}-${i}`}
+                          className="flex items-start gap-3 rounded-md border border-border/30 bg-muted/20 px-3 py-2"
+                        >
+                          <Badge variant="outline" className={cn("text-[10px] uppercase tracking-wide shrink-0", roleStyle)}>
+                            {kd.rol}
+                          </Badge>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                              {formatted}
+                              {isFuture && (isPlazo || isVig) && (
+                                <Clock className="h-3 w-3 text-[hsl(var(--warning))]" />
+                              )}
+                            </div>
+                            {kd.contexto && (
+                              <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                                {kd.contexto}
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <Separator className="bg-border/30" />
+              </>
+            )}
+
+            {/* AI rationale */}
+            {alert.rationale && alert.rationale.length > 0 && (
+              <>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Racional del análisis
+                    </h3>
+                  </div>
+                  <ul className="space-y-2 list-disc pl-5">
+                    {alert.rationale.map((r, i) => (
+                      <li key={i} className="text-sm text-foreground leading-relaxed">
+                        {r}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Separator className="bg-border/30" />
+              </>
+            )}
+
+            {alert.fuente && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Link2 className="h-3.5 w-3.5" />
+                <span>Fuente: {alert.fuente}</span>
+              </div>
             )}
 
             {/* Expert Commentary (Read-Only) */}
