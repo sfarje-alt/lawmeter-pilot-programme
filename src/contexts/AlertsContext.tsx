@@ -64,12 +64,22 @@ function normalizeType(t: string | null): "proyecto_de_ley" | "norma" | null {
   return null;
 }
 
-/** Derive an ImpactLevel label from a numeric AI impact score (0-100). */
+/** Map "Alta/Media/Baja" (case-insensitive) to ImpactLevel. */
+function mapCategoriaToImpact(cat: string | null | undefined): ImpactLevel | null {
+  if (!cat) return null;
+  const c = String(cat).trim().toLowerCase();
+  if (c === "alta") return "grave";
+  if (c === "media") return "medio";
+  if (c === "baja") return "leve";
+  if (c === "positivo" || c === "positiva") return "positivo";
+  return null;
+}
+
+/** Derive an ImpactLevel label from a numeric AI impact score (0-100). Thresholds 70/30/0. */
 function deriveImpactLevel(score: number | null | undefined, fallback?: string | null): ImpactLevel {
   if (typeof score === "number" && !Number.isNaN(score)) {
     if (score >= 70) return "grave";
-    if (score >= 40) return "medio";
-    if (score >= 15) return "leve";
+    if (score >= 30) return "medio";
     return "leve";
   }
   if (fallback === "grave" || fallback === "medio" || fallback === "leve" || fallback === "positivo") {
