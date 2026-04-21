@@ -64,12 +64,22 @@ function normalizeType(t: string | null): "proyecto_de_ley" | "norma" | null {
   return null;
 }
 
-/** Derive an ImpactLevel label from a numeric AI impact score (0-100). */
+/** Map "Alta/Media/Baja" (case-insensitive) to ImpactLevel. */
+function mapCategoriaToImpact(cat: string | null | undefined): ImpactLevel | null {
+  if (!cat) return null;
+  const c = String(cat).trim().toLowerCase();
+  if (c === "alta") return "grave";
+  if (c === "media") return "medio";
+  if (c === "baja") return "leve";
+  if (c === "positivo" || c === "positiva") return "positivo";
+  return null;
+}
+
+/** Derive an ImpactLevel label from a numeric AI impact score (0-100). Thresholds 70/30/0. */
 function deriveImpactLevel(score: number | null | undefined, fallback?: string | null): ImpactLevel {
   if (typeof score === "number" && !Number.isNaN(score)) {
     if (score >= 70) return "grave";
-    if (score >= 40) return "medio";
-    if (score >= 15) return "leve";
+    if (score >= 30) return "medio";
     return "leve";
   }
   if (fallback === "grave" || fallback === "medio" || fallback === "leve" || fallback === "positivo") {
@@ -105,10 +115,20 @@ function mapDbRowToAlert(
   // State family — drives badge color (independent of kanban column).
   const family = getStateFamily(row.estado_actual);
 
-  // Impact level: prefer numeric AI score, fallback to ui_extras label.
-  const impactoScore = typeof ai.impacto === "number" ? ai.impacto : null;
-  const urgenciaScore = typeof ai.urgencia === "number" ? ai.urgencia : null;
-  const impact = deriveImpactLevel(impactoScore, ui.impact_level);
+  // Impact level: prioridad estricta:
+  //   1) row.impacto_categoria  (top-level columna, "Alta/Media/Baja" del payload)
+  //   2) ui.impact_level        (legacy en ai_analysis.ui_extras)
+  //   3) deriveImpactLevel(score) con umbrales 70/30/0
+  const impactoScore = typeof row.impacto === "number"
+    ? row.impacto
+    : (typeof ai.impacto === "number" ? ai.impacto : null);
+  const urgenciaScore = typeof row.urgencia === "number"
+    ? row.urgencia
+    : (typeof ai.urgencia === "number" ? ai.urgencia : null);
+  const impact: ImpactLevel =
+    mapCategoriaToImpact(row.impacto_categoria) ??
+    (ui.impact_level as ImpactLevel | undefined) ??
+    deriveImpactLevel(impactoScore, ui.impact_level);
 
   const rationale: string[] = Array.isArray(ai.racional) ? ai.racional.filter((r: unknown): r is string => typeof r === "string") : [];
   const keyDates: KeyDate[] = Array.isArray(ai.fechas_identificadas)

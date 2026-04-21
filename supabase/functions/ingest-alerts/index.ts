@@ -50,7 +50,7 @@ interface SourceRefBlock {
 
 interface IngestItem {
   alerta_id?: string;
-  external_id?: string; // optional — falls back to alerta_id
+  external_id?: string;
   tipo?: string;
   titulo: string;
   resumen?: string;
@@ -65,10 +65,17 @@ interface IngestItem {
   model?: string;
   version?: number;
   generated_at?: string;
-  // Accept both
   source?: SourceRefBlock;
   source_ref?: SourceRefBlock;
   ui_extras?: Record<string, unknown>;
+
+  // Top-level common fields (productor los manda en raíz)
+  url?: string;
+  fuente?: string;
+  entity?: string;
+  sumilla?: string;
+  reference_number?: string;
+  fecha_publicacion?: string;
 
   // PL-specific
   codigo?: string;
@@ -76,13 +83,15 @@ interface IngestItem {
   estado_anterior?: string | null;
   es_cambio_estado?: boolean;
   seguimiento_hash?: string;
+  autores?: string[];
+  proponente?: string;
+  fecha_presentacion?: string;
 
   // Sesion-specific
   comision?: string;
-  url?: string;
   fecha_sesion?: string;
 
-  // Cliente echo (informational, persisted under ai_analysis.ui_extras)
+  // Cliente echo
   cliente_id?: string;
   cliente_nombre?: string;
 }
@@ -121,30 +130,48 @@ function normalizeDate(s: string | undefined | null): string | null {
   return null;
 }
 
+/** Resolve fuente label: prefer top-level, then source_ref, infer from URL host. */
+function resolveFuenteLabel(item: IngestItem, src: SourceRefBlock, urlResolved: string | null): string | null {
+  const raw = item.fuente ?? src.fuente ?? null;
+  if (raw && !/^https?:\/\//i.test(raw)) {
+    // Map slugs comunes a labels legibles
+    const slug = raw.toLowerCase();
+    if (slug === "el_peruano") return "El Peruano";
+    if (slug === "congreso") return "Congreso de la República";
+    if (slug === "spij") return "SPIJ";
+    return raw;
+  }
+  const url = (raw && /^https?:\/\//i.test(raw)) ? raw : urlResolved;
+  if (!url) return null;
+  if (/elperuano\./i.test(url)) return "El Peruano";
+  if (/spij\./i.test(url)) return "SPIJ";
+  if (/congreso\.gob\.pe/i.test(url)) return "Congreso de la República";
+  return url;
+}
+
 /** Read source block accepting both `source_ref` and `source`, normalizing field names. */
 function readSourceRef(item: IngestItem) {
   const src: SourceRefBlock = { ...(item.source ?? {}), ...(item.source_ref ?? {}) };
-  const url = src.url ?? src.fuente ?? null; // tu pipeline manda la URL en `fuente`
-  let fuenteLabel: string | null = null;
-  if (src.fuente && /^https?:\/\//i.test(src.fuente)) {
-    if (/elperuano\./i.test(src.fuente)) fuenteLabel = "El Peruano";
-    else if (/spij\./i.test(src.fuente)) fuenteLabel = "SPIJ";
-    else if (/congreso\.gob\.pe/i.test(src.fuente)) fuenteLabel = "Congreso de la República";
-    else fuenteLabel = src.fuente;
-  } else if (src.fuente) {
-    fuenteLabel = src.fuente;
-  }
+  // URL: priorizar top-level item.url, luego source_ref.url, luego source_ref.fuente si es URL
+  const url =
+    item.url ??
+    src.url ??
+    (src.fuente && /^https?:\/\//i.test(src.fuente) ? src.fuente : null) ??
+    null;
+  const fuenteLabel = resolveFuenteLabel(item, src, url);
   return {
-    entity: src.entity ?? src.entidad ?? null,
-    reference_number: src.reference_number ?? null,
+    entity: item.entity ?? src.entity ?? src.entidad ?? null,
+    reference_number: item.reference_number ?? src.reference_number ?? null,
     url,
     fuente_label: fuenteLabel,
-    fecha_publicacion_iso: normalizeDate(src.date ?? src.fecha_publicacion),
-    sumilla: src.sumilla ?? null,
+    fecha_publicacion_iso: normalizeDate(
+      item.fecha_publicacion ?? src.date ?? src.fecha_publicacion,
+    ),
+    sumilla: item.sumilla ?? src.sumilla ?? null,
   };
 }
 
-/** Pick publication date with priority: source_ref → fechas_identificadas[publicacion]. */
+/** Pick publication date with priority: top-level/source_ref → fechas_identificadas[publicacion]. */
 function pickPublicationDate(item: IngestItem, srcDateIso: string | null): string | null {
   if (srcDateIso) return srcDateIso;
   const fechas = item.fechas_identificadas;
@@ -332,6 +359,18 @@ Deno.serve(async (req) => {
         // Common
         url: src.url,
         fuente: src.fuente_label,
+        comentario: item.comentario ?? null,
+
+        // Scores y categorías (tal cual del payload)
+        impacto: typeof item.impacto === "number" ? item.impacto : null,
+        urgencia: typeof item.urgencia === "number" ? item.urgencia : null,
+        impacto_categoria: item.impacto_categoria ?? null,
+        urgencia_categoria: item.urgencia_categoria ?? null,
+
+        // Listas / JSON
+        area_de_interes: Array.isArray(item.area_de_interes) ? item.area_de_interes : [],
+        racional: Array.isArray(item.racional) ? item.racional : [],
+        fechas_identificadas: Array.isArray(item.fechas_identificadas) ? item.fechas_identificadas : [],
 
         // PL-specific
         codigo: item.codigo ?? null,
@@ -339,6 +378,9 @@ Deno.serve(async (req) => {
         estado_anterior: item.estado_anterior ?? null,
         es_cambio_estado: item.es_cambio_estado ?? null,
         seguimiento_hash: item.seguimiento_hash ?? null,
+        autores: Array.isArray(item.autores) ? item.autores : [],
+        proponente: item.proponente ?? null,
+        fecha_presentacion: normalizeDate(item.fecha_presentacion ?? null),
 
         // Sesion-specific
         comision: item.comision ?? null,
