@@ -130,9 +130,14 @@ export function useSesionesWorkspace() {
             transcription_state: (row.transcription_state ?? 'no_solicitada') as SesionTranscriptionState,
             chatbot_state: (row.chatbot_state ?? 'no_solicitado') as SesionChatbotState,
             chatbot_summary: typeof meta?.__chatbot_summary === 'string' ? meta.__chatbot_summary : undefined,
+            chat_history: Array.isArray(meta?.__chat_history) ? (meta.__chat_history as SesionChatMessage[]) : undefined,
           };
-          if (row.legal_review && Object.keys(meta).some((k) => k !== '__chatbot_summary')) {
-            nextLegal[row.session_id] = row.legal_review as unknown as SesionLegalReview;
+          if (
+            row.legal_review &&
+            Object.keys(meta).some((k) => k !== '__chatbot_summary' && k !== '__chat_history')
+          ) {
+            const { __chatbot_summary, __chat_history, ...rest } = meta as any;
+            nextLegal[row.session_id] = rest as unknown as SesionLegalReview;
           }
         }
         setEditorial((prev) => ({ ...prev, ...nextEditorial }));
