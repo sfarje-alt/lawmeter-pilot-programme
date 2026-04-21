@@ -58,7 +58,7 @@ type SectionId = "general" | "bills" | "sessions" | "ops";
  * Visualización / Datos / Insights IA tabs, filters, footer "Ver alertas")
  * is preserved untouched. Only the page-level structure changed.
  */
-export function LegalTeamAnalyticsDashboard() {
+export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshotMode?: boolean } = {}) {
   const [period, setPeriod] = React.useState<AnalyticsFilters['period']>('all_time');
   const [customizeOpen, setCustomizeOpen] = React.useState(false);
   const [maximized, setMaximized] = React.useState<SectionId | null>(null);
@@ -172,6 +172,7 @@ export function LegalTeamAnalyticsDashboard() {
           title="General"
           description="Vista de servicio y matriz de impacto consolidada."
           icon={<LayoutGrid className="h-4 w-4" />}
+          defaultOpen={snapshotMode}
           isMaximized={maximized === "general"}
           onMaximizeChange={handleMaximize("general")}
         >
@@ -193,6 +194,7 @@ export function LegalTeamAnalyticsDashboard() {
           title="Proyectos de ley y normas"
           description="Pulso regulatorio, prioridad, distribución y embudo legislativo."
           icon={<FileText className="h-4 w-4" />}
+          defaultOpen={snapshotMode}
           isMaximized={maximized === "bills"}
           onMaximizeChange={handleMaximize("bills")}
         >
@@ -235,6 +237,7 @@ export function LegalTeamAnalyticsDashboard() {
           title="Sesiones del Congreso"
           description="Comportamiento de las sesiones, agenda y materias temáticas."
           icon={<Mic className="h-4 w-4" />}
+          defaultOpen={snapshotMode}
           isMaximized={maximized === "sessions"}
           onMaximizeChange={handleMaximize("sessions")}
           filters={
@@ -298,6 +301,7 @@ export function LegalTeamAnalyticsDashboard() {
           description="Productividad editorial, cola de revisión y uso de IA."
           icon={<Wrench className="h-4 w-4" />}
           badge="Solo Interno"
+          defaultOpen={snapshotMode}
           isMaximized={maximized === "ops"}
           onMaximizeChange={handleMaximize("ops")}
           filters={
