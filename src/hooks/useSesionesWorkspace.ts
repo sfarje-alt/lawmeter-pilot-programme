@@ -171,7 +171,9 @@ export function useSesionesWorkspace() {
         editorial_state,
         transcription_state: entry.transcription_state,
         chatbot_state: entry.chatbot_state,
-        chatbot_summary: entry.chatbot_summary ?? s.chatbot_summary,
+        chatbot_summary:
+          deriveSummaryFromChat(entry.chat_history) ?? entry.chatbot_summary ?? s.chatbot_summary,
+        chat_history: entry.chat_history ?? s.chat_history,
         legal_review: legal[s.id] ?? s.legal_review,
       } satisfies PeruSession;
     });
@@ -181,11 +183,18 @@ export function useSesionesWorkspace() {
   const upsertRemote = useCallback(
     async (sessionId: string, entry: EditorialEntry, legalReview?: SesionLegalReview) => {
       if (!userId) return;
-      // Empaquetamos el resumen del chatbot dentro de legal_review (jsonb) para no requerir migración.
-      const legalPayload =
-        legalReview !== undefined || entry.chatbot_summary !== undefined
-          ? { ...(legalReview ?? {}), __chatbot_summary: entry.chatbot_summary ?? null }
-          : undefined;
+      // Empaquetamos resumen + historial de chat dentro de legal_review (jsonb) para no requerir migración.
+      const needsMeta =
+        legalReview !== undefined ||
+        entry.chatbot_summary !== undefined ||
+        entry.chat_history !== undefined;
+      const legalPayload = needsMeta
+        ? {
+            ...(legalReview ?? {}),
+            __chatbot_summary: entry.chatbot_summary ?? null,
+            __chat_history: entry.chat_history ?? null,
+          }
+        : undefined;
       const payload = {
         session_id: sessionId,
         user_id: userId,
