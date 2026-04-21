@@ -7,7 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PDFDownloadLink, pdf, Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
+import {
+  PDFDownloadLink,
+  pdf,
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Link,
+  Svg,
+  Path,
+  Rect,
+  Line as SvgLine,
+  Circle,
+  G,
+  Polyline,
+} from "@react-pdf/renderer";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
@@ -16,6 +32,7 @@ import type { PeruSession } from "@/types/peruSessions";
 import {
   ANALYTICS_BLOCK_REGISTRY,
   type AnalyticsBlockConfigExtended,
+  type AnalyticsBlockDefinition,
 } from "@/types/analytics";
 import {
   FileDown,
@@ -147,6 +164,282 @@ const styles = StyleSheet.create({
   analyticsBlockMeta: { fontSize: 8, color: "#718096", marginBottom: 4 },
   analyticsBlockBody: { fontSize: 9, color: "#2d3748" },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MiniChart — vector-sharp SVG primitives reused by analytics blocks
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CHART_WIDTH = 460;
+const CHART_HEIGHT = 110;
+const CHART_PADDING = { top: 8, right: 8, bottom: 18, left: 24 };
+const CHART_PALETTE = ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed", "#90cdf4", "#bee3f8"];
+const AXIS_COLOR = "#cbd5e0";
+const LABEL_COLOR = "#718096";
+
+interface SeriesPoint { label: string; value: number; }
+
+/** Derives a representative series for a block from the report's data slice. */
+function computeBlockSeries(
+  block: AnalyticsBlockConfigExtended,
+  alerts: PeruAlert[],
+  sessions: PeruSession[],
+): SeriesPoint[] {
+  const fallback: SeriesPoint[] = [
+    { label: "S1", value: 4 },
+    { label: "S2", value: 6 },
+    { label: "S3", value: 5 },
+    { label: "S4", value: 8 },
+    { label: "S5", value: 7 },
+    { label: "S6", value: 9 },
+  ];
+
+  const countBy = <T,>(items: T[], pick: (i: T) => string | undefined | null) => {
+    const map = new Map<string, number>();
+    for (const it of items) {
+      const k = (pick(it) || "—").toString().trim();
+      if (!k) continue;
+      map.set(k, (map.get(k) ?? 0) + 1);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([label, value]) => ({ label, value }));
+  };
+
+  switch (block.key) {
+    case "impact_matrix":
+    case "alert_priority": {
+      const data = countBy(alerts, (a: any) => a.impact_level);
+      return data.length ? data.slice(0, 4) : [
+        { label: "Grave", value: 3 }, { label: "Medio", value: 6 },
+        { label: "Leve", value: 9 }, { label: "Positivo", value: 4 },
+      ];
+    }
+    case "alert_distribution": {
+      const data = countBy(alerts, (a) => a.legislation_type === "norma" ? "Normas" : "Proyectos");
+      return data.length ? data : [{ label: "Proyectos", value: 7 }, { label: "Normas", value: 5 }];
+    }
+    case "top_entities":
+    case "popular_topics":
+    case "exposure": {
+      const data = countBy(alerts, (a: any) => a.entity || a.author || (a.affected_areas?.[0]));
+      const maxItems = (block as any).maxItems ?? 6;
+      return (data.length ? data : fallback).slice(0, maxItems);
+    }
+    case "legislative_funnel": {
+      const data = countBy(alerts, (a) => a.current_stage);
+      return data.length ? data.slice(0, 5) : [
+        { label: "Comisión", value: 12 }, { label: "Pleno", value: 7 },
+        { label: "Trámite", value: 4 }, { label: "Promulgado", value: 2 },
+      ];
+    }
+    case "regulatory_pulse":
+    case "reviewed_alerts":
+    case "editorial_response_time":
+    case "reports_generated": {
+      const buckets = new Map<string, number>();
+      const items: { date: string }[] = [
+        ...alerts.map((a) => ({ date: a.updated_at })),
+        ...sessions.map((s) => ({ date: s.scheduled_at ?? s.created_at ?? new Date().toISOString() })),
+      ];
+      for (const it of items) {
+        try {
+          const d = parseISO(it.date);
+          const k = format(d, "dd MMM", { locale: es });
+          buckets.set(k, (buckets.get(k) ?? 0) + 1);
+        } catch { /* skip */ }
+      }
+      const arr = Array.from(buckets.entries())
+        .map(([label, value]) => ({ label, value }))
+        .slice(-8);
+      return arr.length ? arr : fallback;
+    }
+    case "key_movements":
+    case "emerging_topics": {
+      const data = countBy(alerts, (a: any) => a.affected_areas?.[0] || a.law_branch);
+      return data.length ? data.slice(0, 5) : fallback.slice(0, 5);
+    }
+    case "service_kpis":
+    case "pin_archive":
+    case "ai_usage":
+    case "detection_to_action_time": {
+      const pinned = alerts.filter((a: any) => a.is_pinned_for_publication).length;
+      const archived = alerts.filter((a: any) => a.archived_at).length;
+      const total = Math.max(alerts.length, 1);
+      return [
+        { label: "Pinneadas", value: pinned },
+        { label: "Archivadas", value: archived },
+        { label: "Activas", value: total - pinned - archived },
+      ];
+    }
+    default:
+      return fallback;
+  }
+}
+
+interface MiniChartProps {
+  type: AnalyticsBlockDefinition["chartType"];
+  data: SeriesPoint[];
+}
+
+const MiniChart = ({ type, data }: MiniChartProps) => {
+  const W = CHART_WIDTH;
+  const H = CHART_HEIGHT;
+  const { top, right, bottom, left } = CHART_PADDING;
+  const innerW = W - left - right;
+  const innerH = H - top - bottom;
+  const max = Math.max(1, ...data.map((d) => d.value));
+
+  const baseline = (
+    <SvgLine x1={left} y1={top + innerH} x2={left + innerW} y2={top + innerH} stroke={AXIS_COLOR} strokeWidth={0.5} />
+  );
+
+  if (type === "line" || type === "timeline") {
+    const stepX = data.length > 1 ? innerW / (data.length - 1) : innerW;
+    const points = data
+      .map((d, i) => `${left + i * stepX},${top + innerH - (d.value / max) * innerH}`)
+      .join(" ");
+    return (
+      <Svg width={W} height={H}>
+        {baseline}
+        <Polyline points={points} fill="none" stroke={CHART_PALETTE[1]} strokeWidth={1.5} />
+        {data.map((d, i) => (
+          <G key={i}>
+            <Circle cx={left + i * stepX} cy={top + innerH - (d.value / max) * innerH} r={1.8} fill={CHART_PALETTE[0]} />
+            <Text x={left + i * stepX} y={H - 4} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
+              {d.label}
+            </Text>
+          </G>
+        ))}
+      </Svg>
+    );
+  }
+
+  if (type === "pie") {
+    const total = data.reduce((s, d) => s + d.value, 0) || 1;
+    const cx = (W - 100) / 2;
+    const cy = H / 2;
+    const r = Math.min(innerH, innerW) / 2 - 6;
+    let startAngle = -Math.PI / 2;
+    const arcs = data.map((d, i) => {
+      const angle = (d.value / total) * Math.PI * 2;
+      const endAngle = startAngle + angle;
+      const x1 = cx + r * Math.cos(startAngle);
+      const y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+      const large = angle > Math.PI ? 1 : 0;
+      const path = `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${large} 1 ${x2},${y2} Z`;
+      const fill = CHART_PALETTE[i % CHART_PALETTE.length];
+      const node = <Path key={i} d={path} fill={fill} />;
+      startAngle = endAngle;
+      return node;
+    });
+    return (
+      <Svg width={W} height={H}>
+        {arcs}
+        {data.map((d, i) => (
+          <G key={`l-${i}`}>
+            <Rect x={W - 100} y={10 + i * 12} width={6} height={6} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+            <Text x={W - 90} y={16 + i * 12} style={{ fontSize: 7, color: "#2d3748" }}>
+              {d.label}: {d.value}
+            </Text>
+          </G>
+        ))}
+      </Svg>
+    );
+  }
+
+  if (type === "funnel") {
+    const rowH = innerH / Math.max(data.length, 1);
+    return (
+      <Svg width={W} height={H}>
+        {data.map((d, i) => {
+          const w = (d.value / max) * innerW;
+          const x = left + (innerW - w) / 2;
+          const y = top + i * rowH + 2;
+          return (
+            <G key={i}>
+              <Rect x={x} y={y} width={w} height={rowH - 4} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+              <Text x={left + innerW / 2} y={y + rowH / 2 + 2} style={{ fontSize: 6, color: "#ffffff", textAlign: "center" }}>
+                {d.label} · {d.value}
+              </Text>
+            </G>
+          );
+        })}
+      </Svg>
+    );
+  }
+
+  if (type === "matrix") {
+    const cols = Math.max(1, Math.ceil(data.length / 2));
+    const rows = data.length > cols ? 2 : 1;
+    const cellW = innerW / cols;
+    const cellH = innerH / rows;
+    return (
+      <Svg width={W} height={H}>
+        {data.map((d, i) => {
+          const r = Math.floor(i / cols);
+          const c = i % cols;
+          const intensity = d.value / max;
+          const fill = CHART_PALETTE[Math.min(CHART_PALETTE.length - 1, Math.floor(intensity * (CHART_PALETTE.length - 1)))];
+          return (
+            <G key={i}>
+              <Rect x={left + c * cellW + 1} y={top + r * cellH + 1} width={cellW - 2} height={cellH - 2} fill={fill} />
+              <Text x={left + c * cellW + cellW / 2} y={top + r * cellH + cellH / 2 + 2} style={{ fontSize: 7, color: "#ffffff", textAlign: "center" }}>
+                {d.label}: {d.value}
+              </Text>
+            </G>
+          );
+        })}
+      </Svg>
+    );
+  }
+
+  if (type === "kpi" || type === "cards") {
+    const cols = Math.min(data.length, 4) || 1;
+    const tileW = innerW / cols;
+    return (
+      <Svg width={W} height={H}>
+        {data.slice(0, cols).map((d, i) => (
+          <G key={i}>
+            <Rect x={left + i * tileW + 4} y={top + 4} width={tileW - 8} height={innerH - 8} fill="#ebf2fb" />
+            <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2} style={{ fontSize: 14, color: "#1a365d", textAlign: "center" }}>
+              {d.value}
+            </Text>
+            <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2 + 14} style={{ fontSize: 7, color: LABEL_COLOR, textAlign: "center" }}>
+              {d.label}
+            </Text>
+          </G>
+        ))}
+      </Svg>
+    );
+  }
+
+  // default: vertical bars
+  const barW = innerW / Math.max(data.length, 1);
+  return (
+    <Svg width={W} height={H}>
+      {baseline}
+      {data.map((d, i) => {
+        const h = (d.value / max) * innerH;
+        const x = left + i * barW + barW * 0.15;
+        const y = top + innerH - h;
+        const w = barW * 0.7;
+        return (
+          <G key={i}>
+            <Rect x={x} y={y} width={w} height={h} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+            <Text x={x + w / 2} y={y - 2} style={{ fontSize: 6, color: "#1a365d", textAlign: "center" }}>
+              {d.value}
+            </Text>
+            <Text x={x + w / 2} y={H - 4} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
+              {d.label.length > 10 ? d.label.slice(0, 10) + "…" : d.label}
+            </Text>
+          </G>
+        );
+      })}
+    </Svg>
+  );
+};
 
 interface PDFProps {
   alerts: PeruAlert[];
@@ -311,16 +604,24 @@ const ReportPDF = ({
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>BLOQUES INCLUIDOS</Text>
-            {analyticsBlocks.map((b) => (
-              <View key={b.key} style={styles.analyticsBlock} wrap={false}>
-                <Text style={styles.analyticsBlockTitle}>{b.title}</Text>
-                <Text style={styles.analyticsBlockMeta}>
-                  {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"}
-                </Text>
-                <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
-              </View>
-            ))}
+            <Text style={styles.sectionTitle}>BLOQUES VISUALIZADOS</Text>
+            {analyticsBlocks.map((b) => {
+              const def = ANALYTICS_BLOCK_REGISTRY.find((r) => r.key === b.key);
+              const chartType = def?.chartType ?? "bar";
+              const series = computeBlockSeries(b, alerts, sessions);
+              return (
+                <View key={b.key} style={styles.analyticsBlock} wrap={false}>
+                  <Text style={styles.analyticsBlockTitle}>{b.title}</Text>
+                  <Text style={styles.analyticsBlockMeta}>
+                    {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"} · {periodLabel}
+                  </Text>
+                  <View style={{ marginVertical: 6 }}>
+                    <MiniChart type={chartType} data={series} />
+                  </View>
+                  <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
+                </View>
+              );
+            })}
           </View>
 
           <Text style={styles.footer}>
