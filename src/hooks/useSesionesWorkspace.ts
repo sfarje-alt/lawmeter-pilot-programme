@@ -12,6 +12,7 @@ import { SESIONES_DEMO_ALERTS } from '@/data/sesionesDemoAlerts';
 import type {
   PeruSession,
   SesionChatbotState,
+  SesionChatMessage,
   SesionEditorialState,
   SesionLegalReview,
   SesionTranscriptionState,
