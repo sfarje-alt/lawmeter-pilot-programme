@@ -9,6 +9,7 @@ import { usePeruSessions } from './usePeruSessions';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { SESIONES_DEMO_ALERTS } from '@/data/sesionesDemoAlerts';
+import { isEmptyDataOrg } from '@/lib/orgDataIsolation';
 import type {
   PeruSession,
   SesionChatbotState,
