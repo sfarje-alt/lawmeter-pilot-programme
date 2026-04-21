@@ -130,30 +130,48 @@ function normalizeDate(s: string | undefined | null): string | null {
   return null;
 }
 
+/** Resolve fuente label: prefer top-level, then source_ref, infer from URL host. */
+function resolveFuenteLabel(item: IngestItem, src: SourceRefBlock, urlResolved: string | null): string | null {
+  const raw = item.fuente ?? src.fuente ?? null;
+  if (raw && !/^https?:\/\//i.test(raw)) {
+    // Map slugs comunes a labels legibles
+    const slug = raw.toLowerCase();
+    if (slug === "el_peruano") return "El Peruano";
+    if (slug === "congreso") return "Congreso de la República";
+    if (slug === "spij") return "SPIJ";
+    return raw;
+  }
+  const url = (raw && /^https?:\/\//i.test(raw)) ? raw : urlResolved;
+  if (!url) return null;
+  if (/elperuano\./i.test(url)) return "El Peruano";
+  if (/spij\./i.test(url)) return "SPIJ";
+  if (/congreso\.gob\.pe/i.test(url)) return "Congreso de la República";
+  return url;
+}
+
 /** Read source block accepting both `source_ref` and `source`, normalizing field names. */
 function readSourceRef(item: IngestItem) {
   const src: SourceRefBlock = { ...(item.source ?? {}), ...(item.source_ref ?? {}) };
-  const url = src.url ?? src.fuente ?? null; // tu pipeline manda la URL en `fuente`
-  let fuenteLabel: string | null = null;
-  if (src.fuente && /^https?:\/\//i.test(src.fuente)) {
-    if (/elperuano\./i.test(src.fuente)) fuenteLabel = "El Peruano";
-    else if (/spij\./i.test(src.fuente)) fuenteLabel = "SPIJ";
-    else if (/congreso\.gob\.pe/i.test(src.fuente)) fuenteLabel = "Congreso de la República";
-    else fuenteLabel = src.fuente;
-  } else if (src.fuente) {
-    fuenteLabel = src.fuente;
-  }
+  // URL: priorizar top-level item.url, luego source_ref.url, luego source_ref.fuente si es URL
+  const url =
+    item.url ??
+    src.url ??
+    (src.fuente && /^https?:\/\//i.test(src.fuente) ? src.fuente : null) ??
+    null;
+  const fuenteLabel = resolveFuenteLabel(item, src, url);
   return {
-    entity: src.entity ?? src.entidad ?? null,
-    reference_number: src.reference_number ?? null,
+    entity: item.entity ?? src.entity ?? src.entidad ?? null,
+    reference_number: item.reference_number ?? src.reference_number ?? null,
     url,
     fuente_label: fuenteLabel,
-    fecha_publicacion_iso: normalizeDate(src.date ?? src.fecha_publicacion),
-    sumilla: src.sumilla ?? null,
+    fecha_publicacion_iso: normalizeDate(
+      item.fecha_publicacion ?? src.date ?? src.fecha_publicacion,
+    ),
+    sumilla: item.sumilla ?? src.sumilla ?? null,
   };
 }
 
-/** Pick publication date with priority: source_ref → fechas_identificadas[publicacion]. */
+/** Pick publication date with priority: top-level/source_ref → fechas_identificadas[publicacion]. */
 function pickPublicationDate(item: IngestItem, srcDateIso: string | null): string | null {
   if (srcDateIso) return srcDateIso;
   const fechas = item.fechas_identificadas;
