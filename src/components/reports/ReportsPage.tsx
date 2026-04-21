@@ -32,6 +32,7 @@ import type { PeruSession } from "@/types/peruSessions";
 import {
   ANALYTICS_BLOCK_REGISTRY,
   type AnalyticsBlockConfigExtended,
+  type AnalyticsBlockDefinition,
 } from "@/types/analytics";
 import {
   FileDown,
@@ -223,8 +224,8 @@ function computeBlockSeries(
     case "popular_topics":
     case "exposure": {
       const data = countBy(alerts, (a: any) => a.entity || a.author || (a.affected_areas?.[0]));
-      const max = block.maxItems ?? 6;
-      return (data.length ? data : fallback).slice(0, max);
+      const maxItems = (block as any).maxItems ?? 6;
+      return (data.length ? data : fallback).slice(0, maxItems);
     }
     case "legislative_funnel": {
       const data = countBy(alerts, (a) => a.current_stage);
