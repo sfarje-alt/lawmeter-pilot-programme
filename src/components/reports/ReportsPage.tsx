@@ -604,16 +604,24 @@ const ReportPDF = ({
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>BLOQUES INCLUIDOS</Text>
-            {analyticsBlocks.map((b) => (
-              <View key={b.key} style={styles.analyticsBlock} wrap={false}>
-                <Text style={styles.analyticsBlockTitle}>{b.title}</Text>
-                <Text style={styles.analyticsBlockMeta}>
-                  {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"}
-                </Text>
-                <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
-              </View>
-            ))}
+            <Text style={styles.sectionTitle}>BLOQUES VISUALIZADOS</Text>
+            {analyticsBlocks.map((b) => {
+              const def = ANALYTICS_BLOCK_REGISTRY.find((r) => r.key === b.key);
+              const chartType = def?.chartType ?? "bar";
+              const series = computeBlockSeries(b, alerts, sessions);
+              return (
+                <View key={b.key} style={styles.analyticsBlock} wrap={false}>
+                  <Text style={styles.analyticsBlockTitle}>{b.title}</Text>
+                  <Text style={styles.analyticsBlockMeta}>
+                    {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"} · {periodLabel}
+                  </Text>
+                  <View style={{ marginVertical: 6 }}>
+                    <MiniChart type={chartType} data={series} />
+                  </View>
+                  <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
+                </View>
+              );
+            })}
           </View>
 
           <Text style={styles.footer}>
