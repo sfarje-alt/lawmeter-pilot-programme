@@ -126,6 +126,18 @@ export interface PeruAlert extends BasePeruAlert {
   reference_number?: string;
   /** Source identifier (e.g. "El Peruano", "Congreso"). */
   fuente?: string;
+  /** Urgency category from payload ("Alta" | "Media" | "Baja"). */
+  urgency_category?: "alta" | "media" | "baja" | null;
+  /** Impact category from payload ("Alta" | "Media" | "Baja" | "Positivo"). */
+  impact_category?: "alta" | "media" | "baja" | "positivo" | null;
+  /** Bill authors (PL only). */
+  autores?: string[];
+  /** Bill proponent (PL only, e.g. "Congreso", "Ejecutivo"). */
+  proponente?: string;
+  /** Bill presentation date (PL only). */
+  fecha_presentacion?: string;
+  /** AI free-form comment / brief explanation. */
+  comentario?: string;
 }
 
 /** Forward-declared shape so that PeruAlert can reference it before AttachedFileMeta is exported. */

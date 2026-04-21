@@ -286,19 +286,24 @@ export function InboxAlertCard({
         </Tooltip>
       </TooltipProvider>
 
-      {/* Bill-specific: Author + Parliamentary Group */}
-      {isBill && (alert.author || alert.parliamentary_group) && (
+      {/* Bill-specific: Authors / Author + Parliamentary Group / Proponente */}
+      {isBill && (alert.author || alert.parliamentary_group || (alert.autores && alert.autores.length) || alert.proponente) && (
         <div className="space-y-1 mb-2">
-          {alert.author && (
+          {alert.autores && alert.autores.length > 0 ? (
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <User className="h-3 w-3 shrink-0 mt-0.5" />
+              <span className="line-clamp-2">{alert.autores.join(", ")}</span>
+            </div>
+          ) : alert.author ? (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <User className="h-3 w-3 shrink-0" />
               <span className="truncate">{alert.author}</span>
             </div>
-          )}
-          {alert.parliamentary_group && (
+          ) : null}
+          {(alert.parliamentary_group || alert.proponente) && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Users className="h-3 w-3 shrink-0" />
-              <span className="truncate">{alert.parliamentary_group}</span>
+              <span className="truncate">{alert.parliamentary_group || alert.proponente}</span>
             </div>
           )}
         </div>
