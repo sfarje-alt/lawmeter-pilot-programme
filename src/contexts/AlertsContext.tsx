@@ -195,6 +195,26 @@ function mapDbRowToAlert(
     is_state_change: !!row.es_cambio_estado,
     reference_number: row.reference_number ?? undefined,
     fuente: row.fuente ?? undefined,
+    urgency_category: (() => {
+      const c = String(row.urgencia_categoria ?? "").trim().toLowerCase();
+      if (c === "alta" || c === "media" || c === "baja") return c;
+      // fallback derived from numeric urgencia (70/30/0)
+      if (typeof urgenciaScore === "number") {
+        if (urgenciaScore >= 70) return "alta";
+        if (urgenciaScore >= 30) return "media";
+        return "baja";
+      }
+      return null;
+    })(),
+    impact_category: (() => {
+      const c = String(row.impacto_categoria ?? "").trim().toLowerCase();
+      if (c === "alta" || c === "media" || c === "baja" || c === "positivo") return c;
+      return null;
+    })(),
+    autores: Array.isArray(row.autores) ? row.autores : [],
+    proponente: row.proponente ?? undefined,
+    fecha_presentacion: row.fecha_presentacion ?? undefined,
+    comentario: row.comentario ?? undefined,
   };
 }
 
