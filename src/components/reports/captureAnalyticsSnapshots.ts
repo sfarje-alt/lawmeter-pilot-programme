@@ -3,18 +3,19 @@ import { createRoot, type Root } from "react-dom/client";
 import html2canvas from "html2canvas";
 import { LegalTeamAnalyticsDashboard } from "@/components/analytics/LegalTeamAnalyticsDashboard";
 
+export interface AnalyticsSnapshot {
+  src: string;
+  width: number;
+  height: number;
+}
+
 /**
  * Renders the live LegalTeamAnalyticsDashboard offscreen, force-expands every
- * collapsible section, then captures **each section** as its own tight,
- * high-resolution PNG snapshot. Sections that are taller than an A4 page are
- * sliced into multiple page-sized chunks. The output skips empty / blank
- * regions so the report appendix never shows mostly-empty pages.
- *
- * Returned strings are PNG data URLs ready to embed in a @react-pdf/renderer
- * <Image /> element.
+ * collapsible section, then captures each section as its own tight,
+ * high-resolution snapshot. Tall sections are split into multiple slices, but
+ * always aligned to the section itself rather than the full dashboard canvas.
  */
-export async function captureAnalyticsSnapshots(): Promise<string[]> {
-  // 1) Mount offscreen container with the *live* analytics dashboard.
+export async function captureAnalyticsSnapshots(): Promise<AnalyticsSnapshot[]> {
   const host = document.createElement("div");
   host.setAttribute("data-snapshot-host", "analytics");
   Object.assign(host.style, {
@@ -33,37 +34,26 @@ export async function captureAnalyticsSnapshots(): Promise<string[]> {
     root = createRoot(host);
     root.render(React.createElement(LegalTeamAnalyticsDashboard));
 
-    // 2) Initial paint — let React commit and recharts measure.
     await raf2();
     await delay(500);
-
-    // 3) Force-expand every collapsible analytics section so charts render.
-    //    Radix Collapsible exposes data-state="closed|open" on the trigger.
-    //    We click any closed trigger inside a <section id="section-..."> root.
     expandAllSections(host);
     await raf2();
-    await delay(900); // Recharts ResizeObserver settle.
-    expandAllSections(host); // second pass for any lazy children.
+    await delay(900);
+    expandAllSections(host);
     await raf2();
     await delay(600);
 
-    // 4) Locate each section root. We snapshot per-section to avoid the giant
-    //    blank gaps that appear when a single full-page screenshot is taken.
     const sections = Array.from(
       host.querySelectorAll<HTMLElement>('section[id^="section-"]'),
     );
-
-    // Fallback: if no sections found (unexpected), snapshot the whole host.
     const targets: HTMLElement[] = sections.length > 0 ? sections : [host];
 
-    const PAGE_W = 1240 * 2; // 2x scale capture width
-    const PAGE_H = Math.round(PAGE_W * Math.SQRT2); // A4 portrait
-
-    const slices: string[] = [];
+    const PAGE_W = 1240 * 2;
+    const PAGE_H = Math.round(PAGE_W * Math.SQRT2);
+    const slices: AnalyticsSnapshot[] = [];
     const bgColor = resolveBackground();
 
     for (const target of targets) {
-      // Skip empty / collapsed-only nodes so we don't produce blank pages.
       if (!hasMeaningfulContent(target)) continue;
 
       const canvas = await html2canvas(target, {
@@ -75,14 +65,10 @@ export async function captureAnalyticsSnapshots(): Promise<string[]> {
         windowHeight: Math.max(target.scrollHeight, host.scrollHeight),
       });
 
-      // Auto-trim transparent / background-only edges so each snapshot is
-      // tight around the actual chart/card content.
       const trimmed = trimCanvas(canvas, bgColor);
 
-      // Paginate vertically into A4-sized slices if the section is tall.
       for (let y = 0; y < trimmed.height; y += PAGE_H) {
         const sliceH = Math.min(PAGE_H, trimmed.height - y);
-        // Skip near-empty trailing slices.
         if (sliceH < 120) continue;
 
         const slice = document.createElement("canvas");
@@ -101,7 +87,11 @@ export async function captureAnalyticsSnapshots(): Promise<string[]> {
           trimmed.width,
           sliceH,
         );
-        slices.push(slice.toDataURL("image/png"));
+        slices.push({
+          src: slice.toDataURL("image/png"),
+          width: slice.width,
+          height: slice.height,
+        });
       }
     }
 

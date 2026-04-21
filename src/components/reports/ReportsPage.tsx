@@ -266,6 +266,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderSoft,
     borderRadius: 6,
+    padding: 0,
+  },
+  analyticsImageGap: {
+    height: ANALYTICS_SECTION_GAP_PT,
   },
 });
 
@@ -534,9 +538,25 @@ const ReportPDF = ({
             </Text>
           </Page>
 
-          {analyticsImages.map((src, i) => (
-            <Page key={i} size="A4" style={styles.analyticsImagePage}>
-              <PDFImage src={src} style={styles.analyticsImage} />
+          {paginateAnalyticsSnapshots(analyticsImages).map((pageImages, pageIndex) => (
+            <Page key={pageIndex} size="A4" style={styles.analyticsImagePage}>
+              {pageImages.map((image, imageIndex) => (
+                <View key={`${pageIndex}-${imageIndex}`}>
+                  <View style={styles.analyticsImageWrap}>
+                    <PDFImage
+                      src={image.src}
+                      style={{
+                        width: ANALYTICS_CONTENT_WIDTH_PT,
+                        height: getAnalyticsImageHeightPt(image),
+                      }}
+                    />
+                  </View>
+                  {imageIndex < pageImages.length - 1 && <View style={styles.analyticsImageGap} />}
+                </View>
+              ))}
+              <Text style={styles.footer}>
+                Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
+              </Text>
             </Page>
           ))}
         </>
