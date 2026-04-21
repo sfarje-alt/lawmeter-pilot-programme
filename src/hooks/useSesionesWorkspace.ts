@@ -28,6 +28,7 @@ interface EditorialEntry {
   transcription_state: SesionTranscriptionState;
   chatbot_state: SesionChatbotState;
   chatbot_summary?: string;
+  chat_history?: SesionChatMessage[];
 }
 
 type EditorialMap = Record<string, EditorialEntry>;
