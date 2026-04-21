@@ -1,117 +1,95 @@
 
 
-## Rediseño del Inbox para el schema real de alertas (PLs y Normas)
+## Fix `ingest-alerts` + drawer flexible para fechas identificadas
 
-Las cards del Inbox seguían pensadas para los mocks de farma. Ahora muestran datos reales del DB, pero hay tres problemas: (1) el mapeo DB → UI deja campos vacíos o desordenados, (2) los 17 estados posibles no caen siempre en la columna correcta del Kanban, (3) las cards no exponen la riqueza del análisis IA (impacto/urgencia 0-100, racional, fechas identificadas) ni distinguen visualmente "estado real" vs "columna del Kanban".
+### Problema raíz
+1. La edge function lee `source.*` (nombres viejos), pero tu pipeline manda `source_ref.*` con campos nuevos (`entity`, `reference_number`, `fuente` como URL, `date` en DD/MM/YYYY). Resultado: todas las columnas top-level de norma quedan en `null`.
+2. `fechas_identificadas` se guarda en `ai_analysis` pero no se aprovecha: ni para poblar `fecha_publicacion`, ni para mostrarse al usuario en el drawer.
+3. Forzar cada rol a una columna fija sería frágil — los roles varían de norma a norma (`aprobacion`, `publicacion`, `plazo`, `vigencia_inicio`, `vigencia_fin`, `entrada_vigor`, `consulta`, lo que sea, y puede haber varios del mismo rol).
 
-### Mapeo de estados → columnas del Kanban
+### Estrategia
+- **Columnas top-level**: solo las 2 que el sistema usa para lógica → `fecha_publicacion` (para ordenar/filtrar/mostrar en card) y `deadline` (para calendario y alerts urgentes).
+- **Resto de fechas**: se preservan crudas en `ai_analysis.fechas_identificadas[]` y se muestran en el drawer como lista flexible con rol + fecha + contexto. Acepta cualquier rol, cualquier cantidad.
 
-Según tu guía. **Publicado/Vigente** y **Archivado/Retirado** ya no son columnas: la card se queda en la última columna donde estuvo (`tramite_final` por default si no tenemos historial), pero el badge de estado en la card siempre muestra el `estado_actual` exacto.
+### Cambios en `supabase/functions/ingest-alerts/index.ts`
 
-| Columna UI | Estados que mapean aquí |
-|---|---|
-| **Comisión / Consulta** | `EN COMISIÓN`, `PRESENTADO`, `DICTAMEN`, `RETORNA A COMISIÓN`, `EN CONSULTA PÚBLICA`, `PREPUBLICACIÓN`, `RECEPCIÓN DE APORTES` |
-| **Pleno** | `ORDEN DEL DÍA`, `EN AGENDA DEL PLENO`, `APROBADO 1ERA. VOTACIÓN`, `EN RECONSIDERACIÓN`, `ACLARACIÓN`, `EN CUARTO INTERMEDIO`, `PENDIENTE 2DA. VOTACIÓN` |
-| **Trámite Final** | `APROBADO`, `AUTÓGRAFA`, `PENDIENTE DE PROMULGACIÓN`, `EN FIRMA`, `EN REFRENDO`, `REMITIDO PARA PUBLICACIÓN` |
-| **Trámite Final (sticky)** | `PUBLICADA EN EL DIARIO OFICIAL EL PERUANO`, `PUBLICADO`, `LEY PUBLICADA` → quedan en Trámite Final con badge verde "Publicada" |
-| **Trámite Final (sticky)** | `RETIRADO POR SU AUTOR`, `AL ARCHIVO`, `DECRETO DE ARCHIVO`, `RECHAZADO` → quedan en Trámite Final con badge gris "Archivada/Retirada" |
+1. **Helper `readSourceRef(item)`** — acepta tanto `source_ref` como `source` y normaliza:
+   - `entity` ← `src.entity ?? src.entidad`
+   - `reference_number` ← `src.reference_number`
+   - `url` ← `src.url ?? src.fuente` (tu `fuente` es la URL completa)
+   - `fuente_label` ← derivar "El Peruano" / "SPIJ" desde la URL si es reconocible, sino guardar la URL como label
+   - `fecha_publicacion_iso` ← normalizar `src.date ?? src.fecha_publicacion` (acepta `DD/MM/YYYY` o ISO)
+   - `sumilla` ← `src.sumilla`
 
-Las **Normas** no usan Kanban (siguen con la grid única "Pendiente Revisión").
+2. **Helper `normalizeDate(s)`**: `DD/MM/YYYY` → `YYYY-MM-DD`. ISO se mantiene. Inválida → `null`.
 
-### Rediseño de la card de PL
+3. **Helper `pickPublicationDate(item, src)`** — prioridad:
+   1. `src.date / src.fecha_publicacion` normalizada
+   2. Primer item de `fechas_identificadas` con `rol === "publicacion"` (o variantes: `publicación`, `published`)
+   3. `null`
 
-Header
-- Badge tipo "Proyecto de Ley" + código (`row.codigo`, ej: `13172/2025-CR`)
-- Badge **estado_actual** exacto (texto del DB) con color según familia: azul (Comisión), morado (Pleno), naranja (Trámite Final), verde (Publicada), gris (Archivada)
-- Si `es_cambio_estado=true`: pequeño chip "↑ cambio" para señalar movimiento reciente
-- Iconos derecha: link externo (`url`/`source_url`), pin, archivar
+4. **`pickDeadline()`** — mantener lógica actual, pero ampliar roles aceptados: `["plazo", "vencimiento", "vigencia_inicio", "entrada_vigor"]` (en ese orden de prioridad). Acepta cualquier rol que coincida case-insensitive.
 
-Cuerpo
-- Título (`legislation_title`, line-clamp-2)
-- Autor (`ui_extras.author`) + Grupo parlamentario (`ui_extras.parliamentary_group`)
-- **Bloque de impacto IA** (nuevo): dos mini-barras horizontales con `ai_analysis.impacto` y `ai_analysis.urgencia` (0-100), color por umbral (≥70 destructivo, ≥40 warning, <40 muted). Si solo hay `impacto_categoria`, fallback a badge Alta/Media/Baja.
-- Racional IA: primer ítem de `ai_analysis.racional[]` truncado a 2 líneas con tooltip que muestra la lista completa
-- Áreas afectadas (`affected_areas`) — primeras 2 + "+N"
+5. **`external_id` opcional**: fallback automático a `item.alerta_id`. Si tampoco existe, error claro.
 
-Footer
-- Fecha del proyecto / fecha de cambio de estado
-- Si hay `fechas_identificadas` con rol `plazo` o `vigencia_inicio`: chip con icono ⏰ y la fecha más próxima
-- Indicador de "comentario experto cargado" cuando aplique
+6. **Mapeo a columnas top-level** (norma):
+   - `entity`, `reference_number`, `sumilla` ← desde `readSourceRef`
+   - `url`, `source_url` ← desde `readSourceRef.url`
+   - `fuente` ← `readSourceRef.fuente_label`
+   - `fecha_publicacion` ← desde `pickPublicationDate`
+   - `published_at` ← mismo valor
+   - `deadline` ← desde `pickDeadline`
+   - `legislation_summary` ← `item.resumen ?? item.comentario` (fallback porque tu pipeline manda el análisis en `comentario`)
+   - `affected_areas` ← `item.area_de_interes ?? []`
 
-### Rediseño de la card de Norma
+7. **`ai_analysis` enriquecido** (preservar todo crudo para el drawer):
+   - `fechas_identificadas` ← `item.fechas_identificadas ?? []` (sin filtrar nada, todos los roles)
+   - `racional`, `impacto`, `urgencia`, `model`, `version`, `generated_at`, `alerta_id` ← como ya está
+   - `ui_extras.source_client` ← `{ id: cliente_id, name: cliente_nombre }` para auditoría
+   - `ui_extras.raw_payload` ← payload crudo del item para reprocesamiento futuro
 
-Header
-- Badge "Norma" + `reference_number` (ej: "Resolución SBS 01116-2026")
-- Badge entidad emisora (`entity`, ej: SBS, MINSA) con color por entidad
-- Badge "Publicada" verde
-- Iconos derecha: link, pin, archivar
+8. **No tocar PL/sesion**: misma lógica de source aplica gratis (ya que `readSourceRef` es agnóstico).
 
-Cuerpo
-- Título (`legislation_title`)
-- Sumilla (`sumilla` o `legislation_summary`) en cita lateral
-- Bloque de impacto IA (igual que PLs)
-- Racional IA (primer ítem + tooltip)
-- Áreas afectadas
+### Cambios en `src/components/inbox/AlertDetailDrawer.tsx`
 
-Footer
-- Fecha de publicación (`fecha_publicacion`)
-- Plazo de cumplimiento si está en `fechas_identificadas`
-- Fuente (`fuente`)
-
-### Cambios técnicos
-
-`src/data/peruAlertsMockData.ts`
-- Reescribir `STAGE_TO_KANBAN` con los 17 estados de la guía (todos los Publicado/Archivado/Retirado mapean a `tramite_final`).
-- Agregar export `STAGE_BADGE_STYLE: Record<string, { label, color, family }>` para que la card pinte el badge según el estado exacto.
-- Agregar export `BILL_STATE_FAMILY` (`comision | pleno | tramite_final | publicada | archivada`) derivado del estado.
-- Quitar `KANBAN_COLUMNS` con `publicado` y `archivado` del flujo del Inbox (mantener export por compatibilidad pero el Inbox usa solo `BILLS_KANBAN_COLUMNS` de 3 columnas).
-
-`src/contexts/AlertsContext.tsx` (`mapDbRowToAlert`)
-- Normalizar `estado_actual` con `.trim().toUpperCase()` y aplicar `STAGE_TO_KANBAN` con fallback `tramite_final` si el estado pertenece a familia "publicada/archivada", `comision` si es desconocido.
-- Leer `ai_analysis.impacto`, `ai_analysis.urgencia`, `ai_analysis.racional`, `ai_analysis.fechas_identificadas` y exponerlos en el shape `PeruAlert` (campos nuevos opcionales).
-- Mapear `row.fuente`, `row.reference_number`, `row.es_cambio_estado`.
-- Derivar `impact_level` desde `impacto` numérico cuando `impact_categoria` no esté: ≥70→grave, ≥40→medio, ≥15→leve, resto→leve.
-
-`src/data/peruAlertsMockData.ts` (interface `PeruAlert`)
-- Agregar campos opcionales: `impacto_score?: number`, `urgencia_score?: number`, `rationale?: string[]`, `key_dates?: { fecha: string; rol: string; contexto?: string }[]`, `state_family?: 'comision'|'pleno'|'tramite_final'|'publicada'|'archivada'`, `is_state_change?: boolean`, `reference_number?: string`, `fuente?: string`.
-
-`src/components/inbox/InboxAlertCard.tsx`
-- Reemplazar el badge genérico de `current_stage` por el badge con color por familia + el chip "↑ cambio" cuando aplique.
-- Insertar bloque de barras impacto/urgencia entre cuerpo y áreas.
-- Insertar racional IA truncado con tooltip.
-- Insertar chip de plazo más próximo cuando `key_dates` lo tenga.
-- Cards de Norma: mostrar entidad y `reference_number` en header.
-
-`src/components/inbox/AlertDetailDrawer.tsx`
-- Sección "Análisis IA" nueva: barras impacto/urgencia, lista completa de racional, tabla de fechas identificadas con rol y contexto.
-- Sección "Trazabilidad de estado": estado actual, estado anterior (`row.estado_anterior`), flag de cambio.
-- Mostrar `fuente` y link verificable a `url`.
-
-`src/components/client-portal/ClientAlertCard.tsx`
-- Mismos cambios visuales que `InboxAlertCard` pero sin acciones (pin/archivar).
-
-### Diagrama de mapeo
+Agregar/asegurar sección **"Fechas identificadas"** flexible:
 
 ```text
-DB row (alerts table)
-├─ codigo, estado_actual, estado_anterior, es_cambio_estado
-├─ legislation_title, legislation_summary, sumilla
-├─ entity, reference_number, fuente, url, fecha_publicacion
-├─ ai_analysis.{impacto, urgencia, racional[], fechas_identificadas[]}
-└─ ai_analysis.ui_extras.{author, parliamentary_group, kanban_stage}
-                      │
-                      ▼
-        mapDbRowToAlert (AlertsContext)
-                      │
-        ┌─────────────┼──────────────┐
-        ▼             ▼              ▼
-    Kanban col    state_family   Card badges
-   (3 columnas)   (5 familias)   (estado exacto)
+┌─ Fechas identificadas ──────────────┐
+│ [aprobación] 14 abr 2026            │
+│   Lima, 14 de abril – fecha de...   │
+│                                     │
+│ [publicación] 17 abr 2026           │
+│   Publicación en El Peruano: 17/04  │
+│                                     │
+│ [plazo] 17 may 2026  ⏰              │
+│   Plazo de 30 días calendario...    │
+└─────────────────────────────────────┘
 ```
 
+- Render: lista (no tabla) con cada `{ rol, fecha, contexto }` de `key_dates`.
+- Badge de rol con color por categoría (publicación = azul, plazo/vencimiento = naranja, vigencia = verde, otros = gris).
+- Fecha formateada `dd MMM yyyy`.
+- Contexto en texto pequeño debajo.
+- Si la fecha es futura y rol es plazo/vencimiento/vigencia_inicio: icono ⏰.
+- Acepta CUALQUIER rol — colorea los conocidos, los demás caen al gris default.
+- Si `key_dates` está vacío, no se renderiza la sección.
+
+### Cambios en `src/components/client-portal/ClientAlertDetailDrawer.tsx`
+
+Mismo bloque "Fechas identificadas" (read-only, sin acciones). Dejar consistente con admin drawer.
+
+### Verificación post-deploy
+
+1. Re-ingestar la `RESOLUCION SBS N° 01116-2026`.
+2. Query a `alerts` para confirmar columnas top-level pobladas: `entity`, `reference_number`, `url`, `fecha_publicacion`, `sumilla`.
+3. Abrir drawer en Inbox → debe mostrar las 3 fechas (aprobación, publicación, plazo) como lista flexible con badges de color.
+4. Card en Inbox → entity badge, reference_number, link externo y fecha de publicación visibles.
+
 ### Lo que NO cambia
-- RLS, edge function `ingest-alerts`, schema del DB.
-- Layout 3 columnas para PLs / grid única para Normas.
-- Sistema de pin / archivar / comentario experto / adjuntos.
-- Realtime subscription.
+- Schema del DB (todas las columnas existen).
+- ID determinístico (`uuidv5`).
+- Frontend `AlertsContext` y `InboxAlertCard` — el mapping ya está listo, solo necesita data.
+- RLS, `INGEST_TOKEN`.
+- Lógica de PLs / sesiones (se beneficia gratis del nuevo `readSourceRef`).
 
