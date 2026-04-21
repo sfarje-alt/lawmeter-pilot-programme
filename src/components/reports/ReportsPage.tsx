@@ -26,7 +26,6 @@ import type { PeruSession } from "@/types/peruSessions";
 import {
   ANALYTICS_BLOCK_REGISTRY,
   type AnalyticsBlockConfigExtended,
-  type AnalyticsBlockDefinition,
 } from "@/types/analytics";
 import {
   FileDown,
@@ -619,7 +618,9 @@ export function ReportsPage() {
   const sourceBadge = (s: SourceMode) =>
     s === "alertas" ? "Alertas" : s === "sesiones" ? "Sesiones" : "Mixto";
 
-  // ── Actions
+  // ── Generation state
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const recordGenerated = (origin: "manual" | "scheduled") => {
     const end = new Date();
     const start = subDays(end, daysBack);
@@ -638,6 +639,52 @@ export function ReportsPage() {
       generatedAt: end.toISOString(),
     };
     setGenerated((prev) => [entry, ...prev].slice(0, 100));
+  };
+
+  const handleManualGenerate = async () => {
+    if (!canGenerate || isGenerating) return;
+    setIsGenerating(true);
+    try {
+      let analyticsImages: string[] = [];
+      if (includeAnalytics) {
+        toast.loading("Capturando analíticas en alta resolución…", { id: "gen-report" });
+        try {
+          analyticsImages = await captureAnalyticsSnapshots();
+        } catch (err) {
+          console.error("Snapshot failed", err);
+          toast.error("No se pudieron capturar las analíticas. Se generará el reporte sin el anexo.", { id: "gen-report" });
+        }
+      }
+      toast.loading("Construyendo PDF…", { id: "gen-report" });
+
+      const blob = await pdf(
+        <ReportPDF
+          alerts={filteredAlerts}
+          sessions={filteredSessions}
+          analyticsImages={analyticsImages}
+          source={source}
+          inclusion={inclusion}
+          includeAnalytics={includeAnalytics}
+          profileName={profileName}
+          periodLabel={periodLabel}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `reporte-${source}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      recordGenerated("manual");
+      toast.success("Reporte generado y descargado", { id: "gen-report" });
+    } catch (err) {
+      console.error(err);
+      toast.error("No se pudo generar el reporte", { id: "gen-report" });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSaveSchedule = () => {
@@ -704,11 +751,20 @@ export function ReportsPage() {
           return true;
         });
 
+    let analyticsImages: string[] = [];
+    if (s.includeAnalytics) {
+      try {
+        analyticsImages = await captureAnalyticsSnapshots();
+      } catch (err) {
+        console.error("Snapshot failed (scheduled)", err);
+      }
+    }
+
     const blob = await pdf(
       <ReportPDF
         alerts={a}
         sessions={ss}
-        analyticsBlocks={visibleAnalytics}
+        analyticsImages={analyticsImages}
         source={s.source}
         inclusion={s.inclusion}
         includeAnalytics={s.includeAnalytics}
@@ -917,35 +973,23 @@ export function ReportsPage() {
 
               {/* Actions */}
               <div className="grid sm:grid-cols-2 gap-3">
-                {canGenerate ? (
-                  <PDFDownloadLink
-                    document={
-                      <ReportPDF
-                        alerts={filteredAlerts}
-                        sessions={filteredSessions}
-                        analyticsBlocks={visibleAnalytics}
-                        source={source}
-                        inclusion={inclusion}
-                        includeAnalytics={includeAnalytics}
-                        profileName={profileName}
-                        periodLabel={periodLabel}
-                      />
-                    }
-                    fileName={`reporte-${source}-${format(new Date(), "yyyy-MM-dd")}.pdf`}
-                  >
-                    {({ loading }) => (
-                      <Button size="lg" className="w-full" disabled={loading} onClick={() => !loading && recordGenerated("manual")}>
-                        {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                        {loading ? "Generando PDF..." : "Generar y descargar"}
-                      </Button>
-                    )}
-                  </PDFDownloadLink>
-                ) : (
-                  <Button size="lg" className="w-full" disabled>
+                <Button
+                  size="lg"
+                  className="w-full"
+                  disabled={!canGenerate || isGenerating}
+                  onClick={handleManualGenerate}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
                     <Download className="h-4 w-4 mr-2" />
-                    Sin contenido para el período
-                  </Button>
-                )}
+                  )}
+                  {isGenerating
+                    ? "Generando PDF…"
+                    : canGenerate
+                      ? "Generar y descargar"
+                      : "Sin contenido para el período"}
+                </Button>
                 <Button size="lg" variant="outline" onClick={() => setTab("scheduled")}>
                   <Clock className="h-4 w-4 mr-2" />
                   Programar este reporte
