@@ -127,8 +127,7 @@ export function SesionDetailWorkstation({
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              <TranscriptionChip state={session.transcription_state ?? 'no_solicitada'} />
-              <ChatbotChip state={session.chatbot_state ?? 'no_solicitado'} />
+              <AIAnalysisChip state={session.transcription_state ?? 'no_solicitada'} />
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-2">
