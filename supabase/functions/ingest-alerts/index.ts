@@ -35,9 +35,22 @@ interface FechaItem {
   contexto?: string;
 }
 
+interface SourceRefBlock {
+  // legacy / canonical
+  entidad?: string;
+  fecha_publicacion?: string;
+  url?: string;
+  sumilla?: string;
+  reference_number?: string;
+  fuente?: string;
+  // new producer fields
+  entity?: string;
+  date?: string; // DD/MM/YYYY or ISO
+}
+
 interface IngestItem {
   alerta_id?: string;
-  external_id: string;
+  external_id?: string; // optional — falls back to alerta_id
   tipo?: string;
   titulo: string;
   resumen?: string;
@@ -52,14 +65,9 @@ interface IngestItem {
   model?: string;
   version?: number;
   generated_at?: string;
-  source?: {
-    entidad?: string;
-    fecha_publicacion?: string;
-    url?: string;
-    sumilla?: string;
-    reference_number?: string;
-    fuente?: string;
-  };
+  // Accept both
+  source?: SourceRefBlock;
+  source_ref?: SourceRefBlock;
   ui_extras?: Record<string, unknown>;
 
   // PL-specific
@@ -74,7 +82,7 @@ interface IngestItem {
   url?: string;
   fecha_sesion?: string;
 
-  // Cliente echo (informational)
+  // Cliente echo (informational, persisted under ai_analysis.ui_extras)
   cliente_id?: string;
   cliente_nombre?: string;
 }
@@ -86,20 +94,80 @@ interface IngestBody {
   items: IngestItem[];
 }
 
-function pickDeadline(
-  tipo: string,
-  item: IngestItem,
-): string | null {
-  if (tipo === "sesion" && item.fecha_sesion) return item.fecha_sesion;
+/** Normalize a date string to ISO YYYY-MM-DD. Accepts DD/MM/YYYY or ISO. */
+function normalizeDate(s: string | undefined | null): string | null {
+  if (!s) return null;
+  const trimmed = String(s).trim();
+  if (!trimmed) return null;
+
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+  const dmy = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (dmy) {
+    const d = dmy[1].padStart(2, "0");
+    const m = dmy[2].padStart(2, "0");
+    const y = dmy[3];
+    return `${y}-${m}-${d}`;
+  }
+
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    const y = parsed.getUTCFullYear();
+    const m = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return null;
+}
+
+/** Read source block accepting both `source_ref` and `source`, normalizing field names. */
+function readSourceRef(item: IngestItem) {
+  const src: SourceRefBlock = { ...(item.source ?? {}), ...(item.source_ref ?? {}) };
+  const url = src.url ?? src.fuente ?? null; // tu pipeline manda la URL en `fuente`
+  let fuenteLabel: string | null = null;
+  if (src.fuente && /^https?:\/\//i.test(src.fuente)) {
+    if (/elperuano\./i.test(src.fuente)) fuenteLabel = "El Peruano";
+    else if (/spij\./i.test(src.fuente)) fuenteLabel = "SPIJ";
+    else if (/congreso\.gob\.pe/i.test(src.fuente)) fuenteLabel = "Congreso de la República";
+    else fuenteLabel = src.fuente;
+  } else if (src.fuente) {
+    fuenteLabel = src.fuente;
+  }
+  return {
+    entity: src.entity ?? src.entidad ?? null,
+    reference_number: src.reference_number ?? null,
+    url,
+    fuente_label: fuenteLabel,
+    fecha_publicacion_iso: normalizeDate(src.date ?? src.fecha_publicacion),
+    sumilla: src.sumilla ?? null,
+  };
+}
+
+/** Pick publication date with priority: source_ref → fechas_identificadas[publicacion]. */
+function pickPublicationDate(item: IngestItem, srcDateIso: string | null): string | null {
+  if (srcDateIso) return srcDateIso;
+  const fechas = item.fechas_identificadas;
+  if (!Array.isArray(fechas)) return null;
+  const pubRoles = ["publicacion", "publicación", "published", "publication"];
+  const hit = fechas.find((f) => pubRoles.includes(String(f.rol ?? "").toLowerCase()));
+  return hit ? normalizeDate(hit.fecha) : null;
+}
+
+/** Pick deadline: priority across plazo / vencimiento / vigencia / entrada_vigor. */
+function pickDeadline(tipo: string, item: IngestItem): string | null {
+  if (tipo === "sesion" && item.fecha_sesion) {
+    return normalizeDate(item.fecha_sesion);
+  }
   const fechas = item.fechas_identificadas;
   if (!Array.isArray(fechas)) return null;
   const roles =
     tipo === "sesion"
-      ? ["sesion", "plazo", "vigencia_inicio"]
-      : ["plazo", "vigencia_inicio"];
+      ? ["sesion", "plazo", "vencimiento", "vigencia_inicio", "entrada_vigor"]
+      : ["plazo", "vencimiento", "vigencia_inicio", "entrada_vigor"];
   for (const r of roles) {
-    const hit = fechas.find((f) => f.rol === r);
-    if (hit) return hit.fecha;
+    const hit = fechas.find((f) => String(f.rol ?? "").toLowerCase() === r);
+    if (hit) return normalizeDate(hit.fecha);
   }
   return null;
 }
@@ -177,12 +245,13 @@ Deno.serve(async (req) => {
 
   for (const item of body.items) {
     try {
-      if (!item.external_id || !item.titulo) {
-        throw new Error("missing external_id or titulo");
+      const externalId = item.external_id ?? item.alerta_id;
+      if (!externalId || !item.titulo) {
+        throw new Error("missing external_id/alerta_id or titulo");
       }
       const tipo = body.tipo;
       const version = item.version ?? 1;
-      const seed = `${body.organization_id}|${body.client_id}|${tipo}|${item.external_id}|v${version}`;
+      const seed = `${body.organization_id}|${body.client_id}|${tipo}|${externalId}|v${version}`;
       const id = uuidv5(seed, NAMESPACE_OID);
 
       const { data: existing, error: selErr } = await supabase
@@ -194,6 +263,14 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (selErr) throw selErr;
+
+      const src = readSourceRef(item);
+      const fechaPubIso = pickPublicationDate(item, src.fecha_publicacion_iso);
+      const deadlineIso = pickDeadline(tipo, item);
+
+      const sumillaResolved =
+        src.sumilla ??
+        (tipo === "norma" ? (item.resumen ?? item.comentario ?? null) : (item.resumen ?? null));
 
       const aiAnalysis = {
         impacto: item.impacto ?? null,
@@ -215,12 +292,17 @@ Deno.serve(async (req) => {
             ? (IMPACT_TO_LEVEL[item.impacto_categoria] ?? null)
             : null,
           entity:
-            item.source?.entidad ??
+            src.entity ??
             (tipo === "sesion" ? (item.comision ?? null) : null),
-          publication_date: item.source?.fecha_publicacion ?? null,
+          publication_date: fechaPubIso,
           approval_probability: null,
           is_pinned_for_publication: false,
           client_commentaries: [],
+          source_client: item.cliente_id || item.cliente_nombre
+            ? { id: item.cliente_id ?? null, name: item.cliente_nombre ?? null }
+            : null,
+          source_ref_raw: { ...(item.source ?? {}), ...(item.source_ref ?? {}) },
+          source_label: src.fuente_label,
           ...(item.ui_extras ?? {}),
         },
       };
@@ -230,26 +312,26 @@ Deno.serve(async (req) => {
         organization_id: body.organization_id,
         client_id: body.client_id,
         legislation_title: item.titulo,
-        legislation_id: item.external_id,
+        legislation_id: externalId,
         legislation_type: tipo,
-        legislation_summary: item.resumen ?? null,
+        legislation_summary: item.resumen ?? item.comentario ?? null,
         ai_summary: item.comentario ?? null,
-        affected_areas: item.area_de_interes ?? [],
+        affected_areas: Array.isArray(item.area_de_interes) ? item.area_de_interes : [],
         risk_level: item.impacto_categoria
           ? (IMPACT_TO_RISK[item.impacto_categoria] ?? "medium")
           : "medium",
         urgency_level: item.urgencia_categoria
           ? item.urgencia_categoria.toLowerCase()
           : "media",
-        deadline: pickDeadline(tipo, item),
-        published_at: item.source?.fecha_publicacion ?? null,
-        source_url: item.source?.url ?? item.url ?? null,
+        deadline: deadlineIso,
+        published_at: fechaPubIso,
+        source_url: src.url,
         ai_analysis: aiAnalysis,
         updated_at: new Date().toISOString(),
 
-        // Common extra columns
-        url: item.url ?? item.source?.url ?? null,
-        fuente: item.source?.fuente ?? null,
+        // Common
+        url: src.url,
+        fuente: src.fuente_label,
 
         // PL-specific
         codigo: item.codigo ?? null,
@@ -260,13 +342,13 @@ Deno.serve(async (req) => {
 
         // Sesion-specific
         comision: item.comision ?? null,
-        fecha_sesion: item.fecha_sesion ?? null,
+        fecha_sesion: normalizeDate(item.fecha_sesion ?? null),
 
-        // Norma-specific
-        fecha_publicacion: item.source?.fecha_publicacion ?? null,
-        reference_number: item.source?.reference_number ?? null,
-        entity: item.source?.entidad ?? null,
-        sumilla: item.source?.sumilla ?? null,
+        // Norma-specific (top-level for fast query/render)
+        fecha_publicacion: fechaPubIso,
+        reference_number: src.reference_number,
+        entity: src.entity,
+        sumilla: sumillaResolved,
       };
 
       if (!existing) {
