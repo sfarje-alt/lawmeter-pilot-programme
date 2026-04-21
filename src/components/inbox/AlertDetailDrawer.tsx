@@ -76,7 +76,9 @@ export function AlertDetailDrawer({
       setSharedCommentary(alert.expert_commentary || "");
       setAttachments((alert.attachments as AttachedFile[]) || []);
       setImpact(alert.impact_level);
-      setUrgency("medium");
+      // Map urgency_category ("alta/media/baja") → drawer value ("high/medium/low")
+      const uc = alert.urgency_category;
+      setUrgency(uc === "alta" ? "high" : uc === "baja" ? "low" : "medium");
       setTagsText((alert.affected_areas || []).join(", "));
     }
   }, [alert?.id]);
