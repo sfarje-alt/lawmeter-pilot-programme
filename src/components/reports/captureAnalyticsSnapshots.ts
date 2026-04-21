@@ -54,7 +54,7 @@ export async function captureAnalyticsSnapshots(): Promise<AnalyticsSnapshot[]> 
     const bgColor = resolveBackground();
 
     for (const target of targets) {
-      if (target.scrollHeight < 180) continue;
+      if (target.scrollHeight < 120 || target.getBoundingClientRect().height < 80) continue;
 
       const canvas = await html2canvas(target, {
         backgroundColor: bgColor,
@@ -62,37 +62,25 @@ export async function captureAnalyticsSnapshots(): Promise<AnalyticsSnapshot[]> 
         useCORS: true,
         logging: false,
         windowWidth: 1240,
-        windowHeight: Math.max(target.scrollHeight, host.scrollHeight),
+        windowHeight: Math.max(target.scrollHeight, host.scrollHeight, window.innerHeight),
       });
 
-      const trimmed = trimCanvas(canvas, bgColor);
+      pushPaginatedSlices(trimCanvas(canvas, bgColor), PAGE_H, slices);
+    }
 
-      for (let y = 0; y < trimmed.height; y += PAGE_H) {
-        const sliceH = Math.min(PAGE_H, trimmed.height - y);
-        if (sliceH < 120) continue;
+    // Fallback safety net: if per-section capture yields nothing, capture the
+    // fully expanded dashboard host so the report never loses the appendix.
+    if (slices.length === 0) {
+      const fallbackCanvas = await html2canvas(host, {
+        backgroundColor: bgColor,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 1240,
+        windowHeight: Math.max(host.scrollHeight, window.innerHeight),
+      });
 
-        const slice = document.createElement("canvas");
-        slice.width = trimmed.width;
-        slice.height = sliceH;
-        const ctx = slice.getContext("2d");
-        if (!ctx) continue;
-        ctx.drawImage(
-          trimmed,
-          0,
-          y,
-          trimmed.width,
-          sliceH,
-          0,
-          0,
-          trimmed.width,
-          sliceH,
-        );
-        slices.push({
-          src: slice.toDataURL("image/png"),
-          width: slice.width,
-          height: slice.height,
-        });
-      }
+      pushPaginatedSlices(trimCanvas(fallbackCanvas, bgColor), PAGE_H, slices);
     }
 
     return slices;
@@ -116,6 +104,29 @@ function raf2(): Promise<void> {
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function pushPaginatedSlices(
+  canvas: HTMLCanvasElement,
+  pageHeight: number,
+  out: AnalyticsSnapshot[],
+) {
+  for (let y = 0; y < canvas.height; y += pageHeight) {
+    const sliceH = Math.min(pageHeight, canvas.height - y);
+    if (sliceH < 120) continue;
+
+    const slice = document.createElement("canvas");
+    slice.width = canvas.width;
+    slice.height = sliceH;
+    const ctx = slice.getContext("2d");
+    if (!ctx) continue;
+    ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+    out.push({
+      src: slice.toDataURL("image/png"),
+      width: slice.width,
+      height: slice.height,
+    });
+  }
 }
 
 function resolveBackground(): string {
