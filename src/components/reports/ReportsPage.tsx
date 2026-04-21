@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   analyticsImageGap: {
-    height: ANALYTICS_SECTION_GAP_PT,
+    height: 10,
   },
 });
 
@@ -713,7 +713,7 @@ export function ReportsPage() {
     if (!canGenerate || isGenerating) return;
     setIsGenerating(true);
     try {
-      let analyticsImages: string[] = [];
+      let analyticsImages: AnalyticsSnapshot[] = [];
       if (includeAnalytics) {
         toast.loading("Capturando analíticas en alta resolución…", { id: "gen-report" });
         try {
@@ -819,7 +819,7 @@ export function ReportsPage() {
           return true;
         });
 
-    let analyticsImages: string[] = [];
+    let analyticsImages: AnalyticsSnapshot[] = [];
     if (s.includeAnalytics) {
       try {
         analyticsImages = await captureAnalyticsSnapshots();
