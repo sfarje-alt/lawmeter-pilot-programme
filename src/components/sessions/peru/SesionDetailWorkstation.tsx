@@ -462,22 +462,14 @@ function SectionClasificatoriaIA({
           </div>
         </div>
 
-        {/* Análisis acumulado del chatbot — se actualiza con cada interacción */}
-        <div className="space-y-1.5 pt-3 border-t border-border/30">
-          <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-primary" />
-            Análisis del chatbot (se actualiza con cada interacción)
-          </Label>
-          {session.chatbot_summary?.trim() ? (
-            <div className="rounded-md border border-border/50 bg-background/50 p-3 text-xs whitespace-pre-wrap text-foreground/85 max-h-64 overflow-y-auto">
-              {session.chatbot_summary}
-            </div>
-          ) : (
-            <p className="text-[11px] text-muted-foreground">
-              Aún no hay interacciones del chatbot sobre esta sesión. Cada pregunta y
-              respuesta del asistente quedará registrada aquí y se incluirá en el reporte.
-            </p>
-          )}
+        {/* Chat interno de la alerta — historial persistente */}
+        <div className="space-y-2 pt-3 border-t border-border/30">
+          <SesionInternalChat
+            session={session}
+            unlocked={unlocked}
+            onAppendMessage={onAppendChatMessage}
+            onClearHistory={onClearChatHistory}
+          />
         </div>
       </div>
     </SectionShell>
@@ -712,16 +704,67 @@ function Section5FuenteEvidencia({ session }: { session: PeruSession }) {
   );
 }
 
-// ── 6. Procesamiento IA ────────────────────────────────────────────────────
+// ── 6. Procesamiento IA — flujo en cadena con un solo botón ────────────────
 function Section6ProcesamientoIA({
   session,
-  onRequestTranscription,
-  onRequestChatbot,
+  onRequestAIAnalysis,
 }: {
   session: PeruSession;
-  onRequestTranscription: (id: string) => void;
-  onRequestChatbot: (id: string) => void;
+  onRequestAIAnalysis: (id: string) => void;
 }) {
+  const tState = session.transcription_state ?? 'no_solicitada';
+  const inFlight = tState === 'en_cola' || tState === 'procesando';
+  const ready = tState === 'lista';
+
+  return (
+    <SectionShell
+      title="Procesamiento IA"
+      icon={<Sparkles className="h-3.5 w-3.5" />}
+      hint="Un solo paso: la IA analiza la sesión, genera la clasificatoria y habilita el chat interno de la alerta."
+    >
+      <div className="rounded-md border border-border/40 bg-card/40 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Analizar con IA
+          </h3>
+          <AIAnalysisChip state={tState} />
+        </div>
+
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Este paso genera la <strong>clasificatoria IA completa</strong> (impacto, urgencia,
+          etiquetas, áreas afectadas) y habilita el <strong>chat interno</strong> de esta alerta.
+          La transcripción se procesa internamente y no se expone.
+        </p>
+
+        {tState === 'no_solicitada' && (
+          <div className="space-y-2 pt-1">
+            <p className="text-[11px] text-muted-foreground">Tiempo estimado: ~20 minutos.</p>
+            <Button size="sm" onClick={() => onRequestAIAnalysis(session.id)}>
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              Analizar con IA
+            </Button>
+          </div>
+        )}
+
+        {inFlight && (
+          <div className="flex items-center gap-2 text-sm text-primary pt-1">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {tState === 'en_cola' ? 'En cola · ~20 min' : 'Procesando · ~20 min'}
+          </div>
+        )}
+
+        {ready && (
+          <div className="flex items-center gap-2 text-sm text-success pt-1">
+            <CheckCircle2 className="h-4 w-4" />
+            Análisis listo. Conversa con esta alerta desde la pestaña{' '}
+            <strong>Clasificatoria + Chat</strong>.
+          </div>
+        )}
+      </div>
+    </SectionShell>
+  );
+}
   const tState = session.transcription_state ?? 'no_solicitada';
   const cState = session.chatbot_state ?? 'no_solicitado';
   const r = session.recording;
