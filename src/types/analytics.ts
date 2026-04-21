@@ -2,6 +2,8 @@
 
 export type AnalyticsVisibility = 'internal' | 'client' | 'both';
 
+export type AnalyticsSection = 'general' | 'bills' | 'sessions' | 'ops';
+
 export type AnalyticsBlockKey = 
   // Internal (Legal Team only) — operations
   | 'editorial_response_time'
@@ -21,7 +23,13 @@ export type AnalyticsBlockKey =
   | 'popular_topics'
   | 'emerging_topics'
   | 'exposure'
-  | 'service_kpis';
+  | 'service_kpis'
+  // Sessions (Sesiones del Congreso)
+  | 'sessions_by_commission'
+  | 'sessions_temporal_evolution'
+  | 'session_agenda_type'
+  | 'session_topics'
+  | 'session_recurring_bills';
 
 export interface AnalyticsBlockDefinition {
   key: AnalyticsBlockKey;
@@ -29,6 +37,7 @@ export interface AnalyticsBlockDefinition {
   takeaway: string;
   infoTooltip: string;
   visibility: AnalyticsVisibility;
+  section: AnalyticsSection;
   chartType: 'line' | 'bar' | 'stacked_bar' | 'pie' | 'matrix' | 'funnel' | 'kpi' | 'timeline' | 'cards';
   defaultEnabled: boolean;
   maxItems?: number; // For rankings (e.g., Top 5-7)
