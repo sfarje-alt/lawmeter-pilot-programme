@@ -52,6 +52,13 @@ export interface SesionLegalReview {
   comentario_experto: string;
 }
 
+export interface SesionChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
 export interface PeruSession {
   id: string;
   external_session_id?: string;
