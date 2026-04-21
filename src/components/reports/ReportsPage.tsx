@@ -689,7 +689,7 @@ const ReportPDF = ({
                     {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"} · {periodLabel}
                   </Text>
                   <View style={{ marginVertical: 6 }}>
-                    <MiniChart type={chartType} data={series} />
+                    <MiniChart type={chartType} data={series} blockKey={b.key} />
                   </View>
                   <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
                 </View>
