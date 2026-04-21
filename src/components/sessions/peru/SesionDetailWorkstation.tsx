@@ -36,7 +36,7 @@ import {
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChatbotChip, TranscriptionChip, AIAnalysisChip } from './SesionChips';
+import { AIAnalysisChip } from './SesionChips';
 import { getCommissionColor } from './commissionColors';
 import { SesionInternalChat } from './SesionInternalChat';
 import type { PeruSession } from '@/types/peruSessions';
