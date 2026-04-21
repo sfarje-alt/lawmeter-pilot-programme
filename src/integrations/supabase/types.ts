@@ -80,7 +80,9 @@ export type Database = {
           created_at: string
           deadline: string | null
           expert_commentary: string | null
+          external_id: string | null
           id: string
+          ingested_at: string | null
           legislation_id: string | null
           legislation_summary: string | null
           legislation_title: string
@@ -95,6 +97,7 @@ export type Database = {
           status: string
           updated_at: string
           urgency_level: string | null
+          version: number | null
         }
         Insert: {
           affected_areas?: string[] | null
@@ -104,7 +107,9 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           expert_commentary?: string | null
+          external_id?: string | null
           id?: string
+          ingested_at?: string | null
           legislation_id?: string | null
           legislation_summary?: string | null
           legislation_title: string
@@ -119,6 +124,7 @@ export type Database = {
           status?: string
           updated_at?: string
           urgency_level?: string | null
+          version?: number | null
         }
         Update: {
           affected_areas?: string[] | null
@@ -128,7 +134,9 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           expert_commentary?: string | null
+          external_id?: string | null
           id?: string
+          ingested_at?: string | null
           legislation_id?: string | null
           legislation_summary?: string | null
           legislation_title?: string
@@ -143,6 +151,7 @@ export type Database = {
           status?: string
           updated_at?: string
           urgency_level?: string | null
+          version?: number | null
         }
         Relationships: [
           {
