@@ -358,10 +358,17 @@ function SectionClasificatoriaIA({
   session,
   unlocked,
   commissionColor,
+  onAppendChatMessage,
+  onClearChatHistory,
 }: {
   session: PeruSession;
   unlocked: boolean;
   commissionColor: { bg: string; ring: string; text: string };
+  onAppendChatMessage: (
+    sessionId: string,
+    message: { role: 'user' | 'assistant'; content: string },
+  ) => void;
+  onClearChatHistory: (sessionId: string) => void;
 }) {
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
   const [urgency, setUrgency] = useState<string>('medium');
