@@ -180,7 +180,7 @@ export function useSesionesWorkspace() {
         legal_review: legal[s.id] ?? s.legal_review,
       } satisfies PeruSession;
     });
-  }, [baseSessions, editorial, legal]);
+  }, [baseSessions, editorial, legal, isEmpty]);
 
   // Upsert en Supabase (silencioso, no bloqueante)
   const upsertRemote = useCallback(
