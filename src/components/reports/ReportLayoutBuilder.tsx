@@ -43,7 +43,7 @@ import {
   FileBarChart,
   Eye as EyeIcon,
 } from "lucide-react";
-import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
+import { CLIENT_ANALYTICS_BLOCKS, ANALYTICS_SECTION_LABELS, type AnalyticsBlockConfigExtended, type AnalyticsSection } from "@/types/analytics";
 import {
   Tooltip,
   TooltipContent,
@@ -70,7 +70,14 @@ const blockIcons: Record<string, React.ElementType> = {
   detection_to_action_time: Clock,
   ai_usage: Bot,
   reports_generated: FileBarChart,
+  sessions_by_commission: BarChart3,
+  sessions_temporal_evolution: TrendingUp,
+  session_agenda_type: PieChart,
+  session_topics: Layers,
+  session_recurring_bills: FileBarChart,
 };
+
+const SECTION_ORDER: AnalyticsSection[] = ['general', 'bills', 'sessions', 'ops'];
 
 interface SortableBlockItemProps {
   block: AnalyticsBlockConfigExtended;
