@@ -76,8 +76,11 @@ export type Database = {
           affected_areas: string[] | null
           ai_analysis: Json | null
           ai_summary: string | null
+          area_de_interes: string[] | null
+          autores: string[] | null
           client_id: string | null
           codigo: string | null
+          comentario: string | null
           comision: string | null
           created_at: string
           deadline: string | null
@@ -87,17 +90,23 @@ export type Database = {
           estado_anterior: string | null
           expert_commentary: string | null
           external_id: string | null
+          fecha_presentacion: string | null
           fecha_publicacion: string | null
           fecha_sesion: string | null
+          fechas_identificadas: Json | null
           fuente: string | null
           id: string
+          impacto: number | null
+          impacto_categoria: string | null
           ingested_at: string | null
           legislation_id: string | null
           legislation_summary: string | null
           legislation_title: string
           legislation_type: string | null
           organization_id: string | null
+          proponente: string | null
           published_at: string | null
+          racional: string[] | null
           reference_number: string | null
           review_notes: string | null
           reviewed_at: string | null
@@ -108,6 +117,8 @@ export type Database = {
           status: string
           sumilla: string | null
           updated_at: string
+          urgencia: number | null
+          urgencia_categoria: string | null
           urgency_level: string | null
           url: string | null
           version: number | null
@@ -116,8 +127,11 @@ export type Database = {
           affected_areas?: string[] | null
           ai_analysis?: Json | null
           ai_summary?: string | null
+          area_de_interes?: string[] | null
+          autores?: string[] | null
           client_id?: string | null
           codigo?: string | null
+          comentario?: string | null
           comision?: string | null
           created_at?: string
           deadline?: string | null
@@ -127,17 +141,23 @@ export type Database = {
           estado_anterior?: string | null
           expert_commentary?: string | null
           external_id?: string | null
+          fecha_presentacion?: string | null
           fecha_publicacion?: string | null
           fecha_sesion?: string | null
+          fechas_identificadas?: Json | null
           fuente?: string | null
           id?: string
+          impacto?: number | null
+          impacto_categoria?: string | null
           ingested_at?: string | null
           legislation_id?: string | null
           legislation_summary?: string | null
           legislation_title: string
           legislation_type?: string | null
           organization_id?: string | null
+          proponente?: string | null
           published_at?: string | null
+          racional?: string[] | null
           reference_number?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
@@ -148,6 +168,8 @@ export type Database = {
           status?: string
           sumilla?: string | null
           updated_at?: string
+          urgencia?: number | null
+          urgencia_categoria?: string | null
           urgency_level?: string | null
           url?: string | null
           version?: number | null
@@ -156,8 +178,11 @@ export type Database = {
           affected_areas?: string[] | null
           ai_analysis?: Json | null
           ai_summary?: string | null
+          area_de_interes?: string[] | null
+          autores?: string[] | null
           client_id?: string | null
           codigo?: string | null
+          comentario?: string | null
           comision?: string | null
           created_at?: string
           deadline?: string | null
@@ -167,17 +192,23 @@ export type Database = {
           estado_anterior?: string | null
           expert_commentary?: string | null
           external_id?: string | null
+          fecha_presentacion?: string | null
           fecha_publicacion?: string | null
           fecha_sesion?: string | null
+          fechas_identificadas?: Json | null
           fuente?: string | null
           id?: string
+          impacto?: number | null
+          impacto_categoria?: string | null
           ingested_at?: string | null
           legislation_id?: string | null
           legislation_summary?: string | null
           legislation_title?: string
           legislation_type?: string | null
           organization_id?: string | null
+          proponente?: string | null
           published_at?: string | null
+          racional?: string[] | null
           reference_number?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
@@ -188,6 +219,8 @@ export type Database = {
           status?: string
           sumilla?: string | null
           updated_at?: string
+          urgencia?: number | null
+          urgencia_categoria?: string | null
           urgency_level?: string | null
           url?: string | null
           version?: number | null
