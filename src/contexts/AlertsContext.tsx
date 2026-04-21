@@ -115,10 +115,20 @@ function mapDbRowToAlert(
   // State family — drives badge color (independent of kanban column).
   const family = getStateFamily(row.estado_actual);
 
-  // Impact level: prefer numeric AI score, fallback to ui_extras label.
-  const impactoScore = typeof ai.impacto === "number" ? ai.impacto : null;
-  const urgenciaScore = typeof ai.urgencia === "number" ? ai.urgencia : null;
-  const impact = deriveImpactLevel(impactoScore, ui.impact_level);
+  // Impact level: prioridad estricta:
+  //   1) row.impacto_categoria  (top-level columna, "Alta/Media/Baja" del payload)
+  //   2) ui.impact_level        (legacy en ai_analysis.ui_extras)
+  //   3) deriveImpactLevel(score) con umbrales 70/30/0
+  const impactoScore = typeof row.impacto === "number"
+    ? row.impacto
+    : (typeof ai.impacto === "number" ? ai.impacto : null);
+  const urgenciaScore = typeof row.urgencia === "number"
+    ? row.urgencia
+    : (typeof ai.urgencia === "number" ? ai.urgencia : null);
+  const impact: ImpactLevel =
+    mapCategoriaToImpact(row.impacto_categoria) ??
+    (ui.impact_level as ImpactLevel | undefined) ??
+    deriveImpactLevel(impactoScore, ui.impact_level);
 
   const rationale: string[] = Array.isArray(ai.racional) ? ai.racional.filter((r: unknown): r is string => typeof r === "string") : [];
   const keyDates: KeyDate[] = Array.isArray(ai.fechas_identificadas)
