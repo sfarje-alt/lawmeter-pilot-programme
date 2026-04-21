@@ -50,7 +50,7 @@ interface SourceRefBlock {
 
 interface IngestItem {
   alerta_id?: string;
-  external_id?: string; // optional — falls back to alerta_id
+  external_id?: string;
   tipo?: string;
   titulo: string;
   resumen?: string;
@@ -65,10 +65,17 @@ interface IngestItem {
   model?: string;
   version?: number;
   generated_at?: string;
-  // Accept both
   source?: SourceRefBlock;
   source_ref?: SourceRefBlock;
   ui_extras?: Record<string, unknown>;
+
+  // Top-level common fields (productor los manda en raíz)
+  url?: string;
+  fuente?: string;
+  entity?: string;
+  sumilla?: string;
+  reference_number?: string;
+  fecha_publicacion?: string;
 
   // PL-specific
   codigo?: string;
@@ -76,13 +83,15 @@ interface IngestItem {
   estado_anterior?: string | null;
   es_cambio_estado?: boolean;
   seguimiento_hash?: string;
+  autores?: string[];
+  proponente?: string;
+  fecha_presentacion?: string;
 
   // Sesion-specific
   comision?: string;
-  url?: string;
   fecha_sesion?: string;
 
-  // Cliente echo (informational, persisted under ai_analysis.ui_extras)
+  // Cliente echo
   cliente_id?: string;
   cliente_nombre?: string;
 }
