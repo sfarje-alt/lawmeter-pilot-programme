@@ -251,13 +251,23 @@ export function LegalTeamAnalyticsDashboard() {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SessionsByCommissionBlock timeframe={timeframeLabel} />
-            <SessionsTemporalEvolutionBlock timeframe={timeframeLabel} />
-            <SessionAgendaTypeBlock timeframe={timeframeLabel} />
-            <SessionTopicsBlock timeframe={timeframeLabel} />
-            <div className="lg:col-span-2">
-              <SessionRecurringBillsBlock timeframe={timeframeLabel} />
-            </div>
+            {isEnabled('sessions_by_commission') && (
+              <SessionsByCommissionBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('sessions_temporal_evolution') && (
+              <SessionsTemporalEvolutionBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('session_agenda_type') && (
+              <SessionAgendaTypeBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('session_topics') && (
+              <SessionTopicsBlock timeframe={timeframeLabel} />
+            )}
+            {isEnabled('session_recurring_bills') && (
+              <div className="lg:col-span-2">
+                <SessionRecurringBillsBlock timeframe={timeframeLabel} />
+              </div>
+            )}
           </div>
         </CollapsibleAnalyticsSection>
       </div>

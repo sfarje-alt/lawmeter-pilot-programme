@@ -49,7 +49,7 @@ export function CollapsibleAnalyticsSection({
   description,
   badge,
   icon,
-  defaultOpen = true,
+  defaultOpen = false,
   filters,
   children,
   isMaximized = false,
