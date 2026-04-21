@@ -1,5 +1,5 @@
 // Edge function: ingest-alerts
-// Idempotent upsert of alerts (tipo="norma") for external ingestion scripts.
+// Idempotent upsert of alerts (tipo="norma" | "pl" | "sesion") for external ingestion scripts.
 // Auth: Bearer token (env INGEST_TOKEN).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -14,6 +14,8 @@ const corsHeaders = {
 
 // Standard OID namespace (RFC 4122)
 const NAMESPACE_OID = "6ba7b812-9dad-11d1-80b4-00c04fd430c8";
+
+const ALLOWED_TIPOS = new Set(["norma", "pl", "sesion"]);
 
 const IMPACT_TO_RISK: Record<string, string> = {
   Alta: "grave",
@@ -34,8 +36,9 @@ interface FechaItem {
 }
 
 interface IngestItem {
-  alerta_id: string;
+  alerta_id?: string;
   external_id: string;
+  tipo?: string;
   titulo: string;
   resumen?: string;
   comentario?: string;
@@ -53,7 +56,27 @@ interface IngestItem {
     entidad?: string;
     fecha_publicacion?: string;
     url?: string;
+    sumilla?: string;
+    reference_number?: string;
+    fuente?: string;
   };
+  ui_extras?: Record<string, unknown>;
+
+  // PL-specific
+  codigo?: string;
+  estado_actual?: string;
+  estado_anterior?: string | null;
+  es_cambio_estado?: boolean;
+  seguimiento_hash?: string;
+
+  // Sesion-specific
+  comision?: string;
+  url?: string;
+  fecha_sesion?: string;
+
+  // Cliente echo (informational)
+  cliente_id?: string;
+  cliente_nombre?: string;
 }
 
 interface IngestBody {
@@ -63,12 +86,22 @@ interface IngestBody {
   items: IngestItem[];
 }
 
-function pickDeadline(fechas?: FechaItem[]): string | null {
+function pickDeadline(
+  tipo: string,
+  item: IngestItem,
+): string | null {
+  if (tipo === "sesion" && item.fecha_sesion) return item.fecha_sesion;
+  const fechas = item.fechas_identificadas;
   if (!Array.isArray(fechas)) return null;
-  const hit = fechas.find(
-    (f) => f.rol === "plazo" || f.rol === "vigencia_inicio",
-  );
-  return hit?.fecha ?? null;
+  const roles =
+    tipo === "sesion"
+      ? ["sesion", "plazo", "vigencia_inicio"]
+      : ["plazo", "vigencia_inicio"];
+  for (const r of roles) {
+    const hit = fechas.find((f) => f.rol === r);
+    if (hit) return hit.fecha;
+  }
+  return null;
 }
 
 Deno.serve(async (req) => {
@@ -116,7 +149,7 @@ Deno.serve(async (req) => {
 
   if (
     !body ||
-    body.tipo !== "norma" ||
+    !ALLOWED_TIPOS.has(body.tipo) ||
     !body.organization_id ||
     !body.client_id ||
     !Array.isArray(body.items)
@@ -124,7 +157,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         error:
-          "invalid_body: requires tipo='norma', organization_id, client_id, items[]",
+          "invalid_body: requires tipo in ('norma','pl','sesion'), organization_id, client_id, items[]",
       }),
       {
         status: 400,
@@ -147,11 +180,11 @@ Deno.serve(async (req) => {
       if (!item.external_id || !item.titulo) {
         throw new Error("missing external_id or titulo");
       }
+      const tipo = body.tipo;
       const version = item.version ?? 1;
-      const seed = `${body.organization_id}|${body.client_id}|${body.tipo}|${item.external_id}|v${version}`;
+      const seed = `${body.organization_id}|${body.client_id}|${tipo}|${item.external_id}|v${version}`;
       const id = uuidv5(seed, NAMESPACE_OID);
 
-      // Check if exists (and capture preserved fields)
       const { data: existing, error: selErr } = await supabase
         .from("alerts")
         .select(
@@ -169,18 +202,26 @@ Deno.serve(async (req) => {
         fechas_identificadas: item.fechas_identificadas ?? [],
         model: item.model ?? null,
         version,
-        alerta_id: item.alerta_id,
+        alerta_id: item.alerta_id ?? null,
         generated_at: item.generated_at ?? null,
         ui_extras: {
-          kanban_stage: "publicado",
+          kanban_stage:
+            tipo === "pl"
+              ? (item.estado_actual ?? "comision").toLowerCase()
+              : tipo === "sesion"
+                ? "sesion"
+                : "publicado",
           impact_level: item.impacto_categoria
             ? (IMPACT_TO_LEVEL[item.impacto_categoria] ?? null)
             : null,
-          entity: item.source?.entidad ?? null,
+          entity:
+            item.source?.entidad ??
+            (tipo === "sesion" ? (item.comision ?? null) : null),
           publication_date: item.source?.fecha_publicacion ?? null,
           approval_probability: null,
           is_pinned_for_publication: false,
           client_commentaries: [],
+          ...(item.ui_extras ?? {}),
         },
       };
 
@@ -190,7 +231,7 @@ Deno.serve(async (req) => {
         client_id: body.client_id,
         legislation_title: item.titulo,
         legislation_id: item.external_id,
-        legislation_type: body.tipo,
+        legislation_type: tipo,
         legislation_summary: item.resumen ?? null,
         ai_summary: item.comentario ?? null,
         affected_areas: item.area_de_interes ?? [],
@@ -200,15 +241,35 @@ Deno.serve(async (req) => {
         urgency_level: item.urgencia_categoria
           ? item.urgencia_categoria.toLowerCase()
           : "media",
-        deadline: pickDeadline(item.fechas_identificadas),
+        deadline: pickDeadline(tipo, item),
         published_at: item.source?.fecha_publicacion ?? null,
-        source_url: item.source?.url ?? null,
+        source_url: item.source?.url ?? item.url ?? null,
         ai_analysis: aiAnalysis,
         updated_at: new Date().toISOString(),
+
+        // Common extra columns
+        url: item.url ?? item.source?.url ?? null,
+        fuente: item.source?.fuente ?? null,
+
+        // PL-specific
+        codigo: item.codigo ?? null,
+        estado_actual: item.estado_actual ?? null,
+        estado_anterior: item.estado_anterior ?? null,
+        es_cambio_estado: item.es_cambio_estado ?? null,
+        seguimiento_hash: item.seguimiento_hash ?? null,
+
+        // Sesion-specific
+        comision: item.comision ?? null,
+        fecha_sesion: item.fecha_sesion ?? null,
+
+        // Norma-specific
+        fecha_publicacion: item.source?.fecha_publicacion ?? null,
+        reference_number: item.source?.reference_number ?? null,
+        entity: item.source?.entidad ?? null,
+        sumilla: item.source?.sumilla ?? null,
       };
 
       if (!existing) {
-        // INSERT
         const insertRow = {
           ...baseRow,
           status: "inbox",
@@ -220,13 +281,10 @@ Deno.serve(async (req) => {
         if (insErr) throw insErr;
         inserted++;
       } else {
-        // UPDATE — preserve editorial fields
         const updateRow: Record<string, unknown> = { ...baseRow };
-        // Do NOT touch: created_at, status (if !== "inbox"), expert_commentary,
-        // reviewed_at, reviewed_by, review_notes
         delete updateRow.id;
         if (existing.status && existing.status !== "inbox") {
-          // keep existing status — do nothing, don't include in update
+          // preserve status
         } else {
           updateRow.status = "inbox";
         }
