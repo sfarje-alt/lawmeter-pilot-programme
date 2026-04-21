@@ -83,8 +83,9 @@ function deriveSummaryFromChat(history: SesionChatMessage[] | undefined): string
 
 export function useSesionesWorkspace() {
   const base = usePeruSessions();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const userId = user?.id;
+  const isEmpty = isEmptyDataOrg(profile?.organization_id);
 
   const [editorial, setEditorial] = useState<EditorialMap>(() =>
     readJSON<EditorialMap>(LS_EDITORIAL, {}),
