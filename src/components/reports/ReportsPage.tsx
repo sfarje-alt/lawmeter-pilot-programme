@@ -258,359 +258,14 @@ const styles = StyleSheet.create({
   analyticsImage: { width: "100%", height: "auto" },
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MiniChart — vector-sharp SVG primitives reused by analytics blocks
-// ─────────────────────────────────────────────────────────────────────────────
-const CHART_WIDTH = 460;
-const CHART_HEIGHT = 130;
-const CHART_PADDING = { top: 10, right: 110, bottom: 26, left: 32 };
-const AXIS_COLOR = "#cbd5e0";
-const GRID_COLOR = "#edf2f7";
-const LABEL_COLOR = "#718096";
+// (Analytics in PDF are now embedded as HD snapshots — see analyticsImages prop.)
 
-const BLOCK_PALETTES: Record<string, string[]> = {
-  editorial_response_time: ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed"],
-  pin_archive:             ["#0f766e", "#14b8a6", "#5eead4", "#99f6e4"],
-  reviewed_alerts:         ["#7c2d12", "#ea580c", "#fb923c", "#fdba74"],
-  detection_to_action_time:["#365314", "#65a30d", "#a3e635", "#d9f99d"],
-  ai_usage:                ["#581c87", "#9333ea", "#c084fc", "#e9d5ff"],
-  reports_generated:       ["#1e3a8a", "#3b82f6", "#93c5fd", "#dbeafe"],
-  impact_matrix:           ["#7f1d1d", "#dc2626", "#f97316", "#facc15", "#22c55e", "#16a34a"],
-  regulatory_pulse:        ["#155e75", "#0891b2", "#22d3ee", "#a5f3fc"],
-  alert_priority:          ["#991b1b", "#dc2626", "#f59e0b", "#10b981"],
-  alert_distribution:      ["#1d4ed8", "#0d9488", "#f59e0b", "#db2777", "#7c3aed", "#0ea5e9"],
-  top_entities:            ["#1e40af", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"],
-  legislative_funnel:      ["#1e3a8a", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd"],
-  key_movements:           ["#831843", "#be185d", "#ec4899", "#f9a8d4", "#fbcfe8"],
-  popular_topics:          ["#134e4a", "#0f766e", "#14b8a6", "#5eead4", "#99f6e4", "#ccfbf1"],
-  emerging_topics:         ["#713f12", "#a16207", "#eab308", "#fde047", "#fef08a"],
-  exposure:                ["#312e81", "#4f46e5", "#818cf8", "#a5b4fc", "#c7d2fe"],
-  service_kpis:            ["#0c4a6e", "#0369a1", "#0ea5e9", "#7dd3fc"],
-};
-const DEFAULT_PALETTE = ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed", "#90cdf4", "#bee3f8"];
-
-function getPalette(blockKey?: string): string[] {
-  return (blockKey && BLOCK_PALETTES[blockKey]) || DEFAULT_PALETTE;
-}
-
-interface SeriesPoint { label: string; value: number; }
-
-function computeYTicks(maxValue: number, desired = 4): number[] {
-  if (maxValue <= 0) return [0, 1];
-  const rawStep = maxValue / desired;
-  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const norm = rawStep / mag;
-  const niceNorm = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
-  const step = niceNorm * mag;
-  const niceMax = Math.ceil(maxValue / step) * step;
-  const ticks: number[] = [];
-  for (let v = 0; v <= niceMax + 1e-9; v += step) ticks.push(Math.round(v * 100) / 100);
-  return ticks;
-}
-
-const fmtNum = (n: number) => (Number.isInteger(n) ? n.toString() : n.toFixed(1));
-
-function computeBlockSeries(
-  block: AnalyticsBlockConfigExtended,
-  alerts: PeruAlert[],
-  sessions: PeruSession[],
-): SeriesPoint[] {
-  const fallback: SeriesPoint[] = [
-    { label: "S1", value: 4 },
-    { label: "S2", value: 6 },
-    { label: "S3", value: 5 },
-    { label: "S4", value: 8 },
-    { label: "S5", value: 7 },
-    { label: "S6", value: 9 },
-  ];
-
-  const countBy = <T,>(items: T[], pick: (i: T) => string | undefined | null) => {
-    const map = new Map<string, number>();
-    for (const it of items) {
-      const k = (pick(it) || "—").toString().trim();
-      if (!k) continue;
-      map.set(k, (map.get(k) ?? 0) + 1);
-    }
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([label, value]) => ({ label, value }));
-  };
-
-  switch (block.key) {
-    case "impact_matrix":
-    case "alert_priority": {
-      const data = countBy(alerts, (a: any) => a.impact_level);
-      return data.length ? data.slice(0, 4) : [
-        { label: "Grave", value: 3 }, { label: "Medio", value: 6 },
-        { label: "Leve", value: 9 }, { label: "Positivo", value: 4 },
-      ];
-    }
-    case "alert_distribution": {
-      const data = countBy(alerts, (a) => a.legislation_type === "norma" ? "Normas" : "Proyectos");
-      return data.length ? data : [{ label: "Proyectos", value: 7 }, { label: "Normas", value: 5 }];
-    }
-    case "top_entities":
-    case "popular_topics":
-    case "exposure": {
-      const data = countBy(alerts, (a: any) => a.entity || a.author || (a.affected_areas?.[0]));
-      const maxItems = (block as any).maxItems ?? 6;
-      return (data.length ? data : fallback).slice(0, maxItems);
-    }
-    case "legislative_funnel": {
-      const data = countBy(alerts, (a) => a.current_stage);
-      return data.length ? data.slice(0, 5) : [
-        { label: "Comisión", value: 12 }, { label: "Pleno", value: 7 },
-        { label: "Trámite", value: 4 }, { label: "Promulgado", value: 2 },
-      ];
-    }
-    case "regulatory_pulse":
-    case "reviewed_alerts":
-    case "editorial_response_time":
-    case "reports_generated": {
-      const buckets = new Map<string, number>();
-      const items: { date: string }[] = [
-        ...alerts.map((a) => ({ date: a.updated_at })),
-        ...sessions.map((s) => ({ date: s.scheduled_at ?? s.created_at ?? new Date().toISOString() })),
-      ];
-      for (const it of items) {
-        try {
-          const d = parseISO(it.date);
-          const k = format(d, "dd MMM", { locale: es });
-          buckets.set(k, (buckets.get(k) ?? 0) + 1);
-        } catch { /* skip */ }
-      }
-      const arr = Array.from(buckets.entries())
-        .map(([label, value]) => ({ label, value }))
-        .slice(-8);
-      return arr.length ? arr : fallback;
-    }
-    case "key_movements":
-    case "emerging_topics": {
-      const data = countBy(alerts, (a: any) => a.affected_areas?.[0] || a.law_branch);
-      return data.length ? data.slice(0, 5) : fallback.slice(0, 5);
-    }
-    case "service_kpis":
-    case "pin_archive":
-    case "ai_usage":
-    case "detection_to_action_time": {
-      const pinned = alerts.filter((a: any) => a.is_pinned_for_publication).length;
-      const archived = alerts.filter((a: any) => a.archived_at).length;
-      const total = Math.max(alerts.length, 1);
-      return [
-        { label: "Pinneadas", value: pinned },
-        { label: "Archivadas", value: archived },
-        { label: "Activas", value: total - pinned - archived },
-      ];
-    }
-    default:
-      return fallback;
-  }
-}
-
-interface MiniChartProps {
-  type: AnalyticsBlockDefinition["chartType"];
-  data: SeriesPoint[];
-  blockKey?: string;
-}
-
-const MiniChart = ({ type, data, blockKey }: MiniChartProps) => {
-  const palette = getPalette(blockKey);
-  const W = CHART_WIDTH;
-  const H = CHART_HEIGHT;
-  const needsLegend = type === "pie" || type === "bar" || type === "stacked_bar" || type === "funnel" || type === "matrix" || type === "cards" || type === "kpi";
-  const padding = needsLegend ? CHART_PADDING : { ...CHART_PADDING, right: 14 };
-  const { top, right, bottom, left } = padding;
-  const innerW = W - left - right;
-  const innerH = H - top - bottom;
-  const max = Math.max(1, ...data.map((d) => d.value));
-  const ticks = computeYTicks(max, 4);
-  const yMax = ticks[ticks.length - 1] || max;
-  const valToY = (v: number) => top + innerH - (v / yMax) * innerH;
-
-  const yAxis = (
-    <G>
-      {ticks.map((t, i) => (
-        <G key={i}>
-          <SvgLine
-            x1={left}
-            y1={valToY(t)}
-            x2={left + innerW}
-            y2={valToY(t)}
-            stroke={t === 0 ? AXIS_COLOR : GRID_COLOR}
-            strokeWidth={0.5}
-          />
-          <Text x={left - 4} y={valToY(t) + 2} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "right" }}>
-            {fmtNum(t)}
-          </Text>
-        </G>
-      ))}
-      <SvgLine x1={left} y1={top} x2={left} y2={top + innerH} stroke={AXIS_COLOR} strokeWidth={0.5} />
-    </G>
-  );
-
-  const legend = (slice: SeriesPoint[]) => (
-    <G>
-      {slice.map((d, i) => (
-        <G key={`lg-${i}`}>
-          <Rect x={W - right + 6} y={top + 2 + i * 11} width={6} height={6} fill={palette[i % palette.length]} />
-          <Text x={W - right + 16} y={top + 8 + i * 11} style={{ fontSize: 6.5, color: "#2d3748" }}>
-            {d.label.length > 16 ? d.label.slice(0, 16) + "…" : d.label}: {fmtNum(d.value)}
-          </Text>
-        </G>
-      ))}
-    </G>
-  );
-
-  if (type === "line" || type === "timeline") {
-    const stepX = data.length > 1 ? innerW / (data.length - 1) : innerW;
-    const points = data.map((d, i) => `${left + i * stepX},${valToY(d.value)}`).join(" ");
-    return (
-      <Svg width={W} height={H}>
-        {yAxis}
-        <Polyline points={points} fill="none" stroke={palette[1] ?? palette[0]} strokeWidth={1.5} />
-        {data.map((d, i) => (
-          <G key={i}>
-            <Circle cx={left + i * stepX} cy={valToY(d.value)} r={2} fill={palette[0]} />
-            <Text x={left + i * stepX} y={H - 6} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
-              {d.label}
-            </Text>
-          </G>
-        ))}
-      </Svg>
-    );
-  }
-
-  if (type === "pie") {
-    const total = data.reduce((s, d) => s + d.value, 0) || 1;
-    const cx = left + innerW / 2;
-    const cy = top + innerH / 2;
-    const r = Math.min(innerH, innerW) / 2 - 4;
-    let startAngle = -Math.PI / 2;
-    const arcs = data.map((d, i) => {
-      const angle = (d.value / total) * Math.PI * 2;
-      const endAngle = startAngle + angle;
-      const x1 = cx + r * Math.cos(startAngle);
-      const y1 = cy + r * Math.sin(startAngle);
-      const x2 = cx + r * Math.cos(endAngle);
-      const y2 = cy + r * Math.sin(endAngle);
-      const large = angle > Math.PI ? 1 : 0;
-      const path = `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${large} 1 ${x2},${y2} Z`;
-      const node = <Path key={i} d={path} fill={palette[i % palette.length]} />;
-      startAngle = endAngle;
-      return node;
-    });
-    return (
-      <Svg width={W} height={H}>
-        {arcs}
-        {legend(data)}
-      </Svg>
-    );
-  }
-
-  if (type === "funnel") {
-    const rowH = innerH / Math.max(data.length, 1);
-    return (
-      <Svg width={W} height={H}>
-        {data.map((d, i) => {
-          const w = (d.value / yMax) * innerW;
-          const x = left + (innerW - w) / 2;
-          const y = top + i * rowH + 2;
-          return (
-            <G key={i}>
-              <Rect x={x} y={y} width={w} height={rowH - 4} fill={palette[i % palette.length]} />
-              <Text x={left + innerW / 2} y={y + rowH / 2 + 2} style={{ fontSize: 6.5, color: "#ffffff", textAlign: "center" }}>
-                {d.label} · {d.value}
-              </Text>
-            </G>
-          );
-        })}
-        {legend(data)}
-      </Svg>
-    );
-  }
-
-  if (type === "matrix") {
-    const cols = Math.max(1, Math.ceil(data.length / 2));
-    const rows = data.length > cols ? 2 : 1;
-    const cellW = innerW / cols;
-    const cellH = innerH / rows;
-    return (
-      <Svg width={W} height={H}>
-        {data.map((d, i) => {
-          const r = Math.floor(i / cols);
-          const c = i % cols;
-          const intensity = d.value / yMax;
-          const fill = palette[Math.min(palette.length - 1, Math.floor(intensity * (palette.length - 1)))];
-          return (
-            <G key={i}>
-              <Rect x={left + c * cellW + 1} y={top + r * cellH + 1} width={cellW - 2} height={cellH - 2} fill={fill} />
-              <Text x={left + c * cellW + cellW / 2} y={top + r * cellH + cellH / 2 + 2} style={{ fontSize: 7, color: "#ffffff", textAlign: "center" }}>
-                {d.label}: {d.value}
-              </Text>
-            </G>
-          );
-        })}
-        {legend(data)}
-      </Svg>
-    );
-  }
-
-  if (type === "kpi" || type === "cards") {
-    const visible = data.slice(0, 4);
-    const cols = Math.max(visible.length, 1);
-    const tileW = innerW / cols;
-    return (
-      <Svg width={W} height={H}>
-        {visible.map((d, i) => {
-          const fill = palette[i % palette.length];
-          return (
-            <G key={i}>
-              <Rect x={left + i * tileW + 4} y={top + 4} width={tileW - 8} height={innerH - 8} fill={fill} />
-              <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2} style={{ fontSize: 16, color: "#ffffff", textAlign: "center" }}>
-                {fmtNum(d.value)}
-              </Text>
-              <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2 + 14} style={{ fontSize: 7, color: "#ffffff", textAlign: "center" }}>
-                {d.label}
-              </Text>
-            </G>
-          );
-        })}
-        {legend(visible)}
-      </Svg>
-    );
-  }
-
-  // default: vertical bars (bar / stacked_bar) — multicolor + Y axis + legend
-  const barW = innerW / Math.max(data.length, 1);
-  return (
-    <Svg width={W} height={H}>
-      {yAxis}
-      {data.map((d, i) => {
-        const h = (d.value / yMax) * innerH;
-        const x = left + i * barW + barW * 0.18;
-        const y = top + innerH - h;
-        const w = barW * 0.64;
-        return (
-          <G key={i}>
-            <Rect x={x} y={y} width={w} height={h} fill={palette[i % palette.length]} />
-            <Text x={x + w / 2} y={y - 2} style={{ fontSize: 6, color: "#1a365d", textAlign: "center" }}>
-              {fmtNum(d.value)}
-            </Text>
-            <Text x={x + w / 2} y={H - 6} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
-              {d.label.length > 10 ? d.label.slice(0, 10) + "…" : d.label}
-            </Text>
-          </G>
-        );
-      })}
-      {legend(data)}
-    </Svg>
-  );
-};
 
 interface PDFProps {
   alerts: PeruAlert[];
   sessions: PeruSession[];
-  analyticsBlocks: AnalyticsBlockConfigExtended[];
+  /** HD analytics snapshots (PNG data URLs), one per page. */
+  analyticsImages: string[];
   source: SourceMode;
   inclusion: InclusionMode;
   includeAnalytics: boolean;
@@ -621,7 +276,7 @@ interface PDFProps {
 const ReportPDF = ({
   alerts,
   sessions,
-  analyticsBlocks,
+  analyticsImages,
   source,
   inclusion,
   includeAnalytics,
@@ -634,72 +289,106 @@ const ReportPDF = ({
   const sourceLabel =
     source === "alertas" ? "Alertas regulatorias" : source === "sesiones" ? "Sesiones" : "Alertas + Sesiones";
   const inclusionLabel = inclusion === "todas" ? "Todas dentro del período" : "Solo pineadas";
+  const hasAnalyticsAppendix = includeAnalytics && analyticsImages.length > 0;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* ── Cover header */}
         <View style={styles.header}>
           <Text style={styles.brand}>LAWMETER</Text>
           <Text style={styles.title}>Reporte Regulatorio</Text>
           <Text style={styles.subtitle}>{profileName}</Text>
           <Text style={styles.subtitle}>{format(new Date(), "d 'de' MMMM yyyy", { locale: es })}</Text>
+          <View style={styles.headerDivider} />
           <View style={styles.pillRow}>
-            <Text style={styles.pill}>{sourceLabel}</Text>
-            <Text style={styles.pill}>{inclusionLabel}</Text>
-            <Text style={styles.pill}>{periodLabel}</Text>
-            {includeAnalytics && <Text style={styles.pill}>+ Analíticas</Text>}
+            <Text style={styles.pill}>{sourceLabel.toUpperCase()}</Text>
+            <Text style={styles.pill}>{inclusionLabel.toUpperCase()}</Text>
+            <Text style={styles.pill}>{periodLabel.toUpperCase()}</Text>
+            {hasAnalyticsAppendix && <Text style={styles.pill}>+ ANALÍTICAS</Text>}
           </View>
         </View>
 
+        {/* ── Executive summary */}
         <View style={styles.summary}>
           <Text style={styles.summaryTitle}>RESUMEN EJECUTIVO</Text>
           {showAlerts && <Text style={styles.summaryItem}>• {alerts.length} alertas regulatorias</Text>}
           {showSessions && <Text style={styles.summaryItem}>• {sessions.length} alertas de sesiones</Text>}
-          {includeAnalytics && (
-            <Text style={styles.summaryItem}>• {analyticsBlocks.length} bloques de analíticas</Text>
+          {hasAnalyticsAppendix && (
+            <Text style={styles.summaryItem}>• Anexo de analíticas ({analyticsImages.length} pág.)</Text>
           )}
         </View>
 
-        {/* SECCIÓN: Alertas regulatorias */}
+        {/* ── Alertas regulatorias */}
         {showAlerts && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ALERTAS REGULATORIAS</Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionTitle}>ALERTAS REGULATORIAS</Text>
+              <Text style={styles.sectionCount}>{alerts.length} ÍTEM{alerts.length === 1 ? "" : "S"}</Text>
+            </View>
+
             {alerts.length === 0 ? (
               <Text style={styles.empty}>Sin alertas en el período seleccionado.</Text>
             ) : (
               alerts.map((a) => {
-                const iaParts: string[] = [];
-                if ((a as any).impact_level) iaParts.push(`Impacto: ${(a as any).impact_level}`);
-                if ((a as any).urgency_level) iaParts.push(`Urgencia: ${(a as any).urgency_level}`);
-                if (a.current_stage) iaParts.push(`Etapa: ${a.current_stage}`);
-                const iaLine = iaParts.join(" · ");
-                const commentary = a.expert_commentary?.replace(/<[^>]+>/g, "").trim();
+                const kicker =
+                  a.legislation_type === "norma" ? "NORMA" : "PROYECTO DE LEY";
+
                 const meta: string[] = [];
                 if (a.legislation_id) meta.push(a.legislation_id);
                 if (a.legislation_type === "proyecto_de_ley" && a.author) meta.push(`Autor: ${a.author}`);
                 if (a.legislation_type === "norma" && a.entity) meta.push(`Entidad: ${a.entity}`);
                 if (a.legislation_type === "norma" && a.publication_date) meta.push(`Publicado: ${a.publication_date}`);
 
+                const iaParts: string[] = [];
+                if ((a as any).impact_level) iaParts.push(`Impacto: ${(a as any).impact_level}`);
+                if ((a as any).urgency_level) iaParts.push(`Urgencia: ${(a as any).urgency_level}`);
+                if (a.current_stage) iaParts.push(`Etapa: ${a.current_stage}`);
+                const iaLine = iaParts.join("   ·   ");
+
+                const commentary = a.expert_commentary?.replace(/<[^>]+>/g, "").trim();
+
                 return (
                   <View key={a.id} style={styles.card} wrap={false}>
+                    <Text style={styles.cardKicker}>{kicker}</Text>
                     <Text style={styles.cardTitle}>{a.legislation_title}</Text>
-                    {meta.length > 0 && <Text style={styles.cardMeta}>{meta.join(" · ")}</Text>}
-                    {a.legislation_summary && (
-                      <Text style={styles.cardBody}>{a.legislation_summary.slice(0, 320)}</Text>
+
+                    {meta.length > 0 && (
+                      <View style={styles.metaRow}>
+                        {meta.map((m, i) => (
+                          <Text key={i} style={styles.metaChip}>{m}</Text>
+                        ))}
+                      </View>
                     )}
+
+                    {a.legislation_summary && (
+                      <>
+                        <View style={styles.cardDivider} />
+                        <Text style={styles.bodyLabel}>RESUMEN</Text>
+                        <Text style={styles.cardBody}>{a.legislation_summary.slice(0, 360)}</Text>
+                      </>
+                    )}
+
                     {iaLine && (
                       <View style={styles.ia}>
                         <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
-                        <Text>{iaLine}</Text>
+                        <Text style={styles.iaText}>{iaLine}</Text>
                       </View>
                     )}
+
                     {commentary && (
                       <View style={styles.commentary}>
                         <Text style={styles.commentaryLabel}>COMENTARIO EXPERTO</Text>
-                        <Text>{commentary}</Text>
+                        <Text style={styles.commentaryText}>{commentary}</Text>
                       </View>
                     )}
-                    {a.source_url && <Link src={a.source_url} style={styles.link}>Fuente oficial</Link>}
+
+                    {a.source_url && (
+                      <Link src={a.source_url} style={styles.link}>
+                        FUENTE OFICIAL →
+                      </Link>
+                    )}
                   </View>
                 );
               })
@@ -707,10 +396,15 @@ const ReportPDF = ({
           </View>
         )}
 
-        {/* SECCIÓN: Sesiones */}
+        {/* ── Sesiones */}
         {showSessions && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>SESIONES DEL CONGRESO</Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionTitle}>SESIONES DEL CONGRESO</Text>
+              <Text style={styles.sectionCount}>{sessions.length} ÍTEM{sessions.length === 1 ? "" : "S"}</Text>
+            </View>
+
             {sessions.length === 0 ? (
               <Text style={styles.empty}>Sin sesiones en el período seleccionado.</Text>
             ) : (
@@ -719,31 +413,48 @@ const ReportPDF = ({
                 const title = item ? `Ítem ${item.item_number} · ${item.title}` : (s.session_title ?? s.commission_name);
                 const when = s.scheduled_date_text ?? (s.scheduled_at ? format(parseISO(s.scheduled_at), "dd/MM/yyyy HH:mm") : "");
 
+                const meta: string[] = [];
+                meta.push(`Comisión: ${s.commission_name}`);
+                if (when) meta.push(when);
+
                 const iaParts: string[] = [];
                 if (s.impact_level) iaParts.push(`Impacto: ${s.impact_level}`);
                 if (s.urgency_level) iaParts.push(`Urgencia: ${s.urgency_level}`);
                 if (s.etiqueta_ia) iaParts.push(`Etiqueta: ${s.etiqueta_ia}`);
-                const iaLine = iaParts.join(" · ");
+                const iaLine = iaParts.join("   ·   ");
 
                 const summary = (s.executive_summary || s.chatbot_summary || "").trim();
 
                 return (
                   <View key={s.id} style={styles.card} wrap={false}>
+                    <Text style={styles.cardKicker}>SESIÓN</Text>
                     <Text style={styles.cardTitle}>{title}</Text>
-                    <Text style={styles.cardMeta}>
-                      Comisión: {s.commission_name}{when ? ` · ${when}` : ""}
-                    </Text>
+
+                    <View style={styles.metaRow}>
+                      {meta.map((m, i) => (
+                        <Text key={i} style={styles.metaChip}>{m}</Text>
+                      ))}
+                    </View>
+
                     {summary && (
-                      <Text style={styles.cardBody}>{summary.slice(0, 400)}</Text>
+                      <>
+                        <View style={styles.cardDivider} />
+                        <Text style={styles.bodyLabel}>RESUMEN DE LA SESIÓN</Text>
+                        <Text style={styles.cardBody}>{summary.slice(0, 460)}</Text>
+                      </>
                     )}
+
                     {iaLine && (
                       <View style={styles.ia}>
                         <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
-                        <Text>{iaLine}</Text>
+                        <Text style={styles.iaText}>{iaLine}</Text>
                       </View>
                     )}
+
                     {s.recording?.video_url && (
-                      <Link src={s.recording.video_url} style={styles.link}>Grabación oficial</Link>
+                      <Link src={s.recording.video_url} style={styles.link}>
+                        GRABACIÓN OFICIAL →
+                      </Link>
                     )}
                   </View>
                 );
@@ -757,43 +468,31 @@ const ReportPDF = ({
         </Text>
       </Page>
 
-      {/* SECCIÓN: Analíticas (página separada, refleja bloques visibles en Analíticas) */}
-      {includeAnalytics && analyticsBlocks.length > 0 && (
-        <Page size="A4" style={styles.page}>
-          <View style={styles.header}>
-            <Text style={styles.brand}>LAWMETER</Text>
-            <Text style={styles.title}>Analíticas</Text>
-            <Text style={styles.subtitle}>{periodLabel}</Text>
-            <Text style={styles.subtitle}>
-              Refleja los bloques visibles en la sección Analíticas al momento de la generación.
+      {/* ── ANEXO: Analíticas — cover + HD snapshots of the live dashboard */}
+      {hasAnalyticsAppendix && (
+        <>
+          <Page size="A4" style={styles.page}>
+            <View style={styles.analyticsCover}>
+              <Text style={styles.analyticsKicker}>LAWMETER · ANEXO</Text>
+              <Text style={styles.analyticsTitle}>Analíticas</Text>
+              <View style={[styles.headerDivider, { marginBottom: 18 }]} />
+              <Text style={styles.analyticsLead}>
+                Vista exacta de tu sección de Analíticas al momento de generar el reporte.
+                Se incluye como apéndice visual de alta resolución, sin reinterpretar el contenido.
+              </Text>
+              <Text style={[styles.analyticsLead, { marginTop: 12 }]}>{periodLabel}</Text>
+            </View>
+            <Text style={styles.footer}>
+              Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
             </Text>
-          </View>
+          </Page>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>BLOQUES VISUALIZADOS</Text>
-            {analyticsBlocks.map((b) => {
-              const def = ANALYTICS_BLOCK_REGISTRY.find((r) => r.key === b.key);
-              const chartType = def?.chartType ?? "bar";
-              const series = computeBlockSeries(b, alerts, sessions);
-              return (
-                <View key={b.key} style={styles.analyticsBlock} wrap={false}>
-                  <Text style={styles.analyticsBlockTitle}>{b.title}</Text>
-                  <Text style={styles.analyticsBlockMeta}>
-                    {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"} · {periodLabel}
-                  </Text>
-                  <View style={{ marginVertical: 6 }}>
-                    <MiniChart type={chartType} data={series} blockKey={b.key} />
-                  </View>
-                  <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
-                </View>
-              );
-            })}
-          </View>
-
-          <Text style={styles.footer}>
-            Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
-          </Text>
-        </Page>
+          {analyticsImages.map((src, i) => (
+            <Page key={i} size="A4" style={styles.analyticsImagePage}>
+              <PDFImage src={src} style={styles.analyticsImage} />
+            </Page>
+          ))}
+        </>
       )}
     </Document>
   );
