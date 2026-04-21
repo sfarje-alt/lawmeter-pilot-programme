@@ -1,82 +1,205 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import {
-  ALL_MOCK_ALERTS,
   PeruAlert,
   AttachedFileMetaRef,
+  ImpactLevel,
+  STAGE_TO_KANBAN,
   purgeOldArchivedAlerts,
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
-import { isEmptyDataOrg, setCurrentOrgEmptyFlag } from "@/lib/orgDataIsolation";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AlertsContextType {
   alerts: PeruAlert[];
-  // Pinning (pin to top of list)
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
   togglePinAlert: (alertId: string) => void;
-  // Archiving
   archiveAlert: (alertId: string) => void;
   unarchiveAlert: (alertId: string) => void;
-  // Commentary (single shared expert commentary per alert)
   updateSharedCommentary: (alertId: string, commentary: string) => void;
-  // Attachments (persisted on the alert across drawer sessions)
   updateAttachments: (alertId: string, attachments: AttachedFileMetaRef[]) => void;
-  // Pinned helper
   getPinnedAlerts: () => PeruAlert[];
 }
 
 const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
-// Single-profile model: alerts are not pre-published to any client.
-// All alerts belong to the organization's single profile.
 const PINNED_STORAGE_KEY = "lawmeter:pinned-alerts";
+const ARCHIVED_STORAGE_KEY = "lawmeter:archived-alerts"; // alertId -> ISO archived_at
+const COMMENTARY_STORAGE_KEY = "lawmeter:expert-commentary"; // alertId -> string
+const ATTACHMENTS_STORAGE_KEY = "lawmeter:alert-attachments"; // alertId -> AttachedFileMetaRef[]
+
+function loadJSON<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+function saveJSON(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+}
 
 function loadPinnedIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw);
-    return new Set(Array.isArray(arr) ? arr : []);
-  } catch {
-    return new Set();
-  }
+  const arr = loadJSON<string[]>(PINNED_STORAGE_KEY, []);
+  return new Set(Array.isArray(arr) ? arr : []);
 }
-
 function savePinnedIds(ids: Set<string>) {
-  try {
-    localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(Array.from(ids)));
-  } catch {
-    // ignore quota / private mode
-  }
+  saveJSON(PINNED_STORAGE_KEY, Array.from(ids));
 }
 
-function initializeAlerts(): PeruAlert[] {
-  const pinned = loadPinnedIds();
-  return ALL_MOCK_ALERTS.map((alert) => ({
-    ...alert,
-    is_pinned_for_publication: pinned.has(alert.id) ? true : !!alert.is_pinned_for_publication,
-  }));
+/** Normalize DB legislation_type to UI value. */
+function normalizeType(t: string | null): "proyecto_de_ley" | "norma" | null {
+  if (!t) return null;
+  if (t === "pl" || t === "proyecto_de_ley") return "proyecto_de_ley";
+  if (t === "norma") return "norma";
+  return null;
+}
+
+/** Map DB row to PeruAlert shape used across the UI. */
+function mapDbRowToAlert(
+  row: any,
+  pinned: Set<string>,
+  archivedMap: Record<string, string>,
+  commentaryMap: Record<string, string>,
+  attachmentsMap: Record<string, AttachedFileMetaRef[]>,
+): PeruAlert | null {
+  const type = normalizeType(row.legislation_type);
+  if (!type) return null;
+
+  const ui = (row.ai_analysis?.ui_extras ?? {}) as Record<string, any>;
+  const sourceRef = (ui.source_ref ?? {}) as Record<string, any>;
+
+  // Resolve kanban_stage
+  let kanban = ui.kanban_stage as PeruAlert["kanban_stage"] | undefined;
+  if (!kanban || !["comision", "pleno", "tramite_final", "publicado", "archivado"].includes(kanban)) {
+    if (type === "norma") {
+      kanban = "publicado";
+    } else {
+      const stageKey = String(row.estado_actual ?? "").toUpperCase();
+      kanban = STAGE_TO_KANBAN[stageKey] ?? "comision";
+    }
+  }
+
+  const impact = (ui.impact_level as ImpactLevel | undefined) ?? "medio";
+
+  // Title fallback for safety
+  const title =
+    row.legislation_title ||
+    row.sumilla ||
+    row.codigo ||
+    "Sin título";
+
+  return {
+    id: row.id,
+    legislation_type: type,
+    legislation_title: title,
+    affected_areas: Array.isArray(row.affected_areas) ? row.affected_areas : [],
+    source_url: row.url ?? row.source_url ?? null,
+    status: (row.status as PeruAlert["status"]) ?? "inbox",
+    kanban_stage: kanban,
+    client_id: row.client_id ?? null,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+
+    // Bill-specific
+    legislation_id: row.codigo ?? sourceRef.codigo ?? row.legislation_id ?? undefined,
+    expert_commentary: commentaryMap[row.id] ?? row.expert_commentary ?? null,
+    parliamentary_group: ui.parliamentary_group ?? sourceRef.grupo_parlamentario ?? undefined,
+    author: ui.author ?? sourceRef.autor ?? undefined,
+    current_stage: row.estado_actual ?? sourceRef.estado_actual ?? undefined,
+    stage_date: sourceRef.fecha_estado ?? undefined,
+    project_date: sourceRef.fecha_proyecto ?? undefined,
+    sector: ui.sector ?? undefined,
+    impact_level: impact,
+
+    // Regulation-specific
+    entity: row.entity ?? ui.entity ?? undefined,
+    publication_date: row.fecha_publicacion ?? ui.publication_date ?? undefined,
+    legislation_summary: row.legislation_summary ?? row.sumilla ?? null,
+
+    // Workflow
+    is_pinned_for_publication: pinned.has(row.id) || !!ui.is_pinned_for_publication,
+    client_commentaries: Array.isArray(ui.client_commentaries) ? ui.client_commentaries : [],
+    primary_client_id: ui.primary_client_id ?? undefined,
+    archived_at: archivedMap[row.id] ?? null,
+    approval_probability: ui.approval_probability ?? undefined,
+    attachments: attachmentsMap[row.id] ?? [],
+  };
 }
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
-  const isEmpty = isEmptyDataOrg(profile?.organization_id);
+  const orgId = profile?.organization_id ?? null;
 
-  const [alerts, setAlerts] = useState<PeruAlert[]>(() =>
-    isEmpty ? [] : purgeOldArchivedAlerts(initializeAlerts())
-  );
+  const [alerts, setAlerts] = useState<PeruAlert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mantener flag global sincronizado para módulos sin acceso a React (analyticsRepository, etc.)
+  const fetchAlerts = useCallback(async () => {
+    if (!orgId) {
+      setAlerts([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    const { data, error: dbError } = await supabase
+      .from("alerts")
+      .select("*")
+      .eq("organization_id", orgId)
+      .order("created_at", { ascending: false });
+
+    if (dbError) {
+      console.error("[AlertsContext] error loading alerts:", dbError);
+      setError(dbError.message);
+      setAlerts([]);
+      setLoading(false);
+      return;
+    }
+
+    const pinned = loadPinnedIds();
+    const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+    const commentaryMap = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
+    const attachmentsMap = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
+
+    const mapped = (data ?? [])
+      .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap))
+      .filter((a): a is PeruAlert => a !== null);
+
+    setAlerts(purgeOldArchivedAlerts(mapped));
+    setLoading(false);
+  }, [orgId]);
+
+  // Initial load + reload when org changes
   useEffect(() => {
-    setCurrentOrgEmptyFlag(isEmpty);
-  }, [isEmpty]);
+    fetchAlerts();
+  }, [fetchAlerts]);
 
-  // Si la organización cambia entre vacía / con datos, resetear el estado.
+  // Realtime subscription so newly ingested alerts appear without refresh
   useEffect(() => {
-    setAlerts(isEmpty ? [] : purgeOldArchivedAlerts(initializeAlerts()));
-  }, [isEmpty]);
+    if (!orgId) return;
+    const channel = supabase
+      .channel(`alerts-${orgId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "alerts", filter: `organization_id=eq.${orgId}` },
+        () => fetchAlerts(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orgId, fetchAlerts]);
 
-  // Auto-purge: re-evaluate every hour while the app is open
+  // Auto-purge archived periodically
   useEffect(() => {
-    if (isEmpty) return;
     const interval = setInterval(() => {
       setAlerts((prev) => {
         const next = purgeOldArchivedAlerts(prev);
@@ -84,15 +207,14 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       });
     }, 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [isEmpty]);
+  }, []);
 
-  // Toggle pin for publication (persisted to localStorage)
   const togglePinAlert = useCallback((alertId: string) => {
     setAlerts((prev) => {
       const next = prev.map((a) =>
         a.id === alertId
           ? { ...a, is_pinned_for_publication: !a.is_pinned_for_publication }
-          : a
+          : a,
       );
       const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
       savePinnedIds(pinnedIds);
@@ -100,48 +222,62 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Archive an alert
   const archiveAlert = useCallback((alertId: string) => {
+    const nowIso = new Date().toISOString();
     setAlerts((prev) => {
       const next = prev.map((a) =>
         a.id === alertId
-          ? { ...a, archived_at: new Date().toISOString(), is_pinned_for_publication: false, updated_at: new Date().toISOString() }
-          : a
+          ? { ...a, archived_at: nowIso, is_pinned_for_publication: false, updated_at: nowIso }
+          : a,
       );
+      const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+      archivedMap[alertId] = nowIso;
+      saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
       const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
       savePinnedIds(pinnedIds);
       return next;
     });
   }, []);
 
-  // Restore an archived alert
   const unarchiveAlert = useCallback((alertId: string) => {
     setAlerts((prev) =>
       prev.map((a) =>
         a.id === alertId
           ? { ...a, archived_at: null, updated_at: new Date().toISOString() }
-          : a
-      )
+          : a,
+      ),
     );
+    const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+    delete archivedMap[alertId];
+    saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
   }, []);
 
-  // Update shared expert commentary
   const updateSharedCommentary = useCallback((alertId: string, commentary: string) => {
     setAlerts((prev) =>
-      prev.map((a) =>
-        a.id === alertId ? { ...a, expert_commentary: commentary } : a
-      )
+      prev.map((a) => (a.id === alertId ? { ...a, expert_commentary: commentary } : a)),
     );
+    const map = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
+    map[alertId] = commentary;
+    saveJSON(COMMENTARY_STORAGE_KEY, map);
+    // Persist to DB best-effort (RLS will allow org members)
+    supabase
+      .from("alerts")
+      .update({ expert_commentary: commentary })
+      .eq("id", alertId)
+      .then(({ error: e }) => {
+        if (e) console.warn("[AlertsContext] could not persist commentary:", e.message);
+      });
   }, []);
 
-  // Update attachments for an alert (persisted across drawer open/close)
   const updateAttachments = useCallback((alertId: string, attachments: AttachedFileMetaRef[]) => {
     setAlerts((prev) =>
-      prev.map((a) => (a.id === alertId ? { ...a, attachments } : a))
+      prev.map((a) => (a.id === alertId ? { ...a, attachments } : a)),
     );
+    const map = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
+    map[alertId] = attachments;
+    saveJSON(ATTACHMENTS_STORAGE_KEY, map);
   }, []);
 
-  // Get all pinned alerts
   const getPinnedAlerts = useCallback((): PeruAlert[] => {
     return alerts.filter((a) => a.is_pinned_for_publication);
   }, [alerts]);
@@ -150,6 +286,9 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     <AlertsContext.Provider
       value={{
         alerts,
+        loading,
+        error,
+        refresh: fetchAlerts,
         togglePinAlert,
         archiveAlert,
         unarchiveAlert,
