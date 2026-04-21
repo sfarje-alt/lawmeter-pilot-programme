@@ -2,6 +2,13 @@
 // Centralizes all analytics calculations combining public data, temporal evolution, and editorial layer
 
 import { ALL_MOCK_ALERTS, type PeruAlert } from '@/data/peruAlertsMockData';
+import { isCurrentOrgEmpty } from '@/lib/orgDataIsolation';
+
+// Devuelve dataset vacío para organizaciones piloto (Betsson, etc.) que aún
+// no tienen data sincronizada — caso contrario devuelve los mocks.
+function getMockAlerts(): PeruAlert[] {
+  return isCurrentOrgEmpty() ? [] : ALL_MOCK_ALERTS;
+}
 import type {
   AnalyticsFilters,
   AggregatedMetrics,
