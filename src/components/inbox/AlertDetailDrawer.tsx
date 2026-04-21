@@ -19,6 +19,10 @@ import {
   AlertTriangle,
   Archive,
   ArchiveRestore,
+  TrendingUp,
+  History,
+  CalendarClock,
+  Link2,
 } from "lucide-react";
 import {
   PeruAlert,
@@ -27,6 +31,7 @@ import {
   IMPACT_LEVELS,
   ImpactLevel,
   getArchiveDaysRemaining,
+  getStateFamilyStyle,
 } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
