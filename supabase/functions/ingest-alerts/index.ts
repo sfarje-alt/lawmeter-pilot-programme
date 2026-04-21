@@ -359,6 +359,18 @@ Deno.serve(async (req) => {
         // Common
         url: src.url,
         fuente: src.fuente_label,
+        comentario: item.comentario ?? null,
+
+        // Scores y categorías (tal cual del payload)
+        impacto: typeof item.impacto === "number" ? item.impacto : null,
+        urgencia: typeof item.urgencia === "number" ? item.urgencia : null,
+        impacto_categoria: item.impacto_categoria ?? null,
+        urgencia_categoria: item.urgencia_categoria ?? null,
+
+        // Listas / JSON
+        area_de_interes: Array.isArray(item.area_de_interes) ? item.area_de_interes : [],
+        racional: Array.isArray(item.racional) ? item.racional : [],
+        fechas_identificadas: Array.isArray(item.fechas_identificadas) ? item.fechas_identificadas : [],
 
         // PL-specific
         codigo: item.codigo ?? null,
@@ -366,6 +378,9 @@ Deno.serve(async (req) => {
         estado_anterior: item.estado_anterior ?? null,
         es_cambio_estado: item.es_cambio_estado ?? null,
         seguimiento_hash: item.seguimiento_hash ?? null,
+        autores: Array.isArray(item.autores) ? item.autores : [],
+        proponente: item.proponente ?? null,
+        fecha_presentacion: normalizeDate(item.fecha_presentacion ?? null),
 
         // Sesion-specific
         comision: item.comision ?? null,
