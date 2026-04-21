@@ -77,10 +77,19 @@ export type Database = {
           ai_analysis: Json | null
           ai_summary: string | null
           client_id: string | null
+          codigo: string | null
+          comision: string | null
           created_at: string
           deadline: string | null
+          entity: string | null
+          es_cambio_estado: boolean | null
+          estado_actual: string | null
+          estado_anterior: string | null
           expert_commentary: string | null
           external_id: string | null
+          fecha_publicacion: string | null
+          fecha_sesion: string | null
+          fuente: string | null
           id: string
           ingested_at: string | null
           legislation_id: string | null
@@ -89,14 +98,18 @@ export type Database = {
           legislation_type: string | null
           organization_id: string | null
           published_at: string | null
+          reference_number: string | null
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           risk_level: string | null
+          seguimiento_hash: string | null
           source_url: string | null
           status: string
+          sumilla: string | null
           updated_at: string
           urgency_level: string | null
+          url: string | null
           version: number | null
         }
         Insert: {
@@ -104,10 +117,19 @@ export type Database = {
           ai_analysis?: Json | null
           ai_summary?: string | null
           client_id?: string | null
+          codigo?: string | null
+          comision?: string | null
           created_at?: string
           deadline?: string | null
+          entity?: string | null
+          es_cambio_estado?: boolean | null
+          estado_actual?: string | null
+          estado_anterior?: string | null
           expert_commentary?: string | null
           external_id?: string | null
+          fecha_publicacion?: string | null
+          fecha_sesion?: string | null
+          fuente?: string | null
           id?: string
           ingested_at?: string | null
           legislation_id?: string | null
@@ -116,14 +138,18 @@ export type Database = {
           legislation_type?: string | null
           organization_id?: string | null
           published_at?: string | null
+          reference_number?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           risk_level?: string | null
+          seguimiento_hash?: string | null
           source_url?: string | null
           status?: string
+          sumilla?: string | null
           updated_at?: string
           urgency_level?: string | null
+          url?: string | null
           version?: number | null
         }
         Update: {
@@ -131,10 +157,19 @@ export type Database = {
           ai_analysis?: Json | null
           ai_summary?: string | null
           client_id?: string | null
+          codigo?: string | null
+          comision?: string | null
           created_at?: string
           deadline?: string | null
+          entity?: string | null
+          es_cambio_estado?: boolean | null
+          estado_actual?: string | null
+          estado_anterior?: string | null
           expert_commentary?: string | null
           external_id?: string | null
+          fecha_publicacion?: string | null
+          fecha_sesion?: string | null
+          fuente?: string | null
           id?: string
           ingested_at?: string | null
           legislation_id?: string | null
@@ -143,14 +178,18 @@ export type Database = {
           legislation_type?: string | null
           organization_id?: string | null
           published_at?: string | null
+          reference_number?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           risk_level?: string | null
+          seguimiento_hash?: string | null
           source_url?: string | null
           status?: string
+          sumilla?: string | null
           updated_at?: string
           urgency_level?: string | null
+          url?: string | null
           version?: number | null
         }
         Relationships: [
