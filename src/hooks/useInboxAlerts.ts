@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { ALL_MOCK_ALERTS, PeruAlert, KANBAN_COLUMNS, ClientCommentary } from "@/data/peruAlertsMockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { isEmptyDataOrg } from "@/lib/orgDataIsolation";
 
 export interface InboxFilters {
   search: string;
@@ -9,7 +11,9 @@ export interface InboxFilters {
 }
 
 export function useInboxAlerts() {
-  const [alerts, setAlerts] = useState<PeruAlert[]>(ALL_MOCK_ALERTS);
+  const { profile } = useAuth();
+  const isEmpty = isEmptyDataOrg(profile?.organization_id);
+  const [alerts, setAlerts] = useState<PeruAlert[]>(isEmpty ? [] : ALL_MOCK_ALERTS);
   const [filters, setFilters] = useState<InboxFilters>({
     search: "",
     type: "all",
