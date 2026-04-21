@@ -168,7 +168,351 @@ const styles = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 // MiniChart — vector-sharp SVG primitives reused by analytics blocks
 // ─────────────────────────────────────────────────────────────────────────────
+const CHART_WIDTH = 460;
+const CHART_HEIGHT = 130;
+const CHART_PADDING = { top: 10, right: 110, bottom: 26, left: 32 };
+const AXIS_COLOR = "#cbd5e0";
+const GRID_COLOR = "#edf2f7";
+const LABEL_COLOR = "#718096";
 
+const BLOCK_PALETTES: Record<string, string[]> = {
+  editorial_response_time: ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed"],
+  pin_archive:             ["#0f766e", "#14b8a6", "#5eead4", "#99f6e4"],
+  reviewed_alerts:         ["#7c2d12", "#ea580c", "#fb923c", "#fdba74"],
+  detection_to_action_time:["#365314", "#65a30d", "#a3e635", "#d9f99d"],
+  ai_usage:                ["#581c87", "#9333ea", "#c084fc", "#e9d5ff"],
+  reports_generated:       ["#1e3a8a", "#3b82f6", "#93c5fd", "#dbeafe"],
+  impact_matrix:           ["#7f1d1d", "#dc2626", "#f97316", "#facc15", "#22c55e", "#16a34a"],
+  regulatory_pulse:        ["#155e75", "#0891b2", "#22d3ee", "#a5f3fc"],
+  alert_priority:          ["#991b1b", "#dc2626", "#f59e0b", "#10b981"],
+  alert_distribution:      ["#1d4ed8", "#0d9488", "#f59e0b", "#db2777", "#7c3aed", "#0ea5e9"],
+  top_entities:            ["#1e40af", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"],
+  legislative_funnel:      ["#1e3a8a", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd"],
+  key_movements:           ["#831843", "#be185d", "#ec4899", "#f9a8d4", "#fbcfe8"],
+  popular_topics:          ["#134e4a", "#0f766e", "#14b8a6", "#5eead4", "#99f6e4", "#ccfbf1"],
+  emerging_topics:         ["#713f12", "#a16207", "#eab308", "#fde047", "#fef08a"],
+  exposure:                ["#312e81", "#4f46e5", "#818cf8", "#a5b4fc", "#c7d2fe"],
+  service_kpis:            ["#0c4a6e", "#0369a1", "#0ea5e9", "#7dd3fc"],
+};
+const DEFAULT_PALETTE = ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed", "#90cdf4", "#bee3f8"];
+
+function getPalette(blockKey?: string): string[] {
+  return (blockKey && BLOCK_PALETTES[blockKey]) || DEFAULT_PALETTE;
+}
+
+interface SeriesPoint { label: string; value: number; }
+
+function computeYTicks(maxValue: number, desired = 4): number[] {
+  if (maxValue <= 0) return [0, 1];
+  const rawStep = maxValue / desired;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const norm = rawStep / mag;
+  const niceNorm = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+  const step = niceNorm * mag;
+  const niceMax = Math.ceil(maxValue / step) * step;
+  const ticks: number[] = [];
+  for (let v = 0; v <= niceMax + 1e-9; v += step) ticks.push(Math.round(v * 100) / 100);
+  return ticks;
+}
+
+const fmtNum = (n: number) => (Number.isInteger(n) ? n.toString() : n.toFixed(1));
+
+function computeBlockSeries(
+  block: AnalyticsBlockConfigExtended,
+  alerts: PeruAlert[],
+  sessions: PeruSession[],
+): SeriesPoint[] {
+  const fallback: SeriesPoint[] = [
+    { label: "S1", value: 4 },
+    { label: "S2", value: 6 },
+    { label: "S3", value: 5 },
+    { label: "S4", value: 8 },
+    { label: "S5", value: 7 },
+    { label: "S6", value: 9 },
+  ];
+
+  const countBy = <T,>(items: T[], pick: (i: T) => string | undefined | null) => {
+    const map = new Map<string, number>();
+    for (const it of items) {
+      const k = (pick(it) || "—").toString().trim();
+      if (!k) continue;
+      map.set(k, (map.get(k) ?? 0) + 1);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([label, value]) => ({ label, value }));
+  };
+
+  switch (block.key) {
+    case "impact_matrix":
+    case "alert_priority": {
+      const data = countBy(alerts, (a: any) => a.impact_level);
+      return data.length ? data.slice(0, 4) : [
+        { label: "Grave", value: 3 }, { label: "Medio", value: 6 },
+        { label: "Leve", value: 9 }, { label: "Positivo", value: 4 },
+      ];
+    }
+    case "alert_distribution": {
+      const data = countBy(alerts, (a) => a.legislation_type === "norma" ? "Normas" : "Proyectos");
+      return data.length ? data : [{ label: "Proyectos", value: 7 }, { label: "Normas", value: 5 }];
+    }
+    case "top_entities":
+    case "popular_topics":
+    case "exposure": {
+      const data = countBy(alerts, (a: any) => a.entity || a.author || (a.affected_areas?.[0]));
+      const maxItems = (block as any).maxItems ?? 6;
+      return (data.length ? data : fallback).slice(0, maxItems);
+    }
+    case "legislative_funnel": {
+      const data = countBy(alerts, (a) => a.current_stage);
+      return data.length ? data.slice(0, 5) : [
+        { label: "Comisión", value: 12 }, { label: "Pleno", value: 7 },
+        { label: "Trámite", value: 4 }, { label: "Promulgado", value: 2 },
+      ];
+    }
+    case "regulatory_pulse":
+    case "reviewed_alerts":
+    case "editorial_response_time":
+    case "reports_generated": {
+      const buckets = new Map<string, number>();
+      const items: { date: string }[] = [
+        ...alerts.map((a) => ({ date: a.updated_at })),
+        ...sessions.map((s) => ({ date: s.scheduled_at ?? s.created_at ?? new Date().toISOString() })),
+      ];
+      for (const it of items) {
+        try {
+          const d = parseISO(it.date);
+          const k = format(d, "dd MMM", { locale: es });
+          buckets.set(k, (buckets.get(k) ?? 0) + 1);
+        } catch { /* skip */ }
+      }
+      const arr = Array.from(buckets.entries())
+        .map(([label, value]) => ({ label, value }))
+        .slice(-8);
+      return arr.length ? arr : fallback;
+    }
+    case "key_movements":
+    case "emerging_topics": {
+      const data = countBy(alerts, (a: any) => a.affected_areas?.[0] || a.law_branch);
+      return data.length ? data.slice(0, 5) : fallback.slice(0, 5);
+    }
+    case "service_kpis":
+    case "pin_archive":
+    case "ai_usage":
+    case "detection_to_action_time": {
+      const pinned = alerts.filter((a: any) => a.is_pinned_for_publication).length;
+      const archived = alerts.filter((a: any) => a.archived_at).length;
+      const total = Math.max(alerts.length, 1);
+      return [
+        { label: "Pinneadas", value: pinned },
+        { label: "Archivadas", value: archived },
+        { label: "Activas", value: total - pinned - archived },
+      ];
+    }
+    default:
+      return fallback;
+  }
+}
+
+interface MiniChartProps {
+  type: AnalyticsBlockDefinition["chartType"];
+  data: SeriesPoint[];
+  blockKey?: string;
+}
+
+const MiniChart = ({ type, data, blockKey }: MiniChartProps) => {
+  const palette = getPalette(blockKey);
+  const W = CHART_WIDTH;
+  const H = CHART_HEIGHT;
+  const needsLegend = type === "pie" || type === "bar" || type === "stacked_bar" || type === "funnel" || type === "matrix" || type === "cards" || type === "kpi";
+  const padding = needsLegend ? CHART_PADDING : { ...CHART_PADDING, right: 14 };
+  const { top, right, bottom, left } = padding;
+  const innerW = W - left - right;
+  const innerH = H - top - bottom;
+  const max = Math.max(1, ...data.map((d) => d.value));
+  const ticks = computeYTicks(max, 4);
+  const yMax = ticks[ticks.length - 1] || max;
+  const valToY = (v: number) => top + innerH - (v / yMax) * innerH;
+
+  const yAxis = (
+    <G>
+      {ticks.map((t, i) => (
+        <G key={i}>
+          <SvgLine
+            x1={left}
+            y1={valToY(t)}
+            x2={left + innerW}
+            y2={valToY(t)}
+            stroke={t === 0 ? AXIS_COLOR : GRID_COLOR}
+            strokeWidth={0.5}
+          />
+          <Text x={left - 4} y={valToY(t) + 2} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "right" }}>
+            {fmtNum(t)}
+          </Text>
+        </G>
+      ))}
+      <SvgLine x1={left} y1={top} x2={left} y2={top + innerH} stroke={AXIS_COLOR} strokeWidth={0.5} />
+    </G>
+  );
+
+  const legend = (slice: SeriesPoint[]) => (
+    <G>
+      {slice.map((d, i) => (
+        <G key={`lg-${i}`}>
+          <Rect x={W - right + 6} y={top + 2 + i * 11} width={6} height={6} fill={palette[i % palette.length]} />
+          <Text x={W - right + 16} y={top + 8 + i * 11} style={{ fontSize: 6.5, color: "#2d3748" }}>
+            {d.label.length > 16 ? d.label.slice(0, 16) + "…" : d.label}: {fmtNum(d.value)}
+          </Text>
+        </G>
+      ))}
+    </G>
+  );
+
+  if (type === "line" || type === "timeline") {
+    const stepX = data.length > 1 ? innerW / (data.length - 1) : innerW;
+    const points = data.map((d, i) => `${left + i * stepX},${valToY(d.value)}`).join(" ");
+    return (
+      <Svg width={W} height={H}>
+        {yAxis}
+        <Polyline points={points} fill="none" stroke={palette[1] ?? palette[0]} strokeWidth={1.5} />
+        {data.map((d, i) => (
+          <G key={i}>
+            <Circle cx={left + i * stepX} cy={valToY(d.value)} r={2} fill={palette[0]} />
+            <Text x={left + i * stepX} y={H - 6} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
+              {d.label}
+            </Text>
+          </G>
+        ))}
+      </Svg>
+    );
+  }
+
+  if (type === "pie") {
+    const total = data.reduce((s, d) => s + d.value, 0) || 1;
+    const cx = left + innerW / 2;
+    const cy = top + innerH / 2;
+    const r = Math.min(innerH, innerW) / 2 - 4;
+    let startAngle = -Math.PI / 2;
+    const arcs = data.map((d, i) => {
+      const angle = (d.value / total) * Math.PI * 2;
+      const endAngle = startAngle + angle;
+      const x1 = cx + r * Math.cos(startAngle);
+      const y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+      const large = angle > Math.PI ? 1 : 0;
+      const path = `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${large} 1 ${x2},${y2} Z`;
+      const node = <Path key={i} d={path} fill={palette[i % palette.length]} />;
+      startAngle = endAngle;
+      return node;
+    });
+    return (
+      <Svg width={W} height={H}>
+        {arcs}
+        {legend(data)}
+      </Svg>
+    );
+  }
+
+  if (type === "funnel") {
+    const rowH = innerH / Math.max(data.length, 1);
+    return (
+      <Svg width={W} height={H}>
+        {data.map((d, i) => {
+          const w = (d.value / yMax) * innerW;
+          const x = left + (innerW - w) / 2;
+          const y = top + i * rowH + 2;
+          return (
+            <G key={i}>
+              <Rect x={x} y={y} width={w} height={rowH - 4} fill={palette[i % palette.length]} />
+              <Text x={left + innerW / 2} y={y + rowH / 2 + 2} style={{ fontSize: 6.5, color: "#ffffff", textAlign: "center" }}>
+                {d.label} · {d.value}
+              </Text>
+            </G>
+          );
+        })}
+        {legend(data)}
+      </Svg>
+    );
+  }
+
+  if (type === "matrix") {
+    const cols = Math.max(1, Math.ceil(data.length / 2));
+    const rows = data.length > cols ? 2 : 1;
+    const cellW = innerW / cols;
+    const cellH = innerH / rows;
+    return (
+      <Svg width={W} height={H}>
+        {data.map((d, i) => {
+          const r = Math.floor(i / cols);
+          const c = i % cols;
+          const intensity = d.value / yMax;
+          const fill = palette[Math.min(palette.length - 1, Math.floor(intensity * (palette.length - 1)))];
+          return (
+            <G key={i}>
+              <Rect x={left + c * cellW + 1} y={top + r * cellH + 1} width={cellW - 2} height={cellH - 2} fill={fill} />
+              <Text x={left + c * cellW + cellW / 2} y={top + r * cellH + cellH / 2 + 2} style={{ fontSize: 7, color: "#ffffff", textAlign: "center" }}>
+                {d.label}: {d.value}
+              </Text>
+            </G>
+          );
+        })}
+        {legend(data)}
+      </Svg>
+    );
+  }
+
+  if (type === "kpi" || type === "cards") {
+    const visible = data.slice(0, 4);
+    const cols = Math.max(visible.length, 1);
+    const tileW = innerW / cols;
+    return (
+      <Svg width={W} height={H}>
+        {visible.map((d, i) => {
+          const fill = palette[i % palette.length];
+          return (
+            <G key={i}>
+              <Rect x={left + i * tileW + 4} y={top + 4} width={tileW - 8} height={innerH - 8} fill={fill} />
+              <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2} style={{ fontSize: 16, color: "#ffffff", textAlign: "center" }}>
+                {fmtNum(d.value)}
+              </Text>
+              <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2 + 14} style={{ fontSize: 7, color: "#ffffff", textAlign: "center" }}>
+                {d.label}
+              </Text>
+            </G>
+          );
+        })}
+        {legend(visible)}
+      </Svg>
+    );
+  }
+
+  // default: vertical bars (bar / stacked_bar) — multicolor + Y axis + legend
+  const barW = innerW / Math.max(data.length, 1);
+  return (
+    <Svg width={W} height={H}>
+      {yAxis}
+      {data.map((d, i) => {
+        const h = (d.value / yMax) * innerH;
+        const x = left + i * barW + barW * 0.18;
+        const y = top + innerH - h;
+        const w = barW * 0.64;
+        return (
+          <G key={i}>
+            <Rect x={x} y={y} width={w} height={h} fill={palette[i % palette.length]} />
+            <Text x={x + w / 2} y={y - 2} style={{ fontSize: 6, color: "#1a365d", textAlign: "center" }}>
+              {fmtNum(d.value)}
+            </Text>
+            <Text x={x + w / 2} y={H - 6} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
+              {d.label.length > 10 ? d.label.slice(0, 10) + "…" : d.label}
+            </Text>
+          </G>
+        );
+      })}
+      {legend(data)}
+    </Svg>
+  );
+};
 
 interface PDFProps {
   alerts: PeruAlert[];
