@@ -1,174 +1,92 @@
 
+## Resumen del cambio
 
-## Plan: Rediseño completo de "Sesiones" como workstation legal de un solo perfil
+Reescribimos el flujo IA de Sesiones para que sea **estrictamente en cadena**: alerta → (decisión usuario) → procesamiento (transcripción + clasificatoria IA en un solo paso) → alerta lista con **chat interno por alerta**. El **chatbot global desaparece** y la **transcripción nunca se expone** al usuario; solo se usa internamente para alimentar el chat por alerta.
 
-Rediseño **únicamente** la sección Sesiones para convertirla en un workspace operativo premium, alineado al estilo de Perfil. Mantiene la arquitectura single-profile actual: nada de selector de cliente, nada de "Publicar a cliente". El editor decide y luego usa Reportes para empaquetar.
-
-### 1. Nuevo modelo de datos de alerta de sesión
-
-Ampliar `PeruSession` (en `src/types/peruSessions.ts`) con campos editoriales y de IA independientes:
+## Nuevo flujo en cadena (una sola decisión)
 
 ```text
-editorial_state: 'nueva' | 'en_revision' | 'pineada' | 'en_seguimiento' | 'archivada'
-is_pinned: boolean              // reemplaza is_pinned_for_publication
-is_follow_up: boolean           // NUEVO — independiente del pin
-is_archived: boolean            // archivado manual
-
-agenda_state: 'lista' | 'pendiente' | 'error'
-video_state: 'vinculado' | 'pendiente' | 'error'
-transcription_state: 'no_solicitada' | 'en_cola' | 'procesando' | 'lista' | 'error'
-chatbot_state:       'no_solicitado' | 'en_cola' | 'procesando' | 'listo' | 'error'
-
-// Campos por ítem de agenda (alerta hija)
-parent_session_id?: string
-agenda_item: {
-  item_number: string
-  title: string
-  thematic_area: string
-  bill_numbers: string[]
-}
-etiqueta_ia: string             // viene de tags configurados en Perfil
-risk_level: 'bajo' | 'medio' | 'alto'
-urgency_level: 'baja' | 'media' | 'alta'
-impact_level: 'bajo' | 'medio' | 'medio_alto' | 'alto'
-
-// Contenido legal/IA
-executive_summary: string
-why_it_matters: string
-preliminary_impact: string
-suggested_next_step: string
-
-// Revisión legal editable
-legal_review: {
-  resumen_legal: string
-  riesgo: string
-  urgencia: string
-  impacto: string
-  areas_afectadas: string[]
-  proximos_pasos: string
-  comentario_experto: string
-}
+1. Llega alerta con orden del día
+   └─ Clasificatoria preliminar (impacto sugerido) ya visible
+2. Usuario decide: "Analizar con IA" (un solo botón)
+   └─ Estado: "En procesamiento" (~20 min simulado)
+3. Listo:
+   ├─ Clasificatoria IA completa (impacto, urgencia, etiquetas, áreas)
+   ├─ Transcripción generada (NO visible al usuario)
+   └─ Chat interno habilitado dentro de la alerta
+4. Usuario abre la alerta y conversa con el chat interno
+   └─ Cada Q&A queda guardada en la alerta (historial persistente)
 ```
 
-Las 4 alertas demo (5.1–5.4) se generan en un nuevo `src/data/sesionesDemoAlerts.ts` y se inyectan en `usePeruSessions` cuando no hay datos en la base.
+Se elimina la doble acción "Solicitar transcripción" + "Habilitar chatbot". Se reemplaza por **un solo botón "Analizar con IA"** que dispara ambos procesos en paralelo. Los estados `transcription_state` y `chatbot_state` se mantienen internos pero se sincronizan automáticamente.
 
-### 2. Estructura de archivos a crear/modificar
+## Cambios por archivo
 
-**Nuevos:**
-- `src/components/sessions/peru/SesionesWorkspace.tsx` — contenedor principal (KPIs + tabs + filtros + lista)
-- `src/components/sessions/peru/SesionesKPIRow.tsx` — 4 KPI principales + 1 secundario
-- `src/components/sessions/peru/SesionesFilterBar.tsx` — filtros y chips rápidos
-- `src/components/sessions/peru/SesionAlertCard.tsx` — tarjeta con todos los chips de estado y acciones rápidas (Pin / Seguimiento / Archivar)
-- `src/components/sessions/peru/SesionDetailWorkstation.tsx` — Sheet con header + 5 tabs
-- `src/components/sessions/peru/tabs/TabResumen.tsx`
-- `src/components/sessions/peru/tabs/TabAgenda.tsx` — bloques estructurados por ítem
-- `src/components/sessions/peru/tabs/TabVideoFuente.tsx`
-- `src/components/sessions/peru/tabs/TabIA.tsx` — Módulo Transcripción + Módulo Chatbot (independientes)
-- `src/components/sessions/peru/tabs/TabRevisionLegal.tsx` — formulario editable
-- `src/components/sessions/peru/SesionesEmptyStates.tsx` — empty states pulidos por tab/módulo
-- `src/components/sessions/peru/ReportesConnector.tsx` — indicador conectado con Reportes
-- `src/data/sesionesDemoAlerts.ts` — 4 alertas demo derivadas de la sesión PRESUPUESTO
+### Sesiones — núcleo del flujo
 
-**Modificados:**
-- `src/types/peruSessions.ts` — extender modelo (compatibilidad: `is_pinned_for_publication` queda como alias)
-- `src/hooks/usePeruSessions.ts` — agregar acciones `togglePin`, `toggleFollowUp`, `archiveSession`, `requestTranscription`, `requestChatbot`, `updateLegalReview`; sembrar las 4 demo si la BD está vacía
-- `src/components/sessions/SessionsPage.tsx` — usar `SesionesWorkspace` en lugar de `PeruSessionsSection`
-- `src/components/reports/ReportsPage.tsx` — añadir bloque opcional para incluir alertas de sesiones (pineadas / seguimiento / ambas) en el reporte
+- **`src/types/peruSessions.ts`**
+  - Añadir `SesionChatMessage { id, role: 'user'|'assistant', content, created_at }`.
+  - Añadir `chat_history?: SesionChatMessage[]` en `PeruSession`.
+  - Marcar `chatbot_summary` como deprecated (mantener por compat con reportes hasta migrar).
 
-### 3. Layout del workspace
+- **`src/hooks/useSesionesWorkspace.ts`**
+  - Reemplazar `requestTranscription` y `requestChatbot` por un único `requestAIAnalysis(sessionId)` que dispara el ciclo `en_cola → procesando → lista` para **ambos** estados a la vez.
+  - Añadir `appendChatMessage(sessionId, message)` y `clearChatHistory(sessionId)`.
+  - Persistir `chat_history` dentro del JSONB `legal_review.__chat_history` (mismo patrón usado hoy para `__chatbot_summary`, sin migración SQL).
+  - Mantener `appendChatbotSummary` como adaptador interno: cuando se agrega un mensaje, también actualiza `chatbot_summary` (texto plano concatenado) para que Reportes y Analíticas existentes sigan funcionando sin cambios.
 
-```text
-┌───────────────────────────────────────────────────────────────────┐
-│ Header existente: 🇵🇪  Sesiones del Congreso del Perú             │
-├───────────────────────────────────────────────────────────────────┤
-│ KPI ROW                                                           │
-│ [Total sesiones] [Pineadas] [En seguimiento] [Procesando IA]      │
-│                              [Elegibles para reporte] (secundario) │
-├───────────────────────────────────────────────────────────────────┤
-│ Tabs/segmentado:                                                  │
-│  Todas · Nuevas · Pineadas · Seguimiento · Procesando IA ·        │
-│  Listas para revisión · Archivadas                                │
-├───────────────────────────────────────────────────────────────────┤
-│ Filtros:                                                          │
-│  [🔎 Buscar comisión/tema] [Comisión▾] [Fecha▾] [Estado IA▾]      │
-│  [Estado editorial▾] [Etiqueta▾] [Impacto▾]                       │
-│  Chips: 7d · 15d · 30d · Solo pineadas · Solo seguimiento         │
-├───────────────────────────────────────────────────────────────────┤
-│ ReportesConnector (banda discreta):                               │
-│  "5 pineadas y 3 en seguimiento disponibles para reporte → Reportes" │
-├───────────────────────────────────────────────────────────────────┤
-│ Lista de SesionAlertCard (densidad compacta, dark premium)        │
-└───────────────────────────────────────────────────────────────────┘
-```
+- **`src/components/sessions/peru/SesionesWorkspace.tsx`**
+  - Eliminar `<SesionesGlobalChatbot />` del render y su prop `appendChatbotSummary`.
+  - Pasar `requestAIAnalysis` (en lugar de `requestTranscription`/`requestChatbot`) al `SesionDetailWorkstation`.
 
-### 4. Diseño de la tarjeta de alerta
+- **`src/components/sessions/peru/SesionesGlobalChatbot.tsx`** → **eliminar archivo** (queda huérfano).
 
-Cada `SesionAlertCard` muestra en una fila densa pero elegante:
+- **`src/components/sessions/peru/SesionDetailWorkstation.tsx`**
+  - **Quitar el tab "Transcripción"** por completo (la transcripción nunca se expone).
+  - Renombrar tab "Procesamiento IA" para que use `requestAIAnalysis` con un único botón **"Analizar con IA"** y un solo bloque de estado en cadena.
+  - Reemplazar el bloque "Análisis del chatbot (chatbot_summary)" en la tab "Clasificatoria IA" por un nuevo componente **`SesionInternalChat`** embebido dentro de la alerta.
+  - El `SesionInternalChat` muestra:
+    - Estado vacío con prompts sugeridos (resumen, orden del día, perfil regulatorio, próximos pasos).
+    - Historial Q&A persistente leído desde `session.chat_history`.
+    - Input de pregunta con envío.
+    - Solo habilitado cuando `transcription_state === 'lista'` (chatbot disponible).
+    - Cuando aún está procesando: muestra "El chat estará disponible cuando termine el análisis IA".
 
-- **Línea 1 (chips)**: Estado editorial · Etiqueta IA · Impacto · Riesgo · Urgencia
-- **Línea 2 (título)**: `Ítem 5.x · Título del predictamen/proyecto` + `Comisión de PRESUPUESTO Y CUENTA GENERAL DE LA REPÚBLICA`
-- **Línea 3 (meta)**: 📅 fecha y hora · 🏛 tipo de sesión · chips: Agenda · Video · Transcripción · Chatbot (cada uno con su color de estado)
-- **Línea 4 (bills)**: badges de proyectos `14305/2025-PE`, etc.
-- **Acciones rápidas (derecha)**: `📌 Pin/Unpin` · `👁 Seguimiento/Quitar` · `🗄 Archivar` · `↗ Abrir`
+- **`src/components/sessions/peru/SesionAlertCard.tsx`**
+  - Mostrar chip único "Analizar IA" / "Procesando" / "Listo" en vez de los dos chips separados (TranscriptionChip + ChatbotChip).
+  - Quitar referencias visuales a "transcripción" en la tarjeta (se reemplaza por "Análisis IA").
 
-Sin "Publicar a cliente". Sin selector de cliente.
+- **`src/components/sessions/peru/SesionChips.tsx`**
+  - Añadir `<AIAnalysisChip state={...} />` derivado de `transcription_state` (que actúa como estado canónico ya que ambos avanzan juntos).
+  - Mantener los chips antiguos como deprecated para no romper otros consumos.
 
-### 5. Workstation de detalle (Sheet)
+### Conexión con Reportes
 
-Header sticky:
-- Título de la sesión (con número de ítem)
-- Comisión · fecha y hora · badge fuente `PERU_CONGRESS_SYNC`
-- Chips de estado: Agenda · Video · Transcripción · Chatbot
-- Botones primarios: `📌 Pin` · `👁 Dar Seguimiento` · `🗄 Archivar`
+- **`src/components/reports/ReportsPage.tsx`**
+  - Línea 477: ya usa `s.chatbot_summary` como fallback. Mantener; ahora `chatbot_summary` se llena automáticamente desde el chat interno (vía adaptador en el hook).
+  - Etiquetar la sección como "Análisis IA y conversación interna" en lugar de "Resumen del chatbot".
+  - No requiere otros cambios.
 
-Tabs:
+### Conexión con Analíticas
 
-1. **Resumen** — executive_summary, etiqueta IA, impacto, urgencia, "Por qué importa", "Próximo paso sugerido"
-2. **Orden del día** — bloques por ítem (número, título, bills, área, resumen corto, badge de impacto)
-3. **Video y fuente** — link oficial, bloque YouTube (provider, channel, expected title, confidence, CTA "Abrir fuente")
-4. **IA** — dos módulos **independientes**:
-   - **Transcripción**: estado actual → CTA "Solicitar transcripción" → estados En cola / Procesando (~20 min) / Lista (con preview + búsqueda)
-   - **Chatbot de la sesión**: estado actual → CTA "Preparar chatbot" → estados En cola / Procesando (~20 min) / Listo (con prompts sugeridos)
-5. **Revisión legal** — formulario con: Resumen legal, Riesgo, Urgencia, Impacto, Áreas afectadas (multi-tag), Próximos pasos, Comentario experto. Auto-save.
+- **`src/components/analytics/*`** (consumen `transcription_state` para KPIs como "Sesiones procesadas")
+  - No requieren cambio: ambos estados ahora avanzan en sincronía, así que cualquier conteo basado en `transcription_state === 'lista'` o `chatbot_state === 'listo'` da el mismo resultado.
 
-### 6. Conexión visual con Reportes
+### Conexión con Calendario
 
-`ReportesConnector` aparece en el workspace y al pie del detalle:
+- **`src/components/calendar/LegislativeSessionsCalendar.tsx`**
+  - Si muestra badges de "transcripción lista" o "chatbot disponible", consolidarlos en un único badge "Análisis IA listo" usando el helper `AIAnalysisChip`.
 
-> "Las alertas pineadas y en seguimiento pueden incluirse desde Reportes" — `5 pineadas · 3 en seguimiento` — botón `Ir a Reportes`.
+## Detalles técnicos de persistencia
 
-En `ReportsPage.tsx`, añadir una sección **"Alertas de Sesiones"** con tres opciones (checkboxes): incluir pineadas / incluir seguimiento / ambas. Sin builder por alerta dentro de Sesiones.
+- **Sin migración SQL**: el historial de chat se guarda dentro del campo `legal_review` (jsonb) de `session_editorial_state`, bajo la clave `__chat_history` (array de mensajes). Mismo patrón que ya se usa para `__chatbot_summary`.
+- Tamaño máximo: últimos 50 mensajes por alerta (truncado en hook).
+- Compatibilidad: `chatbot_summary` se sigue derivando como concatenación de los mensajes para que Reportes y vistas legacy no se rompan.
 
-### 7. Estados visuales (chips reutilizables)
+## Resultado UX
 
-Tokens semánticos del proyecto:
-- Editorial: Nueva (`muted`), En revisión (`primary/20`), Pineada (`primary`), En seguimiento (`amber`), Archivada (`slate`)
-- Agenda/Video: lista/vinculado = `green`, pendiente = `amber`, error = `destructive`
-- Transcripción/Chatbot: no solicitado = `slate`, en cola = `slate`, procesando = `blue` con spinner, listo = `green`, error = `destructive`
-
-### 8. Empty states pulidos
-
-- Sin pineadas / sin seguimiento / sin archivadas → ilustración mínima + copy claro
-- Tab IA sin transcripción solicitada → "La transcripción no ha sido solicitada. Toma unos 20 min." + CTA
-- Tab IA sin chatbot preparado → idem con CTA "Preparar chatbot"
-
-### 9. Datos demo a sembrar
-
-`src/data/sesionesDemoAlerts.ts` genera 4 alertas hijas de la sesión padre **PRESUPUESTO Y CUENTA GENERAL DE LA REPÚBLICA · 01/04/2026 09:00** con todos los campos del prompt. El hook `usePeruSessions` las inyecta cuando la BD devuelve vacío. Se redacta en español jurídico-regulatorio: resumen ejecutivo, "Por qué importa", impacto preliminar y próximo paso para cada ítem 5.1–5.4.
-
-### Detalles técnicos
-
-- Reutilizar `Sheet`, `Tabs`, `Card`, `Badge`, `Button` de shadcn ya en uso.
-- Persistencia local de pin/seguimiento/archivado vía `localStorage` (mismo patrón que `peru_selected_sessions`); cuando exista BD se persiste vía Supabase en una migración futura, pero por ahora demo + local.
-- Filtros y chips rápidos siguen el patrón de `SessionsFilterBar` actual (refactor in-place).
-- Etiqueta IA toma el catálogo de tags del Perfil ya existente (lectura, no edición desde Sesiones).
-- Conservar i18n en español en toda la UI, toasts y empty states.
-
-### Lo que NO se toca
-
-- Perfil
-- Sidebar, shell, theme global
-- Inbox (Proyectos de Ley / Normas) y su Kanban
-- Auth, roles, multi-cliente (no aplica)
-- Edge functions ni esquema de Supabase (sólo lectura de tabla actual)
-
+- **Cero ambigüedad**: un solo botón "Analizar con IA" por alerta.
+- **Transcripción invisible**: el usuario nunca la ve, solo conversa con el chat.
+- **Chat por alerta con historial propio**: cada alerta es autónoma, sus preguntas y respuestas viven con ella.
+- **Sin chatbot global flotante**: la pantalla queda limpia.
+- Reportes, Analíticas y Calendario siguen funcionando sin tocar nada externo.
