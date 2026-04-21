@@ -125,38 +125,137 @@ function readVisibleAnalyticsBlocks(): AnalyticsBlockConfigExtended[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PDF — preserves LawMeter visual identity (deep blue, clean sectioned layout)
+// PDF — premium LawMeter visual identity
+// Deep navy headers, clean dividers, refined typography hierarchy.
 // ─────────────────────────────────────────────────────────────────────────────
 
+const COLORS = {
+  ink:        "#0f172a",
+  inkMuted:   "#475569",
+  inkSubtle:  "#64748b",
+  border:     "#e2e8f0",
+  borderSoft: "#eef2f7",
+  surface:    "#ffffff",
+  surfaceAlt: "#f8fafc",
+  brand:      "#1a365d",
+  brandSoft:  "#e6efff",
+  brandLine:  "#2b6cb0",
+  accent:     "#3182ce",
+  iaInk:      "#14532d",
+  iaBg:       "#f0fdf4",
+  iaBorder:   "#bbf7d0",
+  expertInk:  "#1e3a8a",
+  expertBg:   "#eff6ff",
+  expertBorder: "#bfdbfe",
+};
+
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: "Helvetica", fontSize: 10, color: "#1a202c" },
-  header: { marginBottom: 24, borderBottom: "2 solid #1a365d", paddingBottom: 16 },
-  brand: { fontSize: 9, color: "#2b6cb0", letterSpacing: 2, marginBottom: 4 },
-  title: { fontSize: 22, fontWeight: "bold", color: "#1a365d", marginBottom: 4 },
-  subtitle: { fontSize: 11, color: "#4a5568", marginBottom: 2 },
-  pillRow: { flexDirection: "row", gap: 6, marginTop: 8 },
-  pill: { fontSize: 8, color: "#1a365d", backgroundColor: "#e6efff", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
-  summary: { backgroundColor: "#f7fafc", padding: 14, marginBottom: 18, borderRadius: 4, borderLeft: "3 solid #1a365d" },
-  summaryTitle: { fontSize: 11, fontWeight: "bold", marginBottom: 6, color: "#1a365d" },
-  summaryItem: { fontSize: 10, marginBottom: 3 },
-  section: { marginBottom: 18 },
-  sectionTitle: { fontSize: 13, fontWeight: "bold", color: "#ffffff", backgroundColor: "#1a365d", padding: 8, marginBottom: 10 },
-  subSection: { fontSize: 11, fontWeight: "bold", color: "#2d3748", marginTop: 10, marginBottom: 6, borderLeft: "3 solid #3182ce", paddingLeft: 8 },
-  card: { marginBottom: 10, padding: 10, backgroundColor: "#f7fafc", borderRadius: 4, borderLeft: "2 solid #cbd5e0" },
-  cardTitle: { fontSize: 10, fontWeight: "bold", color: "#1a365d", marginBottom: 3 },
-  cardMeta: { fontSize: 8, color: "#718096", marginBottom: 4 },
-  cardBody: { fontSize: 9, color: "#2d3748", marginBottom: 4 },
-  ia: { fontSize: 9, color: "#22543d", marginTop: 4, padding: 6, backgroundColor: "#f0fff4", borderRadius: 3 },
-  iaLabel: { fontSize: 8, fontWeight: "bold", color: "#22543d", marginBottom: 2 },
-  commentary: { fontSize: 9, color: "#2c5282", marginTop: 4, padding: 6, backgroundColor: "#ebf8ff", borderRadius: 3 },
-  commentaryLabel: { fontSize: 8, fontWeight: "bold", color: "#2b6cb0", marginBottom: 2 },
-  link: { fontSize: 8, color: "#2b6cb0", textDecoration: "underline", marginTop: 3 },
-  empty: { fontSize: 9, color: "#a0aec0", fontStyle: "italic" },
-  footer: { position: "absolute", bottom: 24, left: 40, right: 40, textAlign: "center", fontSize: 8, color: "#a0aec0", borderTop: "1 solid #e2e8f0", paddingTop: 8 },
-  analyticsBlock: { marginBottom: 12, padding: 10, backgroundColor: "#fafafa", borderRadius: 4, border: "1 solid #e2e8f0" },
-  analyticsBlockTitle: { fontSize: 10, fontWeight: "bold", color: "#1a365d", marginBottom: 4 },
-  analyticsBlockMeta: { fontSize: 8, color: "#718096", marginBottom: 4 },
-  analyticsBlockBody: { fontSize: 9, color: "#2d3748" },
+  page: {
+    paddingTop: 44,
+    paddingBottom: 56,
+    paddingHorizontal: 44,
+    fontFamily: "Helvetica",
+    fontSize: 10,
+    color: COLORS.ink,
+    backgroundColor: COLORS.surface,
+  },
+
+  header: { marginBottom: 22 },
+  brand: { fontSize: 8, color: COLORS.brandLine, letterSpacing: 3, fontFamily: "Helvetica-Bold", marginBottom: 6 },
+  title: { fontSize: 24, fontFamily: "Helvetica-Bold", color: COLORS.brand, marginBottom: 4 },
+  subtitle: { fontSize: 10.5, color: COLORS.inkMuted, marginBottom: 1 },
+  headerDivider: { marginTop: 14, height: 2, backgroundColor: COLORS.brand, width: 48 },
+
+  pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 12 },
+  pill: {
+    fontSize: 8, color: COLORS.brand, backgroundColor: COLORS.brandSoft,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
+    fontFamily: "Helvetica-Bold", letterSpacing: 0.4,
+  },
+
+  summary: {
+    backgroundColor: COLORS.surfaceAlt, padding: 16, marginBottom: 20, borderRadius: 6,
+    borderLeftWidth: 3, borderLeftColor: COLORS.brand,
+  },
+  summaryTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", letterSpacing: 1.2, marginBottom: 8, color: COLORS.brand },
+  summaryItem: { fontSize: 10, marginBottom: 3, color: COLORS.ink },
+
+  section: { marginBottom: 22 },
+  sectionHeader: {
+    flexDirection: "row", alignItems: "center", marginBottom: 14,
+    paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: COLORS.border,
+  },
+  sectionAccent: { width: 3, height: 14, backgroundColor: COLORS.brand, marginRight: 8 },
+  sectionTitle: { fontSize: 13, fontFamily: "Helvetica-Bold", color: COLORS.brand, letterSpacing: 0.5 },
+  sectionCount: {
+    marginLeft: "auto", fontSize: 8, color: COLORS.inkMuted,
+    fontFamily: "Helvetica-Bold", letterSpacing: 0.6,
+  },
+
+  // Premium content card
+  card: {
+    marginBottom: 14, padding: 16, backgroundColor: COLORS.surface, borderRadius: 6,
+    borderWidth: 1, borderColor: COLORS.border,
+    borderLeftWidth: 3, borderLeftColor: COLORS.brand,
+  },
+  cardKicker: {
+    fontSize: 7.5, color: COLORS.brandLine, fontFamily: "Helvetica-Bold",
+    letterSpacing: 1.2, marginBottom: 4,
+  },
+  cardTitle: { fontSize: 11.5, fontFamily: "Helvetica-Bold", color: COLORS.ink, lineHeight: 1.35, marginBottom: 6 },
+  metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginBottom: 8 },
+  metaChip: {
+    fontSize: 7.5, color: COLORS.inkMuted, backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderSoft,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8,
+  },
+  cardDivider: { height: 1, backgroundColor: COLORS.borderSoft, marginVertical: 8 },
+  bodyLabel: {
+    fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.inkSubtle,
+    letterSpacing: 1.1, marginBottom: 3,
+  },
+  cardBody: { fontSize: 9.5, color: COLORS.ink, lineHeight: 1.45, marginBottom: 4 },
+
+  ia: {
+    marginTop: 8, padding: 8, backgroundColor: COLORS.iaBg, borderRadius: 4,
+    borderWidth: 1, borderColor: COLORS.iaBorder,
+  },
+  iaLabel: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.iaInk, letterSpacing: 1.1, marginBottom: 3 },
+  iaText: { fontSize: 9, color: COLORS.iaInk, lineHeight: 1.4 },
+
+  commentary: {
+    marginTop: 8, padding: 10, backgroundColor: COLORS.expertBg, borderRadius: 4,
+    borderWidth: 1, borderColor: COLORS.expertBorder,
+    borderLeftWidth: 3, borderLeftColor: COLORS.expertInk,
+  },
+  commentaryLabel: {
+    fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.expertInk,
+    letterSpacing: 1.1, marginBottom: 3,
+  },
+  commentaryText: { fontSize: 9, color: COLORS.expertInk, lineHeight: 1.5, fontStyle: "italic" },
+
+  link: {
+    marginTop: 8, fontSize: 8, color: COLORS.brandLine, textDecoration: "underline",
+    fontFamily: "Helvetica-Bold", letterSpacing: 0.4,
+  },
+  empty: { fontSize: 9.5, color: COLORS.inkSubtle, fontStyle: "italic", paddingVertical: 12, textAlign: "center" },
+
+  footer: {
+    position: "absolute", bottom: 24, left: 44, right: 44, textAlign: "center",
+    fontSize: 7.5, color: COLORS.inkSubtle,
+    borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 8, letterSpacing: 0.4,
+  },
+
+  // Analytics appendix (snapshot pages)
+  analyticsCover: { paddingHorizontal: 44, paddingTop: 80, paddingBottom: 80 },
+  analyticsKicker: {
+    fontSize: 8, color: COLORS.brandLine, letterSpacing: 3,
+    fontFamily: "Helvetica-Bold", marginBottom: 10,
+  },
+  analyticsTitle: { fontSize: 32, fontFamily: "Helvetica-Bold", color: COLORS.brand, marginBottom: 8 },
+  analyticsLead: { fontSize: 11, color: COLORS.inkMuted, lineHeight: 1.55, maxWidth: 420 },
+  analyticsImagePage: { padding: 0, backgroundColor: COLORS.surface },
+  analyticsImage: { width: "100%", height: "auto" },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
