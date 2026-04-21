@@ -43,7 +43,7 @@ import {
   FileBarChart,
   Eye as EyeIcon,
 } from "lucide-react";
-import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
+import { CLIENT_ANALYTICS_BLOCKS, ANALYTICS_SECTION_LABELS, type AnalyticsBlockConfigExtended, type AnalyticsSection } from "@/types/analytics";
 import {
   Tooltip,
   TooltipContent,
@@ -70,7 +70,14 @@ const blockIcons: Record<string, React.ElementType> = {
   detection_to_action_time: Clock,
   ai_usage: Bot,
   reports_generated: FileBarChart,
+  sessions_by_commission: BarChart3,
+  sessions_temporal_evolution: TrendingUp,
+  session_agenda_type: PieChart,
+  session_topics: Layers,
+  session_recurring_bills: FileBarChart,
 };
+
+const SECTION_ORDER: AnalyticsSection[] = ['general', 'bills', 'sessions', 'ops'];
 
 interface SortableBlockItemProps {
   block: AnalyticsBlockConfigExtended;
@@ -286,16 +293,35 @@ export function ReportLayoutBuilder({
             strategy={verticalListSortingStrategy}
           >
             {isDashboard ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {visibleBlocks
-                  .sort((a, b) => a.order - b.order)
-                  .map(block => (
-                    <SortableBlockItem
-                      key={block.key}
-                      block={block}
-                      onToggle={toggleBlock}
-                    />
-                  ))}
+              <div className="space-y-5">
+                {SECTION_ORDER.map((section) => {
+                  const sectionBlocks = visibleBlocks
+                    .filter((b) => b.section === section)
+                    .sort((a, b) => a.order - b.order);
+                  if (sectionBlocks.length === 0) return null;
+                  const activeInSection = sectionBlocks.filter((b) => b.enabled).length;
+                  return (
+                    <div key={section} className="space-y-2">
+                      <div className="flex items-center justify-between px-1">
+                        <h4 className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">
+                          {ANALYTICS_SECTION_LABELS[section]}
+                        </h4>
+                        <Badge variant="outline" className="text-[10px] h-5">
+                          {activeInSection} / {sectionBlocks.length}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {sectionBlocks.map((block) => (
+                          <SortableBlockItem
+                            key={block.key}
+                            block={block}
+                            onToggle={toggleBlock}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <ScrollArea className="h-[400px] pr-4">

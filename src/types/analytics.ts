@@ -2,6 +2,8 @@
 
 export type AnalyticsVisibility = 'internal' | 'client' | 'both';
 
+export type AnalyticsSection = 'general' | 'bills' | 'sessions' | 'ops';
+
 export type AnalyticsBlockKey = 
   // Internal (Legal Team only) — operations
   | 'editorial_response_time'
@@ -21,7 +23,13 @@ export type AnalyticsBlockKey =
   | 'popular_topics'
   | 'emerging_topics'
   | 'exposure'
-  | 'service_kpis';
+  | 'service_kpis'
+  // Sessions (Sesiones del Congreso)
+  | 'sessions_by_commission'
+  | 'sessions_temporal_evolution'
+  | 'session_agenda_type'
+  | 'session_topics'
+  | 'session_recurring_bills';
 
 export interface AnalyticsBlockDefinition {
   key: AnalyticsBlockKey;
@@ -29,6 +37,7 @@ export interface AnalyticsBlockDefinition {
   takeaway: string;
   infoTooltip: string;
   visibility: AnalyticsVisibility;
+  section: AnalyticsSection;
   chartType: 'line' | 'bar' | 'stacked_bar' | 'pie' | 'matrix' | 'funnel' | 'kpi' | 'timeline' | 'cards';
   defaultEnabled: boolean;
   maxItems?: number; // For rankings (e.g., Top 5-7)
@@ -177,6 +186,7 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Horas promedio entre creación y primera lectura',
     infoTooltip: 'Mide qué tan rápido el equipo abre y revisa las alertas tras su creación.',
     visibility: 'internal',
+    section: 'ops',
     chartType: 'line',
     defaultEnabled: true,
   },
@@ -186,6 +196,7 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Total y porcentaje de alertas pinneadas y archivadas',
     infoTooltip: 'Mide cuántas alertas el usuario ha marcado como pinneadas o archivadas, con sus porcentajes.',
     visibility: 'internal',
+    section: 'ops',
     chartType: 'kpi',
     defaultEnabled: true,
   },
@@ -195,6 +206,7 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Volumen semanal de alertas abiertas por el equipo',
     infoTooltip: 'Conteo de alertas que el equipo abrió y revisó al menos una vez, agrupado por semana.',
     visibility: 'internal',
+    section: 'ops',
     chartType: 'bar',
     defaultEnabled: true,
   },
@@ -204,6 +216,7 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Tiempos medios entre detección, apertura y pineo',
     infoTooltip: 'Tiempo medio entre detección y primera apertura, y entre detección y pineo para publicación.',
     visibility: 'internal',
+    section: 'ops',
     chartType: 'bar',
     defaultEnabled: true,
   },
@@ -213,6 +226,7 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Alertas con transcripción solicitada y chatbot habilitado',
     infoTooltip: 'Volumen de alertas que tuvieron transcripción solicitada y/o el chatbot habilitado.',
     visibility: 'internal',
+    section: 'ops',
     chartType: 'bar',
     defaultEnabled: true,
   },
@@ -222,26 +236,41 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Reportes generados y alertas incluidas en cada uno',
     infoTooltip: 'Volumen semanal de reportes generados y total de alertas utilizadas como contenido.',
     visibility: 'internal',
+    section: 'ops',
     chartType: 'line',
     defaultEnabled: true,
   },
-  
-  // Client blocks (shared with Legal Team)
+
+  // General section
+  {
+    key: 'service_kpis',
+    title: 'Indicadores de Servicio',
+    takeaway: 'Calidad operativa: tiempo, cobertura experta y SLA',
+    infoTooltip: 'Tiempo medio de revisión, cobertura con comentario experto y cumplimiento de SLA del servicio.',
+    visibility: 'both',
+    section: 'general',
+    chartType: 'kpi',
+    defaultEnabled: true,
+  },
   {
     key: 'impact_matrix',
     title: 'Matriz de Impacto',
     takeaway: 'Alertas clasificadas por impacto y urgencia',
     infoTooltip: 'Matriz 3x3 que cruza nivel de impacto (Grave/Medio/Leve) con urgencia (Alta/Media/Baja).',
     visibility: 'both',
+    section: 'general',
     chartType: 'matrix',
     defaultEnabled: true,
   },
+
+  // Bills & Regulations section
   {
     key: 'regulatory_pulse',
     title: 'Pulso Regulatorio',
     takeaway: 'Actividad legislativa/regulatoria en el período',
     infoTooltip: 'Conteo de PLs, Leyes y Reglamentos publicados al cliente por fecha oficial.',
     visibility: 'both',
+    section: 'bills',
     chartType: 'line',
     defaultEnabled: true,
   },
@@ -251,6 +280,7 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Alertas por nivel de impacto',
     infoTooltip: 'Clasificación de alertas publicadas según nivel de impacto para el cliente.',
     visibility: 'both',
+    section: 'bills',
     chartType: 'bar',
     defaultEnabled: true,
   },
@@ -260,7 +290,18 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Desglose por tipo y área',
     infoTooltip: 'Distribución de alertas publicadas por tipo de legislación y área legal.',
     visibility: 'both',
+    section: 'bills',
     chartType: 'pie',
+    defaultEnabled: true,
+  },
+  {
+    key: 'legislative_funnel',
+    title: 'Embudo Legislativo',
+    takeaway: 'Distribución de PLs por etapa del proceso',
+    infoTooltip: 'Cuántos proyectos de ley están en cada fase: Comisión, Pleno, Trámite Final, etc.',
+    visibility: 'both',
+    section: 'bills',
+    chartType: 'funnel',
     defaultEnabled: true,
   },
   {
@@ -269,27 +310,10 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Autoridades más activas para el cliente',
     infoTooltip: 'Ranking de entidades emisoras con mayor número de alertas publicadas.',
     visibility: 'both',
+    section: 'bills',
     chartType: 'bar',
     defaultEnabled: true,
     maxItems: 7,
-  },
-  {
-    key: 'legislative_funnel',
-    title: 'Embudo Legislativo',
-    takeaway: 'Distribución de PLs por etapa del proceso',
-    infoTooltip: 'Cuántos proyectos de ley están en cada fase: Comisión, Pleno, Trámite Final, etc.',
-    visibility: 'both',
-    chartType: 'funnel',
-    defaultEnabled: true,
-  },
-  {
-    key: 'key_movements',
-    title: 'Movimientos Clave',
-    takeaway: 'Items nuevos y cambios de etapa recientes',
-    infoTooltip: 'Alertas recién publicadas, cambios de estado y plazos próximos.',
-    visibility: 'both',
-    chartType: 'timeline',
-    defaultEnabled: true,
   },
   {
     key: 'popular_topics',
@@ -297,9 +321,20 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Áreas con mayor concentración de alertas',
     infoTooltip: 'Ranking de temas/áreas legales con más alertas publicadas al cliente.',
     visibility: 'both',
+    section: 'bills',
     chartType: 'bar',
     defaultEnabled: true,
     maxItems: 7,
+  },
+  {
+    key: 'key_movements',
+    title: 'Movimientos Clave',
+    takeaway: 'Items nuevos y cambios de etapa recientes',
+    infoTooltip: 'Alertas recién publicadas, cambios de estado y plazos próximos.',
+    visibility: 'both',
+    section: 'bills',
+    chartType: 'timeline',
+    defaultEnabled: true,
   },
   {
     key: 'emerging_topics',
@@ -307,6 +342,7 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Temas en crecimiento vs período anterior',
     infoTooltip: 'Áreas que muestran aumento sostenido en volumen de alertas.',
     visibility: 'both',
+    section: 'bills',
     chartType: 'cards',
     defaultEnabled: false,
   },
@@ -316,16 +352,60 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
     takeaway: 'Áreas del negocio más impactadas',
     infoTooltip: 'Desglose por área de negocio (operaciones, compliance, gobernanza, etc.) según alertas publicadas.',
     visibility: 'both',
+    section: 'bills',
+    chartType: 'bar',
+    defaultEnabled: true,
+  },
+
+  // Sessions section
+  {
+    key: 'sessions_by_commission',
+    title: 'Alertas de sesiones por comisión',
+    takeaway: 'Volumen de alertas de sesiones por comisión',
+    infoTooltip: 'Distribución de alertas generadas a partir de sesiones según la comisión legislativa.',
+    visibility: 'both',
+    section: 'sessions',
     chartType: 'bar',
     defaultEnabled: true,
   },
   {
-    key: 'service_kpis',
-    title: 'Indicadores de Servicio',
-    takeaway: 'Calidad operativa: tiempo, cobertura experta y SLA',
-    infoTooltip: 'Tiempo medio de revisión, cobertura con comentario experto y cumplimiento de SLA del servicio.',
+    key: 'sessions_temporal_evolution',
+    title: 'Evolución temporal de alertas de sesiones',
+    takeaway: 'Tendencia de alertas de sesiones en el tiempo',
+    infoTooltip: 'Evolución temporal del volumen de alertas generadas a partir de sesiones del Congreso.',
     visibility: 'both',
-    chartType: 'kpi',
+    section: 'sessions',
+    chartType: 'line',
+    defaultEnabled: true,
+  },
+  {
+    key: 'session_agenda_type',
+    title: 'Distribución de ítems del orden del día',
+    takeaway: 'Tipo de agenda tratada en sesiones',
+    infoTooltip: 'Clasificación de ítems del orden del día (presentación, debate, votación, predictamen).',
+    visibility: 'both',
+    section: 'sessions',
+    chartType: 'pie',
+    defaultEnabled: true,
+  },
+  {
+    key: 'session_topics',
+    title: 'Materias temáticas más frecuentes en sesiones',
+    takeaway: 'Temas recurrentes tratados en el Congreso',
+    infoTooltip: 'Ranking de materias temáticas más discutidas durante las sesiones del período.',
+    visibility: 'both',
+    section: 'sessions',
+    chartType: 'bar',
+    defaultEnabled: true,
+  },
+  {
+    key: 'session_recurring_bills',
+    title: 'Proyectos de ley más recurrentes en sesiones',
+    takeaway: 'PLs con mayor actividad en sesiones',
+    infoTooltip: 'Proyectos de ley que aparecen con mayor frecuencia en agendas y debates de sesiones.',
+    visibility: 'both',
+    section: 'sessions',
+    chartType: 'bar',
     defaultEnabled: true,
   },
 ];
@@ -368,6 +448,7 @@ export interface AnalyticsBlockConfigExtended extends AnalyticsBlockConfig {
   takeaway: string;
   infoTooltip: string;
   visibility: AnalyticsVisibility;
+  section: AnalyticsSection;
   renderPDF: boolean;
   renderDashboard: boolean;
 }
@@ -383,6 +464,15 @@ export const CLIENT_ANALYTICS_BLOCKS: AnalyticsBlockConfigExtended[] = ANALYTICS
     takeaway: block.takeaway,
     infoTooltip: block.infoTooltip,
     visibility: block.visibility,
+    section: block.section,
     renderPDF: block.defaultEnabled,
     renderDashboard: true,
   }));
+
+// Section labels for grouping in the customizer
+export const ANALYTICS_SECTION_LABELS: Record<AnalyticsSection, string> = {
+  general: 'General',
+  bills: 'Proyectos de ley y normas',
+  sessions: 'Sesiones del Congreso',
+  ops: 'Operaciones internas',
+};
