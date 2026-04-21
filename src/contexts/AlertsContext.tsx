@@ -57,10 +57,26 @@ function initializeAlerts(): PeruAlert[] {
 }
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
-  const [alerts, setAlerts] = useState<PeruAlert[]>(() => purgeOldArchivedAlerts(initializeAlerts()));
+  const { profile } = useAuth();
+  const isEmpty = isEmptyDataOrg(profile?.organization_id);
+
+  const [alerts, setAlerts] = useState<PeruAlert[]>(() =>
+    isEmpty ? [] : purgeOldArchivedAlerts(initializeAlerts())
+  );
+
+  // Mantener flag global sincronizado para módulos sin acceso a React (analyticsRepository, etc.)
+  useEffect(() => {
+    setCurrentOrgEmptyFlag(isEmpty);
+  }, [isEmpty]);
+
+  // Si la organización cambia entre vacía / con datos, resetear el estado.
+  useEffect(() => {
+    setAlerts(isEmpty ? [] : purgeOldArchivedAlerts(initializeAlerts()));
+  }, [isEmpty]);
 
   // Auto-purge: re-evaluate every hour while the app is open
   useEffect(() => {
+    if (isEmpty) return;
     const interval = setInterval(() => {
       setAlerts((prev) => {
         const next = purgeOldArchivedAlerts(prev);
@@ -68,7 +84,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       });
     }, 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isEmpty]);
 
   // Toggle pin for publication (persisted to localStorage)
   const togglePinAlert = useCallback((alertId: string) => {
