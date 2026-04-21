@@ -32,7 +32,7 @@ export async function captureAnalyticsSnapshots(): Promise<AnalyticsSnapshot[]> 
   let root: Root | null = null;
   try {
     root = createRoot(host);
-    root.render(React.createElement(LegalTeamAnalyticsDashboard));
+    root.render(React.createElement(LegalTeamAnalyticsDashboard, { snapshotMode: true }));
 
     await raf2();
     await delay(500);
@@ -54,7 +54,7 @@ export async function captureAnalyticsSnapshots(): Promise<AnalyticsSnapshot[]> 
     const bgColor = resolveBackground();
 
     for (const target of targets) {
-      if (!hasMeaningfulContent(target)) continue;
+      if (target.scrollHeight < 180) continue;
 
       const canvas = await html2canvas(target, {
         backgroundColor: bgColor,
@@ -147,20 +147,6 @@ function expandAllSections(host: HTMLElement) {
       }
     }
   });
-}
-
-/**
- * Heuristic: a section is "meaningful" if it has at least one rendered
- * chart-like child (svg, canvas, or a card wider than 200px) OR its rendered
- * height comfortably exceeds the header strip.
- */
-function hasMeaningfulContent(el: HTMLElement): boolean {
-  const rect = el.getBoundingClientRect();
-  if (rect.height < 140) return false;
-  const hasChart = !!el.querySelector("svg, canvas, [data-analytics-block]");
-  if (hasChart) return true;
-  // Fallback: any sizable inner content area beyond the header.
-  return el.scrollHeight > 220;
 }
 
 /**
