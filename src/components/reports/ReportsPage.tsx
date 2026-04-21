@@ -168,17 +168,55 @@ const styles = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 // MiniChart — vector-sharp SVG primitives reused by analytics blocks
 // ─────────────────────────────────────────────────────────────────────────────
-
 const CHART_WIDTH = 460;
-const CHART_HEIGHT = 110;
-const CHART_PADDING = { top: 8, right: 8, bottom: 18, left: 24 };
-const CHART_PALETTE = ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed", "#90cdf4", "#bee3f8"];
+const CHART_HEIGHT = 130;
+const CHART_PADDING = { top: 10, right: 110, bottom: 26, left: 32 };
 const AXIS_COLOR = "#cbd5e0";
+const GRID_COLOR = "#edf2f7";
 const LABEL_COLOR = "#718096";
+
+const BLOCK_PALETTES: Record<string, string[]> = {
+  editorial_response_time: ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed"],
+  pin_archive:             ["#0f766e", "#14b8a6", "#5eead4", "#99f6e4"],
+  reviewed_alerts:         ["#7c2d12", "#ea580c", "#fb923c", "#fdba74"],
+  detection_to_action_time:["#365314", "#65a30d", "#a3e635", "#d9f99d"],
+  ai_usage:                ["#581c87", "#9333ea", "#c084fc", "#e9d5ff"],
+  reports_generated:       ["#1e3a8a", "#3b82f6", "#93c5fd", "#dbeafe"],
+  impact_matrix:           ["#7f1d1d", "#dc2626", "#f97316", "#facc15", "#22c55e", "#16a34a"],
+  regulatory_pulse:        ["#155e75", "#0891b2", "#22d3ee", "#a5f3fc"],
+  alert_priority:          ["#991b1b", "#dc2626", "#f59e0b", "#10b981"],
+  alert_distribution:      ["#1d4ed8", "#0d9488", "#f59e0b", "#db2777", "#7c3aed", "#0ea5e9"],
+  top_entities:            ["#1e40af", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"],
+  legislative_funnel:      ["#1e3a8a", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd"],
+  key_movements:           ["#831843", "#be185d", "#ec4899", "#f9a8d4", "#fbcfe8"],
+  popular_topics:          ["#134e4a", "#0f766e", "#14b8a6", "#5eead4", "#99f6e4", "#ccfbf1"],
+  emerging_topics:         ["#713f12", "#a16207", "#eab308", "#fde047", "#fef08a"],
+  exposure:                ["#312e81", "#4f46e5", "#818cf8", "#a5b4fc", "#c7d2fe"],
+  service_kpis:            ["#0c4a6e", "#0369a1", "#0ea5e9", "#7dd3fc"],
+};
+const DEFAULT_PALETTE = ["#1a365d", "#2b6cb0", "#3182ce", "#63b3ed", "#90cdf4", "#bee3f8"];
+
+function getPalette(blockKey?: string): string[] {
+  return (blockKey && BLOCK_PALETTES[blockKey]) || DEFAULT_PALETTE;
+}
 
 interface SeriesPoint { label: string; value: number; }
 
-/** Derives a representative series for a block from the report's data slice. */
+function computeYTicks(maxValue: number, desired = 4): number[] {
+  if (maxValue <= 0) return [0, 1];
+  const rawStep = maxValue / desired;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const norm = rawStep / mag;
+  const niceNorm = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+  const step = niceNorm * mag;
+  const niceMax = Math.ceil(maxValue / step) * step;
+  const ticks: number[] = [];
+  for (let v = 0; v <= niceMax + 1e-9; v += step) ticks.push(Math.round(v * 100) / 100);
+  return ticks;
+}
+
+const fmtNum = (n: number) => (Number.isInteger(n) ? n.toString() : n.toFixed(1));
+
 function computeBlockSeries(
   block: AnalyticsBlockConfigExtended,
   alerts: PeruAlert[],
@@ -279,33 +317,68 @@ function computeBlockSeries(
 interface MiniChartProps {
   type: AnalyticsBlockDefinition["chartType"];
   data: SeriesPoint[];
+  blockKey?: string;
 }
 
-const MiniChart = ({ type, data }: MiniChartProps) => {
+const MiniChart = ({ type, data, blockKey }: MiniChartProps) => {
+  const palette = getPalette(blockKey);
   const W = CHART_WIDTH;
   const H = CHART_HEIGHT;
-  const { top, right, bottom, left } = CHART_PADDING;
+  const needsLegend = type === "pie" || type === "bar" || type === "stacked_bar" || type === "funnel" || type === "matrix" || type === "cards" || type === "kpi";
+  const padding = needsLegend ? CHART_PADDING : { ...CHART_PADDING, right: 14 };
+  const { top, right, bottom, left } = padding;
   const innerW = W - left - right;
   const innerH = H - top - bottom;
   const max = Math.max(1, ...data.map((d) => d.value));
+  const ticks = computeYTicks(max, 4);
+  const yMax = ticks[ticks.length - 1] || max;
+  const valToY = (v: number) => top + innerH - (v / yMax) * innerH;
 
-  const baseline = (
-    <SvgLine x1={left} y1={top + innerH} x2={left + innerW} y2={top + innerH} stroke={AXIS_COLOR} strokeWidth={0.5} />
+  const yAxis = (
+    <G>
+      {ticks.map((t, i) => (
+        <G key={i}>
+          <SvgLine
+            x1={left}
+            y1={valToY(t)}
+            x2={left + innerW}
+            y2={valToY(t)}
+            stroke={t === 0 ? AXIS_COLOR : GRID_COLOR}
+            strokeWidth={0.5}
+          />
+          <Text x={left - 4} y={valToY(t) + 2} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "right" }}>
+            {fmtNum(t)}
+          </Text>
+        </G>
+      ))}
+      <SvgLine x1={left} y1={top} x2={left} y2={top + innerH} stroke={AXIS_COLOR} strokeWidth={0.5} />
+    </G>
+  );
+
+  const legend = (slice: SeriesPoint[]) => (
+    <G>
+      {slice.map((d, i) => (
+        <G key={`lg-${i}`}>
+          <Rect x={W - right + 6} y={top + 2 + i * 11} width={6} height={6} fill={palette[i % palette.length]} />
+          <Text x={W - right + 16} y={top + 8 + i * 11} style={{ fontSize: 6.5, color: "#2d3748" }}>
+            {d.label.length > 16 ? d.label.slice(0, 16) + "…" : d.label}: {fmtNum(d.value)}
+          </Text>
+        </G>
+      ))}
+    </G>
   );
 
   if (type === "line" || type === "timeline") {
     const stepX = data.length > 1 ? innerW / (data.length - 1) : innerW;
-    const points = data
-      .map((d, i) => `${left + i * stepX},${top + innerH - (d.value / max) * innerH}`)
-      .join(" ");
+    const points = data.map((d, i) => `${left + i * stepX},${valToY(d.value)}`).join(" ");
     return (
       <Svg width={W} height={H}>
-        {baseline}
-        <Polyline points={points} fill="none" stroke={CHART_PALETTE[1]} strokeWidth={1.5} />
+        {yAxis}
+        <Polyline points={points} fill="none" stroke={palette[1] ?? palette[0]} strokeWidth={1.5} />
         {data.map((d, i) => (
           <G key={i}>
-            <Circle cx={left + i * stepX} cy={top + innerH - (d.value / max) * innerH} r={1.8} fill={CHART_PALETTE[0]} />
-            <Text x={left + i * stepX} y={H - 4} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
+            <Circle cx={left + i * stepX} cy={valToY(d.value)} r={2} fill={palette[0]} />
+            <Text x={left + i * stepX} y={H - 6} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
               {d.label}
             </Text>
           </G>
@@ -316,9 +389,9 @@ const MiniChart = ({ type, data }: MiniChartProps) => {
 
   if (type === "pie") {
     const total = data.reduce((s, d) => s + d.value, 0) || 1;
-    const cx = (W - 100) / 2;
-    const cy = H / 2;
-    const r = Math.min(innerH, innerW) / 2 - 6;
+    const cx = left + innerW / 2;
+    const cy = top + innerH / 2;
+    const r = Math.min(innerH, innerW) / 2 - 4;
     let startAngle = -Math.PI / 2;
     const arcs = data.map((d, i) => {
       const angle = (d.value / total) * Math.PI * 2;
@@ -329,22 +402,14 @@ const MiniChart = ({ type, data }: MiniChartProps) => {
       const y2 = cy + r * Math.sin(endAngle);
       const large = angle > Math.PI ? 1 : 0;
       const path = `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${large} 1 ${x2},${y2} Z`;
-      const fill = CHART_PALETTE[i % CHART_PALETTE.length];
-      const node = <Path key={i} d={path} fill={fill} />;
+      const node = <Path key={i} d={path} fill={palette[i % palette.length]} />;
       startAngle = endAngle;
       return node;
     });
     return (
       <Svg width={W} height={H}>
         {arcs}
-        {data.map((d, i) => (
-          <G key={`l-${i}`}>
-            <Rect x={W - 100} y={10 + i * 12} width={6} height={6} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
-            <Text x={W - 90} y={16 + i * 12} style={{ fontSize: 7, color: "#2d3748" }}>
-              {d.label}: {d.value}
-            </Text>
-          </G>
-        ))}
+        {legend(data)}
       </Svg>
     );
   }
@@ -354,18 +419,19 @@ const MiniChart = ({ type, data }: MiniChartProps) => {
     return (
       <Svg width={W} height={H}>
         {data.map((d, i) => {
-          const w = (d.value / max) * innerW;
+          const w = (d.value / yMax) * innerW;
           const x = left + (innerW - w) / 2;
           const y = top + i * rowH + 2;
           return (
             <G key={i}>
-              <Rect x={x} y={y} width={w} height={rowH - 4} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
-              <Text x={left + innerW / 2} y={y + rowH / 2 + 2} style={{ fontSize: 6, color: "#ffffff", textAlign: "center" }}>
+              <Rect x={x} y={y} width={w} height={rowH - 4} fill={palette[i % palette.length]} />
+              <Text x={left + innerW / 2} y={y + rowH / 2 + 2} style={{ fontSize: 6.5, color: "#ffffff", textAlign: "center" }}>
                 {d.label} · {d.value}
               </Text>
             </G>
           );
         })}
+        {legend(data)}
       </Svg>
     );
   }
@@ -380,8 +446,8 @@ const MiniChart = ({ type, data }: MiniChartProps) => {
         {data.map((d, i) => {
           const r = Math.floor(i / cols);
           const c = i % cols;
-          const intensity = d.value / max;
-          const fill = CHART_PALETTE[Math.min(CHART_PALETTE.length - 1, Math.floor(intensity * (CHART_PALETTE.length - 1)))];
+          const intensity = d.value / yMax;
+          const fill = palette[Math.min(palette.length - 1, Math.floor(intensity * (palette.length - 1)))];
           return (
             <G key={i}>
               <Rect x={left + c * cellW + 1} y={top + r * cellH + 1} width={cellW - 2} height={cellH - 2} fill={fill} />
@@ -391,52 +457,59 @@ const MiniChart = ({ type, data }: MiniChartProps) => {
             </G>
           );
         })}
+        {legend(data)}
       </Svg>
     );
   }
 
   if (type === "kpi" || type === "cards") {
-    const cols = Math.min(data.length, 4) || 1;
+    const visible = data.slice(0, 4);
+    const cols = Math.max(visible.length, 1);
     const tileW = innerW / cols;
     return (
       <Svg width={W} height={H}>
-        {data.slice(0, cols).map((d, i) => (
-          <G key={i}>
-            <Rect x={left + i * tileW + 4} y={top + 4} width={tileW - 8} height={innerH - 8} fill="#ebf2fb" />
-            <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2} style={{ fontSize: 14, color: "#1a365d", textAlign: "center" }}>
-              {d.value}
-            </Text>
-            <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2 + 14} style={{ fontSize: 7, color: LABEL_COLOR, textAlign: "center" }}>
-              {d.label}
-            </Text>
-          </G>
-        ))}
+        {visible.map((d, i) => {
+          const fill = palette[i % palette.length];
+          return (
+            <G key={i}>
+              <Rect x={left + i * tileW + 4} y={top + 4} width={tileW - 8} height={innerH - 8} fill={fill} />
+              <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2} style={{ fontSize: 16, color: "#ffffff", textAlign: "center" }}>
+                {fmtNum(d.value)}
+              </Text>
+              <Text x={left + i * tileW + tileW / 2} y={top + innerH / 2 + 14} style={{ fontSize: 7, color: "#ffffff", textAlign: "center" }}>
+                {d.label}
+              </Text>
+            </G>
+          );
+        })}
+        {legend(visible)}
       </Svg>
     );
   }
 
-  // default: vertical bars
+  // default: vertical bars (bar / stacked_bar) — multicolor + Y axis + legend
   const barW = innerW / Math.max(data.length, 1);
   return (
     <Svg width={W} height={H}>
-      {baseline}
+      {yAxis}
       {data.map((d, i) => {
-        const h = (d.value / max) * innerH;
-        const x = left + i * barW + barW * 0.15;
+        const h = (d.value / yMax) * innerH;
+        const x = left + i * barW + barW * 0.18;
         const y = top + innerH - h;
-        const w = barW * 0.7;
+        const w = barW * 0.64;
         return (
           <G key={i}>
-            <Rect x={x} y={y} width={w} height={h} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+            <Rect x={x} y={y} width={w} height={h} fill={palette[i % palette.length]} />
             <Text x={x + w / 2} y={y - 2} style={{ fontSize: 6, color: "#1a365d", textAlign: "center" }}>
-              {d.value}
+              {fmtNum(d.value)}
             </Text>
-            <Text x={x + w / 2} y={H - 4} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
+            <Text x={x + w / 2} y={H - 6} style={{ fontSize: 6, color: LABEL_COLOR, textAlign: "center" }}>
               {d.label.length > 10 ? d.label.slice(0, 10) + "…" : d.label}
             </Text>
           </G>
         );
       })}
+      {legend(data)}
     </Svg>
   );
 };
@@ -616,7 +689,7 @@ const ReportPDF = ({
                     {b.visibility === "internal" ? "Operación interna" : "Cliente / Equipo Legal"} · {periodLabel}
                   </Text>
                   <View style={{ marginVertical: 6 }}>
-                    <MiniChart type={chartType} data={series} />
+                    <MiniChart type={chartType} data={series} blockKey={b.key} />
                   </View>
                   <Text style={styles.analyticsBlockBody}>{b.takeaway}</Text>
                 </View>
