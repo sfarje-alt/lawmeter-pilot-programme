@@ -159,6 +159,7 @@ export function useSesionesWorkspace() {
   // Combinar sesiones reales + demo (demo si BD viene vacía)
   const baseSessions = base.allSessions;
   const sessions = useMemo<PeruSession[]>(() => {
+    if (isEmpty) return [];
     const real = baseSessions.length > 0 ? baseSessions : SESIONES_DEMO_ALERTS;
     return real.map((s) => {
       const stored = editorial[s.id];
