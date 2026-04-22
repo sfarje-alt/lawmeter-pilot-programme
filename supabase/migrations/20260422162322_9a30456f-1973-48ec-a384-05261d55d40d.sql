@@ -1,0 +1,1 @@
+DELETE FROM public.alerts WHERE id = '7d34b8ad-d341-5637-af8b-6a20a6cab0c2';
