@@ -124,7 +124,10 @@ export function InboxAlertCard({
   const hasCommentary = !!(alert.expert_commentary && alert.expert_commentary.trim());
   const hasAiScores =
     typeof alert.impacto_score === "number" || typeof alert.urgencia_score === "number";
-  const upcomingDate = getUpcomingKeyDate(alert.key_dates);
+  const excludeFechas = [alert.project_date, alert.stage_date, alert.publication_date].filter(
+    (d): d is string => !!d,
+  );
+  const upcomingDate = getUpcomingKeyDate(alert.key_dates, excludeFechas);
   const firstRationale = alert.rationale && alert.rationale.length > 0 ? alert.rationale[0] : null;
 
   const handlePinClick = (e: React.MouseEvent) => {
