@@ -131,14 +131,14 @@ export function ClientAnalytics() {
         <h2 className="text-lg font-semibold text-foreground mb-5">Visión General</h2>
         
         {isEnabled('service_kpis') && (
-          <ServiceKPIsBlock data={DEMO_SERVICE_KPIS} timeframe={getTimeframeLabel()} />
+          <ServiceKPIsBlock data={undefined as any} timeframe={getTimeframeLabel()} />
         )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {isEnabled('impact_matrix') && (
-            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_IMPACT_MATRIX} />
+            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('regulatory_pulse') && (
-            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_REGULATORY_PULSE} />
+            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
         </div>
       </section>
@@ -150,16 +150,16 @@ export function ClientAnalytics() {
         <h2 className="text-lg font-semibold text-foreground mb-5">Desglose y Rankings</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled('alert_priority') && (
-            <AlertPriorityBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_ALERT_PRIORITY} />
+            <AlertPriorityBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('alert_distribution') && (
-            <AlertDistributionBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_ALERT_DISTRIBUTION} />
+            <AlertDistributionBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('top_entities') && (
-            <TopEntitiesBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={5} demoData={DEMO_TOP_ENTITIES} />
+            <TopEntitiesBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={5} />
           )}
           {isEnabled('popular_topics') && (
-            <PopularTopicsBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={7} demoData={DEMO_POPULAR_TOPICS} />
+            <PopularTopicsBlock alerts={[]} timeframe={getTimeframeLabel()} maxItems={7} />
           )}
         </div>
       </section>
@@ -177,7 +177,7 @@ export function ClientAnalytics() {
             <EmergingTopicsBlock timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('legislative_funnel') && (
-            <LegislativeFunnelBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_LEGISLATIVE_FUNNEL} />
+            <LegislativeFunnelBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('exposure') && (
             <ExposureBlock timeframe={getTimeframeLabel()} />
@@ -197,7 +197,6 @@ export function ClientAnalytics() {
               clientName={clientName || "Su empresa"}
               clientSector={clientSector}
               timeframe={getTimeframeLabel()}
-              demoData={DEMO_INDUSTRY_BENCHMARK}
             />
           )}
         </div>
