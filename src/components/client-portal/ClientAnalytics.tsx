@@ -14,7 +14,6 @@ import {
   TopEntitiesBlock,
   LegislativeFunnelBlock,
   PopularTopicsBlock,
-  ServiceKPIsBlock,
   IndustryBenchmarkBlock,
   KeyMovementsBlock,
   EmergingTopicsBlock,
