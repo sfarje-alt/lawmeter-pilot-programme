@@ -1,87 +1,85 @@
 
 
-## Plan: Limpiar restos de FarmaSalud y aislar data de Bedson/Betsson
+## Plan: Eliminar metadatos técnicos y añadir sistema de créditos para IA en sesiones
 
-Hoy el sistema tiene tres focos de fugas mock que afectan la cuenta de **Betsson Group** (el ID "Bedson" del piloto):
+### 1. Quitar el bloque "Modelo / Costo USD / Duración audio"
 
-1. **Perfil** (`ClientProfileView` y `ClientsPage`) — carga `FARMASALUD_CLIENT_PROFILE` por defecto.
-2. **Reportes** — `readCompanyName()` cae a `MOCK_CLIENT_PROFILES[0].legalName` ("FarmaSalud Perú S.A.C."), y faltan opciones para el filtro de sesiones.
-3. **Analíticas** — `LegalTeamAnalyticsDashboard` pasa `getDemoDataForClient('all')` a todos los bloques, ignorando si la org tiene data real o no.
+En `src/components/sessions/SesionDetailDrawer.tsx` (líneas 335-352) eliminar el bloque que muestra `analysis_model`, `analysis_cost_usd` y `transcript_duration_s`. Esa información es interna y no debe ser visible al usuario.
 
-Existe ya una utilidad `isEmptyDataOrg(orgId)` que marca a Betsson como organización "vacía"; el Inbox y Sesiones la respetan, pero Reportes, Perfil y Analíticas no.
+### 2. Sistema de créditos del piloto
 
----
+**Modelo:**
+- Balance inicial: **30 créditos** por organización (piloto Betsson).
+- Análisis de sesión (transcripción + resumen IA, hasta 90 min): **10 créditos**.
+- Pregunta Q&A sobre sesión analizada: **1 crédito** por defecto, escalando según longitud de respuesta:
+  - respuesta corta (<400 tokens out) → 1 crédito
+  - respuesta media (400-1200) → 2 créditos
+  - respuesta larga (>1200) → 3 créditos
+  El edge function `session-qa` ya devuelve los tokens, así que computamos en backend y descontamos antes de retornar.
 
-### 1) Perfil rígido de Bedson (esperando documento)
+**Backend (migración):**
+Nueva tabla `org_ai_credits`:
+```
+organization_id uuid PK
+balance int not null default 30
+included_credits int not null default 30
+updated_at timestamptz
+```
+Y `ai_credit_transactions` (auditoría):
+```
+id uuid PK, organization_id, delta int, reason text
+('session_analysis' | 'session_qa'), session_id, created_at
+```
+RLS: SELECT para miembros de la org; INSERT/UPDATE solo vía edge functions con service role.
 
-**Crear** `src/data/bedsonClientProfile.ts` con `BEDSON_CLIENT_PROFILE: ClientProfile` rellenado con los datos del Word que vas a subir.
+Función RPC `consume_credits(org_id, amount, reason, session_id)` que:
+- bloquea la fila, valida `balance >= amount`, descuenta y registra transacción.
+- retorna `{ success, new_balance, error }`.
 
-**`ClientsPage.tsx`**:
-- Cuando `profile.organization_id` es de Betsson (vía `isEmptyDataOrg`), cargar `BEDSON_CLIENT_PROFILE` por defecto en lugar de `FARMASALUD_CLIENT_PROFILE`.
-- Mantener el formulario editable para que pueda ajustarse, pero la base inicial será Bedson.
+**Edge functions:**
+- `solicitar-analisis-sesion`: antes de encolar, llamar `consume_credits(10, 'session_analysis')`. Si falla por saldo, retornar 402 con mensaje "Créditos insuficientes".
+- `session-qa`: tras obtener respuesta, calcular tier (1/2/3) por `outputTokens` y consumir. Devolver `creditsUsed` y `newBalance` en la respuesta.
 
-**`ClientProfileView.tsx`** (portal cliente, hoy hardcodeado a FarmaSalud):
-- Reemplazar el objeto local `MOCK_CLIENT_PROFILE` por una lectura de `BEDSON_CLIENT_PROFILE` (vista read-only).
+### 3. UI de balance de créditos
 
-> Espero el Word de Bedson antes de implementar para llenar campos reales. Si quieres avanzar mientras, puedo dejar el archivo con placeholders y completarlo después.
+**Hook nuevo** `useAICredits()` que lee `org_ai_credits` y se suscribe vía realtime para actualizar en vivo.
 
----
+**Barra de balance** (componente `CreditsBalanceBar`):
+- Ubicación: header de `SesionesWorkspace.tsx` (junto al título "Sesiones").
+- Muestra: `[████████░░] 22 / 30 créditos`.
+- Color: verde >50%, ámbar 20-50%, rojo <20%.
+- Tooltip con desglose: "10 créditos = 1 análisis (90 min). 1-3 créditos = 1 pregunta Q&A".
 
-### 2) Reportes
+**En `SesionDetailDrawer` y `peru/SessionDetailDrawer`:**
+- Botón "Analizar sesión con IA" muestra "(10 créditos)" al lado y se deshabilita si `balance < 10` con tooltip "Créditos insuficientes".
+- Antes de ejecutar, modal de confirmación: "Esto consumirá 10 créditos. Saldo actual: 22 → 12. ¿Continuar?".
+- En `SessionQAPanel`: bajo el input mostrar "Cada pregunta consume 1-3 créditos según complejidad". Tras cada respuesta, toast pequeño "1 crédito consumido · saldo: 21".
 
-**Etiqueta de organización** (`ReportsPage.tsx`, línea 100-111):
-- Cambiar `readCompanyName()`: si hay `profile.organization_id` y es Betsson → devolver `"Bedson Group"` (o el legal name del perfil Bedson cargado). Eliminar el fallback a `MOCK_CLIENT_PROFILES[0]`.
-- El header "Organización: …" ahora mostrará "Bedson Group".
+### 4. Q&A en el drawer correcto
 
-**Filtro de fecha de sesiones** (nuevo, dentro del panel "Choices"):
-- Cuando `source === "sesiones" || "mixto"`, mostrar dos checkboxes independientes bajo el campo Período:
-  - ☑ Incluir sesiones cuya **fecha de sesión** esté en el período
-  - ☐ Incluir sesiones cuya **fecha de análisis IA** esté en el período (`analysis_completed_at`)
-- Una sesión entra al reporte si pasa **cualquiera** de los criterios marcados (OR lógico).
-- `filteredSessions` y `handleRunScheduledNow` se actualizan para usar esa lógica; los `ScheduledReport` persisten ambos flags.
+`src/components/sessions/SesionDetailDrawer.tsx` (el genérico, que es el que muestra la captura) **no tiene panel Q&A** — solo lo tiene la versión `peru/SessionDetailDrawer.tsx`. Añadir una sección Q&A al drawer genérico que aparece **solo cuando** `analysis_status === 'COMPLETED'`, reutilizando lógica de `SessionQAPanel` adaptada al tipo `Sesion` (usando `transcript_text` o equivalente del registro). Si no hay transcripción persistida en este modelo, exponer `transcript_text` desde la query de `useSesionRealtime`.
 
-**Verificación de botones**:
-- Auditar: "Generar reporte", "Programar", "Ejecutar ahora", "Pausar/Reanudar", "Eliminar programación", "Descargar PDF histórico". Asegurar que cada uno tiene handler funcional y que la pestaña "Programados" y "Generados" se actualizan en vivo.
-
----
-
-### 3) Analíticas — usar solo datos reales de Bedson
-
-**`LegalTeamAnalyticsDashboard.tsx`**:
-- Detectar `isEmptyDataOrg(organization_id)` con `useAuth()`.
-- Cuando es vacío:
-  - **No** llamar a `getDemoDataForClient('all')`.
-  - Pasar a cada bloque sus datos calculados desde `useAlerts()` (alertas reales de Bedson) y `useSesionesWorkspace()` (sesiones reales).
-  - Bloques que dependen de métricas que aún no recolectamos (ej. `DetectionToActionTimeBlock`, `AIUsageBlock`, `IndustryBenchmarkBlock`, `ReportsGeneratedBlock`, `EditorialResponseTimeBlock`) reciben `data={undefined}` o `alerts={[]}` y muestran un **estado vacío** uniforme.
-
-**Estado vacío estandarizado**:
-- Añadir prop opcional `emptyMessage` al `AnalyticsBlock` (o reutilizar el slot existente). Si los datos están vacíos, renderiza un placeholder centrado: ícono + "Sin datos suficientes" + subtítulo "Los datos aparecerán cuando se acumule actividad real".
-- Aplicar a los bloques que hoy reciben `demoData.*` siempre.
-
-**Bloques con cómputo real disponible** (mantienen visualización si hay alertas/sesiones):
-- ImpactMatrix, RegulatoryPulse, AlertPriority, AlertDistribution, LegislativeFunnel, TopEntities, PopularTopics, KeyMovements, EmergingTopics, Exposure, PinnedArchived → calcular desde alertas reales.
-- SessionsByCommission, SessionsTemporalEvolution, SessionAgendaType, SessionTopics, SessionRecurringBills → calcular desde sesiones reales de Bedson.
-
-**ClientAnalytics.tsx** (portal cliente): mismo tratamiento — eliminar el fallback a `MOCK_CLIENTS` para sector y usar Bedson.
-
----
-
-### Archivos a tocar
+### 5. Archivos a tocar
 
 ```
-src/data/bedsonClientProfile.ts            (nuevo)
-src/components/clients/ClientsPage.tsx     (default profile por org)
-src/components/client-portal/ClientProfileView.tsx  (Bedson read-only)
-src/components/client-portal/ClientAnalytics.tsx    (sin mock)
-src/components/reports/ReportsPage.tsx     (org name + filtro sesiones + auditar botones)
-src/components/analytics/LegalTeamAnalyticsDashboard.tsx  (data real / estado vacío)
-src/components/analytics/shared/AnalyticsBlock.tsx        (prop emptyMessage)
-src/components/analytics/blocks/*.tsx      (manejar undefined → empty state)
+Migración nueva:
+  org_ai_credits + ai_credit_transactions + RPC consume_credits
+
+Backend:
+  supabase/functions/solicitar-analisis-sesion/index.ts   (consumir 10)
+  supabase/functions/session-qa/index.ts                  (consumir 1-3)
+
+Frontend:
+  src/hooks/useAICredits.ts                               (nuevo)
+  src/components/sessions/CreditsBalanceBar.tsx           (nuevo)
+  src/components/sessions/SesionDetailDrawer.tsx          (quitar metadatos + añadir Q&A + costo en botón)
+  src/components/sessions/peru/SessionDetailDrawer.tsx    (costo en botón Analizar)
+  src/components/sessions/peru/SessionQAPanel.tsx         (mostrar créditos consumidos)
+  src/components/sessions/peru/SesionesWorkspace.tsx      (montar CreditsBalanceBar en header)
 ```
 
----
+### 6. Confirmación necesaria
 
-### Próximo paso
-
-Sube el **Word de Bedson** y avanzo con todo en una sola pasada. Sin él, dejaría placeholders en el perfil y tendrías que re-editar.
+- ¿El balance es **por organización** (Betsson comparte 30) o **por usuario**? Asumo por organización salvo que digas lo contrario.
+- ¿Quieres que el admin pueda recargar créditos manualmente desde el panel de cliente, o lo manejamos solo desde backend en el piloto?
 
