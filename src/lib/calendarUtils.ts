@@ -108,6 +108,31 @@ export function convertAlertsToEvents(
         });
       }
     }
+
+    // All AI-identified key dates (deadlines, vigencia, votación, sesión, etc.)
+    if (rules.showManual && Array.isArray(alert.key_dates)) {
+      const rolLower = (r: string) => r.toLowerCase();
+      alert.key_dates.forEach((kd, idx) => {
+        const d = parseAlertDate(kd.fecha);
+        if (!d) return;
+        const rol = rolLower(kd.rol || "");
+        // Skip dates already plotted as stage_entry / publication to avoid duplicates
+        if (rol.includes("publicaci")) return;
+        if (isBill && (rol.includes("presentaci") || rol.includes("último estado") || rol.includes("ultimo estado"))) return;
+
+        const isInForce = rol.includes("vigencia") || rol.includes("entrada en vigor") || rol.includes("vacatio");
+        if (isInForce && !rules.showInForce) return;
+
+        events.push({
+          ...base,
+          id: `${alert.id}__kd${idx}`,
+          date: d,
+          dateType: isInForce ? "in_force" : "manual",
+          kind: isBill ? "bill" : "regulation",
+          title: `${kd.rol}: ${alert.legislation_title}`,
+        });
+      });
+    }
   }
   return events;
 }
