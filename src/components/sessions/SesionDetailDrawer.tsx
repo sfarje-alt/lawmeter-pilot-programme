@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import type { Sesion } from "@/hooks/useSesiones";
 import { useSesionRealtime } from "@/hooks/useSesionRealtime";
 import { useSolicitarAnalisis } from "@/hooks/useSolicitarAnalisis";
+import { AgendaMarkdownView } from "./AgendaMarkdownView";
 
 interface Props {
   sesion: Sesion | null;
@@ -152,10 +153,8 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
                 <h3 className="text-sm font-semibold">Agenda</h3>
               </div>
               {sesion.agenda_markdown ? (
-                <div className="rounded-lg border bg-muted/30 p-4 max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm font-sans text-foreground">
-                    {sesion.agenda_markdown}
-                  </pre>
+                <div className="rounded-lg border bg-muted/30 p-4 max-h-[60vh] overflow-y-auto">
+                  <AgendaMarkdownView markdown={sesion.agenda_markdown} />
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground italic">
