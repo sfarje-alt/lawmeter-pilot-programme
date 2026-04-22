@@ -1,4 +1,4 @@
-import { Inbox, Building2, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock } from "lucide-react";
+import { Inbox, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
