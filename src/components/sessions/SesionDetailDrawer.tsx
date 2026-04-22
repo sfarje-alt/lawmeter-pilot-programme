@@ -332,24 +332,8 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
                     </div>
                   )}
 
-                  {(sesion.analysis_model ||
-                    sesion.analysis_cost_usd !== null ||
-                    sesion.transcript_duration_s !== null) && (
-                    <>
-                      <Separator />
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        {sesion.analysis_model && <div>Modelo: {sesion.analysis_model}</div>}
-                        {sesion.analysis_cost_usd !== null && (
-                          <div>Costo: ${sesion.analysis_cost_usd.toFixed(4)} USD</div>
-                        )}
-                        {sesion.transcript_duration_s !== null && (
-                          <div>
-                            Duración audio: {Math.round(sesion.transcript_duration_s / 60)} min
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
+                  <Separator />
+                  <SesionQABox sesion={sesion} />
                 </div>
               )}
             </div>
