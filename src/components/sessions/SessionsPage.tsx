@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { CountryFlag } from "@/components/shared/CountryFlag";
 import { useSesiones, type Sesion } from "@/hooks/useSesiones";
+import { useSessionsUniverse } from "@/hooks/useSessionsUniverse";
 import { SesionCard } from "./SesionCard";
 import { SesionDetailDrawer } from "./SesionDetailDrawer";
 import { CreditsBalanceBar } from "./CreditsBalanceBar";
@@ -56,10 +57,12 @@ export function SessionsPage({ className }: SessionsPageProps) {
   const [onlyVideo, setOnlyVideo] = useState(false);
   const [onlyAnalyzed, setOnlyAnalyzed] = useState(false);
 
-  const { sesiones, loading, error } = useSesiones({
-    onlyDeInteres: view === "bandeja",
-    daysBack: view === "bandeja" ? 30 : undefined,
-  });
+  // Bandeja = canonical Sesiones universe (same dataset analytics consumes).
+  // Repositorio = full historical archive (broader, only used in this page).
+  const universe = useSessionsUniverse();
+  const repositorio = useSesiones({ onlyDeInteres: false });
+  const { sesiones, loading, error } =
+    view === "bandeja" ? universe : repositorio;
 
   const allCommissions = useMemo(() => {
     const set = new Set<string>();
