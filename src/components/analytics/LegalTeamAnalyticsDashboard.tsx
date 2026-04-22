@@ -40,6 +40,8 @@ import {
   getDemoDataForClient,
 } from "@/lib/analyticsMockData";
 import type { AnalyticsFilters } from "@/types/analytics";
+import { useAuth } from "@/contexts/AuthContext";
+import { isEmptyDataOrg } from "@/lib/orgDataIsolation";
 
 import { ReportLayoutBuilder } from "@/components/reports/ReportLayoutBuilder";
 import { ANALYTICS_BLOCK_REGISTRY, type AnalyticsBlockConfigExtended } from "@/types/analytics";

@@ -23,7 +23,9 @@ import {
 } from "./captureAnalyticsSnapshots";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
-import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
+import { BEDSON_ORGANIZATION_NAME } from "@/data/bedsonClientProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { isEmptyDataOrg } from "@/lib/orgDataIsolation";
 import { useSesionesWorkspace } from "@/hooks/useSesionesWorkspace";
 import type { PeruSession } from "@/types/peruSessions";
 import {
@@ -69,6 +71,10 @@ interface ScheduledReport {
   inclusion: InclusionMode;
   daysBack: number;
   includeAnalytics: boolean;
+  /** Si true, sesiones cuya fecha de sesión cae en el período entran al reporte. */
+  matchSessionDate?: boolean;
+  /** Si true, sesiones analizadas dentro del período entran al reporte (aunque la sesión sea anterior). */
+  matchAnalysisDate?: boolean;
   frequency: Frequency;
   time: string;
   recipients: string;
@@ -97,7 +103,10 @@ const GENERATED_STORAGE_KEY = "lawmeter:generated-reports";
 const PROFILE_STORAGE_KEY = "lawmeter:company-profile";
 const ANALYTICS_LAYOUT_KEY = "analytics-dashboard-layout-v2";
 
-function readCompanyName(): string {
+function readCompanyName(organizationId: string | null | undefined): string {
+  // Para la organización piloto (Bedson), siempre devolvemos su nombre canónico,
+  // aunque el localStorage tenga restos de configuraciones anteriores.
+  if (isEmptyDataOrg(organizationId)) return BEDSON_ORGANIZATION_NAME;
   try {
     const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
     if (raw) {
@@ -107,7 +116,7 @@ function readCompanyName(): string {
   } catch {
     /* ignore */
   }
-  return MOCK_CLIENT_PROFILES[0]?.legalName || "Mi Organización";
+  return BEDSON_ORGANIZATION_NAME;
 }
 
 /** Reads the analytics blocks the user currently has visible/enabled in Analíticas. */
@@ -575,6 +584,35 @@ function buildPeriodLabel(daysBack: number) {
   return `${format(start, "dd MMM", { locale: es })} – ${format(end, "dd MMM yyyy", { locale: es })} (${daysBack} días)`;
 }
 
+/**
+ * Determina si una sesión debe entrar al reporte según las opciones de fecha
+ * elegidas por el usuario. Acepta dos criterios independientes (fecha de
+ * sesión y/o fecha de análisis IA) y los combina con OR. Si ambos están
+ * desactivados, no entra ninguna sesión (defensivo).
+ */
+function sessionMatchesPeriod(
+  s: PeruSession,
+  cutoff: Date,
+  opts: { bySessionDate: boolean; byAnalysisDate: boolean; inclusion: InclusionMode }
+): boolean {
+  if (s.is_archived) return false;
+  if (opts.inclusion === "pineadas" && !s.is_pinned) return false;
+  if (!opts.bySessionDate && !opts.byAnalysisDate) return false;
+
+  const inRange = (iso: string | null | undefined) => {
+    if (!iso) return false;
+    try {
+      return !isBefore(parseISO(iso), cutoff);
+    } catch {
+      return false;
+    }
+  };
+
+  if (opts.bySessionDate && inRange(s.scheduled_at)) return true;
+  if (opts.byAnalysisDate && inRange((s as any).analysis_completed_at)) return true;
+  return false;
+}
+
 function nextRunDate(frequency: Frequency, time: string): string {
   const [hh, mm] = time.split(":").map(Number);
   const d = new Date();
@@ -610,9 +648,13 @@ function saveJSON<T>(key: string, value: T) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ReportsPage() {
+  const { profile } = useAuth();
   const { alerts } = useAlerts();
   const { sessions: allSessions } = useSesionesWorkspace();
-  const profileName = useMemo(() => readCompanyName(), []);
+  const profileName = useMemo(
+    () => readCompanyName(profile?.organization_id),
+    [profile?.organization_id]
+  );
 
   // Tab
   const [tab, setTab] = useState<"create" | "scheduled" | "generated">("create");
@@ -622,6 +664,11 @@ export function ReportsPage() {
   const [inclusion, setInclusion] = useState<InclusionMode>("todas");
   const [daysBack, setDaysBack] = useState<number>(7);
   const [includeAnalytics, setIncludeAnalytics] = useState<boolean>(true);
+
+  // Sessions: which date(s) to use to decide if a session enters the report.
+  // Ambos pueden estar activos a la vez (OR lógico).
+  const [matchSessionDate, setMatchSessionDate] = useState<boolean>(true);
+  const [matchAnalysisDate, setMatchAnalysisDate] = useState<boolean>(false);
 
   // Persisted lists
   const [schedules, setSchedules] = useState<ScheduledReport[]>(() =>
@@ -662,20 +709,14 @@ export function ReportsPage() {
 
   const filteredSessions = useMemo<PeruSession[]>(() => {
     if (source === "alertas") return [];
-    return allSessions.filter((s) => {
-      if (s.is_archived) return false;
-      // period (use scheduled_at if present)
-      try {
-        const ref = s.scheduled_at ? parseISO(s.scheduled_at) : null;
-        if (ref && isBefore(ref, periodCutoff)) return false;
-      } catch {
-        /* keep */
-      }
-      // inclusion
-      if (inclusion === "pineadas" && !s.is_pinned) return false;
-      return true;
-    });
-  }, [allSessions, source, inclusion, periodCutoff]);
+    return allSessions.filter((s) =>
+      sessionMatchesPeriod(s, periodCutoff, {
+        bySessionDate: matchSessionDate,
+        byAnalysisDate: matchAnalysisDate,
+        inclusion,
+      })
+    );
+  }, [allSessions, source, inclusion, periodCutoff, matchSessionDate, matchAnalysisDate]);
 
   const periodLabel = buildPeriodLabel(daysBack);
   const visibleAnalytics = useMemo(() => readVisibleAnalyticsBlocks(), [tab]); // refresh when tab changes
@@ -767,6 +808,8 @@ export function ReportsPage() {
       inclusion,
       daysBack,
       includeAnalytics,
+      matchSessionDate,
+      matchAnalysisDate,
       frequency: scheduleFrequency,
       time: scheduleTime,
       recipients: scheduleRecipients,
@@ -807,17 +850,13 @@ export function ReportsPage() {
         });
     const ss = s.source === "alertas"
       ? []
-      : allSessions.filter((sess) => {
-          if (sess.is_archived) return false;
-          try {
-            const ref = sess.scheduled_at ? parseISO(sess.scheduled_at) : null;
-            if (ref && isBefore(ref, cutoff)) return false;
-          } catch {
-            /* keep */
-          }
-          if (s.inclusion === "pineadas" && !sess.is_pinned) return false;
-          return true;
-        });
+      : allSessions.filter((sess) =>
+          sessionMatchesPeriod(sess, cutoff, {
+            bySessionDate: s.matchSessionDate ?? true,
+            byAnalysisDate: s.matchAnalysisDate ?? false,
+            inclusion: s.inclusion,
+          })
+        );
 
     let analyticsImages: AnalyticsSnapshot[] = [];
     if (s.includeAnalytics) {
@@ -957,6 +996,50 @@ export function ReportsPage() {
           <span className="text-sm text-muted-foreground">días · {periodLabel}</span>
         </div>
       </div>
+
+      {/* Sessions date matching — visible when sessions están en el alcance */}
+      {(source === "sesiones" || source === "mixto") && (
+        <div className="space-y-2 p-3 rounded-lg bg-muted/40 border border-border/50">
+          <Label className="font-medium flex items-center gap-2">
+            <Video className="h-4 w-4" /> ¿Qué fecha define si una sesión entra al reporte?
+          </Label>
+          <div className="space-y-2 pl-1">
+            <label className="flex items-start gap-3 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={matchSessionDate}
+                onChange={(e) => setMatchSessionDate(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-primary"
+              />
+              <span>
+                <span className="font-medium">Por fecha de la sesión</span>
+                <span className="block text-xs text-muted-foreground">
+                  La sesión ocurrió dentro del período seleccionado.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={matchAnalysisDate}
+                onChange={(e) => setMatchAnalysisDate(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-primary"
+              />
+              <span>
+                <span className="font-medium">Por fecha del análisis IA</span>
+                <span className="block text-xs text-muted-foreground">
+                  La sesión fue analizada por IA dentro del período (aunque haya ocurrido antes).
+                </span>
+              </span>
+            </label>
+          </div>
+          {!matchSessionDate && !matchAnalysisDate && (
+            <p className="text-xs text-destructive pl-1">
+              Selecciona al menos una opción o no se incluirán sesiones.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Analytics */}
       <div className="space-y-2 p-3 rounded-lg bg-muted/40 border border-border/50">
