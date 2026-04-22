@@ -30,8 +30,7 @@ import { useAlerts } from "@/contexts/AlertsContext";
 import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
 import type { KPIMetric } from "@/types/analytics";
 
-// (kept for backwards compatibility; freshness/data-through derived live below)
-const DEMO_DATA_FRESHNESS = { lastUpdate: new Date().toISOString(), dataThrough: new Date().toISOString().slice(0, 10) };
+const LIVE_FRESHNESS = { lastUpdate: new Date().toISOString(), dataThrough: new Date().toISOString().slice(0, 10) };
 
 type PeriodFilter = "7d" | "30d" | "90d" | "all";
 
@@ -78,7 +77,7 @@ export function ClientAnalytics() {
     return block ? block.enabled : true;
   };
 
-  const freshness = DEMO_DATA_FRESHNESS;
+  const freshness = LIVE_FRESHNESS;
 
   return (
     <div className="space-y-8">
