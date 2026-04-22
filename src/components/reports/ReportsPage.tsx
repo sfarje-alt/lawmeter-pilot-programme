@@ -23,7 +23,9 @@ import {
 } from "./captureAnalyticsSnapshots";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { PeruAlert } from "@/data/peruAlertsMockData";
-import { MOCK_CLIENT_PROFILES } from "@/data/mockClientProfiles";
+import { BEDSON_ORGANIZATION_NAME } from "@/data/bedsonClientProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { isEmptyDataOrg } from "@/lib/orgDataIsolation";
 import { useSesionesWorkspace } from "@/hooks/useSesionesWorkspace";
 import type { PeruSession } from "@/types/peruSessions";
 import {
@@ -97,7 +99,10 @@ const GENERATED_STORAGE_KEY = "lawmeter:generated-reports";
 const PROFILE_STORAGE_KEY = "lawmeter:company-profile";
 const ANALYTICS_LAYOUT_KEY = "analytics-dashboard-layout-v2";
 
-function readCompanyName(): string {
+function readCompanyName(organizationId: string | null | undefined): string {
+  // Para la organización piloto (Bedson), siempre devolvemos su nombre canónico,
+  // aunque el localStorage tenga restos de configuraciones anteriores.
+  if (isEmptyDataOrg(organizationId)) return BEDSON_ORGANIZATION_NAME;
   try {
     const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
     if (raw) {
@@ -107,7 +112,7 @@ function readCompanyName(): string {
   } catch {
     /* ignore */
   }
-  return MOCK_CLIENT_PROFILES[0]?.legalName || "Mi Organización";
+  return BEDSON_ORGANIZATION_NAME;
 }
 
 /** Reads the analytics blocks the user currently has visible/enabled in Analíticas. */
