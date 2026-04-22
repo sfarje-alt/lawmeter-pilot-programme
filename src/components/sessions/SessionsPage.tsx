@@ -122,6 +122,7 @@ export function SessionsPage({ className }: SessionsPageProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <CreditsBalanceBar compact />
           <Button
             variant={view === "bandeja" ? "default" : "outline"}
             size="sm"
