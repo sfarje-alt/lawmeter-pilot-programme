@@ -117,9 +117,8 @@ export function SesionCard({ sesion, onOpen }: Props) {
           </>
         )}
         {status === "FAILED" && (
-          <Badge variant="destructive">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Falló el análisis
+          <Badge variant="outline" className="text-muted-foreground">
+            Sin analizar
           </Badge>
         )}
       </div>
