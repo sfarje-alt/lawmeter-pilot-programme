@@ -808,6 +808,8 @@ export function ReportsPage() {
       inclusion,
       daysBack,
       includeAnalytics,
+      matchSessionDate,
+      matchAnalysisDate,
       frequency: scheduleFrequency,
       time: scheduleTime,
       recipients: scheduleRecipients,
@@ -848,17 +850,13 @@ export function ReportsPage() {
         });
     const ss = s.source === "alertas"
       ? []
-      : allSessions.filter((sess) => {
-          if (sess.is_archived) return false;
-          try {
-            const ref = sess.scheduled_at ? parseISO(sess.scheduled_at) : null;
-            if (ref && isBefore(ref, cutoff)) return false;
-          } catch {
-            /* keep */
-          }
-          if (s.inclusion === "pineadas" && !sess.is_pinned) return false;
-          return true;
-        });
+      : allSessions.filter((sess) =>
+          sessionMatchesPeriod(sess, cutoff, {
+            bySessionDate: s.matchSessionDate ?? true,
+            byAnalysisDate: s.matchAnalysisDate ?? false,
+            inclusion: s.inclusion,
+          })
+        );
 
     let analyticsImages: AnalyticsSnapshot[] = [];
     if (s.includeAnalytics) {
@@ -998,6 +996,50 @@ export function ReportsPage() {
           <span className="text-sm text-muted-foreground">días · {periodLabel}</span>
         </div>
       </div>
+
+      {/* Sessions date matching — visible when sessions están en el alcance */}
+      {(source === "sesiones" || source === "mixto") && (
+        <div className="space-y-2 p-3 rounded-lg bg-muted/40 border border-border/50">
+          <Label className="font-medium flex items-center gap-2">
+            <Video className="h-4 w-4" /> ¿Qué fecha define si una sesión entra al reporte?
+          </Label>
+          <div className="space-y-2 pl-1">
+            <label className="flex items-start gap-3 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={matchSessionDate}
+                onChange={(e) => setMatchSessionDate(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-primary"
+              />
+              <span>
+                <span className="font-medium">Por fecha de la sesión</span>
+                <span className="block text-xs text-muted-foreground">
+                  La sesión ocurrió dentro del período seleccionado.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={matchAnalysisDate}
+                onChange={(e) => setMatchAnalysisDate(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-primary"
+              />
+              <span>
+                <span className="font-medium">Por fecha del análisis IA</span>
+                <span className="block text-xs text-muted-foreground">
+                  La sesión fue analizada por IA dentro del período (aunque haya ocurrido antes).
+                </span>
+              </span>
+            </label>
+          </div>
+          {!matchSessionDate && !matchAnalysisDate && (
+            <p className="text-xs text-destructive pl-1">
+              Selecciona al menos una opción o no se incluirán sesiones.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Analytics */}
       <div className="space-y-2 p-3 rounded-lg bg-muted/40 border border-border/50">
