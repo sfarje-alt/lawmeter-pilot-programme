@@ -131,14 +131,14 @@ export function ClientAnalytics() {
         <h2 className="text-lg font-semibold text-foreground mb-5">Visión General</h2>
         
         {isEnabled('service_kpis') && (
-          <ServiceKPIsBlock data={DEMO_SERVICE_KPIS} timeframe={getTimeframeLabel()} />
+          <ServiceKPIsBlock data={undefined as any} timeframe={getTimeframeLabel()} />
         )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {isEnabled('impact_matrix') && (
-            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_IMPACT_MATRIX} />
+            <ImpactMatrixBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('regulatory_pulse') && (
-            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_REGULATORY_PULSE} />
+            <RegulatoryPulseBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
         </div>
       </section>
