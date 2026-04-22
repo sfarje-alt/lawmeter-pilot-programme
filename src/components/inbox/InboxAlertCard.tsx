@@ -54,11 +54,19 @@ function tryParse(s: string): Date | null {
 }
 
 /** Returns next upcoming key date with role plazo / vigencia_inicio / sesion. */
-function getUpcomingKeyDate(keyDates: KeyDate[] | undefined): KeyDate | null {
+function getUpcomingKeyDate(keyDates: KeyDate[] | undefined, excludeFechas: string[] = []): KeyDate | null {
   if (!keyDates || keyDates.length === 0) return null;
+  const excludedRoles = ["presentacion", "presentación", "fecha_presentacion", "publicacion", "publicación"];
+  const filtered = keyDates.filter((d) => {
+    const role = String(d.rol ?? "").toLowerCase();
+    if (excludedRoles.includes(role)) return false;
+    if (excludeFechas.includes(d.fecha)) return false;
+    return true;
+  });
+  if (filtered.length === 0) return null;
   const priorityRoles = ["plazo", "vigencia_inicio", "sesion"];
-  const candidates = keyDates.filter((d) => priorityRoles.includes(d.rol));
-  const pool = candidates.length > 0 ? candidates : keyDates;
+  const candidates = filtered.filter((d) => priorityRoles.includes(d.rol));
+  const pool = candidates.length > 0 ? candidates : filtered;
   const now = new Date();
   const upcoming = pool
     .map((d) => ({ d, parsed: tryParse(d.fecha) }))
@@ -116,7 +124,10 @@ export function InboxAlertCard({
   const hasCommentary = !!(alert.expert_commentary && alert.expert_commentary.trim());
   const hasAiScores =
     typeof alert.impacto_score === "number" || typeof alert.urgencia_score === "number";
-  const upcomingDate = getUpcomingKeyDate(alert.key_dates);
+  const excludeFechas = [alert.project_date, alert.stage_date, alert.publication_date].filter(
+    (d): d is string => !!d,
+  );
+  const upcomingDate = getUpcomingKeyDate(alert.key_dates, excludeFechas);
   const firstRationale = alert.rationale && alert.rationale.length > 0 ? alert.rationale[0] : null;
 
   const handlePinClick = (e: React.MouseEvent) => {
@@ -406,12 +417,14 @@ export function InboxAlertCard({
             {alert.project_date && (
               <div className="flex items-center gap-1">
                 <FileText className="h-3 w-3" />
+                <span className="text-muted-foreground/80">Presentación:</span>
                 <span>{formatDate(alert.project_date)}</span>
               </div>
             )}
             {alert.stage_date && alert.stage_date !== alert.project_date && (
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
+                <span className="text-muted-foreground/80">Último estado:</span>
                 <span>{formatDate(alert.stage_date)}</span>
               </div>
             )}
@@ -420,6 +433,7 @@ export function InboxAlertCard({
           alert.publication_date && (
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
+              <span className="text-muted-foreground/80">Publicación:</span>
               <span>{formatDate(alert.publication_date)}</span>
             </div>
           )
