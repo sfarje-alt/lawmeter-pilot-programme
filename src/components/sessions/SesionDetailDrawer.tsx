@@ -90,6 +90,15 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
   const isNotRequested = analysisStatus === "NOT_REQUESTED";
 
   async function onClickAnalizar() {
+    if (insufficientCredits) {
+      toast.error("Créditos insuficientes", {
+        description: `Necesitas ${SESSION_ANALYSIS_COST} créditos. Saldo actual: ${balance}.`,
+      });
+      return;
+    }
+    if (!confirm(`Esto consumirá ${SESSION_ANALYSIS_COST} créditos. Saldo actual: ${balance} → ${balance - SESSION_ANALYSIS_COST}. ¿Continuar?`)) {
+      return;
+    }
     try {
       await solicitar(sesion!.external_id);
       toast.success("Análisis solicitado", {
