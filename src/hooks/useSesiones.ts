@@ -1,7 +1,7 @@
 // Hook for fetching Congress sessions from public.sesiones
 // Phase 1-5: read-only, no IA on-demand yet.
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AnalysisStatus =
