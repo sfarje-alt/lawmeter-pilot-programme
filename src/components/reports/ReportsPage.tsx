@@ -1317,7 +1317,32 @@ export function ReportsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {schedules.length === 0 ? (
+              {restricted ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Ya tienes 2 reportes regulatorios automáticos programados.
+                  </p>
+                  {restrictedPreconfiguredSchedules.map((s) => (
+                    <div key={s.id} className="p-4 rounded-lg border border-border/50 bg-card/40">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-foreground">{s.name}</span>
+                            <Badge variant="outline">Programado</Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline">Tipo: Regulatorio</Badge>
+                            <Badge variant="outline">Modalidad: Automático</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Fecha programada: {s.scheduledDateLabel}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : schedules.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-6 text-center">
                   Aún no tienes reportes programados.
                 </p>
