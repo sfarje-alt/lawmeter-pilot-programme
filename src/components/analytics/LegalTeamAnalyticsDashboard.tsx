@@ -14,7 +14,6 @@ import {
   TopEntitiesBlock,
   AlertDistributionBlock,
   AlertPriorityBlock,
-  ServiceKPIsBlock,
   PopularTopicsBlock,
   KeyMovementsBlock,
   EmergingTopicsBlock,
