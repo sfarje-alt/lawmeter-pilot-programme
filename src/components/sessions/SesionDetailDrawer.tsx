@@ -233,13 +233,13 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
                       {sesion.analysis_error}
                     </p>
                   )}
-                  <Button size="sm" variant="outline" onClick={onClickAnalizar} disabled={loading}>
+                  <Button size="sm" variant="outline" onClick={onClickAnalizar} disabled={loading || insufficientCredits}>
                     {loading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
                       <RefreshCw className="h-4 w-4 mr-2" />
                     )}
-                    Reintentar análisis
+                    Reintentar análisis ({SESSION_ANALYSIS_COST} créditos)
                   </Button>
                 </div>
               )}
