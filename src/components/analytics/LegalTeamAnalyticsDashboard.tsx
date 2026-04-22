@@ -25,8 +25,6 @@ import {
   SessionsByCommissionBlock,
   SessionsTemporalEvolutionBlock,
   SessionAgendaTypeBlock,
-  SessionTopicsBlock,
-  SessionRecurringBillsBlock,
 } from "./blocks/sessions";
 import {
   DetectionToActionTimeBlock,
@@ -488,16 +486,8 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
             {isEnabled("sessions_temporal_evolution") && (
               <SessionsTemporalEvolutionBlock timeframe={timeframeLabel} sessions={sesiones} />
             )}
-            {isEnabled("session_agenda_type") && (
+          {isEnabled("session_agenda_type") && (
               <SessionAgendaTypeBlock timeframe={timeframeLabel} sessions={sesiones} />
-            )}
-            {isEnabled("session_topics") && (
-              <SessionTopicsBlock timeframe={timeframeLabel} sessions={sesiones} />
-            )}
-            {isEnabled("session_recurring_bills") && (
-              <div className="lg:col-span-2">
-                <SessionRecurringBillsBlock timeframe={timeframeLabel} sessions={sesiones} />
-              </div>
             )}
           </div>
         </CollapsibleAnalyticsSection>

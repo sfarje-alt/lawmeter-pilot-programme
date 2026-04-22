@@ -70,7 +70,7 @@ export function SessionsByCommissionBlock({
   return (
     <>
       <AnalyticsBlock
-        title="Alertas de sesiones por comisión"
+        title="Sesiones por comisión"
         takeaway={
           isEmpty
             ? "Aún no hay sesiones registradas en el período."
