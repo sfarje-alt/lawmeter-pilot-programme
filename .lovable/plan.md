@@ -1,95 +1,67 @@
 
 
-## Fix `ingest-alerts` + drawer flexible para fechas identificadas
+## Mejorar la presentación del markdown de la agenda
 
-### Problema raíz
-1. La edge function lee `source.*` (nombres viejos), pero tu pipeline manda `source_ref.*` con campos nuevos (`entity`, `reference_number`, `fuente` como URL, `date` en DD/MM/YYYY). Resultado: todas las columnas top-level de norma quedan en `null`.
-2. `fechas_identificadas` se guarda en `ai_analysis` pero no se aprovecha: ni para poblar `fecha_publicacion`, ni para mostrarse al usuario en el drawer.
-3. Forzar cada rol a una columna fija sería frágil — los roles varían de norma a norma (`aprobacion`, `publicacion`, `plazo`, `vigencia_inicio`, `vigencia_fin`, `entrada_vigor`, `consulta`, lo que sea, y puede haber varios del mismo rol).
+Hoy la agenda se muestra dentro de un `<pre>` con `whitespace-pre-wrap`, así que aparecen los asteriscos, `##`, `[texto](url)`, imágenes en bruto y bloques repetidos del portal. Vamos a renderizarlo como texto formateado.
 
-### Estrategia
-- **Columnas top-level**: solo las 2 que el sistema usa para lógica → `fecha_publicacion` (para ordenar/filtrar/mostrar en card) y `deadline` (para calendario y alerts urgentes).
-- **Resto de fechas**: se preservan crudas en `ai_analysis.fechas_identificadas[]` y se muestran en el drawer como lista flexible con rol + fecha + contexto. Acepta cualquier rol, cualquier cantidad.
+### Sin costo de IA
 
-### Cambios en `supabase/functions/ingest-alerts/index.ts`
+Solo formateo visual del markdown que ya está guardado en `sesiones.agenda_markdown`. **No se llama a ningún modelo de IA, no toca edge functions, no consume créditos.** Todo ocurre en el navegador.
 
-1. **Helper `readSourceRef(item)`** — acepta tanto `source_ref` como `source` y normaliza:
-   - `entity` ← `src.entity ?? src.entidad`
-   - `reference_number` ← `src.reference_number`
-   - `url` ← `src.url ?? src.fuente` (tu `fuente` es la URL completa)
-   - `fuente_label` ← derivar "El Peruano" / "SPIJ" desde la URL si es reconocible, sino guardar la URL como label
-   - `fecha_publicacion_iso` ← normalizar `src.date ?? src.fecha_publicacion` (acepta `DD/MM/YYYY` o ISO)
-   - `sumilla` ← `src.sumilla`
+### Cambios
 
-2. **Helper `normalizeDate(s)`**: `DD/MM/YYYY` → `YYYY-MM-DD`. ISO se mantiene. Inválida → `null`.
+**1. Nuevo archivo `src/components/sessions/AgendaMarkdownView.tsx`**
 
-3. **Helper `pickPublicationDate(item, src)`** — prioridad:
-   1. `src.date / src.fecha_publicacion` normalizada
-   2. Primer item de `fechas_identificadas` con `rol === "publicacion"` (o variantes: `publicación`, `published`)
-   3. `null`
+- Función `cleanAgendaMarkdown(md)` — limpia con regex el ruido del scraper:
+  - Quita imágenes (`![](...logo_congreso.svg)`, `portada.svg`).
+  - Elimina cabecera repetitiva (`## CONGRESO DE LA REPÚBLICA`, `Portal`, `[![](...)](#/)`).
+  - Elimina footer (`# Congreso de la República`, `Visor de SGSC…`, `Plaza Bolívar…`, `Copyright © …`).
+  - Colapsa líneas en blanco múltiples.
+- Renderiza con `react-markdown` + `remark-gfm` y overrides Tailwind:
+  - `h1/h2` → `text-base font-semibold` (no gigantes).
+  - `a` → `text-primary underline` con `target="_blank"` e ícono `ExternalLink`.
+  - `ul/ol/li` → bullets nativos con `space-y-1`.
+  - `img` → `null` (descartar).
+  - `strong/em` respetados.
+- Detecta códigos de proyecto de ley (regex `\d{4,5}/\d{4}-(CR|PE)`) y los envuelve en `Badge` monoespaciado.
 
-4. **`pickDeadline()`** — mantener lógica actual, pero ampliar roles aceptados: `["plazo", "vencimiento", "vigencia_inicio", "entrada_vigor"]` (en ese orden de prioridad). Acepta cualquier rol que coincida case-insensitive.
+**2. Editar `src/components/sessions/SesionDetailDrawer.tsx` (líneas 154–164)**
 
-5. **`external_id` opcional**: fallback automático a `item.alerta_id`. Si tampoco existe, error claro.
+Reemplazar el bloque `<pre>` por:
 
-6. **Mapeo a columnas top-level** (norma):
-   - `entity`, `reference_number`, `sumilla` ← desde `readSourceRef`
-   - `url`, `source_url` ← desde `readSourceRef.url`
-   - `fuente` ← `readSourceRef.fuente_label`
-   - `fecha_publicacion` ← desde `pickPublicationDate`
-   - `published_at` ← mismo valor
-   - `deadline` ← desde `pickDeadline`
-   - `legislation_summary` ← `item.resumen ?? item.comentario` (fallback porque tu pipeline manda el análisis en `comentario`)
-   - `affected_areas` ← `item.area_de_interes ?? []`
-
-7. **`ai_analysis` enriquecido** (preservar todo crudo para el drawer):
-   - `fechas_identificadas` ← `item.fechas_identificadas ?? []` (sin filtrar nada, todos los roles)
-   - `racional`, `impacto`, `urgencia`, `model`, `version`, `generated_at`, `alerta_id` ← como ya está
-   - `ui_extras.source_client` ← `{ id: cliente_id, name: cliente_nombre }` para auditoría
-   - `ui_extras.raw_payload` ← payload crudo del item para reprocesamiento futuro
-
-8. **No tocar PL/sesion**: misma lógica de source aplica gratis (ya que `readSourceRef` es agnóstico).
-
-### Cambios en `src/components/inbox/AlertDetailDrawer.tsx`
-
-Agregar/asegurar sección **"Fechas identificadas"** flexible:
-
-```text
-┌─ Fechas identificadas ──────────────┐
-│ [aprobación] 14 abr 2026            │
-│   Lima, 14 de abril – fecha de...   │
-│                                     │
-│ [publicación] 17 abr 2026           │
-│   Publicación en El Peruano: 17/04  │
-│                                     │
-│ [plazo] 17 may 2026  ⏰              │
-│   Plazo de 30 días calendario...    │
-└─────────────────────────────────────┘
+```tsx
+<div className="rounded-lg border bg-muted/30 p-4 max-h-[60vh] overflow-y-auto">
+  <AgendaMarkdownView markdown={sesion.agenda_markdown} />
+</div>
 ```
 
-- Render: lista (no tabla) con cada `{ rol, fecha, contexto }` de `key_dates`.
-- Badge de rol con color por categoría (publicación = azul, plazo/vencimiento = naranja, vigencia = verde, otros = gris).
-- Fecha formateada `dd MMM yyyy`.
-- Contexto en texto pequeño debajo.
-- Si la fecha es futura y rol es plazo/vencimiento/vigencia_inicio: icono ⏰.
-- Acepta CUALQUIER rol — colorea los conocidos, los demás caen al gris default.
-- Si `key_dates` está vacío, no se renderiza la sección.
+**3. Dependencias nuevas (package.json)**
 
-### Cambios en `src/components/client-portal/ClientAlertDetailDrawer.tsx`
+- `react-markdown`
+- `remark-gfm`
 
-Mismo bloque "Fechas identificadas" (read-only, sin acciones). Dejar consistente con admin drawer.
+(No requiere `@tailwindcss/typography`; los estilos se aplican vía `components` overrides para mantener coherencia con el resto de la app.)
 
-### Verificación post-deploy
+### Resultado visual esperado
 
-1. Re-ingestar la `RESOLUCION SBS N° 01116-2026`.
-2. Query a `alerts` para confirmar columnas top-level pobladas: `entity`, `reference_number`, `url`, `fecha_publicacion`, `sumilla`.
-3. Abrir drawer en Inbox → debe mostrar las 3 fechas (aprobación, publicación, plazo) como lista flexible con badges de color.
-4. Card en Inbox → entity badge, reference_number, link externo y fecha de publicación visibles.
-
-### Lo que NO cambia
-- Schema del DB (todas las columnas existen).
-- ID determinístico (`uuidv5`).
-- Frontend `AlertsContext` y `InboxAlertCard` — el mapping ya está listo, solo necesita data.
-- RLS, `INGEST_TOKEN`.
-- Lógica de PLs / sesiones (se beneficia gratis del nuevo `readSourceRef`).
+```text
+┌─ Agenda ─────────────────────────────────────┐
+│ Comercio Exterior y Turismo                  │
+│ Periodo Anual de Sesiones 2025 - 2026        │
+│                                              │
+│ • TITULO   DÉCIMA SESIÓN ORDINARIA …         │
+│ • FECHA    miércoles, 15 de abril de 2026    │
+│ • HORA     11:00 AM                          │
+│ • LUGAR    Presencial · Sala 1 / Virtual     │
+│                                              │
+│ I — APROBACIÓN DE ACTAS                      │
+│   • ACTA 9na Ses. Ordinaria 21.11.25 [Ver ↗] │
+│                                              │
+│ V — ORDEN DEL DÍA                            │
+│   5.2 Exposición del Proyecto de Ley         │
+│       [12369/2025-CR ↗] — "Ley que modifica  │
+│       las leyes 27790, 29890…"               │
+│       Autor: J. C. Lizarzaburu  [OFICIO ↗]   │
+└──────────────────────────────────────────────┘
+```
 
