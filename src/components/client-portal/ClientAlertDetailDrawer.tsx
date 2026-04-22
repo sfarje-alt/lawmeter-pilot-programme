@@ -92,19 +92,24 @@ export function ClientAlertDetailDrawer({ alert, open, onOpenChange, clientId }:
                   </div>
                 )}
 
-                {isBill && alert.author && (
+                {isBill && (alert.autores && alert.autores.length > 0 ? (
+                  <div className="flex items-start gap-2 text-sm">
+                    <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground shrink-0">Autores:</span>
+                    <span className="text-foreground">{alert.autores.join(", ")}</span>
+                  </div>
+                ) : alert.author ? (
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Autor:</span>
                     <span className="text-foreground">{alert.author}</span>
                   </div>
-                )}
-
-                {isBill && alert.parliamentary_group && (
+                ) : null)}
+                {isBill && alert.proponente && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Grupo:</span>
-                    <span className="text-foreground">{alert.parliamentary_group}</span>
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Proponente:</span>
+                    <span className="text-foreground">{alert.proponente}</span>
                   </div>
                 )}
 
