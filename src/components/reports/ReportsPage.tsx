@@ -1142,7 +1142,9 @@ export function ReportsPage() {
           </TabsTrigger>
           <TabsTrigger value="scheduled" className="gap-2">
             <Clock className="h-4 w-4" /> Reportes programados
-            <Badge variant="secondary">{schedules.length}</Badge>
+            <Badge variant="secondary">
+              {restricted ? restrictedPreconfiguredSchedules.length : schedules.length}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="generated" className="gap-2">
             <History className="h-4 w-4" /> Reportes generados
