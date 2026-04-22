@@ -25,19 +25,13 @@ import {
 } from "@/components/analytics/blocks";
 import { DataFreshnessIndicator } from "@/components/analytics/shared";
 import { ReportLayoutBuilder } from "@/components/reports/ReportLayoutBuilder";
-import {
-  DEMO_SERVICE_KPIS,
-  DEMO_DATA_FRESHNESS,
-  DEMO_IMPACT_MATRIX,
-  DEMO_REGULATORY_PULSE,
-  DEMO_ALERT_PRIORITY,
-  DEMO_ALERT_DISTRIBUTION,
-  DEMO_TOP_ENTITIES,
-  DEMO_POPULAR_TOPICS,
-  DEMO_LEGISLATIVE_FUNNEL,
-  DEMO_INDUSTRY_BENCHMARK,
-} from "@/lib/analyticsMockData";
+import { DataFreshnessIndicator as _DFI } from "@/components/analytics/shared";
+import { useAlerts } from "@/contexts/AlertsContext";
 import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
+import type { KPIMetric } from "@/types/analytics";
+
+// (kept for backwards compatibility; freshness/data-through derived live below)
+const DEMO_DATA_FRESHNESS = { lastUpdate: new Date().toISOString(), dataThrough: new Date().toISOString().slice(0, 10) };
 
 type PeriodFilter = "7d" | "30d" | "90d" | "all";
 
