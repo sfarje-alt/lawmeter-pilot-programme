@@ -12,9 +12,9 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { DEMO_EDITORIAL_RESPONSE_TIME } from "@/lib/analyticsMockData";
 import { useBlockFilters } from "@/hooks/useBlockFilters";
 import { resolveDateRange } from "@/lib/blockFilterUtils";
+import type { TimeSeriesDataPoint } from "@/types/analytics";
 import {
   Table,
   TableBody,
@@ -27,15 +27,18 @@ import {
 interface EditorialResponseTimeBlockProps {
   timeframe: string;
   source?: string;
-  demoData?: typeof DEMO_EDITORIAL_RESPONSE_TIME;
+  /** Real weekly trend (hours from create to first open). */
+  data?: { avgHours: number; medianHours: number; weeklyTrend: TimeSeriesDataPoint[] };
 }
 
 const TARGET_HOURS = 12;
 
+const EMPTY_DATA = { avgHours: 0, medianHours: 0, weeklyTrend: [] as TimeSeriesDataPoint[] };
+
 export function EditorialResponseTimeBlock({
   timeframe,
   source = "Tiempo entre creación y primera lectura",
-  demoData = DEMO_EDITORIAL_RESPONSE_TIME,
+  data: demoData = EMPTY_DATA,
 }: EditorialResponseTimeBlockProps) {
   const filterState = useBlockFilters('editorial_response_time');
 

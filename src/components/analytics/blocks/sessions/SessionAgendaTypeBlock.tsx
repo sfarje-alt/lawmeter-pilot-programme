@@ -15,14 +15,6 @@ interface Props {
   data?: { type: string; value: number }[];
 }
 
-const DEMO_DATA = [
-  { type: "Presentación", value: 38 },
-  { type: "Debate", value: 27 },
-  { type: "Votación", value: 18 },
-  { type: "Predictamen", value: 12 },
-  { type: "Otros", value: 5 },
-];
-
 const COLORS = [
   ANALYTICS_COLORS.stages.comision,
   ANALYTICS_COLORS.stages.dictamen,
@@ -33,27 +25,34 @@ const COLORS = [
 
 export function SessionAgendaTypeBlock({
   timeframe,
-  source = "Orden del día - Sesiones",
-  data = DEMO_DATA,
+  source = "Estado de análisis de sesiones",
+  data = [],
 }: Props) {
   const total = data.reduce((s, d) => s + d.value, 0);
   const top = [...data].sort((a, b) => b.value - a.value)[0];
+  const isEmpty = data.length === 0 || total === 0;
 
   return (
     <AnalyticsBlock
-      title="Distribución de ítems del orden del día"
-      takeaway={top ? `${top.type} es la actuación más frecuente (${Math.round((top.value / total) * 100)}% de los ítems).` : "Sin datos."}
-      infoTooltip="Distribución de ítems del orden del día de las sesiones por tipo de actuación parlamentaria (presentación, debate, votación, predictamen, etc.)."
+      title="Distribución por estado de sesión"
+      takeaway={
+        isEmpty
+          ? "Aún no hay sesiones registradas en el período."
+          : top
+          ? `${top.type} es el estado más frecuente (${Math.round((top.value / total) * 100)}% de las sesiones).`
+          : "Sin datos."
+      }
+      infoTooltip="Distribución de las sesiones del período según su estado actual de análisis (sin analizar, en proceso, analizada, etc.)."
       timeframe={timeframe}
       source={source}
       icon={<ListChecks className="h-4 w-4 text-primary" />}
-      isEmpty={data.length === 0}
+      isEmpty={isEmpty}
       renderDataTable={() => (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tipo de actuación</TableHead>
-              <TableHead className="text-right">Ítems</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="text-right">Sesiones</TableHead>
               <TableHead className="text-right">%</TableHead>
             </TableRow>
           </TableHeader>
@@ -63,7 +62,7 @@ export function SessionAgendaTypeBlock({
                 <TableCell>{d.type}</TableCell>
                 <TableCell className="text-right font-medium">{d.value}</TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {Math.round((d.value / total) * 100)}%
+                  {total > 0 ? Math.round((d.value / total) * 100) : 0}%
                 </TableCell>
               </TableRow>
             ))}

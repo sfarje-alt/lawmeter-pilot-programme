@@ -12,31 +12,32 @@ import {
 interface Props {
   timeframe: string;
   source?: string;
+  /** Pre-computed real data: weekly count of reviewed alerts. */
+  data?: { week: string; reviewed: number }[];
 }
-
-const DEMO = [
-  { week: "Sem 1", reviewed: 28 },
-  { week: "Sem 2", reviewed: 34 },
-  { week: "Sem 3", reviewed: 31 },
-  { week: "Sem 4", reviewed: 41 },
-  { week: "Sem 5", reviewed: 47 },
-];
 
 export function ReviewedAlertsBlock({
   timeframe,
   source = "Actividad editorial",
+  data = [],
 }: Props) {
-  const total = DEMO.reduce((s, d) => s + d.reviewed, 0);
-  const avg = (total / DEMO.length).toFixed(0);
+  const total = data.reduce((s, d) => s + d.reviewed, 0);
+  const avg = data.length ? (total / data.length).toFixed(0) : "0";
+  const isEmpty = data.length === 0 || total === 0;
 
   return (
     <AnalyticsBlock
       title="Alertas revisadas por período"
-      takeaway={`${total} alertas revisadas en el período (promedio ${avg}/semana).`}
-      infoTooltip="Conteo semanal de alertas que el equipo abrió y revisó al menos una vez."
+      takeaway={
+        isEmpty
+          ? "Aún no hay alertas revisadas en el período."
+          : `${total} alertas revisadas en el período (promedio ${avg}/semana).`
+      }
+      infoTooltip="Conteo semanal de alertas que el equipo ha abierto y marcado como leídas. Se calcula a partir del estado real de lectura."
       timeframe={timeframe}
       source={source}
       icon={<Eye className="h-4 w-4 text-primary" />}
+      isEmpty={isEmpty}
       renderDataTable={() => (
         <Table>
           <TableHeader>
@@ -46,7 +47,7 @@ export function ReviewedAlertsBlock({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {DEMO.map((d) => (
+            {data.map((d) => (
               <TableRow key={d.week}>
                 <TableCell>{d.week}</TableCell>
                 <TableCell className="text-right tabular-nums">{d.reviewed}</TableCell>
@@ -57,10 +58,10 @@ export function ReviewedAlertsBlock({
       )}
     >
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={DEMO} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+        <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
           <XAxis dataKey="week" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} />
+          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
           <Tooltip content={<ChartTooltip />} />
           <Bar dataKey="reviewed" fill={ANALYTICS_COLORS.legislationType.bills} radius={[4, 4, 0, 0]} />
         </BarChart>

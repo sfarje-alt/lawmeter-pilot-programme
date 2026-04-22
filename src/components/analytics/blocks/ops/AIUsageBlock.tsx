@@ -1,7 +1,7 @@
 import * as React from "react";
 import { AnalyticsBlock, ChartTooltip } from "../../shared";
 import { ANALYTICS_COLORS } from "@/lib/analyticsColors";
-import { Bot, FileAudio } from "lucide-react";
+import { Bot } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
@@ -12,31 +12,32 @@ import {
 interface Props {
   timeframe: string;
   source?: string;
+  /** Pre-computed real data: weekly counts of AI usage. */
+  data?: { week: string; transcript: number; chatbot: number }[];
 }
-
-const DEMO = [
-  { week: "Sem 1", transcript: 6, chatbot: 9 },
-  { week: "Sem 2", transcript: 8, chatbot: 12 },
-  { week: "Sem 3", transcript: 11, chatbot: 14 },
-  { week: "Sem 4", transcript: 9, chatbot: 17 },
-  { week: "Sem 5", transcript: 13, chatbot: 21 },
-];
 
 export function AIUsageBlock({
   timeframe,
-  source = "Uso de IA en alertas",
+  source = "Uso de IA en sesiones",
+  data = [],
 }: Props) {
-  const totalT = DEMO.reduce((s, d) => s + d.transcript, 0);
-  const totalC = DEMO.reduce((s, d) => s + d.chatbot, 0);
+  const totalT = data.reduce((s, d) => s + d.transcript, 0);
+  const totalC = data.reduce((s, d) => s + d.chatbot, 0);
+  const isEmpty = data.length === 0 || (totalT === 0 && totalC === 0);
 
   return (
     <AnalyticsBlock
       title="Uso de IA: transcripción y chatbot"
-      takeaway={`${totalT} alertas con transcripción solicitada · ${totalC} con chatbot habilitado.`}
-      infoTooltip="Volumen de alertas que tuvieron transcripción solicitada y/o el chatbot habilitado, agrupado por semana."
+      takeaway={
+        isEmpty
+          ? "Aún no se ha solicitado IA en el período."
+          : `${totalT} sesiones con transcripción solicitada · ${totalC} con chatbot habilitado.`
+      }
+      infoTooltip="Volumen real de sesiones que tuvieron transcripción solicitada y/o el chatbot habilitado, agrupado por semana."
       timeframe={timeframe}
       source={source}
       icon={<Bot className="h-4 w-4 text-primary" />}
+      isEmpty={isEmpty}
       renderDataTable={() => (
         <Table>
           <TableHeader>
@@ -47,7 +48,7 @@ export function AIUsageBlock({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {DEMO.map((d) => (
+            {data.map((d) => (
               <TableRow key={d.week}>
                 <TableCell>{d.week}</TableCell>
                 <TableCell className="text-right tabular-nums">{d.transcript}</TableCell>
@@ -59,10 +60,10 @@ export function AIUsageBlock({
       )}
     >
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={DEMO} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+        <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
           <XAxis dataKey="week" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} />
+          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
           <Tooltip content={<ChartTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11 }} />
           <Bar dataKey="transcript" name="Transcripción" fill={ANALYTICS_COLORS.legislationType.bills} radius={[4, 4, 0, 0]} />
