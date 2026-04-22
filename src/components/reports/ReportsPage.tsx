@@ -1352,6 +1352,20 @@ export function ReportsPage() {
                             <span>Generado: {format(parseISO(r.generatedAt), "dd MMM yyyy, HH:mm", { locale: es })}</span>
                           </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          onClick={() => {
+                            if (confirm(`¿Borrar el reporte "${r.title}"? Esta acción no se puede deshacer.`)) {
+                              setGenerated((prev) => prev.filter((g) => g.id !== r.id));
+                              toast.success("Reporte borrado");
+                            }
+                          }}
+                          aria-label="Borrar reporte"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
