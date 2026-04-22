@@ -25,6 +25,8 @@ import type { Sesion } from "@/hooks/useSesiones";
 import { useSesionRealtime } from "@/hooks/useSesionRealtime";
 import { useSolicitarAnalisis } from "@/hooks/useSolicitarAnalisis";
 import { AgendaMarkdownView } from "./AgendaMarkdownView";
+import { SesionQABox } from "./SesionQABox";
+import { useAICredits, SESSION_ANALYSIS_COST } from "@/hooks/useAICredits";
 
 interface Props {
   sesion: Sesion | null;
