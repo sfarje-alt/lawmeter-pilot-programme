@@ -233,6 +233,7 @@ export function ImpactMatrixBlock({
         title={selectedLabel}
         description={`${selectedAlertIds.length} alertas en esta categoría`}
         alertIds={selectedAlertIds}
+        alertsData={filteredAlerts}
       />
     </>
   );

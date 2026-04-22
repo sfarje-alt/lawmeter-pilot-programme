@@ -14,7 +14,6 @@ import {
   TopEntitiesBlock,
   AlertDistributionBlock,
   AlertPriorityBlock,
-  ServiceKPIsBlock,
   PopularTopicsBlock,
   KeyMovementsBlock,
   EmergingTopicsBlock,
@@ -312,22 +311,8 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
     };
   }, [alerts]);
 
-  // Service KPIs: derived from real alerts state
-  const serviceKpisData = React.useMemo<KPIMetric[]>(() => {
-    const total = alerts.length;
-    const reviewed = alerts.filter(
-      (a) => !!a.is_pinned_for_publication || !!a.archived_at || (a.updated_at && a.updated_at !== a.created_at),
-    ).length;
-    const withCommentary = alerts.filter((a) => (a.expert_commentary || "").trim().length > 0).length;
-    const withTags = alerts.filter((a) => (a.affected_areas || []).length > 0).length;
-    const pct = (n: number) => (total > 0 ? `${Math.round((n / total) * 100)}%` : "0%");
-    return [
-      { label: "Alertas Revisadas", value: String(reviewed), icon: "check-circle" },
-      { label: "Comentarios Añadidos", value: String(withCommentary), icon: "file-text" },
-      { label: "% Con Comentario", value: pct(withCommentary), icon: "activity" },
-      { label: "% Con Tags", value: pct(withTags), icon: "clock" },
-    ];
-  }, [alerts]);
+  // (Service KPIs block was removed from General per UX simplification)
+
 
   const timeframeLabel =
     {
@@ -410,9 +395,6 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
           onMaximizeChange={handleMaximize("general")}
         >
           <div className="space-y-6">
-            {isEnabled("service_kpis") && (
-              <ServiceKPIsBlock data={serviceKpisData} timeframe={timeframeLabel} />
-            )}
             {isEnabled("impact_matrix") && (
               <ImpactMatrixBlock alerts={alerts} timeframe={timeframeLabel} />
             )}
