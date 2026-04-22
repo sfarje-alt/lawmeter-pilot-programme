@@ -165,10 +165,10 @@ export function AlertsCalendar() {
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
-        .from("peru_sessions")
-        .select("id, scheduled_at, session_title, commission_name")
+        .from("sesiones" as any)
+        .select("id, scheduled_at, session_title, commission_name, es_de_interes")
         .order("scheduled_at", { ascending: false });
-      if (!error && data) setSessions(data);
+      if (!error && data) setSessions(data as any[]);
     })();
   }, []);
 
