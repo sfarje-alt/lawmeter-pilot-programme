@@ -28,6 +28,7 @@ import { CountryFlag } from "@/components/shared/CountryFlag";
 import { useSesiones, type Sesion } from "@/hooks/useSesiones";
 import { SesionCard } from "./SesionCard";
 import { SesionDetailDrawer } from "./SesionDetailDrawer";
+import { CreditsBalanceBar } from "./CreditsBalanceBar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
