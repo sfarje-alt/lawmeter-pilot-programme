@@ -3,7 +3,6 @@ import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
 import { getNeutralColor } from "@/lib/analyticsColors";
 import { Shield, AlertTriangle, Sparkles } from "lucide-react";
-import { DEMO_EXPOSURE } from "@/lib/analyticsMockData";
 import type { RankingItem } from "@/types/analytics";
 import {
   Tooltip,
@@ -52,7 +51,7 @@ interface ExposureBlockProps {
 export function ExposureBlock({
   timeframe,
   source = "Alertas publicadas",
-  demoData = DEMO_EXPOSURE,
+  demoData = [],
 }: ExposureBlockProps) {
   const filterState = useBlockFilters('exposure', { search: '', impactLevels: [] });
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);

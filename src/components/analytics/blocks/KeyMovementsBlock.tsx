@@ -3,7 +3,6 @@ import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { Sparkles, ArrowRight, Clock, Plus, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { DEMO_KEY_MOVEMENTS } from "@/lib/analyticsMockData";
 import { useBlockFilters } from "@/hooks/useBlockFilters";
 import { resolveDateRange } from "@/lib/blockFilterUtils";
 import {
@@ -15,10 +14,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type KeyMovementsData = {
+  newItems: number;
+  stageChanges: number;
+  upcomingDeadlines: number;
+  items: { id: string; type: 'new' | 'progress' | 'deadline'; title: string; date: string; detail?: string }[];
+};
+
+const EMPTY_KEY_MOVEMENTS: KeyMovementsData = { newItems: 0, stageChanges: 0, upcomingDeadlines: 0, items: [] };
+
 interface KeyMovementsBlockProps {
   timeframe: string;
   source?: string;
-  demoData?: typeof DEMO_KEY_MOVEMENTS;
+  demoData?: KeyMovementsData;
 }
 
 const TYPE_CONFIG = {
@@ -37,7 +45,7 @@ const TYPE_FILTER_OPTIONS = [
 export function KeyMovementsBlock({
   timeframe,
   source = "Alertas publicadas",
-  demoData = DEMO_KEY_MOVEMENTS,
+  demoData = EMPTY_KEY_MOVEMENTS,
 }: KeyMovementsBlockProps) {
   const filterState = useBlockFilters('key_movements', { search: '', status: 'all' });
   // Reuse `status` field as movement type filter ('new' | 'progress' | 'deadline' | 'all')

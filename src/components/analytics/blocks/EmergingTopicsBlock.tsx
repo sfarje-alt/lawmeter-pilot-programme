@@ -2,7 +2,6 @@ import * as React from "react";
 import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { TrendingUp, TrendingDown, Minus, Zap, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DEMO_EMERGING_TOPICS } from "@/lib/analyticsMockData";
 import type { RankingItem } from "@/types/analytics";
 import { useBlockFilters } from "@/hooks/useBlockFilters";
 import {
@@ -23,7 +22,7 @@ interface EmergingTopicsBlockProps {
 export function EmergingTopicsBlock({
   timeframe,
   source = "Alertas publicadas",
-  demoData = DEMO_EMERGING_TOPICS,
+  demoData = [],
 }: EmergingTopicsBlockProps) {
   const filterState = useBlockFilters('emerging_topics', { search: '' });
 
