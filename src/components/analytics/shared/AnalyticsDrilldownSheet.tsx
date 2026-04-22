@@ -25,6 +25,12 @@ interface AnalyticsDrilldownSheetProps {
   title: string;
   description?: string;
   alertIds: string[];
+  /**
+   * Optional: pass the actual alert objects so the drilldown does not need to
+   * look them up in mock data. When provided, this takes precedence over
+   * `alertIds` lookup against ALL_MOCK_ALERTS.
+   */
+  alertsData?: PeruAlert[];
   onAlertClick?: (alertId: string) => void;
 }
 
@@ -40,36 +46,41 @@ export function AnalyticsDrilldownSheet({
   title,
   description,
   alertIds,
+  alertsData,
   onAlertClick,
 }: AnalyticsDrilldownSheetProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const { isClientUser, clientId } = useClientUser();
   
-  // Get alerts from IDs with security filtering
+  // Resolve alert objects: prefer live `alertsData` (real data), fall back to
+  // mock lookup by ID for legacy callers.
   const alerts = React.useMemo(() => {
-    return alertIds
-      .map(id => ALL_MOCK_ALERTS.find(a => a.id === id))
-      .filter((a): a is PeruAlert => {
-        if (!a) return false;
-        
+    const idSet = new Set(alertIds);
+    const sourceAlerts: PeruAlert[] = alertsData
+      ? alertsData.filter(a => idSet.has(a.id))
+      : (alertIds
+          .map(id => ALL_MOCK_ALERTS.find(a => a.id === id))
+          .filter((a): a is PeruAlert => !!a));
+
+    return sourceAlerts
+      .filter((a) => {
         // SECURITY: Client users can only see published alerts for their client
         if (isClientUser) {
           if (a.status !== 'published') return false;
-          if (clientId && a.client_id !== clientId && a.primary_client_id !== clientId) return false;
+          if (clientId && a.client_id !== clientId && (a as any).primary_client_id !== clientId) return false;
         }
-        
         return true;
       })
       .map(alert => ({
         id: alert.id,
         title: alert.legislation_title,
         type: alert.legislation_type === 'proyecto_de_ley' ? 'Proyecto de Ley' : 'Norma',
-        date: alert.project_date || alert.publication_date || alert.stage_date,
-        impact: alert.impact_level,
-        stage: alert.current_stage,
-        sourceUrl: alert.source_url,
+        date: (alert as any).project_date || (alert as any).publication_date || (alert as any).stage_date || (alert as any).created_at,
+        impact: (alert as any).impact_level || (alert as any).impacto_categoria,
+        stage: (alert as any).current_stage || (alert as any).estado_actual,
+        sourceUrl: (alert as any).source_url || (alert as any).url,
       }));
-  }, [alertIds, isClientUser, clientId]);
+  }, [alertIds, alertsData, isClientUser, clientId]);
   
   // Filter by search
   const filteredAlerts = React.useMemo(() => {
