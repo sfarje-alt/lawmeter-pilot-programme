@@ -36,13 +36,30 @@ export function SesionCard({ sesion, onOpen }: Props) {
             {sesion.commission_name}
           </Badge>
         </div>
-        {sesion.video_url && (
-          <Badge variant="secondary" className="shrink-0">
-            <Youtube className="h-3 w-3 mr-1" />
-            Video
-          </Badge>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {(status === "REQUESTED" || status === "PROCESSING") && (
+            <Badge
+              variant="secondary"
+              className="bg-primary/10 text-primary border-primary/20 animate-pulse"
+            >
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              Analizando IA…
+            </Badge>
+          )}
+          {sesion.video_url && (
+            <Badge variant="secondary">
+              <Youtube className="h-3 w-3 mr-1" />
+              Video
+            </Badge>
+          )}
+        </div>
       </div>
+
+      {(status === "REQUESTED" || status === "PROCESSING") && (
+        <div className="mb-2 h-1 w-full overflow-hidden rounded-full bg-primary/10">
+          <div className="h-full w-1/3 animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary to-transparent" />
+        </div>
+      )}
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
         <Calendar className="h-3 w-3" />
