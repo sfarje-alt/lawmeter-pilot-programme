@@ -432,9 +432,9 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
             {isEnabled("popular_topics") && (
               <PopularTopicsBlock alerts={alerts} timeframe={timeframeLabel} maxItems={7} />
             )}
-            {isEnabled("key_movements") && <KeyMovementsBlock timeframe={timeframeLabel} />}
-            {isEnabled("emerging_topics") && <EmergingTopicsBlock timeframe={timeframeLabel} />}
-            {isEnabled("exposure") && <ExposureBlock timeframe={timeframeLabel} />}
+            {isEnabled("key_movements") && <KeyMovementsBlock alerts={alerts} timeframe={timeframeLabel} />}
+            {isEnabled("emerging_topics") && <EmergingTopicsBlock alerts={alerts} timeframe={timeframeLabel} />}
+            {isEnabled("exposure") && <ExposureBlock alerts={alerts} timeframe={timeframeLabel} />}
           </div>
         </CollapsibleAnalyticsSection>
       </div>
