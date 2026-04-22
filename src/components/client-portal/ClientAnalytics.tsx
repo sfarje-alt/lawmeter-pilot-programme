@@ -332,27 +332,8 @@ export function ClientAnalytics() {
     };
   }, [alerts]);
 
-  // ---------- General KPIs ----------
-  const serviceKpisData = React.useMemo<KPIMetric[]>(() => {
-    const total = alerts.length;
-    const reviewed = alerts.filter(
-      (a: any) =>
-        !!a.is_pinned_for_publication ||
-        !!a.archived_at ||
-        (a.updated_at && a.updated_at !== a.created_at),
-    ).length;
-    const withCommentary = alerts.filter(
-      (a: any) => (a.expert_commentary || "").trim().length > 0,
-    ).length;
-    const withTags = alerts.filter((a: any) => (a.affected_areas || []).length > 0).length;
-    const pct = (n: number) => (total > 0 ? `${Math.round((n / total) * 100)}%` : "0%");
-    return [
-      { label: "Alertas Recibidas", value: String(total), icon: "check-circle" },
-      { label: "Con Comentario", value: String(withCommentary), icon: "file-text" },
-      { label: "% Con Comentario", value: pct(withCommentary), icon: "activity" },
-      { label: "% Con Tags", value: pct(withTags), icon: "clock" },
-    ];
-  }, [alerts]);
+  // (Service KPIs block was removed from General per UX simplification)
+
 
   // Freshness from real data
   const freshness = React.useMemo(() => {
