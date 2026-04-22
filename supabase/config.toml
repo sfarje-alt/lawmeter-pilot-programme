@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ingest-sesiones]
 verify_jwt = false
+
+[functions.ingest-analisis-sesion]
+verify_jwt = false
