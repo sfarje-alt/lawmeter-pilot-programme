@@ -147,9 +147,28 @@ Por favor, responde las preguntas del usuario basándote únicamente en esta tra
       },
     });
 
-    console.log(`Q&A answer received, length: ${answer.length}`);
+    // Consumir créditos: 1 (corto) / 2 (medio) / 3 (largo) según output tokens
+    let creditsUsed = 1;
+    if (outputTokens > 1200) creditsUsed = 3;
+    else if (outputTokens > 400) creditsUsed = 2;
 
-    return new Response(JSON.stringify({ answer }), {
+    let newBalance: number | null = null;
+    if (organizationId) {
+      const { data: consumeResult } = await adminClient.rpc("consume_ai_credits", {
+        _organization_id: organizationId,
+        _amount: creditsUsed,
+        _reason: "session_qa",
+        _session_external_id: sessionExternalId ?? null,
+        _metadata: { questionLength: question.length, outputTokens },
+      });
+      if (consumeResult?.success) {
+        newBalance = consumeResult.new_balance;
+      }
+    }
+
+    console.log(`Q&A answer received, length: ${answer.length}, credits: ${creditsUsed}`);
+
+    return new Response(JSON.stringify({ answer, creditsUsed, newBalance }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
