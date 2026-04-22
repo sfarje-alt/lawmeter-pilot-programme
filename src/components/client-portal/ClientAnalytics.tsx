@@ -435,9 +435,9 @@ export function ClientAnalytics() {
           {isEnabled("legislative_funnel") && (
             <LegislativeFunnelBlock alerts={alerts} timeframe={tfLabel} />
           )}
-          {isEnabled("key_movements") && <KeyMovementsBlock timeframe={tfLabel} />}
-          {isEnabled("emerging_topics") && <EmergingTopicsBlock timeframe={tfLabel} />}
-          {isEnabled("exposure") && <ExposureBlock timeframe={tfLabel} />}
+          {isEnabled("key_movements") && <KeyMovementsBlock alerts={alerts} timeframe={tfLabel} />}
+          {isEnabled("emerging_topics") && <EmergingTopicsBlock alerts={alerts} timeframe={tfLabel} />}
+          {isEnabled("exposure") && <ExposureBlock alerts={alerts} timeframe={tfLabel} />}
         </div>
       </CollapsibleAnalyticsSection>
 

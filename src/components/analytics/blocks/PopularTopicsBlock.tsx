@@ -184,6 +184,7 @@ export function PopularTopicsBlock({
         title={`Tema: ${selectedLabel}`}
         description={`${selectedIds.length} alertas sobre este tema`}
         alertIds={selectedIds}
+        alertsData={filteredAlerts}
       />
     </>
   );
