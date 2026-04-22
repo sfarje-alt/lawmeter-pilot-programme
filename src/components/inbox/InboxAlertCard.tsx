@@ -54,11 +54,19 @@ function tryParse(s: string): Date | null {
 }
 
 /** Returns next upcoming key date with role plazo / vigencia_inicio / sesion. */
-function getUpcomingKeyDate(keyDates: KeyDate[] | undefined): KeyDate | null {
+function getUpcomingKeyDate(keyDates: KeyDate[] | undefined, excludeFechas: string[] = []): KeyDate | null {
   if (!keyDates || keyDates.length === 0) return null;
+  const excludedRoles = ["presentacion", "presentación", "fecha_presentacion", "publicacion", "publicación"];
+  const filtered = keyDates.filter((d) => {
+    const role = String(d.rol ?? "").toLowerCase();
+    if (excludedRoles.includes(role)) return false;
+    if (excludeFechas.includes(d.fecha)) return false;
+    return true;
+  });
+  if (filtered.length === 0) return null;
   const priorityRoles = ["plazo", "vigencia_inicio", "sesion"];
-  const candidates = keyDates.filter((d) => priorityRoles.includes(d.rol));
-  const pool = candidates.length > 0 ? candidates : keyDates;
+  const candidates = filtered.filter((d) => priorityRoles.includes(d.rol));
+  const pool = candidates.length > 0 ? candidates : filtered;
   const now = new Date();
   const upcoming = pool
     .map((d) => ({ d, parsed: tryParse(d.fecha) }))
