@@ -146,6 +146,7 @@ export function LegislativeFunnelBlock({
         title={`Etapa: ${selectedStageLabel}`}
         description={`${selectedIds.length} proyectos en esta etapa`}
         alertIds={selectedIds}
+        alertsData={alerts}
       />
     </>
   );

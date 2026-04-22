@@ -185,6 +185,7 @@ export function AlertPriorityBlock({
         title={`Impacto ${selectedLevel}`}
         description={`${selectedAlertIds.length} alertas con impacto ${selectedLevel?.toLowerCase()}`}
         alertIds={selectedAlertIds}
+        alertsData={filteredAlerts}
       />
     </>
   );

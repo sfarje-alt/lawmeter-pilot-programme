@@ -273,6 +273,7 @@ export function AlertDistributionBlock({
         title={`Distribución: ${selectedLabel}`}
         description={`${selectedIds.length} alertas`}
         alertIds={selectedIds}
+        alertsData={filteredAlerts}
       />
     </>
   );
