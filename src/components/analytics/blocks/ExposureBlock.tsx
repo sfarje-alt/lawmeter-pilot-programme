@@ -3,7 +3,6 @@ import { AnalyticsBlock } from "../shared/AnalyticsBlock";
 import { AnalyticsDrilldownSheet } from "../shared/AnalyticsDrilldownSheet";
 import { getNeutralColor } from "@/lib/analyticsColors";
 import { Shield, AlertTriangle, Sparkles } from "lucide-react";
-import type { RankingItem } from "@/types/analytics";
 import {
   Tooltip,
   TooltipContent,
@@ -11,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBlockFilters } from "@/hooks/useBlockFilters";
+import { type PeruAlert } from "@/data/peruAlertsMockData";
 import {
   Table,
   TableBody,
@@ -43,24 +43,56 @@ const SEVERITY_COLORS: Record<string, string> = {
 };
 
 interface ExposureBlockProps {
+  alerts?: PeruAlert[];
   timeframe: string;
   source?: string;
-  demoData?: RankingItem[];
+}
+
+type ExposureItem = { id: string; label: string; value: number; ids: string[] };
+
+/**
+ * Derive exposure-by-area buckets from live alerts.
+ * Each alert is bucketed into one or more business areas using `affected_areas`
+ * (when present) or `area_de_interes` as a fallback.
+ */
+function deriveExposure(alerts: PeruAlert[]): ExposureItem[] {
+  const map = new Map<string, { count: number; ids: string[] }>();
+  alerts.forEach(a => {
+    const buckets: string[] = (
+      (a as any).affected_areas ||
+      (a as any).area_de_interes ||
+      []
+    ).filter(Boolean);
+
+    if (buckets.length === 0) return;
+
+    buckets.forEach((label: string) => {
+      const entry = map.get(label) || { count: 0, ids: [] };
+      entry.count += 1;
+      entry.ids.push(a.id);
+      map.set(label, entry);
+    });
+  });
+
+  return Array.from(map.entries())
+    .map(([label, v]) => ({ id: label, label, value: v.count, ids: v.ids }))
+    .sort((a, b) => b.value - a.value);
 }
 
 export function ExposureBlock({
+  alerts = [],
   timeframe,
   source = "Alertas publicadas",
-  demoData = [],
 }: ExposureBlockProps) {
   const filterState = useBlockFilters('exposure', { search: '', impactLevels: [] });
   const [drilldownOpen, setDrilldownOpen] = React.useState(false);
   const [selectedLabel, setSelectedLabel] = React.useState("");
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  // Filter areas by search + impact level
+  const baseData = React.useMemo(() => deriveExposure(alerts), [alerts]);
+
   const filteredData = React.useMemo(() => {
-    let items = demoData;
+    let items = baseData;
     const q = (filterState.filters.search || '').trim().toLowerCase();
     if (q) {
       items = items.filter(i => i.label.toLowerCase().includes(q));
@@ -70,23 +102,23 @@ export function ExposureBlock({
       items = items.filter(i => impacts.includes(AREA_SEVERITY[i.label] || 'leve'));
     }
     return items;
-  }, [demoData, filterState.filters]);
+  }, [baseData, filterState.filters]);
 
   const isEmpty = filteredData.length === 0;
   const maxValue = Math.max(...filteredData.map(d => d.value), 1);
   const total = filteredData.reduce((sum, d) => sum + d.value, 0);
 
   const takeaway = isEmpty
-    ? "No hay áreas que coincidan con los filtros"
+    ? "No hay áreas con alertas en el período actual"
     : `${filteredData[0]?.label} es el área más expuesta con ${Math.round(((filteredData[0]?.value || 0) / total) * 100)}% de las alertas`;
 
-  const handleAreaClick = (item: RankingItem) => {
+  const handleAreaClick = (item: ExposureItem) => {
     setSelectedLabel(item.label);
-    setSelectedIds([]);
+    setSelectedIds(item.ids);
     setDrilldownOpen(true);
   };
 
-  const renderBars = (items: RankingItem[], compact: boolean) => (
+  const renderBars = (items: ExposureItem[], compact: boolean) => (
     <TooltipProvider>
       <div className={compact ? "space-y-3" : "space-y-4"}>
         {items.map((item, index) => {
@@ -143,7 +175,7 @@ export function ExposureBlock({
       <AnalyticsBlock
         title="Exposición por Área de Negocio"
         takeaway={takeaway}
-        infoTooltip="Desglose de alertas por área funcional del negocio. Combina perfil del cliente, autoridades y clasificación de impacto. Tu configuración se guarda automáticamente."
+        infoTooltip="Desglose de alertas por área funcional del negocio. Combina perfil del cliente, autoridades y clasificación de impacto."
         timeframe={timeframe}
         source={source}
         isEmpty={isEmpty}
@@ -169,7 +201,7 @@ export function ExposureBlock({
                 {filteredData.map(item => {
                   const severity = AREA_SEVERITY[item.label] || 'leve';
                   return (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className="cursor-pointer" onClick={() => handleAreaClick(item)}>
                       <TableCell className="font-medium">{item.label}</TableCell>
                       <TableCell>
                         <span className={`text-xs px-1.5 py-0.5 rounded-full ${SEVERITY_COLORS[severity]}`}>
@@ -211,7 +243,7 @@ export function ExposureBlock({
               <InsightCard
                 icon={<Sparkles className="h-4 w-4" />}
                 title="Concentración"
-                body={`Las 3 áreas principales concentran ${Math.round((top3Share / total) * 100)}% de las alertas (${top3Share} de ${total}).`}
+                body={`Las 3 áreas principales concentran ${total > 0 ? Math.round((top3Share / total) * 100) : 0}% de las alertas (${top3Share} de ${total}).`}
               />
               <p className="text-[11px] text-muted-foreground italic pt-2">
                 Insights derivados de las áreas filtradas.
@@ -227,8 +259,9 @@ export function ExposureBlock({
         open={drilldownOpen}
         onOpenChange={setDrilldownOpen}
         title={`Exposición: ${selectedLabel}`}
-        description={`Alertas que impactan el área de ${selectedLabel}`}
+        description={`${selectedIds.length} alertas que impactan el área de ${selectedLabel}`}
         alertIds={selectedIds}
+        alertsData={alerts}
       />
     </>
   );
