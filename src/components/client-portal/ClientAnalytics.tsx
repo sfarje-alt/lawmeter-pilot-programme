@@ -177,7 +177,7 @@ export function ClientAnalytics() {
             <EmergingTopicsBlock timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('legislative_funnel') && (
-            <LegislativeFunnelBlock alerts={[]} timeframe={getTimeframeLabel()} demoData={DEMO_LEGISLATIVE_FUNNEL} />
+            <LegislativeFunnelBlock alerts={[]} timeframe={getTimeframeLabel()} />
           )}
           {isEnabled('exposure') && (
             <ExposureBlock timeframe={getTimeframeLabel()} />
