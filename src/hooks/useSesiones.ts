@@ -1,7 +1,7 @@
 // Hook for fetching Congress sessions from public.sesiones
 // Phase 1-5: read-only, no IA on-demand yet.
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AnalysisStatus =
@@ -138,14 +138,18 @@ export function useSesiones(opts: UseSesionesOptions = {}) {
   }, [onlyDeInteres]);
 
   // Polling fallback mientras haya sesiones en proceso (REQUESTED/PROCESSING).
+  const inFlight = sesiones.some(
+    (s) => s.analysis_status === "REQUESTED" || s.analysis_status === "PROCESSING",
+  );
+  const fetchRef = useRef(fetchSesiones);
   useEffect(() => {
-    const inFlight = sesiones.some(
-      (s) => s.analysis_status === "REQUESTED" || s.analysis_status === "PROCESSING",
-    );
+    fetchRef.current = fetchSesiones;
+  }, [fetchSesiones]);
+  useEffect(() => {
     if (!inFlight) return;
-    const interval = setInterval(fetchSesiones, 20000);
+    const interval = setInterval(() => fetchRef.current(), 20000);
     return () => clearInterval(interval);
-  }, [sesiones, fetchSesiones]);
+  }, [inFlight]);
 
   return { sesiones, loading, error, refetch: fetchSesiones };
 }
