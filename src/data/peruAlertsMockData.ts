@@ -138,6 +138,17 @@ export interface PeruAlert extends BasePeruAlert {
   fecha_presentacion?: string;
   /** AI free-form comment / brief explanation. */
   comentario?: string;
+  /** Bill follow-up timeline (PL only). Array sorted descending by date. */
+  seguimiento?: SeguimientoEvent[];
+}
+
+/** One event in a Bill's follow-up timeline (Congress SPLEY tracking). */
+export interface SeguimientoEvent {
+  fecha?: string;
+  estado_procesal?: string;
+  comision?: string[];
+  detalle?: string;
+  adjuntos?: { url?: string }[];
 }
 
 /** Forward-declared shape so that PeruAlert can reference it before AttachedFileMeta is exported. */
