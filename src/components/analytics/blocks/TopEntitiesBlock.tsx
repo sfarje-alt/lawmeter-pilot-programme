@@ -42,7 +42,7 @@ export function TopEntitiesBlock({
   const { displayData, total, remaining, fullData } = React.useMemo(() => {
     const groups: Record<string, string[]> = {};
     filteredAlerts.forEach(alert => {
-      const entity = alert.entity || alert.parliamentary_group || 'Sin entidad';
+      const entity = alert.entity || alert.parliamentary_group || 'Congreso';
       (groups[entity] ||= []).push(alert.id);
     });
     const allData = Object.entries(groups)
@@ -162,6 +162,7 @@ export function TopEntitiesBlock({
         title={`Entidad: ${selectedLabel}`}
         description={`${selectedIds.length} alertas de esta entidad`}
         alertIds={selectedIds}
+        alertsData={filteredAlerts}
       />
     </>
   );

@@ -280,8 +280,9 @@ export function RegulatoryPulseBlock({
         open={drilldownOpen}
         onOpenChange={setDrilldownOpen}
         title="Pulso Regulatorio - Todas las Alertas"
-        description={`${alerts.length} alertas en el período`}
-        alertIds={alerts.map(a => a.id)}
+        description={`${filteredAlerts.length} alertas en el período`}
+        alertIds={filteredAlerts.map(a => a.id)}
+        alertsData={filteredAlerts}
       />
     </>
   );
