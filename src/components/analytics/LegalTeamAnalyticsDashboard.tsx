@@ -37,7 +37,7 @@ import { ANALYTICS_BLOCK_REGISTRY, type AnalyticsBlockConfigExtended } from "@/t
 import { ReportLayoutBuilder } from "@/components/reports/ReportLayoutBuilder";
 import { cn } from "@/lib/utils";
 import { useAlerts } from "@/contexts/AlertsContext";
-import { useSesiones } from "@/hooks/useSesiones";
+import { useSessionsUniverse } from "@/hooks/useSessionsUniverse";
 
 type SectionId = "general" | "bills" | "sessions" | "ops";
 
@@ -119,8 +119,10 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
   };
 
   // ---------- Live data sources ----------
+  // Sesiones MUST come from the canonical Sesiones universe (same dataset the
+  // /sesiones page renders). Do NOT introduce any other sessions source here.
   const { alerts: liveAlerts } = useAlerts();
-  const { sesiones: liveSesiones } = useSesiones({ onlyDeInteres: false });
+  const { sesiones: liveSesiones } = useSessionsUniverse();
 
   // Apply page-level period filter to alerts
   const periodCutoff = React.useMemo(() => periodCutoffDate(period), [period]);
@@ -133,6 +135,9 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
     });
   }, [liveAlerts, periodCutoff]);
 
+  // Period filter REFINES the canonical sessions universe — it never switches
+  // to a different source. If no period is selected, analytics show exactly
+  // the same sessions as the Sesiones page.
   const sesiones = React.useMemo(() => {
     if (!periodCutoff) return liveSesiones;
     const cutoffMs = periodCutoff.getTime();

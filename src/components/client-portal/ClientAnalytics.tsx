@@ -33,7 +33,7 @@ import {
 import { DataFreshnessIndicator, CollapsibleAnalyticsSection } from "@/components/analytics/shared";
 import { ReportLayoutBuilder } from "@/components/reports/ReportLayoutBuilder";
 import { useAlerts } from "@/contexts/AlertsContext";
-import { useSesiones } from "@/hooks/useSesiones";
+import { useSessionsUniverse } from "@/hooks/useSessionsUniverse";
 import { CLIENT_ANALYTICS_BLOCKS, type AnalyticsBlockConfigExtended } from "@/types/analytics";
 import type { KPIMetric } from "@/types/analytics";
 
@@ -113,8 +113,10 @@ export function ClientAnalytics() {
   }, [clientId]);
 
   // ---------- Live data sources ----------
+  // Sesiones come from the canonical Sesiones universe (same dataset the
+  // /sesiones page renders). No parallel "all sessions" source allowed here.
   const { alerts: liveAlerts } = useAlerts();
-  const { sesiones: liveSesiones } = useSesiones({ onlyDeInteres: false });
+  const { sesiones: liveSesiones } = useSessionsUniverse();
 
   // Client filter: only alerts published/pinned for this client (read-only portal)
   const clientAlertsAll = React.useMemo(() => {
