@@ -161,8 +161,16 @@ function mapDbRowToAlert(
     parliamentary_group: ui.parliamentary_group ?? sourceRef.grupo_parlamentario ?? undefined,
     author: ui.author ?? sourceRef.autor ?? undefined,
     current_stage: row.estado_actual ?? sourceRef.estado_actual ?? undefined,
-    stage_date: sourceRef.fecha_estado ?? undefined,
-    project_date: sourceRef.fecha_proyecto ?? undefined,
+    stage_date: (() => {
+      // Última fecha del seguimiento (más reciente)
+      const seg = Array.isArray(row.seguimiento) ? row.seguimiento : [];
+      const dates = seg
+        .map((e: any) => e?.fecha)
+        .filter((f: any): f is string => typeof f === "string" && f.length > 0)
+        .sort();
+      return dates.length > 0 ? dates[dates.length - 1] : (sourceRef.fecha_estado ?? undefined);
+    })(),
+    project_date: row.fecha_presentacion ?? sourceRef.fecha_proyecto ?? sourceRef.fecha_presentacion ?? undefined,
     sector: ui.sector ?? undefined,
     impact_level: impact,
 
