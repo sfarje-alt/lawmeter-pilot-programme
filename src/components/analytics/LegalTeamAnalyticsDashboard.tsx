@@ -410,9 +410,6 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
           onMaximizeChange={handleMaximize("general")}
         >
           <div className="space-y-6">
-            {isEnabled("service_kpis") && (
-              <ServiceKPIsBlock data={serviceKpisData} timeframe={timeframeLabel} />
-            )}
             {isEnabled("impact_matrix") && (
               <ImpactMatrixBlock alerts={alerts} timeframe={timeframeLabel} />
             )}
