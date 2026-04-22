@@ -90,15 +90,18 @@ export function useSesiones(opts: UseSesionesOptions = {}) {
     }
   }, [onlyDeInteres, daysBack]);
 
-  useEffect(() => {
-    fetchSesiones();
-  }, [fetchSesiones]);
+  // Mantener una ref con la última fetch para usar dentro de timers/realtime
+  // sin re-suscribir en cada render.
+  const fetchRef = useRef(fetchSesiones);
+  fetchRef.current = fetchSesiones;
 
-  // Realtime: aplicar UPDATEs en vivo a las sesiones ya cargadas (p.ej. cambios
-  // de analysis_status cuando se solicita análisis IA o el backend lo procesa).
+  // Initial fetch + realtime + polling — todo en un único effect para mantener
+  // el conteo de hooks estable.
   useEffect(() => {
+    fetchRef.current();
+
     const channel = supabase
-      .channel("sesiones-list")
+      .channel(`sesiones-list-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "sesiones" },
@@ -107,7 +110,6 @@ export function useSesiones(opts: UseSesionesOptions = {}) {
           setSesiones((prev) => {
             const idx = prev.findIndex((s) => s.id === updated.id);
             if (idx === -1) {
-              // Nueva fila visible (p.ej. recién pasó es_de_interes=true)
               if (!onlyDeInteres || updated.es_de_interes) {
                 return [updated, ...prev];
               }
@@ -132,24 +134,23 @@ export function useSesiones(opts: UseSesionesOptions = {}) {
       )
       .subscribe();
 
+    // Polling cada 20s — el chequeo de inFlight se hace dentro del tick.
+    const interval = setInterval(() => {
+      // Solo refrescar si hay análisis en vuelo
+      setSesiones((prev) => {
+        const inFlight = prev.some(
+          (s) => s.analysis_status === "REQUESTED" || s.analysis_status === "PROCESSING",
+        );
+        if (inFlight) fetchRef.current();
+        return prev;
+      });
+    }, 20000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(interval);
     };
-  }, [onlyDeInteres]);
-
-  // Polling fallback mientras haya sesiones en proceso (REQUESTED/PROCESSING).
-  const inFlight = sesiones.some(
-    (s) => s.analysis_status === "REQUESTED" || s.analysis_status === "PROCESSING",
-  );
-  const fetchRef = useRef(fetchSesiones);
-  useEffect(() => {
-    fetchRef.current = fetchSesiones;
-  }, [fetchSesiones]);
-  useEffect(() => {
-    if (!inFlight) return;
-    const interval = setInterval(() => fetchRef.current(), 20000);
-    return () => clearInterval(interval);
-  }, [inFlight]);
+  }, [onlyDeInteres, daysBack]);
 
   return { sesiones, loading, error, refetch: fetchSesiones };
 }
