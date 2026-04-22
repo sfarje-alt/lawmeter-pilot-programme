@@ -1154,59 +1154,83 @@ export function ReportsPage() {
 
         {/* ─────────────────── CREAR ─────────────────── */}
         <TabsContent value="create" className="mt-6">
-          <Card className="border-border/50">
+          <Card className="border-border/50 relative overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileDown className="h-5 w-5" /> Configuración del reporte
+                {restricted && (
+                  <Badge variant="outline" className="ml-2 text-xs font-normal">
+                    Solo lectura
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
                 Elige contenido, modo de inclusión y período. Opcionalmente añade tus analíticas.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {ChoicesPanel}
+              {restricted && (
+                <div className="rounded-lg border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
+                  La configuración adicional de reportes no está disponible en este momento.
+                </div>
+              )}
+              <div
+                className={
+                  restricted
+                    ? "space-y-6 pointer-events-none select-none opacity-60 [filter:blur(0.3px)]"
+                    : "space-y-6"
+                }
+                aria-disabled={restricted || undefined}
+              >
+                {ChoicesPanel}
 
-              {/* Preview */}
-              <div className="grid grid-cols-3 gap-3 p-4 rounded-lg bg-muted/40 border border-border/50">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{filteredAlerts.length}</div>
-                  <div className="text-xs text-muted-foreground">Alertas regulatorias</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{filteredSessions.length}</div>
-                  <div className="text-xs text-muted-foreground">Sesiones</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">
-                    {includeAnalytics ? visibleAnalytics.length : 0}
+                {/* Preview */}
+                <div className="grid grid-cols-3 gap-3 p-4 rounded-lg bg-muted/40 border border-border/50">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">{filteredAlerts.length}</div>
+                    <div className="text-xs text-muted-foreground">Alertas regulatorias</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Bloques de analíticas</div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">{filteredSessions.length}</div>
+                    <div className="text-xs text-muted-foreground">Sesiones</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">
+                      {includeAnalytics ? visibleAnalytics.length : 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Bloques de analíticas</div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Button
-                  size="lg"
-                  className="w-full"
-                  disabled={!canGenerate || isGenerating}
-                  onClick={handleManualGenerate}
-                >
-                  {isGenerating ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-2" />
-                  )}
-                  {isGenerating
-                    ? "Generando PDF…"
-                    : canGenerate
-                      ? "Generar y descargar"
-                      : "Sin contenido para el período"}
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => setTab("scheduled")}>
-                  <Clock className="h-4 w-4 mr-2" />
-                  Programar este reporte
-                </Button>
+                {/* Actions */}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    disabled={restricted || !canGenerate || isGenerating}
+                    onClick={handleManualGenerate}
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
+                    {isGenerating
+                      ? "Generando PDF…"
+                      : canGenerate
+                        ? "Generar y descargar"
+                        : "Sin contenido para el período"}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    disabled={restricted}
+                    onClick={() => setTab("scheduled")}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Programar este reporte
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
