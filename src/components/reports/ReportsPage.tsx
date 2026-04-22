@@ -682,9 +682,9 @@ export function ReportsPage() {
         analysis_completed_at: a.analysis_completed_at ?? (existing as any)?.analysis_completed_at ?? null,
         executive_summary:
           a.resumen_ejecutivo ?? (existing as any)?.executive_summary ?? undefined,
-        impact_level: a.impacto_categoria ?? (existing as any)?.impact_level ?? undefined,
-        urgency_level: a.urgencia_categoria ?? (existing as any)?.urgency_level ?? undefined,
-      } as PeruSession;
+        impact_level: ((a.impacto_categoria ?? (existing as any)?.impact_level) as any) ?? undefined,
+        urgency_level: ((a.urgencia_categoria ?? (existing as any)?.urgency_level) as any) ?? undefined,
+      } as unknown as PeruSession;
       byExternalId.set(key, merged);
     }
     return Array.from(byExternalId.values());
