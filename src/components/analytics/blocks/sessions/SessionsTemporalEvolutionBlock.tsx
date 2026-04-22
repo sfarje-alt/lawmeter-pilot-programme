@@ -18,46 +18,38 @@ import {
 interface Props {
   timeframe: string;
   source?: string;
+  /** Pre-computed real data: weekly bucket of sessions. */
   data?: { date: string; sessions: number }[];
 }
-
-const DEMO_DATA = [
-  { date: "Nov 1", sessions: 4 },
-  { date: "Nov 8", sessions: 6 },
-  { date: "Nov 15", sessions: 8 },
-  { date: "Nov 22", sessions: 7 },
-  { date: "Nov 29", sessions: 9 },
-  { date: "Dic 6", sessions: 11 },
-  { date: "Dic 13", sessions: 10 },
-  { date: "Dic 20", sessions: 5 },
-  { date: "Ene 5", sessions: 7 },
-  { date: "Ene 12", sessions: 12 },
-  { date: "Ene 19", sessions: 14 },
-];
 
 export function SessionsTemporalEvolutionBlock({
   timeframe,
   source = "Sesiones del Congreso",
-  data = DEMO_DATA,
+  data = [],
 }: Props) {
   const total = data.reduce((s, d) => s + d.sessions, 0);
   const last = data[data.length - 1];
+  const isEmpty = data.length === 0;
 
   return (
     <AnalyticsBlock
-      title="Evolución temporal de alertas de sesiones"
-      takeaway={`${total} alertas de sesiones en el período. Última semana: ${last?.sessions ?? 0}.`}
-      infoTooltip="Tendencia semanal del volumen de alertas de sesiones publicadas."
+      title="Evolución temporal de sesiones"
+      takeaway={
+        isEmpty
+          ? "Aún no hay sesiones registradas en el período."
+          : `${total} sesiones en el período. Última semana: ${last?.sessions ?? 0}.`
+      }
+      infoTooltip="Tendencia semanal del volumen de sesiones del Congreso registradas, calculada a partir de la fecha real de cada sesión."
       timeframe={timeframe}
       source={source}
       icon={<TrendingUp className="h-4 w-4 text-primary" />}
-      isEmpty={data.length === 0}
+      isEmpty={isEmpty}
       renderDataTable={() => (
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Período</TableHead>
-              <TableHead className="text-right">Alertas</TableHead>
+              <TableHead className="text-right">Sesiones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -81,7 +73,7 @@ export function SessionsTemporalEvolutionBlock({
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} />
+          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
           <Tooltip content={<ChartTooltip />} />
           <Area
             type="monotone"
