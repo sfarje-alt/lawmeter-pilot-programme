@@ -6,6 +6,15 @@ export function useSolicitarAnalisis() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const extractMessage = (payload: unknown, fallback: string) => {
+    if (!payload || typeof payload !== "object") return fallback;
+    const record = payload as Record<string, unknown>;
+    const parts = [record.error, record.help].filter(
+      (value): value is string => typeof value === "string" && value.trim().length > 0,
+    );
+    return parts.length > 0 ? parts.join(". ") : fallback;
+  };
+
   const solicitar = async (externalId: string) => {
     setLoading(true);
     setError(null);
@@ -15,7 +24,9 @@ export function useSolicitarAnalisis() {
         { body: { external_id: externalId } },
       );
       if (invokeErr) throw invokeErr;
-      if (data?.error) throw new Error(data.error);
+      if (data?.error) {
+        throw new Error(extractMessage(data, "Error al solicitar análisis"));
+      }
       return data as { status: string; estimated_seconds: number };
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al solicitar análisis";
