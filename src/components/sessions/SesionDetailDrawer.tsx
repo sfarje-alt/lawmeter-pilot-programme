@@ -1,6 +1,7 @@
 // Detail drawer for a Congress session.
-// Phase 1-5: agenda visible, video link, analysis section is placeholder.
+// Fase 6-7: análisis IA on-demand con Realtime + polling fallback.
 
+import { useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +16,14 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { toast } from "sonner";
 import type { Sesion } from "@/hooks/useSesiones";
+import { useSesionRealtime } from "@/hooks/useSesionRealtime";
+import { useSolicitarAnalisis } from "@/hooks/useSolicitarAnalisis";
 
 interface Props {
   sesion: Sesion | null;
@@ -42,7 +47,34 @@ function timestampToSeconds(ts: string): number {
   return 0;
 }
 
-export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
+function buildYoutubeUrlAt(videoUrl: string, ts: string): string {
+  const seconds = timestampToSeconds(ts);
+  const sep = videoUrl.includes("?") ? "&" : "?";
+  return `${videoUrl}${sep}t=${seconds}s`;
+}
+
+export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Props) {
+  const sesion = useSesionRealtime(initial, open);
+  const { solicitar, loading } = useSolicitarAnalisis();
+  const prevStatusRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    const curr = sesion?.analysis_status ?? null;
+    if (prev && prev !== curr) {
+      if (curr === "COMPLETED") {
+        toast.success("Análisis listo", {
+          description: "El análisis IA de la sesión se completó.",
+        });
+      } else if (curr === "FAILED") {
+        toast.error("Falló el análisis", {
+          description: sesion?.analysis_error ?? "Intenta de nuevo.",
+        });
+      }
+    }
+    prevStatusRef.current = curr;
+  }, [sesion?.analysis_status, sesion?.analysis_error]);
+
   if (!sesion) return null;
 
   const analysisStatus = sesion.analysis_status;
@@ -50,6 +82,19 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
   const isProcessing =
     analysisStatus === "REQUESTED" || analysisStatus === "PROCESSING";
   const isFailed = analysisStatus === "FAILED";
+  const isNotRequested = analysisStatus === "NOT_REQUESTED";
+
+  async function onClickAnalizar() {
+    try {
+      await solicitar(sesion!.external_id);
+      toast.success("Análisis solicitado", {
+        description: "Tardará entre 3 y 5 minutos. Te avisamos al terminar.",
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al solicitar análisis";
+      toast.error("No se pudo solicitar", { description: msg });
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -72,15 +117,10 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
 
         <ScrollArea className="flex-1">
           <div className="px-6 py-4 space-y-6">
-            {/* Metadata buttons */}
             <div className="flex flex-wrap gap-2">
               {sesion.agenda_url && (
                 <Button variant="outline" size="sm" asChild>
-                  <a
-                    href={sesion.agenda_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a href={sesion.agenda_url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Ver en portal Congreso
                   </a>
@@ -93,11 +133,7 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
                 asChild={!!sesion.video_url}
               >
                 {sesion.video_url ? (
-                  <a
-                    href={sesion.video_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a href={sesion.video_url} target="_blank" rel="noopener noreferrer">
                     <Youtube className="h-4 w-4 mr-2" />
                     Ver video YouTube
                   </a>
@@ -110,7 +146,6 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
               </Button>
             </div>
 
-            {/* Agenda */}
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-4 w-4 text-primary" />
@@ -131,25 +166,28 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
 
             <Separator />
 
-            {/* AI Analysis section */}
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold">Análisis IA</h3>
               </div>
 
-              {analysisStatus === "NOT_REQUESTED" && (
+              {isNotRequested && (
                 <div className="rounded-lg border border-dashed p-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Esta sesión aún no ha sido analizada por IA.
                   </p>
-                  <Button disabled title="Funcionalidad próximamente disponible">
-                    <Sparkles className="h-4 w-4 mr-2" />
+                  <Button onClick={onClickAnalizar} disabled={loading} title="Toma entre 3 y 5 minutos">
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-2" />
+                    )}
                     Analizar sesión con IA
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    Próximamente: descargamos el video, transcribimos y
-                    analizamos contra el perfil regulatorio del cliente.
+                    Descargamos el video, transcribimos y analizamos contra el perfil
+                    regulatorio del cliente. Tarda 3–5 minutos.
                   </p>
                 </div>
               )}
@@ -158,24 +196,35 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
                 <div className="rounded-lg border bg-muted/30 p-6 text-center space-y-3">
                   <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                   <p className="text-sm">
-                    Procesando análisis… (estimado 3–5 min)
+                    {analysisStatus === "REQUESTED"
+                      ? "En cola…"
+                      : "Analizando… puede tardar 3–5 min."}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Puedes cerrar este panel; el análisis continúa en segundo plano.
                   </p>
                 </div>
               )}
 
               {isFailed && (
-                <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 space-y-2">
+                <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-destructive" />
-                    <span className="text-sm font-medium">
-                      Falló el análisis
-                    </span>
+                    <span className="text-sm font-medium">Falló el análisis</span>
                   </div>
                   {sesion.analysis_error && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground break-words">
                       {sesion.analysis_error}
                     </p>
                   )}
+                  <Button size="sm" variant="outline" onClick={onClickAnalizar} disabled={loading}>
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Reintentar análisis
+                  </Button>
                 </div>
               )}
 
@@ -203,9 +252,7 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
 
                   {sesion.resumen_ejecutivo && (
                     <div>
-                      <h4 className="text-sm font-semibold mb-1">
-                        Resumen ejecutivo
-                      </h4>
+                      <h4 className="text-sm font-semibold mb-1">Resumen ejecutivo</h4>
                       <p className="text-sm text-foreground whitespace-pre-wrap">
                         {sesion.resumen_ejecutivo}
                       </p>
@@ -223,18 +270,13 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
 
                   {sesion.puntos_clave && sesion.puntos_clave.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold mb-2">
-                        Puntos clave
-                      </h4>
+                      <h4 className="text-sm font-semibold mb-2">Puntos clave</h4>
                       <ul className="space-y-2">
                         {sesion.puntos_clave.map((p, i) => (
-                          <li
-                            key={i}
-                            className="flex gap-2 text-sm border-l-2 border-primary/30 pl-3"
-                          >
+                          <li key={i} className="flex gap-2 text-sm border-l-2 border-primary/30 pl-3">
                             {sesion.video_url ? (
                               <a
-                                href={`${sesion.video_url}&t=${timestampToSeconds(p.timestamp)}`}
+                                href={buildYoutubeUrlAt(sesion.video_url, p.timestamp)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="font-mono text-primary hover:underline shrink-0"
@@ -269,9 +311,7 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
 
                   {sesion.recomendaciones && sesion.recomendaciones.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold mb-2">
-                        Recomendaciones
-                      </h4>
+                      <h4 className="text-sm font-semibold mb-2">Recomendaciones</h4>
                       <ul className="list-disc list-inside text-sm space-y-1">
                         {sesion.recomendaciones.map((r, i) => (
                           <li key={i}>{r}</li>
@@ -280,21 +320,18 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
                     </div>
                   )}
 
-                  {sesion.area_de_interes &&
-                    sesion.area_de_interes.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold mb-2">
-                          Áreas de interés
-                        </h4>
-                        <div className="flex flex-wrap gap-1">
-                          {sesion.area_de_interes.map((a, i) => (
-                            <Badge key={i} variant="outline">
-                              {a}
-                            </Badge>
-                          ))}
-                        </div>
+                  {sesion.area_de_interes && sesion.area_de_interes.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2">Áreas de interés</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {sesion.area_de_interes.map((a, i) => (
+                          <Badge key={i} variant="outline">
+                            {a}
+                          </Badge>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   {(sesion.analysis_model ||
                     sesion.analysis_cost_usd !== null ||
@@ -302,18 +339,13 @@ export function SesionDetailDrawer({ sesion, open, onOpenChange }: Props) {
                     <>
                       <Separator />
                       <div className="text-xs text-muted-foreground space-y-1">
-                        {sesion.analysis_model && (
-                          <div>Modelo: {sesion.analysis_model}</div>
-                        )}
+                        {sesion.analysis_model && <div>Modelo: {sesion.analysis_model}</div>}
                         {sesion.analysis_cost_usd !== null && (
-                          <div>
-                            Costo: ${sesion.analysis_cost_usd.toFixed(4)} USD
-                          </div>
+                          <div>Costo: ${sesion.analysis_cost_usd.toFixed(4)} USD</div>
                         )}
                         {sesion.transcript_duration_s !== null && (
                           <div>
-                            Duración audio:{" "}
-                            {Math.round(sesion.transcript_duration_s / 60)} min
+                            Duración audio: {Math.round(sesion.transcript_duration_s / 60)} min
                           </div>
                         )}
                       </div>
