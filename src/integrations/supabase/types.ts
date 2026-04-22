@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_credit_transactions: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          metadata: Json | null
+          organization_id: string
+          reason: string
+          session_external_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+          reason: string
+          session_external_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+          reason?: string
+          session_external_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_usage_logs: {
         Row: {
           client_id: string | null
@@ -639,6 +672,33 @@ export type Database = {
         }
         Relationships: []
       }
+      org_ai_credits: {
+        Row: {
+          balance: number
+          created_at: string
+          included_credits: number
+          organization_id: string
+          total_consumed: number
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          included_credits?: number
+          organization_id: string
+          total_consumed?: number
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          included_credits?: number
+          organization_id?: string
+          total_consumed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           created_at: string
@@ -1223,6 +1283,17 @@ export type Database = {
       }
     }
     Functions: {
+      consume_ai_credits: {
+        Args: {
+          _amount: number
+          _metadata?: Json
+          _organization_id: string
+          _reason: string
+          _session_external_id?: string
+          _user_id?: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

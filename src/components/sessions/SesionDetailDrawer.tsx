@@ -25,6 +25,8 @@ import type { Sesion } from "@/hooks/useSesiones";
 import { useSesionRealtime } from "@/hooks/useSesionRealtime";
 import { useSolicitarAnalisis } from "@/hooks/useSolicitarAnalisis";
 import { AgendaMarkdownView } from "./AgendaMarkdownView";
+import { SesionQABox } from "./SesionQABox";
+import { useAICredits, SESSION_ANALYSIS_COST } from "@/hooks/useAICredits";
 
 interface Props {
   sesion: Sesion | null;
@@ -57,6 +59,8 @@ function buildYoutubeUrlAt(videoUrl: string, ts: string): string {
 export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Props) {
   const sesion = useSesionRealtime(initial, open);
   const { solicitar, loading } = useSolicitarAnalisis();
+  const { balance } = useAICredits();
+  const insufficientCredits = balance < SESSION_ANALYSIS_COST;
   const prevStatusRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -86,6 +90,15 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
   const isNotRequested = analysisStatus === "NOT_REQUESTED";
 
   async function onClickAnalizar() {
+    if (insufficientCredits) {
+      toast.error("Créditos insuficientes", {
+        description: `Necesitas ${SESSION_ANALYSIS_COST} créditos. Saldo actual: ${balance}.`,
+      });
+      return;
+    }
+    if (!confirm(`Esto consumirá ${SESSION_ANALYSIS_COST} créditos. Saldo actual: ${balance} → ${balance - SESSION_ANALYSIS_COST}. ¿Continuar?`)) {
+      return;
+    }
     try {
       await solicitar(sesion!.external_id);
       toast.success("Análisis solicitado", {
@@ -176,17 +189,21 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
                   <p className="text-sm text-muted-foreground">
                     Esta sesión aún no ha sido analizada por IA.
                   </p>
-                  <Button onClick={onClickAnalizar} disabled={loading} title="Toma entre 3 y 5 minutos">
+                  <Button
+                    onClick={onClickAnalizar}
+                    disabled={loading || insufficientCredits}
+                    title={insufficientCredits ? "Créditos insuficientes" : "Toma entre 3 y 5 minutos"}
+                  >
                     {loading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
                       <Sparkles className="h-4 w-4 mr-2" />
                     )}
-                    Analizar sesión con IA
+                    Analizar sesión con IA ({SESSION_ANALYSIS_COST} créditos)
                   </Button>
                   <p className="text-xs text-muted-foreground">
                     Descargamos el video, transcribimos y analizamos contra el perfil
-                    regulatorio del cliente. Tarda 3–5 minutos.
+                    regulatorio del cliente. Tarda 3–5 minutos. Saldo actual: {balance} créditos.
                   </p>
                 </div>
               )}
@@ -216,13 +233,13 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
                       {sesion.analysis_error}
                     </p>
                   )}
-                  <Button size="sm" variant="outline" onClick={onClickAnalizar} disabled={loading}>
+                  <Button size="sm" variant="outline" onClick={onClickAnalizar} disabled={loading || insufficientCredits}>
                     {loading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
                       <RefreshCw className="h-4 w-4 mr-2" />
                     )}
-                    Reintentar análisis
+                    Reintentar análisis ({SESSION_ANALYSIS_COST} créditos)
                   </Button>
                 </div>
               )}
@@ -332,24 +349,8 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
                     </div>
                   )}
 
-                  {(sesion.analysis_model ||
-                    sesion.analysis_cost_usd !== null ||
-                    sesion.transcript_duration_s !== null) && (
-                    <>
-                      <Separator />
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        {sesion.analysis_model && <div>Modelo: {sesion.analysis_model}</div>}
-                        {sesion.analysis_cost_usd !== null && (
-                          <div>Costo: ${sesion.analysis_cost_usd.toFixed(4)} USD</div>
-                        )}
-                        {sesion.transcript_duration_s !== null && (
-                          <div>
-                            Duración audio: {Math.round(sesion.transcript_duration_s / 60)} min
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
+                  <Separator />
+                  <SesionQABox sesion={sesion} />
                 </div>
               )}
             </div>

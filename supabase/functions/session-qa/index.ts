@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { logAIUsage, estimateTokens, calculateCost } from "../_shared/aiUsageLogger.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,10 +22,31 @@ serve(async (req) => {
   }
 
   try {
-    const { question, transcription, commissionName, sessionTitle, sessionDate, previousMessages, clientId, organizationId } = await req.json();
+    const { question, transcription, commissionName, sessionTitle, sessionDate, previousMessages, clientId, organizationId, sessionExternalId } = await req.json();
 
     if (!question || !transcription) {
       throw new Error('Question and transcription are required');
+    }
+
+    // Pre-check: ¿la org tiene al menos 1 crédito?
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+
+    if (organizationId) {
+      const { data: creditRow } = await adminClient
+        .from("org_ai_credits")
+        .select("balance")
+        .eq("organization_id", organizationId)
+        .maybeSingle();
+      if (!creditRow || creditRow.balance < 1) {
+        return new Response(
+          JSON.stringify({ error: "Créditos insuficientes", code: "INSUFFICIENT_CREDITS", balance: creditRow?.balance ?? 0 }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -125,9 +147,28 @@ Por favor, responde las preguntas del usuario basándote únicamente en esta tra
       },
     });
 
-    console.log(`Q&A answer received, length: ${answer.length}`);
+    // Consumir créditos: 1 (corto) / 2 (medio) / 3 (largo) según output tokens
+    let creditsUsed = 1;
+    if (outputTokens > 1200) creditsUsed = 3;
+    else if (outputTokens > 400) creditsUsed = 2;
 
-    return new Response(JSON.stringify({ answer }), {
+    let newBalance: number | null = null;
+    if (organizationId) {
+      const { data: consumeResult } = await adminClient.rpc("consume_ai_credits", {
+        _organization_id: organizationId,
+        _amount: creditsUsed,
+        _reason: "session_qa",
+        _session_external_id: sessionExternalId ?? null,
+        _metadata: { questionLength: question.length, outputTokens },
+      });
+      if (consumeResult?.success) {
+        newBalance = consumeResult.new_balance;
+      }
+    }
+
+    console.log(`Q&A answer received, length: ${answer.length}, credits: ${creditsUsed}`);
+
+    return new Response(JSON.stringify({ answer, creditsUsed, newBalance }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

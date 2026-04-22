@@ -110,6 +110,33 @@ serve(async (req) => {
   const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
+
+  // Consumir créditos IA (10 por análisis de sesión)
+  const SESSION_ANALYSIS_COST = 10;
+  const { data: creditResult, error: creditErr } = await adminClient.rpc("consume_ai_credits", {
+    _organization_id: sesion.organization_id,
+    _amount: SESSION_ANALYSIS_COST,
+    _reason: "session_analysis",
+    _user_id: userId,
+    _session_external_id: externalId,
+    _metadata: { client_id: sesion.client_id },
+  });
+
+  if (creditErr) {
+    return json({ error: "credit consumption failed", detail: creditErr.message }, 500);
+  }
+  if (!creditResult?.success) {
+    return json(
+      {
+        error: "Créditos insuficientes",
+        code: "INSUFFICIENT_CREDITS",
+        balance: creditResult?.balance ?? 0,
+        required: SESSION_ANALYSIS_COST,
+      },
+      402,
+    );
+  }
+
   const { error: updErr } = await adminClient
     .from("sesiones")
     .update({

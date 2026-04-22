@@ -24,6 +24,7 @@ import {
 } from './SesionesFilterBar';
 import { SesionAlertCard } from './SesionAlertCard';
 import { SesionDetailWorkstation } from './SesionDetailWorkstation';
+import { CreditsBalanceBar } from '../CreditsBalanceBar';
 
 import type { PeruSession } from '@/types/peruSessions';
 
@@ -131,6 +132,11 @@ export function SesionesWorkspace({ initialSessionId }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* ── Créditos IA ─────────────────────────────────────────────────── */}
+      <div className="flex justify-end">
+        <CreditsBalanceBar />
+      </div>
+
       {/* ── KPI Cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="glass-card border-border/30">
