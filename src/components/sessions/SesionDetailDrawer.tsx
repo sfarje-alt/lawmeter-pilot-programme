@@ -59,6 +59,8 @@ function buildYoutubeUrlAt(videoUrl: string, ts: string): string {
 export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Props) {
   const sesion = useSesionRealtime(initial, open);
   const { solicitar, loading } = useSolicitarAnalisis();
+  const { balance } = useAICredits();
+  const insufficientCredits = balance < SESSION_ANALYSIS_COST;
   const prevStatusRef = useRef<string | null>(null);
 
   useEffect(() => {
