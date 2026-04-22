@@ -483,20 +483,20 @@ export function ClientAnalytics() {
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isEnabled("sessions_by_commission") && (
-            <SessionsByCommissionBlock timeframe={tfLabel} data={sessionsByCommissionData} />
+            <SessionsByCommissionBlock timeframe={tfLabel} sessions={sesiones} />
           )}
           {isEnabled("sessions_temporal_evolution") && (
-            <SessionsTemporalEvolutionBlock timeframe={tfLabel} data={sessionsTemporalData} />
+            <SessionsTemporalEvolutionBlock timeframe={tfLabel} sessions={sesiones} />
           )}
           {isEnabled("session_agenda_type") && (
-            <SessionAgendaTypeBlock timeframe={tfLabel} data={sessionAgendaTypeData} />
+            <SessionAgendaTypeBlock timeframe={tfLabel} sessions={sesiones} />
           )}
           {isEnabled("session_topics") && (
-            <SessionTopicsBlock timeframe={tfLabel} data={sessionTopicsData} />
+            <SessionTopicsBlock timeframe={tfLabel} sessions={sesiones} />
           )}
           {isEnabled("session_recurring_bills") && (
             <div className="lg:col-span-2">
-              <SessionRecurringBillsBlock timeframe={tfLabel} data={sessionRecurringBillsData} />
+              <SessionRecurringBillsBlock timeframe={tfLabel} sessions={sesiones} />
             </div>
           )}
         </div>
