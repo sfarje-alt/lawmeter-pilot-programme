@@ -1,0 +1,1 @@
+UPDATE public.org_ai_credits SET balance = 30, updated_at = now() WHERE organization_id = 'b7e15500-0001-4000-8000-000000000001';
