@@ -320,7 +320,100 @@ export function AlertDetailDrawer({
               </>
             )}
 
-            {/* AI rationale full list */}
+            {/* Bill follow-up timeline (Congreso SPLEY) */}
+            {isBill && Array.isArray(alert.seguimiento) && alert.seguimiento.length > 0 && (
+              <>
+                <Separator className="bg-border/30" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <History className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Historial de seguimiento
+                    </h3>
+                    <Badge variant="outline" className="text-[10px] bg-muted/40 border-border/40 text-muted-foreground">
+                      {alert.seguimiento.length} {alert.seguimiento.length === 1 ? "evento" : "eventos"}
+                    </Badge>
+                  </div>
+                  <ol className="relative border-l border-border/40 ml-2 space-y-4 pl-5">
+                    {alert.seguimiento.map((ev, i) => {
+                      const estado = String(ev.estado_procesal ?? "").trim();
+                      const estadoLower = estado.toLowerCase();
+                      const isApproved = /aprob|publicad|promulgad|autograf|ley\s*n/i.test(estado);
+                      const isComision = /comisi|decretad|dictamen/i.test(estado);
+                      const isRejected = /rechaz|archiv|retirad/i.test(estado);
+                      const dotStyle = isApproved
+                        ? "bg-emerald-500"
+                        : isRejected
+                          ? "bg-destructive"
+                          : isComision
+                            ? "bg-amber-500"
+                            : "bg-blue-500";
+                      const badgeStyle = isApproved
+                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/35"
+                        : isRejected
+                          ? "bg-destructive/15 text-destructive border-destructive/35"
+                          : isComision
+                            ? "bg-amber-500/15 text-amber-400 border-amber-500/35"
+                            : "bg-blue-500/15 text-blue-400 border-blue-500/35";
+                      let formattedDate = ev.fecha ?? "";
+                      try {
+                        if (ev.fecha) formattedDate = format(new Date(ev.fecha), "dd MMM yyyy", { locale: es });
+                      } catch {
+                        // keep raw
+                      }
+                      const adjuntos = Array.isArray(ev.adjuntos) ? ev.adjuntos.filter((a) => a?.url) : [];
+                      return (
+                        <li key={`${ev.fecha}-${i}`} className="relative">
+                          <span
+                            className={cn(
+                              "absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-2 ring-background",
+                              dotStyle,
+                            )}
+                          />
+                          <div className="rounded-md border border-border/30 bg-muted/20 px-3 py-2 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="text-sm font-medium text-foreground">{formattedDate}</span>
+                              {estado && (
+                                <Badge variant="outline" className={cn("text-[10px] uppercase tracking-wide", badgeStyle)}>
+                                  {estado}
+                                </Badge>
+                              )}
+                            </div>
+                            {ev.detalle && (
+                              <p className="text-xs text-foreground/90 leading-relaxed">{ev.detalle}</p>
+                            )}
+                            {Array.isArray(ev.comision) && ev.comision.length > 0 && (
+                              <p className="text-[11px] italic text-muted-foreground">
+                                {ev.comision.join(" · ")}
+                              </p>
+                            )}
+                            {adjuntos.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {adjuntos.map((a, j) => (
+                                  <Button
+                                    key={`${a.url}-${j}`}
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-2 text-[11px] gap-1.5 bg-background/40 border-border/40"
+                                  >
+                                    <a href={a.url} target="_blank" rel="noopener noreferrer">
+                                      <FileText className="h-3 w-3" />
+                                      Descargar PDF
+                                      <ExternalLink className="h-3 w-3 opacity-60" />
+                                    </a>
+                                  </Button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              </>
+            )}
             {alert.rationale && alert.rationale.length > 0 && (
               <>
                 <Separator className="bg-border/30" />
