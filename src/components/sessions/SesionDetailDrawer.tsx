@@ -189,17 +189,21 @@ export function SesionDetailDrawer({ sesion: initial, open, onOpenChange }: Prop
                   <p className="text-sm text-muted-foreground">
                     Esta sesión aún no ha sido analizada por IA.
                   </p>
-                  <Button onClick={onClickAnalizar} disabled={loading} title="Toma entre 3 y 5 minutos">
+                  <Button
+                    onClick={onClickAnalizar}
+                    disabled={loading || insufficientCredits}
+                    title={insufficientCredits ? "Créditos insuficientes" : "Toma entre 3 y 5 minutos"}
+                  >
                     {loading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
                       <Sparkles className="h-4 w-4 mr-2" />
                     )}
-                    Analizar sesión con IA
+                    Analizar sesión con IA ({SESSION_ANALYSIS_COST} créditos)
                   </Button>
                   <p className="text-xs text-muted-foreground">
                     Descargamos el video, transcribimos y analizamos contra el perfil
-                    regulatorio del cliente. Tarda 3–5 minutos.
+                    regulatorio del cliente. Tarda 3–5 minutos. Saldo actual: {balance} créditos.
                   </p>
                 </div>
               )}
