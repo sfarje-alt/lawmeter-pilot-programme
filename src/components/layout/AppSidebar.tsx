@@ -28,7 +28,6 @@ interface AppSidebarProps {
 const menuItems = [
   { id: "inbox", title: "Alertas", icon: Inbox },
   { id: "sessions", title: "Sesiones", icon: Video },
-  { id: "clients", title: "Perfil", icon: Building2 },
   { id: "reports", title: "Reportes", icon: FileText },
   { id: "analytics", title: "Analíticas", icon: BarChart3 },
   { id: "calendar", title: "Calendario", icon: Calendar },
