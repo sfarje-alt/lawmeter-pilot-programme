@@ -27,6 +27,7 @@ import { BEDSON_ORGANIZATION_NAME } from "@/data/bedsonClientProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { isEmptyDataOrg } from "@/lib/orgDataIsolation";
 import { useSesionesWorkspace } from "@/hooks/useSesionesWorkspace";
+import { useSesiones, type Sesion } from "@/hooks/useSesiones";
 import type { PeruSession } from "@/types/peruSessions";
 import {
   ANALYTICS_BLOCK_REGISTRY,
@@ -650,7 +651,44 @@ function saveJSON<T>(key: string, value: T) {
 export function ReportsPage() {
   const { profile } = useAuth();
   const { alerts } = useAlerts();
-  const { sessions: allSessions } = useSesionesWorkspace();
+  const { sessions: workspaceSessions } = useSesionesWorkspace();
+  // También leemos la tabla `sesiones` (donde viven los análisis IA) para que
+  // las sesiones analizadas por el usuario aparezcan en el reporte aunque no
+  // estén en la fuente `peru_sessions` que alimenta el workspace editorial.
+  const { sesiones: analyzedSesiones } = useSesiones({ onlyDeInteres: false });
+
+  const allSessions = useMemo<PeruSession[]>(() => {
+    const byExternalId = new Map<string, PeruSession>();
+    for (const s of workspaceSessions) {
+      const key = (s as any).external_id ?? s.id;
+      byExternalId.set(String(key), s);
+    }
+    // Merge analizadas: si ya existe (mismo external_id) enriquecemos con
+    // analysis_completed_at/scheduled_at; si no, la añadimos como nueva.
+    for (const a of analyzedSesiones) {
+      const key = a.external_id ?? a.id;
+      const existing = byExternalId.get(key);
+      const merged: PeruSession = {
+        ...(existing ?? ({} as PeruSession)),
+        id: existing?.id ?? a.id,
+        external_id: a.external_id,
+        commission_name: a.commission_name ?? existing?.commission_name ?? "",
+        session_title: a.session_title ?? existing?.session_title ?? null,
+        scheduled_at: a.scheduled_at ?? existing?.scheduled_at ?? null,
+        scheduled_date_text: a.scheduled_date_text ?? existing?.scheduled_date_text ?? null,
+        is_archived: existing?.is_archived ?? false,
+        is_pinned: existing?.is_pinned ?? false,
+        is_pinned_for_publication: existing?.is_pinned_for_publication ?? false,
+        analysis_completed_at: a.analysis_completed_at ?? (existing as any)?.analysis_completed_at ?? null,
+        executive_summary:
+          a.resumen_ejecutivo ?? (existing as any)?.executive_summary ?? undefined,
+        impact_level: ((a.impacto_categoria ?? (existing as any)?.impact_level) as any) ?? undefined,
+        urgency_level: ((a.urgencia_categoria ?? (existing as any)?.urgency_level) as any) ?? undefined,
+      } as unknown as PeruSession;
+      byExternalId.set(key, merged);
+    }
+    return Array.from(byExternalId.values());
+  }, [workspaceSessions, analyzedSesiones]);
   const profileName = useMemo(
     () => readCompanyName(profile?.organization_id),
     [profile?.organization_id]
