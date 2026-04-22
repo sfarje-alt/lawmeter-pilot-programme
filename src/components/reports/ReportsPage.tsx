@@ -71,6 +71,10 @@ interface ScheduledReport {
   inclusion: InclusionMode;
   daysBack: number;
   includeAnalytics: boolean;
+  /** Si true, sesiones cuya fecha de sesión cae en el período entran al reporte. */
+  matchSessionDate?: boolean;
+  /** Si true, sesiones analizadas dentro del período entran al reporte (aunque la sesión sea anterior). */
+  matchAnalysisDate?: boolean;
   frequency: Frequency;
   time: string;
   recipients: string;
@@ -578,6 +582,35 @@ function buildPeriodLabel(daysBack: number) {
   const end = new Date();
   const start = subDays(end, daysBack);
   return `${format(start, "dd MMM", { locale: es })} – ${format(end, "dd MMM yyyy", { locale: es })} (${daysBack} días)`;
+}
+
+/**
+ * Determina si una sesión debe entrar al reporte según las opciones de fecha
+ * elegidas por el usuario. Acepta dos criterios independientes (fecha de
+ * sesión y/o fecha de análisis IA) y los combina con OR. Si ambos están
+ * desactivados, no entra ninguna sesión (defensivo).
+ */
+function sessionMatchesPeriod(
+  s: PeruSession,
+  cutoff: Date,
+  opts: { bySessionDate: boolean; byAnalysisDate: boolean; inclusion: InclusionMode }
+): boolean {
+  if (s.is_archived) return false;
+  if (opts.inclusion === "pineadas" && !s.is_pinned) return false;
+  if (!opts.bySessionDate && !opts.byAnalysisDate) return false;
+
+  const inRange = (iso: string | null | undefined) => {
+    if (!iso) return false;
+    try {
+      return !isBefore(parseISO(iso), cutoff);
+    } catch {
+      return false;
+    }
+  };
+
+  if (opts.bySessionDate && inRange(s.scheduled_at)) return true;
+  if (opts.byAnalysisDate && inRange((s as any).analysis_completed_at)) return true;
+  return false;
 }
 
 function nextRunDate(frequency: Frequency, time: string): string {
