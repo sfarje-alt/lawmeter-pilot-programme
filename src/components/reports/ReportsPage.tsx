@@ -694,6 +694,28 @@ export function ReportsPage() {
     [profile?.organization_id]
   );
 
+  // UI-only restricted state for specific organizations.
+  // Backend, scheduling logic and report generation are untouched.
+  const restricted = isEmptyDataOrg(profile?.organization_id);
+
+  // Preconfigured (display-only) schedules shown when restricted.
+  // These are NOT persisted and do NOT trigger any backend job.
+  const restrictedPreconfiguredSchedules = useMemo(
+    () => [
+      {
+        id: "preconfigured-2026-05-06",
+        name: "Reporte regulatorio automático",
+        scheduledDateLabel: "6 de mayo de 2026",
+      },
+      {
+        id: "preconfigured-2026-05-20",
+        name: "Reporte regulatorio automático",
+        scheduledDateLabel: "20 de mayo de 2026",
+      },
+    ],
+    []
+  );
+
   // Tab
   const [tab, setTab] = useState<"create" | "scheduled" | "generated">("create");
 
