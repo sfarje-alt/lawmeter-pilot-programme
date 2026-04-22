@@ -25,8 +25,6 @@ import {
   SessionsByCommissionBlock,
   SessionsTemporalEvolutionBlock,
   SessionAgendaTypeBlock,
-  SessionTopicsBlock,
-  SessionRecurringBillsBlock,
 } from "@/components/analytics/blocks/sessions";
 import {
   ReviewedAlertsBlock,
@@ -488,16 +486,8 @@ export function ClientAnalytics() {
           {isEnabled("sessions_temporal_evolution") && (
             <SessionsTemporalEvolutionBlock timeframe={tfLabel} sessions={sesiones} />
           )}
-          {isEnabled("session_agenda_type") && (
+         {isEnabled("session_agenda_type") && (
             <SessionAgendaTypeBlock timeframe={tfLabel} sessions={sesiones} />
-          )}
-          {isEnabled("session_topics") && (
-            <SessionTopicsBlock timeframe={tfLabel} sessions={sesiones} />
-          )}
-          {isEnabled("session_recurring_bills") && (
-            <div className="lg:col-span-2">
-              <SessionRecurringBillsBlock timeframe={tfLabel} sessions={sesiones} />
-            </div>
           )}
         </div>
       </CollapsibleAnalyticsSection>

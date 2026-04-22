@@ -27,9 +27,7 @@ export type AnalyticsBlockKey =
   // Sessions (Sesiones del Congreso)
   | 'sessions_by_commission'
   | 'sessions_temporal_evolution'
-  | 'session_agenda_type'
-  | 'session_topics'
-  | 'session_recurring_bills';
+  | 'session_agenda_type';
 
 export interface AnalyticsBlockDefinition {
   key: AnalyticsBlockKey;
@@ -360,9 +358,9 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
   // Sessions section
   {
     key: 'sessions_by_commission',
-    title: 'Alertas de sesiones por comisión',
-    takeaway: 'Volumen de alertas de sesiones por comisión',
-    infoTooltip: 'Distribución de alertas generadas a partir de sesiones según la comisión legislativa.',
+    title: 'Sesiones por comisión',
+    takeaway: 'Volumen de sesiones por comisión',
+    infoTooltip: 'Distribución de sesiones del Congreso según la comisión legislativa que las convoca.',
     visibility: 'both',
     section: 'sessions',
     chartType: 'bar',
@@ -370,9 +368,9 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
   },
   {
     key: 'sessions_temporal_evolution',
-    title: 'Evolución temporal de alertas de sesiones',
-    takeaway: 'Tendencia de alertas de sesiones en el tiempo',
-    infoTooltip: 'Evolución temporal del volumen de alertas generadas a partir de sesiones del Congreso.',
+    title: 'Evolución temporal de sesiones',
+    takeaway: 'Tendencia de sesiones en el tiempo',
+    infoTooltip: 'Evolución temporal del volumen de sesiones del Congreso.',
     visibility: 'both',
     section: 'sessions',
     chartType: 'line',
@@ -380,32 +378,12 @@ export const ANALYTICS_BLOCK_REGISTRY: AnalyticsBlockDefinition[] = [
   },
   {
     key: 'session_agenda_type',
-    title: 'Distribución de ítems del orden del día',
-    takeaway: 'Tipo de agenda tratada en sesiones',
-    infoTooltip: 'Clasificación de ítems del orden del día (presentación, debate, votación, predictamen).',
+    title: 'Distribución por estado de sesión',
+    takeaway: 'Estado de análisis de las sesiones',
+    infoTooltip: 'Distribución de las sesiones del período según su estado actual de análisis.',
     visibility: 'both',
     section: 'sessions',
     chartType: 'pie',
-    defaultEnabled: true,
-  },
-  {
-    key: 'session_topics',
-    title: 'Materias temáticas más frecuentes en sesiones',
-    takeaway: 'Temas recurrentes tratados en el Congreso',
-    infoTooltip: 'Ranking de materias temáticas más discutidas durante las sesiones del período.',
-    visibility: 'both',
-    section: 'sessions',
-    chartType: 'bar',
-    defaultEnabled: true,
-  },
-  {
-    key: 'session_recurring_bills',
-    title: 'Proyectos de ley más recurrentes en sesiones',
-    takeaway: 'PLs con mayor actividad en sesiones',
-    infoTooltip: 'Proyectos de ley que aparecen con mayor frecuencia en agendas y debates de sesiones.',
-    visibility: 'both',
-    section: 'sessions',
-    chartType: 'bar',
     defaultEnabled: true,
   },
 ];

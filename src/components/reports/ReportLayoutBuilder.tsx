@@ -73,8 +73,6 @@ const blockIcons: Record<string, React.ElementType> = {
   sessions_by_commission: BarChart3,
   sessions_temporal_evolution: TrendingUp,
   session_agenda_type: PieChart,
-  session_topics: Layers,
-  session_recurring_bills: FileBarChart,
 };
 
 const SECTION_ORDER: AnalyticsSection[] = ['general', 'bills', 'sessions', 'ops'];
