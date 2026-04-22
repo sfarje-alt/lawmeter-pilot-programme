@@ -57,7 +57,7 @@ export function SesionCard({ sesion, onOpen }: Props) {
 
       {(status === "REQUESTED" || status === "PROCESSING") && (
         <div className="mb-2 h-1 w-full overflow-hidden rounded-full bg-primary/10">
-          <div className="h-full w-1/3 animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary to-transparent" />
+          <div className="h-full w-1/4 animate-shimmer bg-gradient-to-r from-transparent via-primary to-transparent" />
         </div>
       )}
 
