@@ -14,8 +14,22 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GITHUB_PAT = Deno.env.get("GITHUB_PAT_REPO_DISPATCH")!;
-const GITHUB_REPO = Deno.env.get("GITHUB_REPO") ?? "sfarje-alt/lawmeter-backend";
+const DEFAULT_GITHUB_REPO = "sfarje-alt/lawmeter-backend";
+
+function normalizeGithubRepo(raw: string | null | undefined): string | null {
+  const value = (raw ?? "")
+    .trim()
+    .replace(/^https?:\/\/github\.com\//i, "")
+    .replace(/\.git$/i, "")
+    .replace(/^\/+|\/+$/g, "");
+
+  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value) ? value : null;
+}
+
+function githubPermissionHelp(repo: string): string {
+  return `Verifica que el token tenga acceso al repositorio ${repo}, permiso repo (classic) o Contents: Read and write (fine-grained), y autorización SSO si pertenece a una organización.`;
+}
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -27,11 +41,28 @@ function json(payload: unknown, status = 200): Response {
 }
 
 serve(async (req) => {
+  const githubPat = Deno.env.get("GITHUB_PAT_REPO_DISPATCH")?.trim();
+  const githubRepo = normalizeGithubRepo(
+    Deno.env.get("GITHUB_REPO") ?? DEFAULT_GITHUB_REPO,
+  );
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
   if (req.method !== "POST") {
     return json({ error: "method not allowed" }, 405);
+  }
+  if (!githubPat) {
+    return json({ error: "missing github token configuration" }, 500);
+  }
+  if (!githubRepo) {
+    return json(
+      {
+        error: "invalid github repo configuration",
+        detail: "Usa owner/repo o https://github.com/owner/repo",
+      },
+      500,
+    );
   }
 
   const auth = req.headers.get("Authorization") ?? "";
@@ -94,11 +125,11 @@ serve(async (req) => {
   let ghResp: Response;
   try {
     ghResp = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/dispatches`,
+      `https://api.github.com/repos/${githubRepo}/dispatches`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${GITHUB_PAT}`,
+          Authorization: `Bearer ${githubPat}`,
           Accept: "application/vnd.github+json",
           "X-GitHub-Api-Version": "2022-11-28",
           "Content-Type": "application/json",
@@ -130,16 +161,32 @@ serve(async (req) => {
 
   if (!ghResp.ok) {
     const detail = await ghResp.text();
+    const help = ghResp.status === 403 ? githubPermissionHelp(githubRepo) : null;
     await adminClient
       .from("sesiones")
       .update({
         analysis_status: "FAILED",
-        analysis_error: `github dispatch ${ghResp.status}: ${detail.slice(0, 500)}`,
+        analysis_error: help
+          ? `GitHub no autorizó el dispatch. ${help}`
+          : `github dispatch ${ghResp.status}: ${detail.slice(0, 500)}`,
       })
       .eq("external_id", externalId);
     return json(
-      { error: "github dispatch failed", status: ghResp.status, detail },
-      502,
+      {
+        error:
+          ghResp.status === 403
+            ? "GitHub no autorizó el dispatch"
+            : "github dispatch failed",
+        code:
+          ghResp.status === 403
+            ? "GITHUB_DISPATCH_FORBIDDEN"
+            : "GITHUB_DISPATCH_FAILED",
+        status: ghResp.status,
+        detail,
+        help,
+        repo: githubRepo,
+      },
+      ghResp.status === 403 ? 403 : 502,
     );
   }
 
