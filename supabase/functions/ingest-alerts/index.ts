@@ -86,6 +86,13 @@ interface IngestItem {
   autores?: string[];
   proponente?: string;
   fecha_presentacion?: string;
+  seguimiento?: Array<{
+    fecha?: string;
+    estado_procesal?: string;
+    comision?: string[];
+    detalle?: string;
+    adjuntos?: Array<{ url?: string }>;
+  }>;
 
   // Sesion-specific
   comision?: string;
@@ -381,6 +388,9 @@ Deno.serve(async (req) => {
         autores: Array.isArray(item.autores) ? item.autores : [],
         proponente: item.proponente ?? null,
         fecha_presentacion: normalizeDate(item.fecha_presentacion ?? null),
+        seguimiento: tipo === "pl" && Array.isArray(item.seguimiento)
+          ? item.seguimiento.slice(0, 200)
+          : null,
 
         // Sesion-specific
         comision: item.comision ?? null,

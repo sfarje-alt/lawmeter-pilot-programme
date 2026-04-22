@@ -112,6 +112,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           risk_level: string | null
+          seguimiento: Json | null
           seguimiento_hash: string | null
           source_url: string | null
           status: string
@@ -163,6 +164,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           risk_level?: string | null
+          seguimiento?: Json | null
           seguimiento_hash?: string | null
           source_url?: string | null
           status?: string
@@ -214,6 +216,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           risk_level?: string | null
+          seguimiento?: Json | null
           seguimiento_hash?: string | null
           source_url?: string | null
           status?: string
