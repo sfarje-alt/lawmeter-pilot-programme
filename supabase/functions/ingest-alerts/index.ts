@@ -86,6 +86,13 @@ interface IngestItem {
   autores?: string[];
   proponente?: string;
   fecha_presentacion?: string;
+  seguimiento?: Array<{
+    fecha?: string;
+    estado_procesal?: string;
+    comision?: string[];
+    detalle?: string;
+    adjuntos?: Array<{ url?: string }>;
+  }>;
 
   // Sesion-specific
   comision?: string;
