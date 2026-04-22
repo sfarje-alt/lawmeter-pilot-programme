@@ -22,10 +22,31 @@ serve(async (req) => {
   }
 
   try {
-    const { question, transcription, commissionName, sessionTitle, sessionDate, previousMessages, clientId, organizationId } = await req.json();
+    const { question, transcription, commissionName, sessionTitle, sessionDate, previousMessages, clientId, organizationId, sessionExternalId } = await req.json();
 
     if (!question || !transcription) {
       throw new Error('Question and transcription are required');
+    }
+
+    // Pre-check: ¿la org tiene al menos 1 crédito?
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+
+    if (organizationId) {
+      const { data: creditRow } = await adminClient
+        .from("org_ai_credits")
+        .select("balance")
+        .eq("organization_id", organizationId)
+        .maybeSingle();
+      if (!creditRow || creditRow.balance < 1) {
+        return new Response(
+          JSON.stringify({ error: "Créditos insuficientes", code: "INSUFFICIENT_CREDITS", balance: creditRow?.balance ?? 0 }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
