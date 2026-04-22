@@ -854,6 +854,126 @@ export type Database = {
           },
         ]
       }
+      sesiones: {
+        Row: {
+          agenda_markdown: string | null
+          agenda_scraped_at: string | null
+          agenda_url: string | null
+          analysis_completed_at: string | null
+          analysis_cost_usd: number | null
+          analysis_error: string | null
+          analysis_model: string | null
+          analysis_requested_at: string | null
+          analysis_requested_by: string | null
+          analysis_started_at: string | null
+          analysis_status: string
+          area_de_interes: string[] | null
+          client_id: string
+          comentario: string | null
+          commission_name: string
+          commission_normalized: string
+          created_at: string
+          es_de_interes: boolean
+          external_id: string
+          id: string
+          impacto: number | null
+          impacto_categoria: string | null
+          organization_id: string
+          puntos_clave: Json | null
+          racional: string[] | null
+          recomendaciones: string[] | null
+          resumen_ejecutivo: string | null
+          scheduled_at: string | null
+          scheduled_date_text: string | null
+          session_title: string | null
+          transcript_duration_s: number | null
+          transcript_excerpt: string | null
+          updated_at: string
+          urgencia: number | null
+          urgencia_categoria: string | null
+          video_resolved_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          agenda_markdown?: string | null
+          agenda_scraped_at?: string | null
+          agenda_url?: string | null
+          analysis_completed_at?: string | null
+          analysis_cost_usd?: number | null
+          analysis_error?: string | null
+          analysis_model?: string | null
+          analysis_requested_at?: string | null
+          analysis_requested_by?: string | null
+          analysis_started_at?: string | null
+          analysis_status?: string
+          area_de_interes?: string[] | null
+          client_id: string
+          comentario?: string | null
+          commission_name: string
+          commission_normalized: string
+          created_at?: string
+          es_de_interes?: boolean
+          external_id: string
+          id?: string
+          impacto?: number | null
+          impacto_categoria?: string | null
+          organization_id: string
+          puntos_clave?: Json | null
+          racional?: string[] | null
+          recomendaciones?: string[] | null
+          resumen_ejecutivo?: string | null
+          scheduled_at?: string | null
+          scheduled_date_text?: string | null
+          session_title?: string | null
+          transcript_duration_s?: number | null
+          transcript_excerpt?: string | null
+          updated_at?: string
+          urgencia?: number | null
+          urgencia_categoria?: string | null
+          video_resolved_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          agenda_markdown?: string | null
+          agenda_scraped_at?: string | null
+          agenda_url?: string | null
+          analysis_completed_at?: string | null
+          analysis_cost_usd?: number | null
+          analysis_error?: string | null
+          analysis_model?: string | null
+          analysis_requested_at?: string | null
+          analysis_requested_by?: string | null
+          analysis_started_at?: string | null
+          analysis_status?: string
+          area_de_interes?: string[] | null
+          client_id?: string
+          comentario?: string | null
+          commission_name?: string
+          commission_normalized?: string
+          created_at?: string
+          es_de_interes?: boolean
+          external_id?: string
+          id?: string
+          impacto?: number | null
+          impacto_categoria?: string | null
+          organization_id?: string
+          puntos_clave?: Json | null
+          racional?: string[] | null
+          recomendaciones?: string[] | null
+          resumen_ejecutivo?: string | null
+          scheduled_at?: string | null
+          scheduled_date_text?: string | null
+          session_title?: string | null
+          transcript_duration_s?: number | null
+          transcript_excerpt?: string | null
+          updated_at?: string
+          urgencia?: number | null
+          urgencia_categoria?: string | null
+          video_resolved_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       session_editorial_state: {
         Row: {
           chatbot_state: string
