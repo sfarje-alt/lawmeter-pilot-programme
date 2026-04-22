@@ -694,6 +694,28 @@ export function ReportsPage() {
     [profile?.organization_id]
   );
 
+  // UI-only restricted state for specific organizations.
+  // Backend, scheduling logic and report generation are untouched.
+  const restricted = isEmptyDataOrg(profile?.organization_id);
+
+  // Preconfigured (display-only) schedules shown when restricted.
+  // These are NOT persisted and do NOT trigger any backend job.
+  const restrictedPreconfiguredSchedules = useMemo(
+    () => [
+      {
+        id: "preconfigured-2026-05-06",
+        name: "Reporte regulatorio automático",
+        scheduledDateLabel: "6 de mayo de 2026",
+      },
+      {
+        id: "preconfigured-2026-05-20",
+        name: "Reporte regulatorio automático",
+        scheduledDateLabel: "20 de mayo de 2026",
+      },
+    ],
+    []
+  );
+
   // Tab
   const [tab, setTab] = useState<"create" | "scheduled" | "generated">("create");
 
@@ -1120,7 +1142,9 @@ export function ReportsPage() {
           </TabsTrigger>
           <TabsTrigger value="scheduled" className="gap-2">
             <Clock className="h-4 w-4" /> Reportes programados
-            <Badge variant="secondary">{schedules.length}</Badge>
+            <Badge variant="secondary">
+              {restricted ? restrictedPreconfiguredSchedules.length : schedules.length}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="generated" className="gap-2">
             <History className="h-4 w-4" /> Reportes generados
@@ -1130,59 +1154,83 @@ export function ReportsPage() {
 
         {/* ─────────────────── CREAR ─────────────────── */}
         <TabsContent value="create" className="mt-6">
-          <Card className="border-border/50">
+          <Card className="border-border/50 relative overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileDown className="h-5 w-5" /> Configuración del reporte
+                {restricted && (
+                  <Badge variant="outline" className="ml-2 text-xs font-normal">
+                    Solo lectura
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
                 Elige contenido, modo de inclusión y período. Opcionalmente añade tus analíticas.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {ChoicesPanel}
+              {restricted && (
+                <div className="rounded-lg border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
+                  La configuración adicional de reportes no está disponible en este momento.
+                </div>
+              )}
+              <div
+                className={
+                  restricted
+                    ? "space-y-6 pointer-events-none select-none opacity-60 [filter:blur(0.3px)]"
+                    : "space-y-6"
+                }
+                aria-disabled={restricted || undefined}
+              >
+                {ChoicesPanel}
 
-              {/* Preview */}
-              <div className="grid grid-cols-3 gap-3 p-4 rounded-lg bg-muted/40 border border-border/50">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{filteredAlerts.length}</div>
-                  <div className="text-xs text-muted-foreground">Alertas regulatorias</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{filteredSessions.length}</div>
-                  <div className="text-xs text-muted-foreground">Sesiones</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">
-                    {includeAnalytics ? visibleAnalytics.length : 0}
+                {/* Preview */}
+                <div className="grid grid-cols-3 gap-3 p-4 rounded-lg bg-muted/40 border border-border/50">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">{filteredAlerts.length}</div>
+                    <div className="text-xs text-muted-foreground">Alertas regulatorias</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Bloques de analíticas</div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">{filteredSessions.length}</div>
+                    <div className="text-xs text-muted-foreground">Sesiones</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">
+                      {includeAnalytics ? visibleAnalytics.length : 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Bloques de analíticas</div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Button
-                  size="lg"
-                  className="w-full"
-                  disabled={!canGenerate || isGenerating}
-                  onClick={handleManualGenerate}
-                >
-                  {isGenerating ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-2" />
-                  )}
-                  {isGenerating
-                    ? "Generando PDF…"
-                    : canGenerate
-                      ? "Generar y descargar"
-                      : "Sin contenido para el período"}
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => setTab("scheduled")}>
-                  <Clock className="h-4 w-4 mr-2" />
-                  Programar este reporte
-                </Button>
+                {/* Actions */}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    disabled={restricted || !canGenerate || isGenerating}
+                    onClick={handleManualGenerate}
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
+                    {isGenerating
+                      ? "Generando PDF…"
+                      : canGenerate
+                        ? "Generar y descargar"
+                        : "Sin contenido para el período"}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    disabled={restricted}
+                    onClick={() => setTab("scheduled")}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Programar este reporte
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1194,49 +1242,70 @@ export function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" /> Nueva programación
+                {restricted && (
+                  <Badge variant="outline" className="ml-2 text-xs font-normal">
+                    Solo lectura
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
                 Reutiliza la misma lógica simple: contenido, modo, período y analíticas opcionales.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {ChoicesPanel}
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs">Nombre</Label>
-                  <Input
-                    value={scheduleName}
-                    onChange={(e) => setScheduleName(e.target.value)}
-                    placeholder="Ej., Reporte semanal regulatorio"
-                  />
+              {restricted && (
+                <div className="rounded-lg border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
+                  Esta organización ya cuenta con reportes regulatorios programados. La configuración adicional de reportes no está disponible en este momento.
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Destinatarios</Label>
-                  <Input
-                    value={scheduleRecipients}
-                    onChange={(e) => setScheduleRecipients(e.target.value)}
-                    placeholder="legal@empresa.com, ceo@empresa.com"
-                  />
+              )}
+              <div
+                className={
+                  restricted
+                    ? "space-y-6 pointer-events-none select-none opacity-60 [filter:blur(0.3px)]"
+                    : "space-y-6"
+                }
+                aria-disabled={restricted || undefined}
+              >
+                {ChoicesPanel}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Nombre</Label>
+                    <Input
+                      value={scheduleName}
+                      onChange={(e) => setScheduleName(e.target.value)}
+                      placeholder="Ej., Reporte semanal regulatorio"
+                      disabled={restricted}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Destinatarios</Label>
+                    <Input
+                      value={scheduleRecipients}
+                      onChange={(e) => setScheduleRecipients(e.target.value)}
+                      placeholder="legal@empresa.com, ceo@empresa.com"
+                      disabled={restricted}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Frecuencia</Label>
+                    <Select value={scheduleFrequency} onValueChange={(v) => setScheduleFrequency(v as Frequency)} disabled={restricted}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Diario</SelectItem>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="monthly">Mensual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Hora</Label>
+                    <Input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} disabled={restricted} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Frecuencia</Label>
-                  <Select value={scheduleFrequency} onValueChange={(v) => setScheduleFrequency(v as Frequency)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Diario</SelectItem>
-                      <SelectItem value="weekly">Semanal</SelectItem>
-                      <SelectItem value="monthly">Mensual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Hora</Label>
-                  <Input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} />
-                </div>
+                <Button onClick={handleSaveSchedule} className="w-full sm:w-auto" disabled={restricted}>
+                  <PlusCircle className="h-4 w-4 mr-2" /> Crear programación
+                </Button>
               </div>
-              <Button onClick={handleSaveSchedule} className="w-full sm:w-auto">
-                <PlusCircle className="h-4 w-4 mr-2" /> Crear programación
-              </Button>
             </CardContent>
           </Card>
 
@@ -1248,7 +1317,32 @@ export function ReportsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {schedules.length === 0 ? (
+              {restricted ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Ya tienes 2 reportes regulatorios automáticos programados.
+                  </p>
+                  {restrictedPreconfiguredSchedules.map((s) => (
+                    <div key={s.id} className="p-4 rounded-lg border border-border/50 bg-card/40">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-foreground">{s.name}</span>
+                            <Badge variant="outline">Programado</Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline">Tipo: Regulatorio</Badge>
+                            <Badge variant="outline">Modalidad: Automático</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Fecha programada: {s.scheduledDateLabel}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : schedules.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-6 text-center">
                   Aún no tienes reportes programados.
                 </p>
