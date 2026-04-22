@@ -215,6 +215,7 @@ function mapDbRowToAlert(
     proponente: row.proponente ?? undefined,
     fecha_presentacion: row.fecha_presentacion ?? undefined,
     comentario: row.comentario ?? undefined,
+    seguimiento: Array.isArray(row.seguimiento) ? row.seguimiento : [],
   };
 }
 
