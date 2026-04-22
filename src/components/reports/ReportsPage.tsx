@@ -615,9 +615,13 @@ function saveJSON<T>(key: string, value: T) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ReportsPage() {
+  const { profile } = useAuth();
   const { alerts } = useAlerts();
   const { sessions: allSessions } = useSesionesWorkspace();
-  const profileName = useMemo(() => readCompanyName(), []);
+  const profileName = useMemo(
+    () => readCompanyName(profile?.organization_id),
+    [profile?.organization_id]
+  );
 
   // Tab
   const [tab, setTab] = useState<"create" | "scheduled" | "generated">("create");
@@ -627,6 +631,11 @@ export function ReportsPage() {
   const [inclusion, setInclusion] = useState<InclusionMode>("todas");
   const [daysBack, setDaysBack] = useState<number>(7);
   const [includeAnalytics, setIncludeAnalytics] = useState<boolean>(true);
+
+  // Sessions: which date(s) to use to decide if a session enters the report.
+  // Ambos pueden estar activos a la vez (OR lógico).
+  const [matchSessionDate, setMatchSessionDate] = useState<boolean>(true);
+  const [matchAnalysisDate, setMatchAnalysisDate] = useState<boolean>(false);
 
   // Persisted lists
   const [schedules, setSchedules] = useState<ScheduledReport[]>(() =>
@@ -667,20 +676,14 @@ export function ReportsPage() {
 
   const filteredSessions = useMemo<PeruSession[]>(() => {
     if (source === "alertas") return [];
-    return allSessions.filter((s) => {
-      if (s.is_archived) return false;
-      // period (use scheduled_at if present)
-      try {
-        const ref = s.scheduled_at ? parseISO(s.scheduled_at) : null;
-        if (ref && isBefore(ref, periodCutoff)) return false;
-      } catch {
-        /* keep */
-      }
-      // inclusion
-      if (inclusion === "pineadas" && !s.is_pinned) return false;
-      return true;
-    });
-  }, [allSessions, source, inclusion, periodCutoff]);
+    return allSessions.filter((s) =>
+      sessionMatchesPeriod(s, periodCutoff, {
+        bySessionDate: matchSessionDate,
+        byAnalysisDate: matchAnalysisDate,
+        inclusion,
+      })
+    );
+  }, [allSessions, source, inclusion, periodCutoff, matchSessionDate, matchAnalysisDate]);
 
   const periodLabel = buildPeriodLabel(daysBack);
   const visibleAnalytics = useMemo(() => readVisibleAnalyticsBlocks(), [tab]); // refresh when tab changes
