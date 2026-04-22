@@ -94,5 +94,58 @@ export function useSesiones(opts: UseSesionesOptions = {}) {
     fetchSesiones();
   }, [fetchSesiones]);
 
+  // Realtime: aplicar UPDATEs en vivo a las sesiones ya cargadas (p.ej. cambios
+  // de analysis_status cuando se solicita análisis IA o el backend lo procesa).
+  useEffect(() => {
+    const channel = supabase
+      .channel("sesiones-list")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "sesiones" },
+        (payload) => {
+          const updated = payload.new as unknown as Sesion;
+          setSesiones((prev) => {
+            const idx = prev.findIndex((s) => s.id === updated.id);
+            if (idx === -1) {
+              // Nueva fila visible (p.ej. recién pasó es_de_interes=true)
+              if (!onlyDeInteres || updated.es_de_interes) {
+                return [updated, ...prev];
+              }
+              return prev;
+            }
+            const next = [...prev];
+            next[idx] = { ...next[idx], ...updated };
+            return next;
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "sesiones" },
+        (payload) => {
+          const inserted = payload.new as unknown as Sesion;
+          if (onlyDeInteres && !inserted.es_de_interes) return;
+          setSesiones((prev) =>
+            prev.some((s) => s.id === inserted.id) ? prev : [inserted, ...prev],
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [onlyDeInteres]);
+
+  // Polling fallback mientras haya sesiones en proceso (REQUESTED/PROCESSING).
+  useEffect(() => {
+    const inFlight = sesiones.some(
+      (s) => s.analysis_status === "REQUESTED" || s.analysis_status === "PROCESSING",
+    );
+    if (!inFlight) return;
+    const interval = setInterval(fetchSesiones, 20000);
+    return () => clearInterval(interval);
+  }, [sesiones, fetchSesiones]);
+
   return { sesiones, loading, error, refetch: fetchSesiones };
 }
