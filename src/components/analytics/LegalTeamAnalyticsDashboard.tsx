@@ -483,20 +483,20 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {isEnabled("sessions_by_commission") && (
-              <SessionsByCommissionBlock timeframe={timeframeLabel} data={sessionsByCommissionData} />
+              <SessionsByCommissionBlock timeframe={timeframeLabel} sessions={sesiones} />
             )}
             {isEnabled("sessions_temporal_evolution") && (
-              <SessionsTemporalEvolutionBlock timeframe={timeframeLabel} data={sessionsTemporalData} />
+              <SessionsTemporalEvolutionBlock timeframe={timeframeLabel} sessions={sesiones} />
             )}
             {isEnabled("session_agenda_type") && (
-              <SessionAgendaTypeBlock timeframe={timeframeLabel} data={sessionAgendaTypeData} />
+              <SessionAgendaTypeBlock timeframe={timeframeLabel} sessions={sesiones} />
             )}
             {isEnabled("session_topics") && (
-              <SessionTopicsBlock timeframe={timeframeLabel} data={sessionTopicsData} />
+              <SessionTopicsBlock timeframe={timeframeLabel} sessions={sesiones} />
             )}
             {isEnabled("session_recurring_bills") && (
               <div className="lg:col-span-2">
-                <SessionRecurringBillsBlock timeframe={timeframeLabel} data={sessionRecurringBillsData} />
+                <SessionRecurringBillsBlock timeframe={timeframeLabel} sessions={sesiones} />
               </div>
             )}
           </div>
