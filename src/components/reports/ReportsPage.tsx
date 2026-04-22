@@ -27,6 +27,7 @@ import { BEDSON_ORGANIZATION_NAME } from "@/data/bedsonClientProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { isEmptyDataOrg } from "@/lib/orgDataIsolation";
 import { useSesionesWorkspace } from "@/hooks/useSesionesWorkspace";
+import { useSesiones, type Sesion } from "@/hooks/useSesiones";
 import type { PeruSession } from "@/types/peruSessions";
 import {
   ANALYTICS_BLOCK_REGISTRY,
