@@ -121,19 +121,39 @@ export function ClientAlertDetailDrawer({ alert, open, onOpenChange, clientId }:
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Fecha:</span>
-                  <span className="text-foreground">{formattedDate}</span>
-                </div>
-
-                {isBill && alert.project_date && alert.stage_date && alert.project_date !== alert.stage_date && (
+                {isBill ? (
+                  <>
+                    {alert.project_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Fecha de presentación:</span>
+                        <span className="text-foreground">
+                          {format(new Date(alert.project_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                        </span>
+                      </div>
+                    )}
+                    {alert.stage_date && alert.stage_date !== alert.project_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Fecha último estado:</span>
+                        <span className="text-foreground">
+                          {format(new Date(alert.stage_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                        </span>
+                      </div>
+                    )}
+                    {!alert.project_date && !alert.stage_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Fecha:</span>
+                        <span className="text-foreground">{formattedDate}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
                   <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Fecha proyecto:</span>
-                    <span className="text-foreground">
-                      {format(new Date(alert.project_date), "dd MMM yyyy", { locale: es })}
-                    </span>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Fecha de publicación:</span>
+                    <span className="text-foreground">{formattedDate}</span>
                   </div>
                 )}
               </div>
