@@ -1242,49 +1242,70 @@ export function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" /> Nueva programación
+                {restricted && (
+                  <Badge variant="outline" className="ml-2 text-xs font-normal">
+                    Solo lectura
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
                 Reutiliza la misma lógica simple: contenido, modo, período y analíticas opcionales.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {ChoicesPanel}
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs">Nombre</Label>
-                  <Input
-                    value={scheduleName}
-                    onChange={(e) => setScheduleName(e.target.value)}
-                    placeholder="Ej., Reporte semanal regulatorio"
-                  />
+              {restricted && (
+                <div className="rounded-lg border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
+                  Esta organización ya cuenta con reportes regulatorios programados. La configuración adicional de reportes no está disponible en este momento.
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Destinatarios</Label>
-                  <Input
-                    value={scheduleRecipients}
-                    onChange={(e) => setScheduleRecipients(e.target.value)}
-                    placeholder="legal@empresa.com, ceo@empresa.com"
-                  />
+              )}
+              <div
+                className={
+                  restricted
+                    ? "space-y-6 pointer-events-none select-none opacity-60 [filter:blur(0.3px)]"
+                    : "space-y-6"
+                }
+                aria-disabled={restricted || undefined}
+              >
+                {ChoicesPanel}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Nombre</Label>
+                    <Input
+                      value={scheduleName}
+                      onChange={(e) => setScheduleName(e.target.value)}
+                      placeholder="Ej., Reporte semanal regulatorio"
+                      disabled={restricted}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Destinatarios</Label>
+                    <Input
+                      value={scheduleRecipients}
+                      onChange={(e) => setScheduleRecipients(e.target.value)}
+                      placeholder="legal@empresa.com, ceo@empresa.com"
+                      disabled={restricted}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Frecuencia</Label>
+                    <Select value={scheduleFrequency} onValueChange={(v) => setScheduleFrequency(v as Frequency)} disabled={restricted}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Diario</SelectItem>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="monthly">Mensual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Hora</Label>
+                    <Input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} disabled={restricted} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Frecuencia</Label>
-                  <Select value={scheduleFrequency} onValueChange={(v) => setScheduleFrequency(v as Frequency)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Diario</SelectItem>
-                      <SelectItem value="weekly">Semanal</SelectItem>
-                      <SelectItem value="monthly">Mensual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Hora</Label>
-                  <Input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} />
-                </div>
+                <Button onClick={handleSaveSchedule} className="w-full sm:w-auto" disabled={restricted}>
+                  <PlusCircle className="h-4 w-4 mr-2" /> Crear programación
+                </Button>
               </div>
-              <Button onClick={handleSaveSchedule} className="w-full sm:w-auto">
-                <PlusCircle className="h-4 w-4 mr-2" /> Crear programación
-              </Button>
             </CardContent>
           </Card>
 
