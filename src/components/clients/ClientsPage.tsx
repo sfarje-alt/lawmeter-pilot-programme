@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Building2, Save, Target, Tag as TagIcon, CheckCircle2 } from "lucide-react";
 import { ClientProfile, DEFAULT_CLIENT_PROFILE } from "./types";
-import { FARMASALUD_CLIENT_PROFILE } from "@/data/mockClientProfiles";
+import { BEDSON_CLIENT_PROFILE } from "@/data/bedsonClientProfile";
 import { Step1Basics } from "./wizard/Step1Basics";
 import { Step2Monitoring } from "./wizard/Step2Monitoring";
 import { Step3Tags } from "./wizard/Step3Tags";
@@ -23,7 +23,7 @@ function loadProfile(): ClientProfile {
   } catch {
     // ignore
   }
-  return { ...FARMASALUD_CLIENT_PROFILE };
+  return { ...BEDSON_CLIENT_PROFILE };
 }
 
 export function ClientsPage() {
