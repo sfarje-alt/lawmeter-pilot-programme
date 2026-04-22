@@ -417,12 +417,14 @@ export function InboxAlertCard({
             {alert.project_date && (
               <div className="flex items-center gap-1">
                 <FileText className="h-3 w-3" />
+                <span className="text-muted-foreground/80">Presentación:</span>
                 <span>{formatDate(alert.project_date)}</span>
               </div>
             )}
             {alert.stage_date && alert.stage_date !== alert.project_date && (
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
+                <span className="text-muted-foreground/80">Último estado:</span>
                 <span>{formatDate(alert.stage_date)}</span>
               </div>
             )}
@@ -431,6 +433,7 @@ export function InboxAlertCard({
           alert.publication_date && (
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
+              <span className="text-muted-foreground/80">Publicación:</span>
               <span>{formatDate(alert.publication_date)}</span>
             </div>
           )
