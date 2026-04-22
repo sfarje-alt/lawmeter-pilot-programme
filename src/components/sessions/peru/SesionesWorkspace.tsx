@@ -24,6 +24,7 @@ import {
 } from './SesionesFilterBar';
 import { SesionAlertCard } from './SesionAlertCard';
 import { SesionDetailWorkstation } from './SesionDetailWorkstation';
+import { CreditsBalanceBar } from '../CreditsBalanceBar';
 
 import type { PeruSession } from '@/types/peruSessions';
 
