@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { DEMO_AGGREGATED_ENTITIES } from "@/lib/analyticsMockData";
+
 import type { RankingItem } from "@/types/analytics";
 import { useBlockFilters } from "@/hooks/useBlockFilters";
 import {
@@ -35,7 +35,7 @@ export function AggregatedEntityMonitoringBlock({
   timeframe,
   source = "Todas las alertas capturadas",
   maxItems = 10,
-  demoData = DEMO_AGGREGATED_ENTITIES,
+  demoData = [],
 }: AggregatedEntityMonitoringBlockProps) {
   const filterState = useBlockFilters('aggregated_entity_monitoring', { search: '' });
 
