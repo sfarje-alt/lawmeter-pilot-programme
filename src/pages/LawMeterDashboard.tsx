@@ -76,7 +76,8 @@ export default function LawMeterDashboard() {
         case "client-inbox":
           return <ClientInbox />;
         case "client-profile":
-          return <ClientProfileView />;
+          // Profile is now embedded as a tab inside Settings (read-only).
+          return <ClientSettings defaultTab="profile" />;
         case "client-reports":
           return <ClientReports />;
         case "client-analytics":
