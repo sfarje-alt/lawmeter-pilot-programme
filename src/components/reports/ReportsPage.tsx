@@ -897,13 +897,39 @@ export function ReportsPage() {
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
+      const fileName = `reporte-${source}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
       link.href = url;
-      link.download = `reporte-${source}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+      link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
 
+      // Optional email delivery
+      const recipients = parseRecipients(manualRecipients);
+      if (emailAfterGenerate && recipients.length > 0) {
+        toast.loading(`Enviando reporte a ${recipients.length} destinatario(s)…`, { id: "gen-report" });
+        try {
+          await sendReportByEmail({
+            blob,
+            fileName,
+            recipients,
+            subject: `Reporte ${sourceBadge(source)} · ${format(new Date(), "dd MMM yyyy", { locale: es })}`,
+            message: `Adjunto el reporte regulatorio (${periodLabel}).`,
+          });
+          toast.success(`Reporte enviado a ${recipients.length} destinatario(s)`, { id: "gen-report" });
+        } catch (mailErr) {
+          console.error("Email send failed", mailErr);
+          toast.error("PDF generado, pero no se pudo enviar por correo", { id: "gen-report" });
+        }
+      } else if (emailAfterGenerate && recipients.length === 0) {
+        toast.warning("PDF generado. Añade al menos un correo válido para enviar.", { id: "gen-report" });
+      } else {
+        recordGenerated("manual");
+        toast.success("Reporte generado y descargado", { id: "gen-report" });
+        setIsGenerating(false);
+        return;
+      }
+
       recordGenerated("manual");
-      toast.success("Reporte generado y descargado", { id: "gen-report" });
     } catch (err) {
       console.error(err);
       toast.error("No se pudo generar el reporte", { id: "gen-report" });
