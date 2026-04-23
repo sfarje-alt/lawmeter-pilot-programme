@@ -799,6 +799,10 @@ export function ReportsPage() {
   const [scheduleTime, setScheduleTime] = useState("08:00");
   const [scheduleRecipients, setScheduleRecipients] = useState("");
 
+  // Manual-generate email options
+  const [manualRecipients, setManualRecipients] = useState("");
+  const [emailAfterGenerate, setEmailAfterGenerate] = useState(false);
+
   // ── Data slicing per simplified rules
   const periodCutoff = useMemo(() => subDays(new Date(), daysBack), [daysBack]);
 
