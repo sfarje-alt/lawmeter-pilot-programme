@@ -1304,7 +1304,40 @@ export function ReportsPage() {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Email delivery (optional) */}
+                <div className="rounded-lg border border-border/50 p-4 space-y-3 bg-muted/20">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Enviar por correo al generar</Label>
+                      <p className="text-xs text-muted-foreground">
+                        El PDF se descarga y, si activas esta opción, también se envía como adjunto.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={emailAfterGenerate}
+                      onCheckedChange={setEmailAfterGenerate}
+                      disabled={restricted}
+                    />
+                  </div>
+                  {emailAfterGenerate && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Destinatarios (separa con coma)</Label>
+                      <Input
+                        value={manualRecipients}
+                        onChange={(e) => setManualRecipients(e.target.value)}
+                        placeholder="legal@empresa.com, ceo@empresa.com"
+                        disabled={restricted}
+                      />
+                      {manualRecipients && parseRecipients(manualRecipients).length === 0 && (
+                        <p className="text-xs text-destructive">
+                          Añade al menos un correo válido.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+
                 <div className="grid sm:grid-cols-2 gap-3">
                   <Button
                     size="lg"
