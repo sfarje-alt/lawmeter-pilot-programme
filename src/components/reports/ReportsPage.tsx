@@ -56,6 +56,58 @@ import {
 import { format, subDays, parseISO, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Email delivery helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function parseRecipients(raw: string): string[] {
+  if (!raw) return [];
+  return raw
+    .split(/[,;\n]/)
+    .map((r) => r.trim())
+    .filter((r) => r.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r));
+}
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buf = await blob.arrayBuffer();
+  // Convert in chunks to avoid call-stack issues with large PDFs
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(i, Math.min(i + chunkSize, bytes.length))
+    );
+  }
+  return btoa(binary);
+}
+
+async function sendReportByEmail(params: {
+  blob: Blob;
+  fileName: string;
+  recipients: string[];
+  subject: string;
+  message?: string;
+}) {
+  const { blob, fileName, recipients, subject, message } = params;
+  if (recipients.length === 0) return;
+  const pdfBase64 = await blobToBase64(blob);
+  const { data, error } = await supabase.functions.invoke("send-report-email", {
+    body: {
+      recipients,
+      subject,
+      message: message ?? "",
+      pdfBase64,
+      pdfFileName: fileName,
+      fromName: "LawMeter",
+    },
+  });
+  if (error) throw error;
+  if (data && (data as any).error) throw new Error((data as any).error);
+  return data;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -747,6 +799,10 @@ export function ReportsPage() {
   const [scheduleTime, setScheduleTime] = useState("08:00");
   const [scheduleRecipients, setScheduleRecipients] = useState("");
 
+  // Manual-generate email options
+  const [manualRecipients, setManualRecipients] = useState("");
+  const [emailAfterGenerate, setEmailAfterGenerate] = useState(false);
+
   // ── Data slicing per simplified rules
   const periodCutoff = useMemo(() => subDays(new Date(), daysBack), [daysBack]);
 
@@ -841,13 +897,39 @@ export function ReportsPage() {
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
+      const fileName = `reporte-${source}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
       link.href = url;
-      link.download = `reporte-${source}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+      link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
 
+      // Optional email delivery
+      const recipients = parseRecipients(manualRecipients);
+      if (emailAfterGenerate && recipients.length > 0) {
+        toast.loading(`Enviando reporte a ${recipients.length} destinatario(s)…`, { id: "gen-report" });
+        try {
+          await sendReportByEmail({
+            blob,
+            fileName,
+            recipients,
+            subject: `Reporte ${sourceBadge(source)} · ${format(new Date(), "dd MMM yyyy", { locale: es })}`,
+            message: `Adjunto el reporte regulatorio (${periodLabel}).`,
+          });
+          toast.success(`Reporte enviado a ${recipients.length} destinatario(s)`, { id: "gen-report" });
+        } catch (mailErr) {
+          console.error("Email send failed", mailErr);
+          toast.error("PDF generado, pero no se pudo enviar por correo", { id: "gen-report" });
+        }
+      } else if (emailAfterGenerate && recipients.length === 0) {
+        toast.warning("PDF generado. Añade al menos un correo válido para enviar.", { id: "gen-report" });
+      } else {
+        recordGenerated("manual");
+        toast.success("Reporte generado y descargado", { id: "gen-report" });
+        setIsGenerating(false);
+        return;
+      }
+
       recordGenerated("manual");
-      toast.success("Reporte generado y descargado", { id: "gen-report" });
     } catch (err) {
       console.error(err);
       toast.error("No se pudo generar el reporte", { id: "gen-report" });
@@ -941,10 +1023,31 @@ export function ReportsPage() {
     ).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+    const fileName = `${s.name.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
     link.href = url;
-    link.download = `${s.name.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+    link.download = fileName;
     link.click();
     URL.revokeObjectURL(url);
+
+    // Send to configured recipients
+    const recipients = parseRecipients(s.recipients || "");
+    if (recipients.length > 0) {
+      try {
+        await sendReportByEmail({
+          blob,
+          fileName,
+          recipients,
+          subject: `${s.name} · ${format(new Date(), "dd MMM yyyy", { locale: es })}`,
+          message: `Reporte programado (${s.frequency}). Período: ${buildPeriodLabel(s.daysBack)}.`,
+        });
+        toast.success(`Reporte "${s.name}" enviado a ${recipients.length} destinatario(s)`);
+      } catch (mailErr) {
+        console.error("Scheduled email send failed", mailErr);
+        toast.error(`PDF de "${s.name}" generado, pero no se pudo enviar por correo`);
+      }
+    } else {
+      toast.success(`Reporte "${s.name}" generado`);
+    }
 
     const end = new Date();
     const start = subDays(end, s.daysBack);
@@ -967,7 +1070,6 @@ export function ReportsPage() {
     setSchedules((prev) =>
       prev.map((it) => (it.id === s.id ? { ...it, nextRunAt: nextRunDate(s.frequency, s.time) } : it))
     );
-    toast.success(`Reporte "${s.name}" generado`);
   };
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -1202,7 +1304,40 @@ export function ReportsPage() {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Email delivery (optional) */}
+                <div className="rounded-lg border border-border/50 p-4 space-y-3 bg-muted/20">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Enviar por correo al generar</Label>
+                      <p className="text-xs text-muted-foreground">
+                        El PDF se descarga y, si activas esta opción, también se envía como adjunto.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={emailAfterGenerate}
+                      onCheckedChange={setEmailAfterGenerate}
+                      disabled={restricted}
+                    />
+                  </div>
+                  {emailAfterGenerate && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Destinatarios (separa con coma)</Label>
+                      <Input
+                        value={manualRecipients}
+                        onChange={(e) => setManualRecipients(e.target.value)}
+                        placeholder="legal@empresa.com, ceo@empresa.com"
+                        disabled={restricted}
+                      />
+                      {manualRecipients && parseRecipients(manualRecipients).length === 0 && (
+                        <p className="text-xs text-destructive">
+                          Añade al menos un correo válido.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+
                 <div className="grid sm:grid-cols-2 gap-3">
                   <Button
                     size="lg"
