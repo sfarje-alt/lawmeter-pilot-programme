@@ -56,6 +56,58 @@ import {
 import { format, subDays, parseISO, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Email delivery helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function parseRecipients(raw: string): string[] {
+  if (!raw) return [];
+  return raw
+    .split(/[,;\n]/)
+    .map((r) => r.trim())
+    .filter((r) => r.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r));
+}
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buf = await blob.arrayBuffer();
+  // Convert in chunks to avoid call-stack issues with large PDFs
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(i, Math.min(i + chunkSize, bytes.length))
+    );
+  }
+  return btoa(binary);
+}
+
+async function sendReportByEmail(params: {
+  blob: Blob;
+  fileName: string;
+  recipients: string[];
+  subject: string;
+  message?: string;
+}) {
+  const { blob, fileName, recipients, subject, message } = params;
+  if (recipients.length === 0) return;
+  const pdfBase64 = await blobToBase64(blob);
+  const { data, error } = await supabase.functions.invoke("send-report-email", {
+    body: {
+      recipients,
+      subject,
+      message: message ?? "",
+      pdfBase64,
+      pdfFileName: fileName,
+      fromName: "LawMeter",
+    },
+  });
+  if (error) throw error;
+  if (data && (data as any).error) throw new Error((data as any).error);
+  return data;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
