@@ -1023,10 +1023,31 @@ export function ReportsPage() {
     ).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+    const fileName = `${s.name.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
     link.href = url;
-    link.download = `${s.name.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+    link.download = fileName;
     link.click();
     URL.revokeObjectURL(url);
+
+    // Send to configured recipients
+    const recipients = parseRecipients(s.recipients || "");
+    if (recipients.length > 0) {
+      try {
+        await sendReportByEmail({
+          blob,
+          fileName,
+          recipients,
+          subject: `${s.name} · ${format(new Date(), "dd MMM yyyy", { locale: es })}`,
+          message: `Reporte programado (${s.frequency}). Período: ${buildPeriodLabel(s.daysBack)}.`,
+        });
+        toast.success(`Reporte "${s.name}" enviado a ${recipients.length} destinatario(s)`);
+      } catch (mailErr) {
+        console.error("Scheduled email send failed", mailErr);
+        toast.error(`PDF de "${s.name}" generado, pero no se pudo enviar por correo`);
+      }
+    } else {
+      toast.success(`Reporte "${s.name}" generado`);
+    }
 
     const end = new Date();
     const start = subDays(end, s.daysBack);
@@ -1049,7 +1070,6 @@ export function ReportsPage() {
     setSchedules((prev) =>
       prev.map((it) => (it.id === s.id ? { ...it, nextRunAt: nextRunDate(s.frequency, s.time) } : it))
     );
-    toast.success(`Reporte "${s.name}" generado`);
   };
 
   // ───────────────────────────────────────────────────────────────────────────
