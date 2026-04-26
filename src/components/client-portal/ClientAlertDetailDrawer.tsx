@@ -21,6 +21,7 @@ import { PeruAlert, getTypeLabel, getTypeColor } from "@/data/peruAlertsMockData
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
 
 interface ClientAlertDetailDrawerProps {
   alert: PeruAlert | null;
@@ -68,6 +69,7 @@ export function ClientAlertDetailDrawer({ alert, open, onOpenChange, clientId }:
                     <Eye className="h-3 w-3 mr-1" />
                     Solo Lectura
                   </Badge>
+                  <AlertFeedbackPopover alert={alert} clientId={clientId} />
                 </div>
               </div>
               <SheetTitle className="text-left text-lg font-semibold leading-tight">
