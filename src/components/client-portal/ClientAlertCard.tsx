@@ -5,6 +5,7 @@ import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, MOCK_CLIENTS
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
 
 interface ClientAlertCardProps {
   alert: PeruAlert;
