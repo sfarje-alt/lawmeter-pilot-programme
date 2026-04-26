@@ -73,6 +73,22 @@ export function AlertFeedbackPopover({ alert, variant = "icon", clientId }: Prop
           clientId: clientId ?? profile.client_id ?? null,
         },
       );
+
+      // Si la alerta es marcada como "no relevante" por un admin (Equipo Legal),
+      // se archiva automáticamente para sacarla del flujo de revisión.
+      const isAdmin = profile.account_type === "admin";
+      if (rating === "not_relevant" && isAdmin) {
+        try {
+          archiveAlert(alert.id);
+          toast({
+            title: "Alerta archivada",
+            description: "La alerta se movió al archivo por no ser relevante.",
+          });
+        } catch (archiveErr) {
+          console.error("[AlertFeedback] archive failed", archiveErr);
+        }
+      }
+
       setDone(true);
       setTimeout(() => setOpen(false), 1800);
     } catch (err) {
