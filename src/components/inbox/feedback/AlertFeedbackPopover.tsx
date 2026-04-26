@@ -30,6 +30,7 @@ interface Props {
 
 export function AlertFeedbackPopover({ alert, variant = "icon", clientId }: Props) {
   const { user, profile } = useAuth();
+  const { archiveAlert } = useAlerts();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState<FeedbackRating | null>(null);
