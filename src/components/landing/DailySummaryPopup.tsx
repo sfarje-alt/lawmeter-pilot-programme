@@ -8,8 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Inbox, AlertTriangle, FileText, ArrowRight } from "lucide-react";
+import { Inbox, AlertTriangle, FileText, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDailySummaryStats } from "@/hooks/useDailySummaryStats";
 
 interface DailySummaryPopupProps {
   open: boolean;
@@ -20,12 +21,8 @@ export function DailySummaryPopup({ open, onOpenChange }: DailySummaryPopupProps
   const { profile, dismissDailyPopup } = useAuth();
   const [greeting, setGreeting] = useState("Buen día");
 
-  // Mock data for demo - replace with real queries later
-  const stats = {
-    lawsAnalyzed: 47,
-    alertsDetected: 12,
-    urgentAlerts: 3,
-  };
+  // Live counts since the user's previous login.
+  const stats = useDailySummaryStats(open);
 
   useEffect(() => {
     const hour = new Date().getHours();
