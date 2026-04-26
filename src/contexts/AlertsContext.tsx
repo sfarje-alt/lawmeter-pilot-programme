@@ -10,6 +10,7 @@ import {
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 interface AlertsContextType {
   alerts: PeruAlert[];
