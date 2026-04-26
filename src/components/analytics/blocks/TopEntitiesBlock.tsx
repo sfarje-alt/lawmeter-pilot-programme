@@ -8,6 +8,7 @@ import {
 import { type PeruAlert } from "@/data/peruAlertsMockData";
 import { useBlockFilters } from "@/hooks/useBlockFilters";
 import { applyAlertFilters } from "@/lib/blockFilterUtils";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -42,7 +43,7 @@ export function TopEntitiesBlock({
   const { displayData, total, remaining, fullData } = React.useMemo(() => {
     const groups: Record<string, string[]> = {};
     filteredAlerts.forEach(alert => {
-      const entity = alert.entity || alert.parliamentary_group || 'Congreso';
+      const entity = normalizeEntityName(alert.entity) || alert.parliamentary_group || 'Congreso';
       (groups[entity] ||= []).push(alert.id);
     });
     const allData = Object.entries(groups)

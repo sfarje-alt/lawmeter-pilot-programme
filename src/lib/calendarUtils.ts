@@ -1,5 +1,6 @@
 import { parseISO, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
 import { PeruAlert, ImpactLevel } from "@/data/peruAlertsMockData";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 export type DateType = "stage_entry" | "publication" | "in_force" | "manual" | "session";
 export type EventKind = "bill" | "regulation" | "session";
@@ -74,7 +75,7 @@ export function convertAlertsToEvents(
       alert,
       title: alert.legislation_title,
       stage: alert.current_stage,
-      entity: alert.entity,
+      entity: normalizeEntityName(alert.entity) || undefined,
       affectedAreas: alert.affected_areas || [],
       impactLevel: alert.impact_level,
       urgencyLevel: urgency,

@@ -3,6 +3,7 @@
 
 import { ALL_MOCK_ALERTS, type PeruAlert } from '@/data/peruAlertsMockData';
 import { isCurrentOrgEmpty } from '@/lib/orgDataIsolation';
+import { normalizeEntityName } from '@/lib/entityNormalization';
 import type {
   AnalyticsFilters,
   AggregatedMetrics,
@@ -128,7 +129,7 @@ function filterAlerts(
     if (filters.stages?.length && alert.current_stage && !filters.stages.includes(alert.current_stage)) return false;
     
     // Entity filter
-    if (filters.entities?.length && alert.entity && !filters.entities.includes(alert.entity)) return false;
+    if (filters.entities?.length && alert.entity && !filters.entities.map(normalizeEntityName).includes(normalizeEntityName(alert.entity))) return false;
     
     return true;
   });
@@ -222,7 +223,7 @@ export function getAggregatedMetrics(
     }
     
     // Entity
-    const entity = alert.entity || alert.parliamentary_group;
+    const entity = normalizeEntityName(alert.entity) || alert.parliamentary_group;
     if (entity) {
       entityCounts[entity] = (entityCounts[entity] || 0) + 1;
     }
