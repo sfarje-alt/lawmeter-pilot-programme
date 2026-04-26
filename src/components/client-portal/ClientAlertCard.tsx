@@ -82,6 +82,7 @@ export function ClientAlertCard({ alert, onClick, clientId }: ClientAlertCardPro
               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
             </button>
           )}
+          <AlertFeedbackPopover alert={alert} clientId={clientId} />
         </div>
       </div>
 
