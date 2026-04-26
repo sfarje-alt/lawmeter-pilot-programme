@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageSquarePlus, ThumbsUp, CheckCircle2, AlertTriangle, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAlerts } from "@/contexts/AlertsContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +30,7 @@ interface Props {
 
 export function AlertFeedbackPopover({ alert, variant = "icon", clientId }: Props) {
   const { user, profile } = useAuth();
+  const { archiveAlert } = useAlerts();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState<FeedbackRating | null>(null);
@@ -71,6 +73,22 @@ export function AlertFeedbackPopover({ alert, variant = "icon", clientId }: Prop
           clientId: clientId ?? profile.client_id ?? null,
         },
       );
+
+      // Si la alerta es marcada como "no relevante" por un admin (Equipo Legal),
+      // se archiva automáticamente para sacarla del flujo de revisión.
+      const isAdmin = profile.account_type === "admin";
+      if (rating === "not_relevant" && isAdmin) {
+        try {
+          archiveAlert(alert.id);
+          toast({
+            title: "Alerta archivada",
+            description: "La alerta se movió al archivo por no ser relevante.",
+          });
+        } catch (archiveErr) {
+          console.error("[AlertFeedback] archive failed", archiveErr);
+        }
+      }
+
       setDone(true);
       setTimeout(() => setOpen(false), 1800);
     } catch (err) {
@@ -162,6 +180,15 @@ export function AlertFeedbackPopover({ alert, variant = "icon", clientId }: Prop
                 tone="amber"
               />
             </div>
+
+            {rating === "not_relevant" && profile?.account_type === "admin" && (
+              <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-amber-200 leading-snug">
+                  Al enviar, esta alerta se moverá automáticamente al archivo.
+                </p>
+              </div>
+            )}
 
             {/* Step 2 — optional reason */}
             {rating && (
