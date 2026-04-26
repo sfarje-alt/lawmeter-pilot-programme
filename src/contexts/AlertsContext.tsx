@@ -175,7 +175,7 @@ function mapDbRowToAlert(
     impact_level: impact,
 
     // Regulation-specific
-    entity: row.entity ?? ui.entity ?? undefined,
+    entity: normalizeEntityName(row.entity ?? ui.entity ?? undefined) || undefined,
     publication_date:
       row.fecha_publicacion
       ?? ui.publication_date
