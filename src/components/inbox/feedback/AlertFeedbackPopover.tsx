@@ -175,12 +175,12 @@ export function AlertFeedbackPopover({ alert, variant = "icon", clientId }: Prop
                     return (
                       <Badge
                         key={r}
-                        variant={selected ? "default" : "secondary"}
+                        variant="outline"
                         className={cn(
-                          "text-[11px] cursor-pointer py-0.5 px-2 transition-colors",
+                          "text-[11px] cursor-pointer py-0.5 px-2 transition-colors border",
                           selected
-                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                            : "bg-muted/40 hover:bg-muted/70",
+                            ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+                            : "bg-background/60 text-foreground border-border/60 hover:bg-muted hover:border-primary/40",
                         )}
                         onClick={() => setReason(selected ? null : r)}
                       >
