@@ -62,7 +62,9 @@ export function DailySummaryPopup({ open, onOpenChange }: DailySummaryPopupProps
             )}
           </div>
           <DialogDescription className="text-base pt-2">
-            Esto es lo que ha pasado desde tu último ingreso
+            {stats.sinceDate
+              ? `Esto es lo que ha pasado desde tu último ingreso (${stats.sinceDate.toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })})`
+              : "Esto es lo que ha pasado desde tu último ingreso"}
           </DialogDescription>
         </DialogHeader>
 
@@ -71,8 +73,8 @@ export function DailySummaryPopup({ open, onOpenChange }: DailySummaryPopupProps
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <FileText className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold text-foreground">
-                {stats.lawsAnalyzed}
+              <div className="text-2xl font-bold text-foreground min-h-[2rem] flex items-center justify-center">
+                {stats.loading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats.lawsAnalyzed}
               </div>
               <div className="text-xs text-muted-foreground">
                 Leyes y proyectos analizados
@@ -80,8 +82,8 @@ export function DailySummaryPopup({ open, onOpenChange }: DailySummaryPopupProps
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <Inbox className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold text-foreground">
-                {stats.alertsDetected}
+              <div className="text-2xl font-bold text-foreground min-h-[2rem] flex items-center justify-center">
+                {stats.loading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats.alertsDetected}
               </div>
               <div className="text-xs text-muted-foreground">
                 Alertas relevantes detectadas
@@ -91,7 +93,9 @@ export function DailySummaryPopup({ open, onOpenChange }: DailySummaryPopupProps
 
           {/* Message */}
           <p className="text-sm text-muted-foreground text-center">
-            Consulta tu bandeja para ver las fichas de alerta y su análisis.
+            {!stats.loading && stats.alertsDetected === 0
+              ? "No hay novedades nuevas desde tu último ingreso."
+              : "Consulta tu bandeja para ver las fichas de alerta y su análisis."}
           </p>
         </div>
 
