@@ -5,6 +5,7 @@ import { ClientAlertDetailDrawer } from "./ClientAlertDetailDrawer";
 import { ClientRegulationsFilterBar, ClientRegulationsFilters } from "./ClientRegulationsFilterBar";
 import { ClientAlertCard } from "./ClientAlertCard";
 import { PeruAlert } from "@/data/peruAlertsMockData";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 interface ClientRegulationsInboxProps {
   alerts: PeruAlert[];
@@ -33,7 +34,8 @@ export function ClientRegulationsInbox({ alerts, clientId }: ClientRegulationsIn
   const availableEntities = useMemo(() => {
     const entities = new Set<string>();
     regulationAlerts.forEach(alert => {
-      if (alert.entity) entities.add(alert.entity);
+      const normalized = normalizeEntityName(alert.entity);
+      if (normalized) entities.add(normalized);
     });
     return Array.from(entities).sort();
   }, [regulationAlerts]);
@@ -69,7 +71,7 @@ export function ClientRegulationsInbox({ alerts, clientId }: ClientRegulationsIn
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesTitle = alert.legislation_title.toLowerCase().includes(searchLower);
-        const matchesEntity = alert.entity?.toLowerCase().includes(searchLower) || false;
+        const matchesEntity = normalizeEntityName(alert.entity).toLowerCase().includes(searchLower) || false;
         const matchesSummary = alert.legislation_summary?.toLowerCase().includes(searchLower) || false;
         if (!matchesTitle && !matchesEntity && !matchesSummary) return false;
       }
@@ -80,7 +82,7 @@ export function ClientRegulationsInbox({ alerts, clientId }: ClientRegulationsIn
       }
 
       // Entity filter
-      if (filters.entities.length > 0 && !filters.entities.includes(alert.entity || "")) {
+      if (filters.entities.length > 0 && !filters.entities.includes(normalizeEntityName(alert.entity))) {
         return false;
       }
 

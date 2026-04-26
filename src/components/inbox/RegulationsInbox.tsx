@@ -6,6 +6,7 @@ import { RegulationsFilterBar } from "./RegulationsFilterBar";
 import { InboxAlertCard } from "./InboxAlertCard";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 interface RegulationsInboxProps {
   alerts: PeruAlert[];
@@ -79,7 +80,8 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
   const availableEntities = useMemo(() => {
     const entities = new Set<string>();
     regulationAlerts.forEach(alert => {
-      if (alert.entity) entities.add(alert.entity);
+      const normalized = normalizeEntityName(alert.entity);
+      if (normalized) entities.add(normalized);
     });
     return Array.from(entities).sort();
   }, [regulationAlerts]);
@@ -118,7 +120,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesTitle = alert.legislation_title.toLowerCase().includes(searchLower);
-        const matchesEntity = alert.entity?.toLowerCase().includes(searchLower) || false;
+        const matchesEntity = normalizeEntityName(alert.entity).toLowerCase().includes(searchLower) || false;
         const matchesSummary = alert.legislation_summary?.toLowerCase().includes(searchLower) || false;
         if (!matchesTitle && !matchesEntity && !matchesSummary) return false;
       }
@@ -127,7 +129,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
         return false;
       }
 
-      if (filters.entities.length > 0 && !filters.entities.includes(alert.entity || "")) {
+      if (filters.entities.length > 0 && !filters.entities.includes(normalizeEntityName(alert.entity))) {
         return false;
       }
 
