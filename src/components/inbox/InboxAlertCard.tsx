@@ -400,12 +400,12 @@ export function InboxAlertCard({
         <div className="flex items-center gap-1.5 flex-wrap mb-2">
           <Tag className="h-3 w-3 text-muted-foreground" />
           {alert.affected_areas.slice(0, 2).map((area) => (
-            <Badge key={area} variant="outline" className="text-xs py-0 text-destructive-foreground bg-teal-800 border-transparent">
+            <Badge key={area} variant="outline" className="text-xs py-0 border-0 bg-slate-700 text-gray-100">
               {area}
             </Badge>
           ))}
           {alert.affected_areas.length > 2 && (
-            <Badge variant="outline" className="text-xs py-0 text-destructive-foreground bg-teal-800 border-transparent">
+            <Badge variant="outline" className="text-xs py-0 border-0 bg-slate-700 text-gray-100">
               +{alert.affected_areas.length - 2}
             </Badge>
           )}
