@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageSquarePlus, ThumbsUp, CheckCircle2, AlertTriangle, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAlerts } from "@/contexts/AlertsContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
