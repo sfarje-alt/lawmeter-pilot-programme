@@ -5,6 +5,7 @@ import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, MOCK_CLIENTS
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
 
 interface ClientAlertCardProps {
   alert: PeruAlert;
@@ -82,6 +83,7 @@ export function ClientAlertCard({ alert, onClick, clientId }: ClientAlertCardPro
               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
             </button>
           )}
+          <AlertFeedbackPopover alert={alert} clientId={clientId} />
         </div>
       </div>
 

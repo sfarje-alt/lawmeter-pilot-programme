@@ -31,6 +31,7 @@ import {
   AIUsageBlock,
   ReportsGeneratedBlock,
   ReviewedAlertsBlock,
+  AlertFeedbackBlock,
 } from "./blocks/ops";
 import type { AnalyticsFilters, KPIMetric } from "@/types/analytics";
 import { ANALYTICS_BLOCK_REGISTRY, type AnalyticsBlockConfigExtended } from "@/types/analytics";
@@ -551,6 +552,9 @@ export function LegalTeamAnalyticsDashboard({ snapshotMode = false }: { snapshot
             {isEnabled("ai_usage") && <AIUsageBlock timeframe={timeframeLabel} data={aiUsageData} />}
             {isEnabled("reports_generated") && (
               <ReportsGeneratedBlock timeframe={timeframeLabel} data={reportsGeneratedData} />
+            )}
+            {isEnabled("alert_feedback") && (
+              <AlertFeedbackBlock timeframe={timeframeLabel} />
             )}
           </div>
         </CollapsibleAnalyticsSection>

@@ -19,6 +19,7 @@ import {
   CalendarClock,
   ArrowUpRight,
 } from "lucide-react";
+import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
 import {
   PeruAlert,
   getTypeLabel,
@@ -280,6 +281,7 @@ export function InboxAlertCard({
               )}
             </button>
           )}
+          <AlertFeedbackPopover alert={alert} />
         </div>
       </div>
 

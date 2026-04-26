@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
 import {
   ExternalLink,
   Calendar,
@@ -156,26 +157,29 @@ export function AlertDetailDrawer({
                     </Badge>
                   )}
                 </div>
-                {(onArchive || onUnarchive) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleArchiveToggle}
-                    className="gap-1.5"
-                  >
-                    {isArchived ? (
-                      <>
-                        <ArchiveRestore className="h-3.5 w-3.5" />
-                        Restaurar
-                      </>
-                    ) : (
-                      <>
-                        <Archive className="h-3.5 w-3.5" />
-                        Archivar
-                      </>
-                    )}
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  <AlertFeedbackPopover alert={alert} />
+                  {(onArchive || onUnarchive) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleArchiveToggle}
+                      className="gap-1.5"
+                    >
+                      {isArchived ? (
+                        <>
+                          <ArchiveRestore className="h-3.5 w-3.5" />
+                          Restaurar
+                        </>
+                      ) : (
+                        <>
+                          <Archive className="h-3.5 w-3.5" />
+                          Archivar
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
               <SheetTitle className="text-left text-lg font-semibold leading-tight">
                 {alert.legislation_title}
