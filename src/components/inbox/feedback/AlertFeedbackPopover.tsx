@@ -181,6 +181,15 @@ export function AlertFeedbackPopover({ alert, variant = "icon", clientId }: Prop
               />
             </div>
 
+            {rating === "not_relevant" && profile?.account_type === "admin" && (
+              <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-amber-200 leading-snug">
+                  Al enviar, esta alerta se moverá automáticamente al archivo.
+                </p>
+              </div>
+            )}
+
             {/* Step 2 — optional reason */}
             {rating && (
               <div className="space-y-1.5">
