@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
   ExternalLink,
   Calendar,
@@ -142,7 +143,7 @@ export function AlertDetailDrawer({
                   {!isBill && alert.entity && (
                     <Badge variant="outline" className="text-sm bg-emerald-500/15 text-emerald-400 border-emerald-500/35">
                       <Building2 className="h-3.5 w-3.5 mr-1" />
-                      {alert.entity}
+                      {normalizeEntityName(alert.entity)}
                     </Badge>
                   )}
                   {alert.reference_number && !isBill && (
@@ -231,7 +232,7 @@ export function AlertDetailDrawer({
                   <div className="flex items-center gap-2 text-sm">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Entidad:</span>
-                    <span className="text-foreground">{alert.entity}</span>
+                    <span className="text-foreground">{normalizeEntityName(alert.entity)}</span>
                   </div>
                 )}
                 {isBill ? (

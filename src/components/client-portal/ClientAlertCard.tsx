@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 interface ClientAlertCardProps {
   alert: PeruAlert;
@@ -114,7 +115,7 @@ export function ClientAlertCard({ alert, onClick, clientId }: ClientAlertCardPro
       {!isBill && alert.entity && (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
           <Building2 className="h-3 w-3 shrink-0" />
-          <span className="font-medium">{alert.entity}</span>
+          <span className="font-medium">{normalizeEntityName(alert.entity)}</span>
         </div>
       )}
 

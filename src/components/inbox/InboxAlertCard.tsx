@@ -20,6 +20,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
   PeruAlert,
   getTypeLabel,
@@ -203,7 +204,7 @@ export function InboxAlertCard({
           {!isBill && alert.entity && (
             <Badge variant="outline" className="text-xs bg-emerald-500/15 text-emerald-400 border-emerald-500/35">
               <Building2 className="h-3 w-3 mr-1" />
-              {alert.entity}
+              {normalizeEntityName(alert.entity)}
             </Badge>
           )}
 
