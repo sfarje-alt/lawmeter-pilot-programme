@@ -10,6 +10,7 @@ import {
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 interface AlertsContextType {
   alerts: PeruAlert[];
@@ -175,7 +176,7 @@ function mapDbRowToAlert(
     impact_level: impact,
 
     // Regulation-specific
-    entity: row.entity ?? ui.entity ?? undefined,
+    entity: normalizeEntityName(row.entity ?? ui.entity ?? undefined) || undefined,
     publication_date:
       row.fecha_publicacion
       ?? ui.publication_date

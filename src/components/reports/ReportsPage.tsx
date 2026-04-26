@@ -26,6 +26,7 @@ import { PeruAlert } from "@/data/peruAlertsMockData";
 import { BEDSON_ORGANIZATION_NAME } from "@/data/bedsonClientProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { isEmptyDataOrg } from "@/lib/orgDataIsolation";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 import { useSesionesWorkspace } from "@/hooks/useSesionesWorkspace";
 import { useSesiones, type Sesion } from "@/hooks/useSesiones";
 import type { PeruSession } from "@/types/peruSessions";
@@ -451,7 +452,7 @@ const ReportPDF = ({
                 const meta: string[] = [];
                 if (a.legislation_id) meta.push(a.legislation_id);
                 if (a.legislation_type === "proyecto_de_ley" && a.author) meta.push(`Autor: ${a.author}`);
-                if (a.legislation_type === "norma" && a.entity) meta.push(`Entidad: ${a.entity}`);
+                if (a.legislation_type === "norma" && a.entity) meta.push(`Entidad: ${normalizeEntityName(a.entity)}`);
                 if (a.legislation_type === "norma" && a.publication_date) meta.push(`Publicado: ${a.publication_date}`);
 
                 const iaParts: string[] = [];

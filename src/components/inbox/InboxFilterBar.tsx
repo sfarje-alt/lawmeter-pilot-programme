@@ -11,6 +11,7 @@ import {
 import { Search, X } from "lucide-react";
 import { ENTITIES } from "@/data/peruAlertsMockData";
 import { InboxFilters } from "@/hooks/useInboxAlerts";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 interface InboxFilterBarProps {
   filters: InboxFilters;
@@ -107,7 +108,7 @@ export function InboxFilterBar({ filters, onFiltersChange, alertCounts }: InboxF
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las instituciones</SelectItem>
-            {ENTITIES.map((entity) => (
+            {Array.from(new Set(ENTITIES.map(normalizeEntityName))).sort().map((entity) => (
               <SelectItem key={entity} value={entity}>{entity}</SelectItem>
             ))}
           </SelectContent>
@@ -157,7 +158,7 @@ export function InboxFilterBar({ filters, onFiltersChange, alertCounts }: InboxF
           )}
           {filters.entity !== "all" && (
             <Badge variant="secondary" className="gap-1">
-              Institución: {filters.entity}
+              Institución: {normalizeEntityName(filters.entity)}
               <button onClick={() => onFiltersChange({ ...filters, entity: "all" })}>
                 <X className="h-3 w-3" />
               </button>

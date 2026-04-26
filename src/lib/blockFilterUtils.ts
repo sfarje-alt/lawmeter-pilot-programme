@@ -1,5 +1,6 @@
 import type { BlockFilters } from "@/hooks/useBlockFilters";
 import type { PeruAlert } from "@/data/peruAlertsMockData";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 /**
  * Resolve the effective date range for a block, given its filters and
@@ -84,7 +85,7 @@ export function applyAlertFilters(alerts: PeruAlert[], filters: BlockFilters): P
       (a.legislation_title || '').toLowerCase().includes(q) ||
       (a.legislation_summary || '').toLowerCase().includes(q) ||
       (a.expert_commentary || '').toLowerCase().includes(q) ||
-      (a.entity || '').toLowerCase().includes(q) ||
+      normalizeEntityName(a.entity).toLowerCase().includes(q) ||
       (a.parliamentary_group || '').toLowerCase().includes(q) ||
       (a.author || '').toLowerCase().includes(q)
     );
