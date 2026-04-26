@@ -104,6 +104,66 @@ export type Database = {
           },
         ]
       }
+      alert_feedback: {
+        Row: {
+          alert_area: string | null
+          alert_id: string
+          alert_jurisdiction: string | null
+          alert_keywords_detected: string[] | null
+          alert_risk_score: number | null
+          alert_subarea: string | null
+          alert_urgency: number | null
+          client_id: string | null
+          created_at: string
+          id: string
+          optional_comment: string | null
+          organization_id: string
+          profile_id: string
+          rating: string
+          reason_selected: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          alert_area?: string | null
+          alert_id: string
+          alert_jurisdiction?: string | null
+          alert_keywords_detected?: string[] | null
+          alert_risk_score?: number | null
+          alert_subarea?: string | null
+          alert_urgency?: number | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          optional_comment?: string | null
+          organization_id: string
+          profile_id: string
+          rating: string
+          reason_selected?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          alert_area?: string | null
+          alert_id?: string
+          alert_jurisdiction?: string | null
+          alert_keywords_detected?: string[] | null
+          alert_risk_score?: number | null
+          alert_subarea?: string | null
+          alert_urgency?: number | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          optional_comment?: string | null
+          organization_id?: string
+          profile_id?: string
+          rating?: string
+          reason_selected?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       alerts: {
         Row: {
           affected_areas: string[] | null

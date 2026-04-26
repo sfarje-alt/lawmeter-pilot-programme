@@ -1,85 +1,129 @@
+# Plan: Quick Alert Feedback ("¿Qué tal esta alerta?")
 
+## Goal
+Lightweight micro-feedback (<15 s) on every regulatory alert, stored as a learning signal — never auto-applied to keywords, scoring, or classification. Aggregated view inside **Operaciones internas** for the legal team.
 
-## Plan: Eliminar metadatos técnicos y añadir sistema de créditos para IA en sesiones
+---
 
-### 1. Quitar el bloque "Modelo / Costo USD / Duración audio"
+## 1. Database — new `alert_feedback` table (migration)
 
-En `src/components/sessions/SesionDetailDrawer.tsx` (líneas 335-352) eliminar el bloque que muestra `analysis_model`, `analysis_cost_usd` y `transcript_duration_s`. Esa información es interna y no debe ser visible al usuario.
+Create one record per submission:
 
-### 2. Sistema de créditos del piloto
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | `gen_random_uuid()` |
+| `alert_id` | uuid | logical link to `alerts.id` (no FK to keep flexibility) |
+| `user_id` | uuid | `auth.uid()` |
+| `profile_id` | uuid | `profiles.id` (same as user) |
+| `client_id` | uuid | nullable (admin may have none) |
+| `organization_id` | uuid | required for RLS scoping |
+| `rating` | text | `'very_useful' \| 'useful' \| 'not_relevant'` (CHECK) |
+| `reason_selected` | text | nullable, single chip |
+| `optional_comment` | text | nullable |
+| `alert_keywords_detected` | text[] | snapshot from `alerts.area_de_interes` ∪ matched keywords |
+| `alert_area` | text | snapshot |
+| `alert_subarea` | text | nullable snapshot |
+| `alert_jurisdiction` | text | default `'PERU'` |
+| `alert_risk_score` | int | snapshot from `alerts.impacto` |
+| `alert_urgency` | int | snapshot from `alerts.urgencia` |
+| `status` | text | default `'pending_review'` |
+| `created_at` | timestamptz | `now()` |
 
-**Modelo:**
-- Balance inicial: **30 créditos** por organización (piloto Betsson).
-- Análisis de sesión (transcripción + resumen IA, hasta 90 min): **10 créditos**.
-- Pregunta Q&A sobre sesión analizada: **1 crédito** por defecto, escalando según longitud de respuesta:
-  - respuesta corta (<400 tokens out) → 1 crédito
-  - respuesta media (400-1200) → 2 créditos
-  - respuesta larga (>1200) → 3 créditos
-  El edge function `session-qa` ya devuelve los tokens, así que computamos en backend y descontamos antes de retornar.
+**RLS:**
+- INSERT: any authenticated user whose `organization_id` matches their profile.
+- SELECT: org members (mirrors existing alerts policy). Admins see all; clients only see their own rows (added predicate `user_id = auth.uid() OR has_role(auth.uid(),'admin')`).
+- No UPDATE/DELETE policies (immutable signal).
 
-**Backend (migración):**
-Nueva tabla `org_ai_credits`:
-```
-organization_id uuid PK
-balance int not null default 30
-included_credits int not null default 30
-updated_at timestamptz
-```
-Y `ai_credit_transactions` (auditoría):
-```
-id uuid PK, organization_id, delta int, reason text
-('session_analysis' | 'session_qa'), session_id, created_at
-```
-RLS: SELECT para miembros de la org; INSERT/UPDATE solo vía edge functions con service role.
+Index on `(organization_id, created_at desc)`, `(alert_id)`, `(rating)`.
 
-Función RPC `consume_credits(org_id, amount, reason, session_id)` que:
-- bloquea la fila, valida `balance >= amount`, descuenta y registra transacción.
-- retorna `{ success, new_balance, error }`.
+---
 
-**Edge functions:**
-- `solicitar-analisis-sesion`: antes de encolar, llamar `consume_credits(10, 'session_analysis')`. Si falla por saldo, retornar 402 con mensaje "Créditos insuficientes".
-- `session-qa`: tras obtener respuesta, calcular tier (1/2/3) por `outputTokens` y consumir. Devolver `creditsUsed` y `newBalance` en la respuesta.
+## 2. Reusable UI: `AlertFeedbackPopover`
 
-### 3. UI de balance de créditos
+New file: `src/components/inbox/feedback/AlertFeedbackPopover.tsx`
 
-**Hook nuevo** `useAICredits()` que lee `org_ai_credits` y se suscribe vía realtime para actualizar en vivo.
+- Trigger: `<Button variant="ghost" size="icon">` with `MessageSquarePlus` icon (small, dark-mode), tooltip **"Dar feedback"**.
+- Wraps shadcn `Popover` (compact, ~320 px). Stops click propagation so it doesn't open the alert drawer when used on the card.
+- Internal state: `step` (`rating` → `reason` → `done`), `rating`, `reason`, `comment`.
+- **Step 1 — Title** *"¿Qué tal esta alerta?"* + 3 large stacked buttons:
+  - Muy útil (👍 emerald)
+  - Útil (✅ neutral)
+  - No relevante (⚠ amber)
+- **Step 2 — Reason chips** (Badge buttons, single-select, optional). Chip set depends on rating:
+  - Positive: *Buen match con mis keywords / Tema importante para mi perfil / Buen nivel de prioridad / Debe aparecer más contenido similar*.
+  - Negative: *Keyword demasiado amplia / No aplica a mi perfil / Área legal incorrecta / Prioridad exagerada / Fuente no relevante / Otro*.
+- **Step 3 — Optional `<Textarea>`** label *"Comentario opcional"*, placeholder per spec.
+- Submit button **"Enviar feedback"** active from Step 1 onward (rating-only submit allowed).
+- After insert: replace content with success state *"Gracias. Usaremos este feedback para mejorar futuras alertas."* + auto-close after 1.8 s.
+- Uses `supabase.from('alert_feedback').insert(...)` with snapshot fields pulled from the alert prop.
 
-**Barra de balance** (componente `CreditsBalanceBar`):
-- Ubicación: header de `SesionesWorkspace.tsx` (junto al título "Sesiones").
-- Muestra: `[████████░░] 22 / 30 créditos`.
-- Color: verde >50%, ámbar 20-50%, rojo <20%.
-- Tooltip con desglose: "10 créditos = 1 análisis (90 min). 1-3 créditos = 1 pregunta Q&A".
+Submission helper: `src/lib/alertFeedback.ts` exporting `submitAlertFeedback(alert, payload, ctx)` that builds the snapshot and inserts.
 
-**En `SesionDetailDrawer` y `peru/SessionDetailDrawer`:**
-- Botón "Analizar sesión con IA" muestra "(10 créditos)" al lado y se deshabilita si `balance < 10` con tooltip "Créditos insuficientes".
-- Antes de ejecutar, modal de confirmación: "Esto consumirá 10 créditos. Saldo actual: 22 → 12. ¿Continuar?".
-- En `SessionQAPanel`: bajo el input mostrar "Cada pregunta consume 1-3 créditos según complejidad". Tras cada respuesta, toast pequeño "1 crédito consumido · saldo: 21".
+---
 
-### 4. Q&A en el drawer correcto
+## 3. Mount points
 
-`src/components/sessions/SesionDetailDrawer.tsx` (el genérico, que es el que muestra la captura) **no tiene panel Q&A** — solo lo tiene la versión `peru/SessionDetailDrawer.tsx`. Añadir una sección Q&A al drawer genérico que aparece **solo cuando** `analysis_status === 'COMPLETED'`, reutilizando lógica de `SessionQAPanel` adaptada al tipo `Sesion` (usando `transcript_text` o equivalente del registro). Si no hay transcripción persistida en este modelo, exponer `transcript_text` desde la query de `useSesionRealtime`.
+1. **`InboxAlertCard.tsx`** — add the feedback icon next to existing Pin/Archive buttons in the card header action group. Same pattern as those buttons (stopPropagation).
+2. **`AlertDetailDrawer.tsx`** — add a `AlertFeedbackPopover` button inside `SheetHeader` actions (top-right), next to existing actions.
+3. **Client portal**: same in `ClientAlertCard.tsx` and `ClientAlertDetailDrawer.tsx`. Clients see only their own ratings; admin aggregates everyone.
 
-### 5. Archivos a tocar
+No changes to other workflows. Feedback button never blocks navigation.
 
-```
-Migración nueva:
-  org_ai_credits + ai_credit_transactions + RPC consume_credits
+---
 
-Backend:
-  supabase/functions/solicitar-analisis-sesion/index.ts   (consumir 10)
-  supabase/functions/session-qa/index.ts                  (consumir 1-3)
+## 4. Operaciones internas — new analytics block
 
-Frontend:
-  src/hooks/useAICredits.ts                               (nuevo)
-  src/components/sessions/CreditsBalanceBar.tsx           (nuevo)
-  src/components/sessions/SesionDetailDrawer.tsx          (quitar metadatos + añadir Q&A + costo en botón)
-  src/components/sessions/peru/SessionDetailDrawer.tsx    (costo en botón Analizar)
-  src/components/sessions/peru/SessionQAPanel.tsx         (mostrar créditos consumidos)
-  src/components/sessions/peru/SesionesWorkspace.tsx      (montar CreditsBalanceBar en header)
-```
+New block: `src/components/analytics/blocks/ops/AlertFeedbackBlock.tsx`
+- Title: **"Feedback de alertas"**, subtitle *"Señal de relevancia enviada por usuarios — no afecta scoring automáticamente."*
+- Data hook: `src/hooks/useAlertFeedbackStats.ts` — single query against `alert_feedback` filtered by org + timeframe; aggregates client-side.
+- KPIs row:
+  - Total feedback recibido
+  - % Muy útil / Útil / No relevante (stacked bar)
+  - Alertas marcadas "No relevante"
+  - Alertas marcadas "Muy útil"
+- Lists (3-tab `Tabs`):
+  - **Por keyword** — top keywords linked to "No relevante" (groups feedback rows by `alert_keywords_detected` unnested). Shows count + chip *"Posible keyword demasiado amplia"* when ≥3 negatives.
+  - **Por perfil/cliente** — clients with repeated low-relevance feedback. Chip *"Perfil requiere ajuste"* when ≥3 negatives in the period.
+  - **Por área legal** — areas with concentration of "Muy útil". Chip *"Área de alta relevancia para este perfil"* when ≥3 positives.
+- Drilldown: click a row → opens existing `AnalyticsDrilldownSheet` with the underlying alerts (reusing the inbox-derived alert collection — same source-of-truth rule as Sesiones).
+- Register block in `src/components/analytics/blocks/ops/index.ts` and add to `LegalTeamAnalyticsDashboard.tsx` Operaciones internas grid behind `isEnabled("alert_feedback")`. Default: enabled. Add to `ReportLayoutBuilder` block catalog so it can be toggled.
 
-### 6. Confirmación necesaria
+**Rule-based flags** (computed in the hook, no LLM):
+- keyword with ≥3 `not_relevant` → `"Posible keyword demasiado amplia"`
+- profile with ≥3 `not_relevant` over period → `"Perfil requiere ajuste"`
+- area with ≥3 `very_useful` → `"Área de alta relevancia para este perfil"`
 
-- ¿El balance es **por organización** (Betsson comparte 30) o **por usuario**? Asumo por organización salvo que digas lo contrario.
-- ¿Quieres que el admin pueda recargar créditos manualmente desde el panel de cliente, o lo manejamos solo desde backend en el piloto?
+These are surfaced as chips/badges only — no automatic write-back to `clients.keywords`, `alerts`, or scoring fields.
 
+---
+
+## 5. Guarantees & non-goals
+- **No** automatic mutation of keywords, scores, or classifications anywhere.
+- **No** new full-page form — only the popover.
+- **No** required fields beyond rating.
+- Spanish UI throughout, consistent with existing dark-mode tokens (`bg-card`, `border-border/30`, `text-muted-foreground`, etc.).
+- Client portal users can submit; only admin sees the aggregated Operaciones internas block (controlled by existing `account_type === 'admin'` gate around `LegalTeamAnalyticsDashboard`).
+
+---
+
+## Files to create
+- `supabase/migrations/<ts>_alert_feedback.sql`
+- `src/components/inbox/feedback/AlertFeedbackPopover.tsx`
+- `src/lib/alertFeedback.ts`
+- `src/hooks/useAlertFeedbackStats.ts`
+- `src/components/analytics/blocks/ops/AlertFeedbackBlock.tsx`
+
+## Files to edit
+- `src/components/inbox/InboxAlertCard.tsx` — add feedback trigger
+- `src/components/inbox/AlertDetailDrawer.tsx` — add feedback trigger in header
+- `src/components/client-portal/ClientAlertCard.tsx` — add feedback trigger
+- `src/components/client-portal/ClientAlertDetailDrawer.tsx` — add feedback trigger
+- `src/components/analytics/blocks/ops/index.ts` — export new block
+- `src/components/analytics/LegalTeamAnalyticsDashboard.tsx` — render new block
+- `src/components/reports/ReportLayoutBuilder.tsx` — register `alert_feedback` block id
+
+## Acceptance
+- One-click rating submit works from card and drawer.
+- Row appears in `alert_feedback` with all snapshot metadata.
+- Operaciones internas shows live aggregates, drilldowns to real alerts.
+- No keyword / scoring / classification side effects.
