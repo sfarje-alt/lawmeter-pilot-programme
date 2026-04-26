@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
+import { normalizeEntityName } from "@/lib/entityNormalization";
 
 interface ClientAlertDetailDrawerProps {
   alert: PeruAlert | null;
@@ -119,7 +120,7 @@ export function ClientAlertDetailDrawer({ alert, open, onOpenChange, clientId }:
                   <div className="flex items-center gap-2 text-sm">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Entidad:</span>
-                    <span className="text-foreground">{alert.entity}</span>
+                    <span className="text-foreground">{normalizeEntityName(alert.entity)}</span>
                   </div>
                 )}
 
