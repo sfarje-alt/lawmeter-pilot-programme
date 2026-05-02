@@ -85,14 +85,10 @@ function getIngestionTime(a: PeruAlert): number {
 export function sortAlerts(alerts: PeruAlert[], mode: SortMode): PeruAlert[] {
   const copy = [...alerts];
   copy.sort((a, b) => {
-    // Bookmarks ya no se anclan arriba — aparecen en su posición natural por score.
     if (mode === "impact") return getImpactScore(b) - getImpactScore(a);
     if (mode === "urgency") return getUrgencyScore(b) - getUrgencyScore(a);
-    if (mode === "date") return getIngestionTime(b) - getIngestionTime(a);
-    // movement (most recent first)
-    const da = getLastMovementDate(a)?.getTime() ?? 0;
-    const db = getLastMovementDate(b)?.getTime() ?? 0;
-    return db - da;
+    // movement & date → ordenar por fecha de ingesta (más reciente primero)
+    return getIngestionTime(b) - getIngestionTime(a);
   });
   return copy;
 }
