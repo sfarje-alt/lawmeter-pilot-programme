@@ -984,17 +984,21 @@ export function AlertsCalendar() {
           </DialogHeader>
           <div className="space-y-3 pt-2">
             {[
-              { key: "showStageEntry", label: "Ingreso a etapa (PLs)", desc: "Fecha en que el proyecto ingresó a su etapa actual." },
-              { key: "showPublication", label: "Publicación (Normas)", desc: "Fecha de publicación oficial." },
-              { key: "showInForce", label: "Entrada en vigor", desc: "Cuando la norma entra en vigencia." },
-              { key: "showManual", label: "Fechas manuales", desc: "Fechas personalizadas agregadas por el equipo." },
-              { key: "showSessions", label: "Sesiones del Congreso", desc: "Sesiones programadas." },
+              { key: "showStageEntry", label: "Ingreso a etapa (PLs)", desc: "Fecha en que el proyecto ingresó a su etapa actual.", locked: false },
+              { key: "showPublication", label: "Publicación (Normas)", desc: "Fecha de publicación oficial.", locked: false },
+              { key: "showInForce", label: "Entrada en vigor", desc: "Cuando la norma entra en vigencia.", locked: false },
+              { key: "showManual", label: "Fechas manuales", desc: "Fechas clave detectadas (siempre activas).", locked: true },
+              { key: "showSessions", label: "Sesiones del Congreso", desc: "Sesiones programadas.", locked: false },
             ].map((r) => (
               <div key={r.key} className="flex items-start gap-2">
                 <Checkbox
                   id={r.key}
-                  checked={(rules as any)[r.key]}
-                  onCheckedChange={(c) => setRules((prev) => ({ ...prev, [r.key]: !!c }))}
+                  checked={r.locked ? true : (rules as any)[r.key]}
+                  disabled={r.locked}
+                  onCheckedChange={(c) => {
+                    if (r.locked) return;
+                    setRules((prev) => ({ ...prev, [r.key]: !!c }));
+                  }}
                 />
                 <Label htmlFor={r.key} className="flex-1 cursor-pointer">
                   <span className="font-medium">{r.label}</span>
