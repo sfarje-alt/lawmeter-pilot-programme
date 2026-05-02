@@ -28,7 +28,7 @@ export function BriefingKPIRow({ alerts }: BriefingKPIRowProps) {
     {
       label: "Activas",
       value: stats.total,
-      hint: `${stats.rezagadas} rezagadas (>30d sin movimiento)`,
+      hint: `${stats.rezagadas} rezagadas (>6m, o >12m si impacto ≥ 70)`,
       icon: InboxIcon,
       tone: "primary" as const,
     },
