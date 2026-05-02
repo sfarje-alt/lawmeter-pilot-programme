@@ -147,7 +147,7 @@ export function AlertsCalendar() {
   const navigate = useNavigate();
   const { alerts, archiveAlert, unarchiveAlert, updateSharedCommentary } = useAlerts();
 
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1));
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [expandedDate, setExpandedDate] = useState<Date | null>(null);
   const [view, setView] = useState<"day" | "week" | "month">("month");
@@ -159,6 +159,13 @@ export function AlertsCalendar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { filters, setFilters, rules, setRules, reset, activeCount } = useCalendarFilters();
+
+  // "Fechas manuales" is always on and cannot be disabled.
+  useEffect(() => {
+    if (!rules.showManual) {
+      setRules((prev) => ({ ...prev, showManual: true }));
+    }
+  }, [rules.showManual, setRules]);
 
   // ---------- Sessions from Supabase ----------
   const [sessions, setSessions] = useState<any[]>([]);
@@ -278,9 +285,10 @@ export function AlertsCalendar() {
     const total = eventsInRange.length;
     const critical = eventsInRange.filter((e) => e.isCritical).length;
     const top = busiestWeek(eventsInRange, visibleRange.start, visibleRange.end);
-    const next = nextUpcoming(eventsInRange);
+    // Próximo evento: next upcoming across ALL filtered events (not just visible range)
+    const next = nextUpcoming(filteredEvents);
     return { total, critical, top, next };
-  }, [eventsInRange, visibleRange]);
+  }, [eventsInRange, visibleRange, filteredEvents]);
 
   const sparkData = useMemo(
     () => aggregateByWeek(eventsInRange, visibleRange.start, visibleRange.end),
@@ -352,15 +360,6 @@ export function AlertsCalendar() {
           <Button variant="outline" size="sm" onClick={() => setShowDateRules(true)} className="gap-2">
             <Settings className="h-4 w-4" />
             Reglas de Fecha
-          </Button>
-          <Button
-            variant={showFilters ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowFilters((v) => !v)}
-            className="gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filtros{activeCount > 0 ? ` · ${activeCount}` : ""}
           </Button>
         </div>
       </div>
@@ -985,17 +984,21 @@ export function AlertsCalendar() {
           </DialogHeader>
           <div className="space-y-3 pt-2">
             {[
-              { key: "showStageEntry", label: "Ingreso a etapa (PLs)", desc: "Fecha en que el proyecto ingresó a su etapa actual." },
-              { key: "showPublication", label: "Publicación (Normas)", desc: "Fecha de publicación oficial." },
-              { key: "showInForce", label: "Entrada en vigor", desc: "Cuando la norma entra en vigencia." },
-              { key: "showManual", label: "Fechas manuales", desc: "Fechas personalizadas agregadas por el equipo." },
-              { key: "showSessions", label: "Sesiones del Congreso", desc: "Sesiones programadas." },
+              { key: "showStageEntry", label: "Ingreso a etapa (PLs)", desc: "Fecha en que el proyecto ingresó a su etapa actual.", locked: false },
+              { key: "showPublication", label: "Publicación (Normas)", desc: "Fecha de publicación oficial.", locked: false },
+              { key: "showInForce", label: "Entrada en vigor", desc: "Cuando la norma entra en vigencia.", locked: false },
+              { key: "showManual", label: "Fechas manuales", desc: "Fechas clave detectadas (siempre activas).", locked: true },
+              { key: "showSessions", label: "Sesiones del Congreso", desc: "Sesiones programadas.", locked: false },
             ].map((r) => (
               <div key={r.key} className="flex items-start gap-2">
                 <Checkbox
                   id={r.key}
-                  checked={(rules as any)[r.key]}
-                  onCheckedChange={(c) => setRules((prev) => ({ ...prev, [r.key]: !!c }))}
+                  checked={r.locked ? true : (rules as any)[r.key]}
+                  disabled={r.locked}
+                  onCheckedChange={(c) => {
+                    if (r.locked) return;
+                    setRules((prev) => ({ ...prev, [r.key]: !!c }));
+                  }}
                 />
                 <Label htmlFor={r.key} className="flex-1 cursor-pointer">
                   <span className="font-medium">{r.label}</span>
