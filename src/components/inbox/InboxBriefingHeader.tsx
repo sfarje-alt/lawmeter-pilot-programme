@@ -43,12 +43,19 @@ interface InboxBriefingHeaderProps {
   toolbarExtras?: React.ReactNode;
 }
 
-const SORT_LABELS: Record<SortMode, string> = {
+const SORT_LABELS: Record<Exclude<SortMode, "date">, string> = {
   movement: "Último movimiento",
   impact: "Mayor impacto",
   urgency: "Mayor urgencia",
-  date: "Fecha",
 };
+
+// Deterministic color dot per tag (HSL hue from string hash, semantic-friendly)
+function tagDotColor(tag: string): string {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  const hue = h % 360;
+  return `hsl(${hue} 65% 55%)`;
+}
 
 const BRIEFING_LABELS: Record<Exclude<BriefingFilter, null>, string> = {
   action: "Requieren acción",
