@@ -21,7 +21,7 @@ export function BriefingKPIRow({ alerts }: BriefingKPIRowProps) {
     action: alerts.filter(isActionRequired).length,
     bookmarks: alerts.filter(a => a.is_pinned_for_publication).length,
     recent: alerts.filter(a => isRecentMovement(a, 7)).length,
-    rezagadas: alerts.filter(a => isRezagada(a, 30)).length,
+    rezagadas: alerts.filter(a => isRezagada(a)).length,
   }), [alerts]);
 
   const kpis = [
