@@ -119,7 +119,7 @@ export function KanbanColumn({
                           <TooltipTrigger asChild>
                             <Info className="h-3 w-3 text-muted-foreground/70" />
                           </TooltipTrigger>
-                          <TooltipContent side="top">
+                          <TooltipContent side="top" className="max-w-xs">
                             <p className="text-xs">{meta.hint}</p>
                           </TooltipContent>
                         </Tooltip>
