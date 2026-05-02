@@ -160,6 +160,13 @@ export function AlertsCalendar() {
 
   const { filters, setFilters, rules, setRules, reset, activeCount } = useCalendarFilters();
 
+  // "Fechas manuales" is always on and cannot be disabled.
+  useEffect(() => {
+    if (!rules.showManual) {
+      setRules((prev) => ({ ...prev, showManual: true }));
+    }
+  }, [rules.showManual, setRules]);
+
   // ---------- Sessions from Supabase ----------
   const [sessions, setSessions] = useState<any[]>([]);
   useEffect(() => {
