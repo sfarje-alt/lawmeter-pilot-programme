@@ -9,11 +9,8 @@ import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES } from "@/data/
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import {
   applyQuickFilter,
+  countByQuickFilter,
   isRezagada,
-  isActionRequired,
-  isRecentMovement,
-  getImpactScore,
-  sortAlerts,
   QuickFilter,
   SortMode,
 } from "@/lib/alertClassification";
