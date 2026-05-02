@@ -35,7 +35,7 @@ export function BriefingKPIRow({ alerts }: BriefingKPIRowProps) {
     {
       label: "Acción requerida",
       value: stats.action,
-      hint: "Impacto y urgencia altos",
+      hint: "Impacto o urgencia ≥ 70",
       icon: AlertTriangle,
       tone: "destructive" as const,
     },
