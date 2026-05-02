@@ -156,10 +156,9 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
         return false;
       }
 
-      // Hide rezagadas unless toggle is on
-      if (!showRezagadas && isRezagada(alert)) {
-        return false;
-      }
+      // Nota: las rezagadas NO se filtran del kanban — siempre están presentes
+      // en su zona colapsable. El toggle `showRezagadas` solo controla si esa
+      // zona arranca abierta o cerrada (ver KanbanColumn).
 
       // Search filter
       if (filters.search) {
