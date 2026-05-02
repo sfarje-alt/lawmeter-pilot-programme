@@ -278,9 +278,10 @@ export function AlertsCalendar() {
     const total = eventsInRange.length;
     const critical = eventsInRange.filter((e) => e.isCritical).length;
     const top = busiestWeek(eventsInRange, visibleRange.start, visibleRange.end);
-    const next = nextUpcoming(eventsInRange);
+    // Próximo evento: next upcoming across ALL filtered events (not just visible range)
+    const next = nextUpcoming(filteredEvents);
     return { total, critical, top, next };
-  }, [eventsInRange, visibleRange]);
+  }, [eventsInRange, visibleRange, filteredEvents]);
 
   const sparkData = useMemo(
     () => aggregateByWeek(eventsInRange, visibleRange.start, visibleRange.end),
