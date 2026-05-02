@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
-  Bookmark,
+  Pin,
   ExternalLink,
   Clock,
   Building2,
@@ -30,7 +30,6 @@ import {
   getStateFamilyStyle,
   KeyDate,
 } from "@/data/peruAlertsMockData";
-import { getVigenciaInfo } from "@/lib/alertClassification";
 import { format, isAfter, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -168,20 +167,6 @@ export function InboxAlertCard({
     ? alert.legislation_id
     : alert.reference_number || alert.legislation_id;
 
-  const vigencia = !isBill ? getVigenciaInfo(alert) : null;
-  const vigenciaTone =
-    vigencia?.status === "reciente"
-      ? "text-[hsl(var(--warning))]"
-      : vigencia?.status === "vigente"
-        ? "text-muted-foreground"
-        : "text-muted-foreground/60";
-  const vigenciaDot =
-    vigencia?.status === "reciente"
-      ? "bg-[hsl(var(--warning))]"
-      : vigencia?.status === "vigente"
-        ? "bg-muted-foreground/70"
-        : "bg-muted-foreground/30";
-
   return (
     <Card
       className={cn(
@@ -194,41 +179,7 @@ export function InboxAlertCard({
       )}
       onClick={onClick}
     >
-      <div className={cn("flex gap-3 min-w-0", !vigencia && "block")}>
-        {vigencia && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className={cn(
-                    "shrink-0 w-20 sm:w-24 pr-3 border-r border-border/40 flex flex-col items-start justify-start gap-1 cursor-default",
-                  )}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className={cn("h-2 w-2 rounded-full", vigenciaDot)} />
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Vigencia
-                    </span>
-                  </div>
-                  <span className={cn("text-xs font-semibold leading-tight", vigenciaTone)}>
-                    {vigencia.label}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs">
-                <p className="text-xs">
-                  {vigencia.status === "reciente"
-                    ? "Norma publicada en los últimos 30 días."
-                    : vigencia.status === "vigente"
-                      ? "Norma vigente desde su publicación."
-                      : "Sin información de fecha de publicación."}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        <div className="flex-1 min-w-0">
-
+      {/* Header: Type + State badge + ID + Actions */}
       <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
           <Badge variant="outline" className={cn("text-xs", getTypeColor(alert.legislation_type))}>
@@ -308,9 +259,9 @@ export function InboxAlertCard({
                 "p-1 rounded transition-colors",
                 isPinned ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-white/10"
               )}
-              title={isPinned ? "Quitar marcador" : "Marcar para publicación"}
+              title={isPinned ? "Quitar fijación" : "Fijar arriba"}
             >
-              <Bookmark
+              <Pin
                 className={cn(
                   "h-3.5 w-3.5 transition-colors",
                   isPinned ? "fill-primary text-primary" : "text-muted-foreground"
@@ -518,8 +469,6 @@ export function InboxAlertCard({
             <span>Archivada {formatDate(alert.archived_at)}</span>
           </div>
         )}
-      </div>
-        </div>
       </div>
     </Card>
   );

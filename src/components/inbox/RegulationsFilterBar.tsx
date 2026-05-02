@@ -6,7 +6,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Search, X, Bookmark, CalendarIcon, ChevronDown, Filter, Archive } from "lucide-react";
+import { Search, X, Pin, CalendarIcon, ChevronDown, Filter, Archive } from "lucide-react";
 import { RegulationsFilters } from "./RegulationsInbox";
 import { format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -112,9 +112,9 @@ export function RegulationsFilterBar({
           <Input placeholder="Buscar por título, entidad, resumen..." value={filters.search} onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })} className="pl-10 bg-muted/30 border-border/50 h-9" />
         </div>
 
-        <Toggle pressed={filters.onlyPinned} onPressedChange={(pressed) => onFiltersChange({ ...filters, onlyPinned: pressed })} className="gap-1.5 h-9 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" aria-label="Solo marcadores">
-          <Bookmark className="h-4 w-4" />
-          <span className="hidden sm:inline text-sm">Marcadores</span>
+        <Toggle pressed={filters.onlyPinned} onPressedChange={(pressed) => onFiltersChange({ ...filters, onlyPinned: pressed })} className="gap-1.5 h-9 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" aria-label="Solo pineados">
+          <Pin className="h-4 w-4" />
+          <span className="hidden sm:inline text-sm">Pineados</span>
           {pinnedCount > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{pinnedCount}</Badge>}
         </Toggle>
 
@@ -204,7 +204,7 @@ export function RegulationsFilterBar({
           )}
           {filters.onlyPinned && (
             <Badge variant="secondary" className="gap-1 text-xs bg-primary/20 text-primary">
-              <Bookmark className="h-3 w-3" /> Solo marcadores
+              <Pin className="h-3 w-3" /> Solo pineados
               <button onClick={() => onFiltersChange({ ...filters, onlyPinned: false })}><X className="h-3 w-3" /></button>
             </Badge>
           )}

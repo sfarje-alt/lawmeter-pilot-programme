@@ -109,17 +109,10 @@ export function KanbanColumn({
                         </span>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex"
-                            >
-                              <Info className="h-3 w-3 text-muted-foreground/70 hover:text-foreground" />
-                            </span>
+                            <Info className="h-3 w-3 text-muted-foreground/70" />
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
-                            <p className="text-xs leading-snug">{meta.description}</p>
+                          <TooltipContent side="top">
+                            <p className="text-xs">{meta.hint}</p>
                           </TooltipContent>
                         </Tooltip>
                         <Badge variant="secondary" className="ml-auto h-4 px-1.5 text-[10px]">

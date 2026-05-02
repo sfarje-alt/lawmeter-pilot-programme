@@ -119,10 +119,7 @@ export function classifyCard(a: PeruAlert): CardZone {
 export interface ZoneMeta {
   id: CardZone;
   label: string;
-  /** Short inline hint (chip / aria). */
   hint: string;
-  /** Long explanation shown in the (i) popover. */
-  description: string;
   /** Tailwind classes for the dot + accent. */
   dot: string;
   text: string;
@@ -133,8 +130,6 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
     id: "action",
     label: "Acción requerida",
     hint: "Impacto o urgencia ≥ 70",
-    description:
-      "Proyectos con impacto o urgencia ≥ 70 en etapa avanzada o con movimiento reciente. Son los de mayor riesgo para Betsson en el corto plazo.",
     dot: "bg-destructive",
     text: "text-destructive",
   },
@@ -142,8 +137,6 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
     id: "monitor",
     label: "Monitorear",
     hint: "Impacto medio (40–69)",
-    description:
-      "Impacto o urgencia moderados. No requieren acción inmediata — si su score sube o avanzan en el Congreso, suben a Acción requerida automáticamente.",
     dot: "bg-[hsl(var(--warning))]",
     text: "text-[hsl(var(--warning))]",
   },
@@ -151,8 +144,6 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
     id: "low",
     label: "Bajo impacto",
     hint: "Impacto < 40",
-    description:
-      "Score de impacto y urgencia bajos. No son prioridad por ahora.",
     dot: "bg-muted-foreground",
     text: "text-muted-foreground",
   },
@@ -160,8 +151,6 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
     id: "lagging",
     label: "Rezagadas",
     hint: "Sin movimiento 6m (o 12m si impacto ≥ 70)",
-    description:
-      "Sin movimiento en el Congreso: 6 meses si score < 70, o 12 meses si score ≥ 70. Bookmark protege de este movimiento automático.",
     dot: "bg-slate-500",
     text: "text-slate-400",
   },
