@@ -85,10 +85,7 @@ function getIngestionTime(a: PeruAlert): number {
 export function sortAlerts(alerts: PeruAlert[], mode: SortMode): PeruAlert[] {
   const copy = [...alerts];
   copy.sort((a, b) => {
-    // Bookmarks always first
-    if (a.is_pinned_for_publication !== b.is_pinned_for_publication) {
-      return a.is_pinned_for_publication ? -1 : 1;
-    }
+    // Bookmarks ya no se anclan arriba — aparecen en su posición natural por score.
     if (mode === "impact") return getImpactScore(b) - getImpactScore(a);
     if (mode === "urgency") return getUrgencyScore(b) - getUrgencyScore(a);
     if (mode === "date") return getIngestionTime(b) - getIngestionTime(a);
@@ -231,28 +228,28 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
   action: {
     id: "action",
     label: "Acción requerida",
-    hint: "Impacto o urgencia ≥ 70",
+    hint: "Proyectos con impacto o urgencia ≥ 70 en etapa avanzada del Congreso, o con movimiento en los últimos 30 días. Son los de mayor riesgo en el corto plazo.",
     dot: "bg-destructive",
     text: "text-destructive",
   },
   monitor: {
     id: "monitor",
     label: "Monitorear",
-    hint: "Impacto medio (40–69)",
+    hint: "Impacto o urgencia moderados (al menos uno ≥ 40). Si su score sube o avanzan en el Congreso, suben a Acción requerida automáticamente.",
     dot: "bg-[hsl(var(--warning))]",
     text: "text-[hsl(var(--warning))]",
   },
   low: {
     id: "low",
     label: "Bajo impacto",
-    hint: "Impacto < 40",
+    hint: "Score de impacto y urgencia bajos (ambos < 40). No son prioridad por ahora.",
     dot: "bg-muted-foreground",
     text: "text-muted-foreground",
   },
   lagging: {
     id: "lagging",
     label: "Rezagadas",
-    hint: "Sin movimiento 6m (o 12m si impacto ≥ 70)",
+    hint: "Sin movimiento en el Congreso: 6 meses si score < 70, o 12 meses si score ≥ 70. Bookmark protege de este movimiento automático.",
     dot: "bg-slate-500",
     text: "text-slate-400",
   },
@@ -312,4 +309,153 @@ export function getVigenciaInfo(a: PeruAlert): VigenciaInfo {
   if (days < 0) return { status: "reciente", label: `Vigente desde ${fmt}`, daysSince: days };
   if (days <= 30) return { status: "reciente", label: `Vigente hace ${days}d`, daysSince: days };
   return { status: "vigente", label: `Vigente desde ${fmt}`, daysSince: days };
+}
+
+// ============================================================================
+// Tag-cloud helpers (Fase D): tags reales por alerta + agregación.
+// ============================================================================
+
+/** Devuelve los tags visibles de la card (mismo campo que se renderiza). */
+export function getAlertTags(a: PeruAlert): string[] {
+  const out = new Set<string>();
+  (a.affected_areas || []).forEach((t) => {
+    if (typeof t === "string" && t.trim()) out.add(t.trim());
+  });
+  const ai = (a as any).area_de_interes;
+  if (Array.isArray(ai)) {
+    ai.forEach((t) => {
+      if (typeof t === "string" && t.trim()) out.add(t.trim());
+    });
+  }
+  return Array.from(out);
+}
+
+/** Cuenta cuántas alertas tienen cada tag, ordenado desc por frecuencia. */
+export function aggregateTagCounts(alerts: PeruAlert[]): Array<{ tag: string; count: number }> {
+  const map = new Map<string, number>();
+  alerts.forEach((a) => {
+    getAlertTags(a).forEach((t) => map.set(t, (map.get(t) ?? 0) + 1));
+  });
+  return Array.from(map.entries())
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+}
+
+/** Filtra alertas que tengan AL MENOS uno de los tags seleccionados. */
+export function filterByTags(alerts: PeruAlert[], selected: string[]): PeruAlert[] {
+  if (!selected.length) return alerts;
+  const set = new Set(selected);
+  return alerts.filter((a) => getAlertTags(a).some((t) => set.has(t)));
+}
+
+// ============================================================================
+// Quick-date filter (Fase D): chips simples en el botón "Fechas".
+// ============================================================================
+
+export type QuickDateRange = "7d" | "30d" | "60d" | "1y" | null;
+
+const QUICK_DATE_DAYS: Record<Exclude<QuickDateRange, null>, number> = {
+  "7d": 7,
+  "30d": 30,
+  "60d": 60,
+  "1y": 365,
+};
+
+export function getQuickDateLabel(r: Exclude<QuickDateRange, null>): string {
+  return {
+    "7d": "Últimos 7 días",
+    "30d": "Últimos 30 días",
+    "60d": "Últimos 60 días",
+    "1y": "Último año",
+  }[r];
+}
+
+/** Devuelve la fecha de corte (inicio) para el rango quick-date elegido. */
+export function getQuickDateFrom(r: QuickDateRange): Date | null {
+  if (!r) return null;
+  const days = QUICK_DATE_DAYS[r];
+  return new Date(Date.now() - days * DAY_MS);
+}
+
+// ============================================================================
+// Norma entity grouping (Fase D): grupos canónicos para la sección por entidad.
+// ============================================================================
+
+export type NormaEntityGroup =
+  | "sbs_uif"
+  | "mincetur"
+  | "sunat"
+  | "indecopi"
+  | "pcm_otros";
+
+export interface NormaEntityGroupMeta {
+  id: NormaEntityGroup;
+  label: string;
+  subtitle: string;
+  /** Token semantico HSL para color del símbolo (texto/fondo). */
+  toneClass: string; // texto del icono
+  bgClass: string;   // fondo de la pastilla del icono
+  /** Nombre del icono lucide a renderizar fuera de aquí. */
+  iconName: "Landmark" | "Plane" | "Receipt" | "Scale" | "Building";
+}
+
+export const NORMA_ENTITY_GROUPS: Record<NormaEntityGroup, NormaEntityGroupMeta> = {
+  sbs_uif: {
+    id: "sbs_uif",
+    label: "SBS / UIF-Perú",
+    subtitle: "Superintendencia de Banca, Seguros y AFP · Unidad de Inteligencia Financiera",
+    toneClass: "text-blue-400",
+    bgClass: "bg-blue-500/15",
+    iconName: "Landmark",
+  },
+  mincetur: {
+    id: "mincetur",
+    label: "MINCETUR / DGJCMT",
+    subtitle: "Ministerio de Comercio Exterior y Turismo · Dirección de Juegos",
+    toneClass: "text-amber-400",
+    bgClass: "bg-amber-500/15",
+    iconName: "Plane",
+  },
+  sunat: {
+    id: "sunat",
+    label: "SUNAT",
+    subtitle: "Superintendencia Nacional de Aduanas y Administración Tributaria",
+    toneClass: "text-emerald-400",
+    bgClass: "bg-emerald-500/15",
+    iconName: "Receipt",
+  },
+  indecopi: {
+    id: "indecopi",
+    label: "INDECOPI",
+    subtitle: "Instituto Nacional de Defensa de la Competencia y Propiedad Intelectual",
+    toneClass: "text-fuchsia-400",
+    bgClass: "bg-fuchsia-500/15",
+    iconName: "Scale",
+  },
+  pcm_otros: {
+    id: "pcm_otros",
+    label: "PCM / Otros",
+    subtitle: "Presidencia del Consejo de Ministros y otros ministerios",
+    toneClass: "text-slate-300",
+    bgClass: "bg-slate-500/15",
+    iconName: "Building",
+  },
+};
+
+export const NORMA_ENTITY_GROUP_ORDER: NormaEntityGroup[] = [
+  "sbs_uif",
+  "mincetur",
+  "sunat",
+  "indecopi",
+  "pcm_otros",
+];
+
+/** Mapea una entidad libre al grupo canónico. */
+export function getNormaEntityGroup(entity?: string | null): NormaEntityGroup {
+  const u = (entity || "").toUpperCase();
+  if (/\bSBS\b|BANCA.*SEGUROS|\bUIF\b|INTELIGENCIA\s+FINANCIERA/.test(u)) return "sbs_uif";
+  if (/MINCETUR|COMERCIO\s+EXTERIOR|DGJCMT|JUEGOS\s+DE\s+CASINO|TRAGAMONEDAS|TURISMO/.test(u)) return "mincetur";
+  if (/\bSUNAT\b|ADUANAS|ADMINISTRACI[ÓO]N\s+TRIBUTARIA/.test(u)) return "sunat";
+  if (/INDECOPI|DEFENSA\s+DE\s+LA\s+COMPETENCIA|PROPIEDAD\s+INTELECTUAL/.test(u)) return "indecopi";
+  return "pcm_otros";
 }

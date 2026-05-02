@@ -2,10 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
-  Pin,
+  Bookmark,
   ExternalLink,
   Clock,
-  Building2,
   User,
   Users,
   FileText,
@@ -20,7 +19,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
-import { normalizeEntityName } from "@/lib/entityNormalization";
+
 import {
   PeruAlert,
   getTypeLabel,
@@ -170,11 +169,7 @@ export function InboxAlertCard({
   return (
     <Card
       className={cn(
-        "p-3 border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full min-w-0 max-w-full overflow-hidden",
-        isUnread && !isArchived
-          ? "bg-gradient-to-br from-primary/[0.08] via-card to-card border-l-2 border-l-primary/60 shadow-[inset_0_1px_0_0_hsl(var(--primary)/0.12)]"
-          : "bg-card",
-        isPinned && !isArchived && "border-l-4 border-l-primary",
+        "p-3 bg-card border-border/30 hover:bg-card/90 transition-all cursor-pointer group w-full min-w-0 max-w-full overflow-hidden",
         isArchived && "opacity-70 border-dashed"
       )}
       onClick={onClick}
@@ -200,13 +195,7 @@ export function InboxAlertCard({
             </Badge>
           )}
 
-          {/* Norma: entity badge */}
-          {!isBill && alert.entity && (
-            <Badge variant="outline" className="text-xs bg-emerald-500/15 text-emerald-400 border-emerald-500/35">
-              <Building2 className="h-3 w-3 mr-1" />
-              {normalizeEntityName(alert.entity)}
-            </Badge>
-          )}
+          {/* Norma: entity badge eliminado — ya está en el header del grupo */}
 
           {/* Impact level */}
           {alert.impact_level && (
@@ -255,13 +244,10 @@ export function InboxAlertCard({
           {!isArchived && onTogglePin && (
             <button
               onClick={handlePinClick}
-              className={cn(
-                "p-1 rounded transition-colors",
-                isPinned ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-white/10"
-              )}
-              title={isPinned ? "Quitar fijación" : "Fijar arriba"}
+              className="p-1 rounded hover:bg-white/10 transition-colors"
+              title={isPinned ? "Quitar bookmark" : "Marcar bookmark"}
             >
-              <Pin
+              <Bookmark
                 className={cn(
                   "h-3.5 w-3.5 transition-colors",
                   isPinned ? "fill-primary text-primary" : "text-muted-foreground"
