@@ -24,6 +24,7 @@ const SORT_LABELS: Record<SortMode, string> = {
   movement: "Último movimiento",
   impact: "Mayor impacto",
   urgency: "Mayor urgencia",
+  date: "Fecha",
 };
 
 export function InboxToolbar({

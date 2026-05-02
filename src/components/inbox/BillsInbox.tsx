@@ -2,15 +2,13 @@ import { useState, useMemo, useEffect } from "react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
-import { BriefingKPIRow } from "./BriefingKPIRow";
-import { QuickFilterPills } from "./QuickFilterPills";
-import { InboxToolbar } from "./InboxToolbar";
+import { InboxBriefingHeader } from "./InboxBriefingHeader";
 import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import {
+  applyBriefingFilter,
   applyQuickFilter,
-  countByQuickFilter,
-  isRezagada,
+  BriefingFilter,
   sortAlerts,
   QuickFilter,
   SortMode,
