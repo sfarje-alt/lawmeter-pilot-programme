@@ -278,21 +278,22 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
         onShowRezagadasChange={setShowRezagadas}
         search={filters.search}
         onSearchChange={(s) => setFilters((f) => ({ ...f, search: s }))}
-      />
-
-      {/* Filters */}
-      <BillsFilterBar
-        filters={filters}
-        onFiltersChange={setFilters}
-        availableParliamentaryGroups={availableParliamentaryGroups}
-        availableSectors={availableSectors}
-        availableStages={availableStages}
-        availableImpactLevels={availableImpactLevels}
-        availableAreas={availableAreas}
-        totalCount={alertCounts.total}
-        filteredCount={alertCounts.filtered}
-        pinnedCount={pinnedCount}
-        archivedCount={archivedCount}
+        toolbarExtras={
+          <>
+            <DateRangeButton
+              dateFrom={filters.dateFrom}
+              dateTo={filters.dateTo}
+              onChange={(from, to) => setFilters((f) => ({ ...f, dateFrom: from, dateTo: to }))}
+            />
+            <ArchivedToggle
+              pressed={filters.showArchived}
+              onPressedChange={(v) => setFilters((f) => ({ ...f, showArchived: v }))}
+              count={archivedCount}
+            />
+            <AdvancedFiltersButton groups={advancedGroups} />
+          </>
+        }
+        toolbarFooter={hasActiveFilters ? activeFilterChips : null}
       />
 
       {/* Kanban Board */}
