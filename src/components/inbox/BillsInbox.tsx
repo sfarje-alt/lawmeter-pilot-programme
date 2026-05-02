@@ -44,6 +44,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const { isRead, markAsRead } = useReadAlerts();
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
+  const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>(null);
   const [sortMode, setSortMode] = useState<SortMode>("movement");
   const [showRezagadas, setShowRezagadas] = useState(false);
   const [filters, setFilters] = useState<BillsFilters>({
