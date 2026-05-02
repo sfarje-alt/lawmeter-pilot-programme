@@ -2,17 +2,16 @@ import { useState, useMemo, useEffect } from "react";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { RegulationsFilterBar } from "./RegulationsFilterBar";
 import { InboxAlertCard } from "./InboxAlertCard";
-import { BriefingKPIRow } from "./BriefingKPIRow";
-import { QuickFilterPills } from "./QuickFilterPills";
-import { InboxToolbar } from "./InboxToolbar";
+import { InboxBriefingHeader } from "./InboxBriefingHeader";
 import { EntityGroupSection } from "./EntityGroupSection";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
+  applyBriefingFilter,
   applyQuickFilter,
   isRezagada,
-  countByQuickFilter,
+  BriefingFilter,
   getEntityGroup,
   sortAlerts,
   QuickFilter,
@@ -53,6 +52,7 @@ export function RegulationsInbox({
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const { isRead, markAsRead } = useReadAlerts();
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
+  const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>(null);
   const [sortMode, setSortMode] = useState<SortMode>("movement");
   const [showRezagadas, setShowRezagadas] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -163,8 +163,8 @@ export function RegulationsInbox({
       return true;
     });
 
-    return applyQuickFilter(base, quickFilter);
-  }, [regulationAlerts, filters, quickFilter, showRezagadas]);
+    return applyBriefingFilter(applyQuickFilter(base, quickFilter), briefingFilter);
+  }, [regulationAlerts, filters, quickFilter, briefingFilter, showRezagadas]);
 
   const pinnedCount = useMemo(
     () => regulationAlerts.filter((a) => a.is_pinned_for_publication).length,
@@ -210,24 +210,19 @@ export function RegulationsInbox({
 
   return (
     <div className="space-y-4">
-      {/* Briefing diario */}
-      <BriefingKPIRow alerts={regulationAlerts} />
-
-      {/* Pills + toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <QuickFilterPills
-          active={quickFilter}
-          onChange={setQuickFilter}
-          counts={countByQuickFilter(regulationAlerts)}
-        />
-        <InboxToolbar
-          sortMode={sortMode}
-          onSortModeChange={setSortMode}
-          showRezagadas={showRezagadas}
-          onShowRezagadasChange={setShowRezagadas}
-          rezagadasCount={regulationAlerts.filter(isRezagada).length}
-        />
-      </div>
+      <InboxBriefingHeader
+        alerts={regulationAlerts}
+        briefingFilter={briefingFilter}
+        onBriefingFilterChange={setBriefingFilter}
+        quickFilter={quickFilter}
+        onQuickFilterChange={setQuickFilter}
+        sortMode={sortMode}
+        onSortModeChange={setSortMode}
+        showRezagadas={showRezagadas}
+        onShowRezagadasChange={setShowRezagadas}
+        search={filters.search}
+        onSearchChange={(s) => setFilters((f) => ({ ...f, search: s }))}
+      />
 
       {/* Filters */}
       <RegulationsFilterBar
