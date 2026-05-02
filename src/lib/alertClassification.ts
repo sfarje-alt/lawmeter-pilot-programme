@@ -85,10 +85,7 @@ function getIngestionTime(a: PeruAlert): number {
 export function sortAlerts(alerts: PeruAlert[], mode: SortMode): PeruAlert[] {
   const copy = [...alerts];
   copy.sort((a, b) => {
-    // Bookmarks always first
-    if (a.is_pinned_for_publication !== b.is_pinned_for_publication) {
-      return a.is_pinned_for_publication ? -1 : 1;
-    }
+    // Bookmarks ya no se anclan arriba — aparecen en su posición natural por score.
     if (mode === "impact") return getImpactScore(b) - getImpactScore(a);
     if (mode === "urgency") return getUrgencyScore(b) - getUrgencyScore(a);
     if (mode === "date") return getIngestionTime(b) - getIngestionTime(a);
