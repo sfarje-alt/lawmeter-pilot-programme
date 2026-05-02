@@ -157,3 +157,57 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
 };
 
 export const ZONE_ORDER: CardZone[] = ["action", "monitor", "low", "lagging"];
+
+/**
+ * Derive a coarse "entity group" from a regulator entity string.
+ * Strategy: prefer well-known acronyms (SBS, MEF, MINSA, BCRP, PCM, INDECOPI,
+ * SUNAT, OSIPTEL, OSINERGMIN, SUNARP, SMV, MTPE, MINJUS, MINEM, MININTER,
+ * MINEDU, MTC, MIDIS, MINAM, MIDAGRI, PRODUCE, MINCETUR, MIMP, MINCUL,
+ * RREE, CONGRESO, PJ, MP, INEI, ONP, ESSALUD, DIGEMID).
+ * Fallback: first word of the entity.
+ */
+const KNOWN_ACRONYMS = [
+  "SBS", "MEF", "MINSA", "BCRP", "PCM", "INDECOPI", "SUNAT", "OSIPTEL",
+  "OSINERGMIN", "SUNARP", "SMV", "MTPE", "MINJUS", "MINEM", "MININTER",
+  "MINEDU", "MTC", "MIDIS", "MINAM", "MIDAGRI", "PRODUCE", "MINCETUR",
+  "MIMP", "MINCUL", "RREE", "CONGRESO", "MP", "INEI", "ONP", "ESSALUD",
+  "DIGEMID", "OEFA", "ANA", "SUNEDU", "SERVIR", "CEPLAN",
+];
+
+export function getEntityGroup(entity?: string | null): string {
+  if (!entity) return "Sin entidad";
+  const upper = entity.toUpperCase();
+  for (const acr of KNOWN_ACRONYMS) {
+    const re = new RegExp(`\\b${acr}\\b`);
+    if (re.test(upper)) return acr;
+  }
+  // Keyword fallbacks for common long forms.
+  if (/PODER\s+JUDICIAL/.test(upper)) return "PJ";
+  if (/MINISTERIO\s+P[ÚU]BLICO/.test(upper)) return "MP";
+  if (/CONGRESO/.test(upper)) return "CONGRESO";
+  if (/PRESIDENCIA\s+DEL\s+CONSEJO/.test(upper)) return "PCM";
+  // Fallback: first 1-2 words.
+  const words = entity.trim().split(/\s+/).slice(0, 2).join(" ");
+  return words || "Sin entidad";
+}
+
+export type VigenciaStatus = "vigente" | "reciente" | "sin_info";
+
+export interface VigenciaInfo {
+  status: VigenciaStatus;
+  label: string;
+  daysSince: number | null;
+}
+
+/** Norma vigencia inferred from publication_date (fallback fecha_publicacion). */
+export function getVigenciaInfo(a: PeruAlert): VigenciaInfo {
+  const raw = a.publication_date;
+  if (!raw) return { status: "sin_info", label: "Sin fecha de publicación", daysSince: null };
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return { status: "sin_info", label: "Sin fecha de publicación", daysSince: null };
+  const days = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+  const fmt = d.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" });
+  if (days < 0) return { status: "reciente", label: `Vigente desde ${fmt}`, daysSince: days };
+  if (days <= 30) return { status: "reciente", label: `Vigente hace ${days}d`, daysSince: days };
+  return { status: "vigente", label: `Vigente desde ${fmt}`, daysSince: days };
+}
