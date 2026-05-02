@@ -53,7 +53,7 @@ export function KanbanColumn({
   const [openZones, setOpenZones] = useState<Record<CardZone, boolean>>({
     action: true,
     monitor: true,
-    low: true,
+    low: false,
     lagging: false,
   });
 
