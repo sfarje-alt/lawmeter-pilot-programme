@@ -11,6 +11,7 @@ import {
   applyQuickFilter,
   countByQuickFilter,
   isRezagada,
+  sortAlerts,
   QuickFilter,
   SortMode,
 } from "@/lib/alertClassification";
