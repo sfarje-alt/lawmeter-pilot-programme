@@ -1,9 +1,19 @@
 import { useState, useMemo, useEffect } from "react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
-import { BillsFilterBar } from "./BillsFilterBar";
 import { InboxBriefingHeader } from "./InboxBriefingHeader";
-import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES } from "@/data/peruAlertsMockData";
+import {
+  AdvancedFiltersButton,
+  ArchivedToggle,
+  DateRangeButton,
+  FilterGroup,
+} from "./InboxToolbarExtras";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES, IMPACT_LEVELS } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import {
   applyBriefingFilter,
