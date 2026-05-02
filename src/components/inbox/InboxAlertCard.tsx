@@ -221,16 +221,10 @@ export function InboxAlertCard({
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {isPinned && !isArchived && (
-            hasCommentary ? (
-              <Badge variant="secondary" className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1.5">
-                <CheckCircle2 className="h-3 w-3" />
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="text-xs bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.35)] py-0 px-1.5">
-                <AlertCircle className="h-3 w-3" />
-              </Badge>
-            )
+          {isPinned && !isArchived && hasCommentary && (
+            <Badge variant="secondary" className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1.5">
+              <CheckCircle2 className="h-3 w-3" />
+            </Badge>
           )}
           {alert.source_url && (
             <button
