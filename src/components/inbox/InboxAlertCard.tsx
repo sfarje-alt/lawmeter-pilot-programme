@@ -308,9 +308,9 @@ export function InboxAlertCard({
                 "p-1 rounded transition-colors",
                 isPinned ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-white/10"
               )}
-              title={isPinned ? "Quitar fijación" : "Fijar arriba"}
+              title={isPinned ? "Quitar marcador" : "Marcar para publicación"}
             >
-              <Pin
+              <Bookmark
                 className={cn(
                   "h-3.5 w-3.5 transition-colors",
                   isPinned ? "fill-primary text-primary" : "text-muted-foreground"
