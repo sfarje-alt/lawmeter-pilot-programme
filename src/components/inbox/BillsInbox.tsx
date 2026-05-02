@@ -264,6 +264,160 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
 
   const pendingCount = alertCounts.byStage.comision + alertCounts.byStage.pleno + alertCounts.byStage.tramite_final;
 
+  const setF = (patch: Partial<BillsFilters>) => setFilters((f) => ({ ...f, ...patch }));
+
+  const advancedGroups: FilterGroup[] = [
+    {
+      key: "stages",
+      placeholder: "Estado: Todos",
+      options: availableStages.map((s) => ({ value: s, label: s })),
+      selected: filters.stages,
+      onChange: (stages) => setF({ stages }),
+    },
+    {
+      key: "impact",
+      placeholder: "Impacto: Todos",
+      options: availableImpactLevels.map((level) => {
+        const info = IMPACT_LEVELS.find((l) => l.value === level);
+        return {
+          value: level,
+          label: info?.label || level,
+          icon: (
+            <div
+              className={cn(
+                "w-2 h-2 rounded-full",
+                level === "positivo" && "bg-green-500",
+                level === "leve" && "bg-gray-400",
+                level === "medio" && "bg-yellow-500",
+                level === "grave" && "bg-red-500"
+              )}
+            />
+          ),
+        };
+      }),
+      selected: filters.impactLevels,
+      onChange: (impactLevels) => setF({ impactLevels }),
+    },
+    {
+      key: "groups",
+      placeholder: "Grupo: Todos",
+      options: availableParliamentaryGroups.map((g) => ({ value: g, label: g })),
+      selected: filters.parliamentaryGroups,
+      onChange: (parliamentaryGroups) => setF({ parliamentaryGroups }),
+    },
+    {
+      key: "sectors",
+      placeholder: "Sector: Todos",
+      options: availableSectors.map((s) => ({ value: s, label: s })),
+      selected: filters.sectors,
+      onChange: (sectors) => setF({ sectors }),
+    },
+    {
+      key: "areas",
+      placeholder: "Área: Todas",
+      options: availableAreas.map((a) => ({ value: a, label: a })),
+      selected: filters.areas,
+      onChange: (areas) => setF({ areas }),
+    },
+  ];
+
+  const hasActiveFilters =
+    filters.stages.length > 0 ||
+    filters.sectors.length > 0 ||
+    filters.parliamentaryGroups.length > 0 ||
+    filters.impactLevels.length > 0 ||
+    filters.areas.length > 0 ||
+    !!filters.dateFrom ||
+    !!filters.dateTo;
+
+  const activeFilterChips = (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-xs text-muted-foreground">
+        Mostrando {alertCounts.filtered} de {alertCounts.total} proyectos:
+      </span>
+      {filters.stages.map((stage) => (
+        <Badge key={stage} variant="secondary" className="gap-1 text-xs">
+          Estado: {stage}
+          <button onClick={() => setF({ stages: filters.stages.filter((s) => s !== stage) })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {filters.impactLevels.map((level) => (
+        <Badge
+          key={level}
+          variant="secondary"
+          className={cn("gap-1 text-xs", IMPACT_LEVELS.find((l) => l.value === level)?.color)}
+        >
+          Impacto: {IMPACT_LEVELS.find((l) => l.value === level)?.label || level}
+          <button
+            onClick={() => setF({ impactLevels: filters.impactLevels.filter((l) => l !== level) })}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {filters.parliamentaryGroups.map((group) => (
+        <Badge key={group} variant="secondary" className="gap-1 text-xs">
+          Grupo: {group}
+          <button
+            onClick={() =>
+              setF({ parliamentaryGroups: filters.parliamentaryGroups.filter((g) => g !== group) })
+            }
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {filters.sectors.map((sector) => (
+        <Badge key={sector} variant="secondary" className="gap-1 text-xs">
+          Sector: {sector}
+          <button onClick={() => setF({ sectors: filters.sectors.filter((s) => s !== sector) })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {filters.areas.map((area) => (
+        <Badge key={area} variant="secondary" className="gap-1 text-xs">
+          Área: {area}
+          <button onClick={() => setF({ areas: filters.areas.filter((a) => a !== area) })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {(filters.dateFrom || filters.dateTo) && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {filters.dateFrom && filters.dateTo
+            ? `${format(filters.dateFrom, "dd/MM/yy")} - ${format(filters.dateTo, "dd/MM/yy")}`
+            : filters.dateFrom
+            ? `Desde ${format(filters.dateFrom, "dd/MM/yy")}`
+            : `Hasta ${format(filters.dateTo!, "dd/MM/yy")}`}
+          <button onClick={() => setF({ dateFrom: undefined, dateTo: undefined })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() =>
+          setF({
+            stages: [],
+            sectors: [],
+            parliamentaryGroups: [],
+            impactLevels: [],
+            areas: [],
+            dateFrom: undefined,
+            dateTo: undefined,
+          })
+        }
+        className="h-6 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-3 w-3 mr-1" /> Limpiar
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       <InboxBriefingHeader
