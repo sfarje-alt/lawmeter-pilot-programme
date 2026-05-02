@@ -44,7 +44,7 @@ export function EntityZoneStack({
   const [openZones, setOpenZones] = useState<Record<CardZone, boolean>>({
     action: true,
     monitor: true,
-    low: false,
+    low: true,
     lagging: false,
   });
 
