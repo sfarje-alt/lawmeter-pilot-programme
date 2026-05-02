@@ -314,6 +314,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
             onUnarchive={onUnarchive}
             isArchiveView={filters.showArchived}
             unreadIds={unreadIds}
+            laggingOpen={showRezagadas}
           />
         ))}
       </div>
