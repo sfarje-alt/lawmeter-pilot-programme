@@ -321,7 +321,7 @@ export function InboxBriefingHeader({
                     className="h-8 gap-1.5 bg-muted/30 border-border/50 text-xs"
                   >
                     <ArrowUpDown className="h-3.5 w-3.5" />
-                    <span>Orden: {SORT_LABELS[sortMode]}</span>
+                    <span>Orden: {SORT_LABELS[(sortMode === "date" ? "movement" : sortMode) as Exclude<SortMode, "date">]}</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
