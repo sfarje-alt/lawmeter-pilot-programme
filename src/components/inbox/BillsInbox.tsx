@@ -1,12 +1,22 @@
 import { useState, useMemo, useEffect } from "react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
-import { Inbox as InboxIcon, Scale, Pin } from "lucide-react";
 import { KanbanColumn } from "./KanbanColumn";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { BillsFilterBar } from "./BillsFilterBar";
+import { BriefingKPIRow } from "./BriefingKPIRow";
+import { QuickFilterPills } from "./QuickFilterPills";
+import { InboxToolbar } from "./InboxToolbar";
 import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
+import {
+  applyQuickFilter,
+  isRezagada,
+  isActionRequired,
+  isRecentMovement,
+  getImpactScore,
+  sortAlerts,
+  QuickFilter,
+  SortMode,
+} from "@/lib/alertClassification";
 
 interface BillsInboxProps {
   alerts: PeruAlert[];
