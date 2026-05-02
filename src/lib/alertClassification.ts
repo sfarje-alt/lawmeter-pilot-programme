@@ -29,9 +29,18 @@ export function getUrgencyScore(a: PeruAlert): number {
   }
 }
 
-/** Last movement timestamp. Fallback chain: updated_at → stage_date → project_date → publication_date. */
+/**
+ * Last *legislative* movement. Priority: stage_date (último seguimiento) →
+ * project_date / fecha_presentacion → publication_date → updated_at (last resort,
+ * since en datos reales suele ser la fecha de ingesta y no de movimiento real).
+ */
 export function getLastMovementDate(a: PeruAlert): Date | null {
-  const candidate = a.updated_at || a.stage_date || a.project_date || a.publication_date || a.fecha_presentacion;
+  const candidate =
+    a.stage_date ||
+    a.project_date ||
+    a.fecha_presentacion ||
+    a.publication_date ||
+    a.updated_at;
   if (!candidate) return null;
   const d = new Date(candidate);
   return isNaN(d.getTime()) ? null : d;

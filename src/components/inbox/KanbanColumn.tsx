@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -21,6 +21,8 @@ interface KanbanColumnProps {
   isArchiveView?: boolean;
   /** Conjunto de ids de alertas no leídas (estilo "correo no abierto"). */
   unreadIds?: Set<string>;
+  /** Si está en true, la zona "Rezagadas" arranca abierta. Default false. */
+  laggingOpen?: boolean;
 }
 
 export function KanbanColumn({
@@ -34,6 +36,7 @@ export function KanbanColumn({
   onUnarchive,
   isArchiveView,
   unreadIds,
+  laggingOpen = false,
 }: KanbanColumnProps) {
   // Group alerts by inner zone, preserving input order (already sorted upstream).
   const byZone = useMemo(() => {
@@ -54,8 +57,13 @@ export function KanbanColumn({
     action: true,
     monitor: true,
     low: false,
-    lagging: false,
+    lagging: laggingOpen,
   });
+
+  // Sync external toggle (Mostrar rezagadas) with lagging zone state.
+  useEffect(() => {
+    setOpenZones((prev) => (prev.lagging === laggingOpen ? prev : { ...prev, lagging: laggingOpen }));
+  }, [laggingOpen]);
 
   const toggleZone = (z: CardZone) =>
     setOpenZones((prev) => ({ ...prev, [z]: !prev[z] }));
