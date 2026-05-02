@@ -1,12 +1,25 @@
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Inbox as InboxIcon, FileText, Pin } from "lucide-react";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { RegulationsFilterBar } from "./RegulationsFilterBar";
 import { InboxAlertCard } from "./InboxAlertCard";
+import { BriefingKPIRow } from "./BriefingKPIRow";
+import { QuickFilterPills } from "./QuickFilterPills";
+import { InboxToolbar } from "./InboxToolbar";
+import { EntityGroupSection } from "./EntityGroupSection";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import { normalizeEntityName } from "@/lib/entityNormalization";
+import {
+  applyQuickFilter,
+  isRezagada,
+  isActionRequired,
+  isRecentMovement,
+  getImpactScore,
+  getEntityGroup,
+  sortAlerts,
+  QuickFilter,
+  SortMode,
+} from "@/lib/alertClassification";
 
 interface RegulationsInboxProps {
   alerts: PeruAlert[];
@@ -29,11 +42,22 @@ export interface RegulationsFilters {
   showArchived: boolean;
 }
 
-export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpdateExpertCommentary, initialAlertId }: RegulationsInboxProps) {
+export function RegulationsInbox({
+  alerts,
+  onTogglePin,
+  onArchive,
+  onUnarchive,
+  onUpdateExpertCommentary,
+  initialAlertId,
+}: RegulationsInboxProps) {
   const [selectedAlert, setSelectedAlert] = useState<PeruAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const { isRead, markAsRead } = useReadAlerts();
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("movement");
+  const [showRezagadas, setShowRezagadas] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<RegulationsFilters>({
     search: "",
     areas: [],
@@ -48,7 +72,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
 
   // Filter only regulations (and respect archive toggle)
   const regulationAlerts = useMemo(() => {
-    return alerts.filter(a => {
+    return alerts.filter((a) => {
       if (a.legislation_type !== "norma") return false;
       if (filters.showArchived) return !!a.archived_at;
       return !a.archived_at;
@@ -56,19 +80,17 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
   }, [alerts, filters.showArchived]);
 
   const archivedCount = useMemo(
-    () => alerts.filter(a => a.legislation_type === "norma" && !!a.archived_at).length,
+    () => alerts.filter((a) => a.legislation_type === "norma" && !!a.archived_at).length,
     [alerts]
   );
 
   useEffect(() => {
-    if (initialAlertId) {
-      setProcessedInitialAlert(false);
-    }
+    if (initialAlertId) setProcessedInitialAlert(false);
   }, [initialAlertId]);
 
   useEffect(() => {
     if (initialAlertId && !processedInitialAlert && regulationAlerts.length > 0) {
-      const alertToOpen = regulationAlerts.find(a => a.id === initialAlertId);
+      const alertToOpen = regulationAlerts.find((a) => a.id === initialAlertId);
       if (alertToOpen) {
         setSelectedAlert(alertToOpen);
         setDrawerOpen(true);
@@ -79,7 +101,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
 
   const availableEntities = useMemo(() => {
     const entities = new Set<string>();
-    regulationAlerts.forEach(alert => {
+    regulationAlerts.forEach((alert) => {
       const normalized = normalizeEntityName(alert.entity);
       if (normalized) entities.add(normalized);
     });
@@ -88,7 +110,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
 
   const availableSectors = useMemo(() => {
     const sectors = new Set<string>();
-    regulationAlerts.forEach(alert => {
+    regulationAlerts.forEach((alert) => {
       if (alert.sector) sectors.add(alert.sector);
     });
     return Array.from(sectors).sort();
@@ -96,7 +118,7 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
 
   const availableImpactLevels = useMemo(() => {
     const levels = new Set<string>();
-    regulationAlerts.forEach(alert => {
+    regulationAlerts.forEach((alert) => {
       if (alert.impact_level) levels.add(alert.impact_level);
     });
     return Array.from(levels);
@@ -104,18 +126,17 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
 
   const availableAreas = useMemo(() => {
     const areas = new Set<string>();
-    regulationAlerts.forEach(alert => {
-      alert.affected_areas.forEach(area => areas.add(area));
+    regulationAlerts.forEach((alert) => {
+      alert.affected_areas.forEach((area) => areas.add(area));
     });
     return Array.from(areas).sort();
   }, [regulationAlerts]);
 
   // Apply filters with multi-select support
   const filteredAlerts = useMemo(() => {
-    return regulationAlerts.filter((alert) => {
-      if (filters.onlyPinned && !alert.is_pinned_for_publication) {
-        return false;
-      }
+    const base = regulationAlerts.filter((alert) => {
+      if (filters.onlyPinned && !alert.is_pinned_for_publication) return false;
+      if (!showRezagadas && isRezagada(alert)) return false;
 
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -125,26 +146,14 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
         if (!matchesTitle && !matchesEntity && !matchesSummary) return false;
       }
 
-      if (filters.areas.length > 0 && !filters.areas.some(area => alert.affected_areas.includes(area))) {
-        return false;
-      }
-
-      if (filters.entities.length > 0 && !filters.entities.includes(normalizeEntityName(alert.entity))) {
-        return false;
-      }
-
-      if (filters.sectors.length > 0 && !filters.sectors.includes(alert.sector || "")) {
-        return false;
-      }
-
-      if (filters.impactLevels.length > 0 && !filters.impactLevels.includes(alert.impact_level || "")) {
-        return false;
-      }
+      if (filters.areas.length > 0 && !filters.areas.some((area) => alert.affected_areas.includes(area))) return false;
+      if (filters.entities.length > 0 && !filters.entities.includes(normalizeEntityName(alert.entity))) return false;
+      if (filters.sectors.length > 0 && !filters.sectors.includes(alert.sector || "")) return false;
+      if (filters.impactLevels.length > 0 && !filters.impactLevels.includes(alert.impact_level || "")) return false;
 
       if (filters.dateFrom || filters.dateTo) {
         const alertDate = alert.publication_date ? new Date(alert.publication_date) : null;
         if (!alertDate) return false;
-
         if (filters.dateFrom && alertDate < filters.dateFrom) return false;
         if (filters.dateTo) {
           const endOfDay = new Date(filters.dateTo);
@@ -155,26 +164,36 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
 
       return true;
     });
-  }, [regulationAlerts, filters]);
 
-  const pinnedCount = useMemo(() => {
-    return regulationAlerts.filter(a => a.is_pinned_for_publication).length;
-  }, [regulationAlerts]);
+    return applyQuickFilter(base, quickFilter);
+  }, [regulationAlerts, filters, quickFilter, showRezagadas]);
 
-  const sortedAlerts = useMemo(() => {
-    return [...filteredAlerts].sort((a, b) => {
-      if (a.is_pinned_for_publication && !b.is_pinned_for_publication) return -1;
-      if (!a.is_pinned_for_publication && b.is_pinned_for_publication) return 1;
-      const dateA = new Date(a.updated_at).getTime();
-      const dateB = new Date(b.updated_at).getTime();
-      return dateB - dateA;
+  const pinnedCount = useMemo(
+    () => regulationAlerts.filter((a) => a.is_pinned_for_publication).length,
+    [regulationAlerts]
+  );
+
+  // Group filtered alerts by entity_group, sorted within each group.
+  const grouped = useMemo(() => {
+    const map = new Map<string, PeruAlert[]>();
+    filteredAlerts.forEach((a) => {
+      const key = getEntityGroup(a.entity);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(a);
     });
-  }, [filteredAlerts]);
+    const entries = Array.from(map.entries()).map(([group, items]) => ({
+      group,
+      items: sortAlerts(items, sortMode),
+    }));
+    // Sort groups by item count desc, then alphabetically.
+    entries.sort((a, b) => b.items.length - a.items.length || a.group.localeCompare(b.group));
+    return entries;
+  }, [filteredAlerts, sortMode]);
 
-  const alertCounts = useMemo(() => ({
-    total: regulationAlerts.length,
-    filtered: filteredAlerts.length,
-  }), [regulationAlerts, filteredAlerts]);
+  const alertCounts = useMemo(
+    () => ({ total: regulationAlerts.length, filtered: filteredAlerts.length }),
+    [regulationAlerts, filteredAlerts]
+  );
 
   const handleAlertClick = (alert: PeruAlert) => {
     markAsRead(alert.id);
@@ -182,51 +201,40 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
     setDrawerOpen(true);
   };
 
+  const toggleGroup = (g: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(g)) next.delete(g);
+      else next.add(g);
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-4">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <InboxIcon className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.total}</div>
-                <div className="text-xs text-muted-foreground">Total Normas</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Briefing diario */}
+      <BriefingKPIRow alerts={regulationAlerts} />
 
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <FileText className="h-4 w-4 text-amber-400" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.filtered}</div>
-                <div className="text-xs text-muted-foreground">Mostrando</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Pin className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{pinnedCount}</div>
-                <div className="text-xs text-muted-foreground">Pineados</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Pills + toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <QuickFilterPills
+          active={quickFilter}
+          onChange={setQuickFilter}
+          counts={{
+            all: regulationAlerts.length,
+            action: regulationAlerts.filter(isActionRequired).length,
+            bookmarks: regulationAlerts.filter((a) => a.is_pinned_for_publication).length,
+            recent: regulationAlerts.filter((a) => isRecentMovement(a, 7)).length,
+            low: regulationAlerts.filter((a) => getImpactScore(a) < 40).length,
+          }}
+        />
+        <InboxToolbar
+          sortMode={sortMode}
+          onSortModeChange={setSortMode}
+          showRezagadas={showRezagadas}
+          onShowRezagadasChange={setShowRezagadas}
+          rezagadasCount={regulationAlerts.filter(isRezagada).length}
+        />
       </div>
 
       {/* Filters */}
@@ -243,27 +251,36 @@ export function RegulationsInbox({ alerts, onTogglePin, onArchive, onUnarchive, 
         archivedCount={archivedCount}
       />
 
-      {/* Grid of Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {sortedAlerts.length === 0 ? (
-          <div className="col-span-full p-8 text-center text-muted-foreground">
+      {/* Feed agrupado por entidad */}
+      <div className="space-y-3">
+        {grouped.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground border border-dashed border-border/40 rounded-lg">
             {filters.onlyPinned
               ? "No hay normas pineadas. Pinea algunas desde las cards para verlas aquí."
-              : "No hay normas que coincidan con los filtros."
-            }
+              : "No hay normas que coincidan con los filtros."}
           </div>
         ) : (
-          sortedAlerts.map((alert) => (
-            <InboxAlertCard
-              key={alert.id}
-              alert={alert}
-              onClick={() => handleAlertClick(alert)}
-              onTogglePin={onTogglePin}
-              onArchive={onArchive}
-              onUnarchive={onUnarchive}
-              isArchiveView={filters.showArchived}
-              isUnread={!isRead(alert.id)}
-            />
+          grouped.map(({ group, items }) => (
+            <EntityGroupSection
+              key={group}
+              group={group}
+              count={items.length}
+              open={!collapsedGroups.has(group)}
+              onToggle={() => toggleGroup(group)}
+            >
+              {items.map((alert) => (
+                <InboxAlertCard
+                  key={alert.id}
+                  alert={alert}
+                  onClick={() => handleAlertClick(alert)}
+                  onTogglePin={onTogglePin}
+                  onArchive={onArchive}
+                  onUnarchive={onUnarchive}
+                  isArchiveView={filters.showArchived}
+                  isUnread={!isRead(alert.id)}
+                />
+              ))}
+            </EntityGroupSection>
           ))
         )}
       </div>
