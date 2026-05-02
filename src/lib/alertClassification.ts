@@ -96,3 +96,64 @@ export function applyQuickFilter(alerts: PeruAlert[], qf: QuickFilter): PeruAler
       return alerts;
   }
 }
+
+/** Internal kanban zones inside a single legislative-stage column. */
+export type CardZone = "action" | "monitor" | "low" | "lagging";
+
+/**
+ * Classify a card into one zone per Fase B spec:
+ *  - lagging: ya rezagada (6m / 12m según impacto)
+ *  - action:  impacto >= 70 OR urgencia >= 70
+ *  - monitor: impacto entre 40 y 69 (relevancia media)
+ *  - low:     impacto < 40 (bajo impacto)
+ * Bookmarks nunca caen en lagging (los protege).
+ */
+export function classifyCard(a: PeruAlert): CardZone {
+  if (isRezagada(a)) return "lagging";
+  if (isActionRequired(a)) return "action";
+  const impact = getImpactScore(a);
+  if (impact >= 40) return "monitor";
+  return "low";
+}
+
+export interface ZoneMeta {
+  id: CardZone;
+  label: string;
+  hint: string;
+  /** Tailwind classes for the dot + accent. */
+  dot: string;
+  text: string;
+}
+
+export const ZONE_META: Record<CardZone, ZoneMeta> = {
+  action: {
+    id: "action",
+    label: "Acción requerida",
+    hint: "Impacto o urgencia ≥ 70",
+    dot: "bg-destructive",
+    text: "text-destructive",
+  },
+  monitor: {
+    id: "monitor",
+    label: "Monitorear",
+    hint: "Impacto medio (40–69)",
+    dot: "bg-[hsl(var(--warning))]",
+    text: "text-[hsl(var(--warning))]",
+  },
+  low: {
+    id: "low",
+    label: "Bajo impacto",
+    hint: "Impacto < 40",
+    dot: "bg-muted-foreground",
+    text: "text-muted-foreground",
+  },
+  lagging: {
+    id: "lagging",
+    label: "Rezagadas",
+    hint: "Sin movimiento 6m (o 12m si impacto ≥ 70)",
+    dot: "bg-slate-500",
+    text: "text-slate-400",
+  },
+};
+
+export const ZONE_ORDER: CardZone[] = ["action", "monitor", "low", "lagging"];
