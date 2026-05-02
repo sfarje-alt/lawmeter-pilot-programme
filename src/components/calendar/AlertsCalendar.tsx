@@ -147,7 +147,7 @@ export function AlertsCalendar() {
   const navigate = useNavigate();
   const { alerts, archiveAlert, unarchiveAlert, updateSharedCommentary } = useAlerts();
 
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1));
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [expandedDate, setExpandedDate] = useState<Date | null>(null);
   const [view, setView] = useState<"day" | "week" | "month">("month");
