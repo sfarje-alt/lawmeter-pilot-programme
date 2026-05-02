@@ -42,6 +42,10 @@ interface InboxBriefingHeaderProps {
   onShowRezagadasChange: (v: boolean) => void;
   search: string;
   onSearchChange: (s: string) => void;
+  /** Extra controls rendered on the same toolbar row, after the Rezagadas toggle. */
+  toolbarExtras?: React.ReactNode;
+  /** Optional footer (active-filter chips) rendered under the toolbar row when expanded. */
+  toolbarFooter?: React.ReactNode;
 }
 
 const PILLS: { value: QuickFilter; label: string }[] = [
