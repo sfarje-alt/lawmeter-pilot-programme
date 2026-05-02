@@ -157,7 +157,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
       }
 
       // Hide rezagadas unless toggle is on
-      if (!showRezagadas && isRezagada(alert, 30)) {
+      if (!showRezagadas && isRezagada(alert)) {
         return false;
       }
 
@@ -281,7 +281,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
           onSortModeChange={setSortMode}
           showRezagadas={showRezagadas}
           onShowRezagadasChange={setShowRezagadas}
-          rezagadasCount={billAlerts.filter(a => isRezagada(a, 30)).length}
+          rezagadasCount={billAlerts.filter(a => isRezagada(a)).length}
         />
       </div>
 

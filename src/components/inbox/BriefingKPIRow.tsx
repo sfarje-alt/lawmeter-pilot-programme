@@ -21,21 +21,21 @@ export function BriefingKPIRow({ alerts }: BriefingKPIRowProps) {
     action: alerts.filter(isActionRequired).length,
     bookmarks: alerts.filter(a => a.is_pinned_for_publication).length,
     recent: alerts.filter(a => isRecentMovement(a, 7)).length,
-    rezagadas: alerts.filter(a => isRezagada(a, 30)).length,
+    rezagadas: alerts.filter(a => isRezagada(a)).length,
   }), [alerts]);
 
   const kpis = [
     {
       label: "Activas",
       value: stats.total,
-      hint: `${stats.rezagadas} rezagadas (>30d sin movimiento)`,
+      hint: `${stats.rezagadas} rezagadas (>6m, o >12m si impacto ≥ 70)`,
       icon: InboxIcon,
       tone: "primary" as const,
     },
     {
       label: "Acción requerida",
       value: stats.action,
-      hint: "Impacto y urgencia altos",
+      hint: "Impacto o urgencia ≥ 70",
       icon: AlertTriangle,
       tone: "destructive" as const,
     },
