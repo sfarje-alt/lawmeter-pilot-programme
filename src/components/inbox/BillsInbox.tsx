@@ -209,7 +209,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
     });
 
     return applyQuickFilter(base, quickFilter);
-  }, [billAlerts, filters, quickFilter, showRezagadas]);
+  }, [billAlerts, filters, quickFilter]);
 
   // Group alerts by kanban stage (legislative stage)
   const alertsByStage = useMemo(() => {
