@@ -12,9 +12,7 @@ import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
   applyQuickFilter,
   isRezagada,
-  isActionRequired,
-  isRecentMovement,
-  getImpactScore,
+  countByQuickFilter,
   getEntityGroup,
   sortAlerts,
   QuickFilter,
