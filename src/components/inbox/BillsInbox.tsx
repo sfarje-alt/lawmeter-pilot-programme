@@ -150,9 +150,14 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
 
   // Apply filters with multi-select support
   const filteredAlerts = useMemo(() => {
-    return billAlerts.filter((alert) => {
+    const base = billAlerts.filter((alert) => {
       // Pinned filter
       if (filters.onlyPinned && !alert.is_pinned_for_publication) {
+        return false;
+      }
+
+      // Hide rezagadas unless toggle is on
+      if (!showRezagadas && isRezagada(alert, 30)) {
         return false;
       }
 
@@ -203,7 +208,9 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
 
       return true;
     });
-  }, [billAlerts, filters]);
+
+    return applyQuickFilter(base, quickFilter);
+  }, [billAlerts, filters, quickFilter, showRezagadas]);
 
   // Group alerts by kanban stage (legislative stage)
   const alertsByStage = useMemo(() => {
@@ -221,18 +228,11 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
     });
 
     Object.keys(grouped).forEach((stage) => {
-      grouped[stage as BillKanbanStage].sort((a, b) => {
-        if (a.is_pinned_for_publication !== b.is_pinned_for_publication) {
-          return a.is_pinned_for_publication ? -1 : 1;
-        }
-        const dateA = new Date(a.updated_at).getTime();
-        const dateB = new Date(b.updated_at).getTime();
-        return dateB - dateA;
-      });
+      grouped[stage as BillKanbanStage] = sortAlerts(grouped[stage as BillKanbanStage], sortMode);
     });
 
     return grouped;
-  }, [filteredAlerts]);
+  }, [filteredAlerts, sortMode]);
 
   // Counts
   const alertCounts = useMemo(() => ({
