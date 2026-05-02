@@ -241,7 +241,7 @@ export function InboxBriefingHeader({
                 No hay temáticas en el dataset actual.
               </div>
             ) : (
-              <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pb-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 max-h-60 overflow-y-auto pb-1">
                 {tagCounts.map(({ tag, count }) => {
                   const isActive = selectedTags.includes(tag);
                   return (
@@ -250,16 +250,21 @@ export function InboxBriefingHeader({
                       type="button"
                       onClick={() => toggleTag(tag)}
                       className={cn(
-                        "inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs border transition-colors",
+                        "inline-flex items-center gap-2 h-7 px-2.5 rounded-full text-xs border transition-colors w-full text-left",
                         isActive
                           ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
                           : "bg-muted/30 border-border/50 text-foreground hover:bg-muted/50"
                       )}
                     >
-                      <span className="truncate max-w-[220px]">{tag}</span>
+                      <span
+                        aria-hidden
+                        className="h-2 w-2 rounded-full shrink-0 ring-1 ring-background/40"
+                        style={{ backgroundColor: tagDotColor(tag) }}
+                      />
+                      <span className="flex-1 truncate">{tag}</span>
                       <span
                         className={cn(
-                          "tabular-nums text-[10px] px-1 rounded",
+                          "tabular-nums text-[10px] px-1 rounded shrink-0",
                           isActive ? "bg-primary-foreground/20" : "bg-muted/60 text-muted-foreground"
                         )}
                       >
