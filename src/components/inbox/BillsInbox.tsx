@@ -9,10 +9,8 @@ import { PeruAlert, BILLS_KANBAN_COLUMNS, ALL_LEGISLATIVE_STAGES } from "@/data/
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import {
   applyQuickFilter,
+  countByQuickFilter,
   isRezagada,
-  isActionRequired,
-  isRecentMovement,
-  getImpactScore,
   sortAlerts,
   QuickFilter,
   SortMode,
@@ -267,13 +265,7 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
         <QuickFilterPills
           active={quickFilter}
           onChange={setQuickFilter}
-          counts={{
-            all: billAlerts.length,
-            action: billAlerts.filter(isActionRequired).length,
-            bookmarks: billAlerts.filter(a => a.is_pinned_for_publication).length,
-            recent: billAlerts.filter(a => isRecentMovement(a, 7)).length,
-            low: billAlerts.filter(a => getImpactScore(a) < 40).length,
-          }}
+          counts={countByQuickFilter(billAlerts)}
         />
         <InboxToolbar
           sortMode={sortMode}

@@ -12,9 +12,7 @@ import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
   applyQuickFilter,
   isRezagada,
-  isActionRequired,
-  isRecentMovement,
-  getImpactScore,
+  countByQuickFilter,
   getEntityGroup,
   sortAlerts,
   QuickFilter,
@@ -220,13 +218,7 @@ export function RegulationsInbox({
         <QuickFilterPills
           active={quickFilter}
           onChange={setQuickFilter}
-          counts={{
-            all: regulationAlerts.length,
-            action: regulationAlerts.filter(isActionRequired).length,
-            bookmarks: regulationAlerts.filter((a) => a.is_pinned_for_publication).length,
-            recent: regulationAlerts.filter((a) => isRecentMovement(a, 7)).length,
-            low: regulationAlerts.filter((a) => getImpactScore(a) < 40).length,
-          }}
+          counts={countByQuickFilter(regulationAlerts)}
         />
         <InboxToolbar
           sortMode={sortMode}

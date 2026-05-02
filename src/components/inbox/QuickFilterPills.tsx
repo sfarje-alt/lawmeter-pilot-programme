@@ -12,11 +12,18 @@ interface QuickFilterPillsProps {
 }
 
 const PILLS: { value: QuickFilter; label: string }[] = [
-  { value: "all", label: "Todas" },
-  { value: "action", label: "Acción requerida" },
+  { value: "all", label: "Todo" },
+  { value: "publicidad", label: "Publicidad" },
+  { value: "consumidor", label: "Consumidor" },
+  { value: "aml", label: "AML / UIF" },
+  { value: "fintech", label: "Pagos / Fintech" },
+  { value: "tributario", label: "Tributario" },
+  { value: "privacidad", label: "Privacidad / ANPD" },
+  { value: "deportiva", label: "Integridad deportiva" },
+  { value: "ciberseguridad", label: "Ciberseguridad" },
+  { value: "societario", label: "Societario" },
   { value: "bookmarks", label: "Bookmarks" },
-  { value: "recent", label: "Movimiento 7d" },
-  { value: "low", label: "Bajo impacto" },
+  { value: "otros", label: "Otros" },
 ];
 
 export function QuickFilterPills({ active, onChange, counts }: QuickFilterPillsProps) {

@@ -92,18 +92,82 @@ export function sortAlerts(alerts: PeruAlert[], mode: SortMode): PeruAlert[] {
   return copy;
 }
 
-export type QuickFilter = "all" | "action" | "bookmarks" | "recent" | "low";
+/**
+ * Quick-filter por temática. "all" muestra todo, "bookmarks" filtra por
+ * pin/bookmark, "otros" agrupa todo lo que no encaja en una temática conocida.
+ */
+export type QuickFilter =
+  | "all"
+  | "publicidad"
+  | "consumidor"
+  | "aml"
+  | "fintech"
+  | "tributario"
+  | "privacidad"
+  | "deportiva"
+  | "ciberseguridad"
+  | "societario"
+  | "bookmarks"
+  | "otros";
+
+/** Patrones (regex case-insensitive) por temática contra el área de interés. */
+const TOPIC_PATTERNS: Record<Exclude<QuickFilter, "all" | "bookmarks" | "otros">, RegExp> = {
+  publicidad: /publicidad|advertising/i,
+  consumidor: /consumidor|consumer/i,
+  aml: /\baml\b|uif|lavado|antilavado|anti-?lavado|money\s*laundering/i,
+  fintech: /fintech|pagos|payment|medios de pago/i,
+  tributario: /tributari|fiscal|impuest|\btax\b|sunat/i,
+  privacidad: /privacidad|datos personales|anpd|gdpr|protecci[oó]n de datos/i,
+  deportiva: /deportiv|integridad deportiva|sport/i,
+  ciberseguridad: /ciberseg|cybersec|seguridad de la informaci[oó]n|infosec/i,
+  societario: /societari|gobierno corporativo|corporate governance|mercantil/i,
+};
+
+const ALL_TOPIC_PATTERNS = Object.values(TOPIC_PATTERNS);
+
+function getAlertTopics(a: PeruAlert): string[] {
+  const fromAreas = Array.isArray(a.affected_areas) ? a.affected_areas : [];
+  const fromInterest = Array.isArray((a as any).area_de_interes)
+    ? ((a as any).area_de_interes as string[])
+    : [];
+  return [...fromAreas, ...fromInterest].filter(
+    (s): s is string => typeof s === "string" && s.length > 0,
+  );
+}
+
+function matchesTopic(a: PeruAlert, pattern: RegExp): boolean {
+  return getAlertTopics(a).some((t) => pattern.test(t));
+}
+
+function isOtros(a: PeruAlert): boolean {
+  const topics = getAlertTopics(a);
+  if (topics.length === 0) return true;
+  return !topics.some((t) => ALL_TOPIC_PATTERNS.some((re) => re.test(t)));
+}
 
 export function applyQuickFilter(alerts: PeruAlert[], qf: QuickFilter): PeruAlert[] {
-  switch (qf) {
-    case "action": return alerts.filter(isActionRequired);
-    case "bookmarks": return alerts.filter(a => a.is_pinned_for_publication);
-    case "recent": return alerts.filter(a => isRecentMovement(a, 7));
-    case "low": return alerts.filter(a => getImpactScore(a) < 40);
-    case "all":
-    default:
-      return alerts;
-  }
+  if (qf === "all") return alerts;
+  if (qf === "bookmarks") return alerts.filter((a) => a.is_pinned_for_publication);
+  if (qf === "otros") return alerts.filter(isOtros);
+  const pattern = TOPIC_PATTERNS[qf];
+  return alerts.filter((a) => matchesTopic(a, pattern));
+}
+
+export function countByQuickFilter(alerts: PeruAlert[]): Record<QuickFilter, number> {
+  return {
+    all: alerts.length,
+    publicidad: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.publicidad)).length,
+    consumidor: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.consumidor)).length,
+    aml: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.aml)).length,
+    fintech: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.fintech)).length,
+    tributario: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.tributario)).length,
+    privacidad: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.privacidad)).length,
+    deportiva: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.deportiva)).length,
+    ciberseguridad: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.ciberseguridad)).length,
+    societario: alerts.filter((a) => matchesTopic(a, TOPIC_PATTERNS.societario)).length,
+    bookmarks: alerts.filter((a) => a.is_pinned_for_publication).length,
+    otros: alerts.filter(isOtros).length,
+  };
 }
 
 /** Internal kanban zones inside a single legislative-stage column. */
