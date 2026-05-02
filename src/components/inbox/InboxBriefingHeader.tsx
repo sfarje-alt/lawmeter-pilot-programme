@@ -326,7 +326,7 @@ export function InboxBriefingHeader({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="z-50 bg-popover">
-                  {(Object.keys(SORT_LABELS) as SortMode[]).map((m) => (
+                  {(Object.keys(SORT_LABELS) as Exclude<SortMode, "date">[]).map((m) => (
                     <DropdownMenuItem key={m} onClick={() => onSortModeChange(m)}>
                       {SORT_LABELS[m]}
                     </DropdownMenuItem>
