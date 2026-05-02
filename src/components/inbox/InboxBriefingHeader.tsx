@@ -1,11 +1,10 @@
-// Header de la bandeja: 3 zonas — Briefing, Filtrar por temática, Búsqueda y orden.
+// Header de la bandeja: 3 zonas — Briefing, Filtrar por temática (tags), Búsqueda y orden.
 // Zone 1 siempre visible; Zone 2 y 3 colapsadas por default.
 
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Toggle } from "@/components/ui/toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +16,6 @@ import {
   ArrowUpDown,
   ChevronDown,
   ChevronRight,
-  Hourglass,
   Search,
   X,
 } from "lucide-react";
@@ -25,43 +23,25 @@ import { cn } from "@/lib/utils";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import {
   BriefingFilter,
-  QuickFilter,
   SortMode,
   countBriefing,
+  aggregateTagCounts,
 } from "@/lib/alertClassification";
 
 interface InboxBriefingHeaderProps {
   alerts: PeruAlert[];
   briefingFilter: BriefingFilter;
   onBriefingFilterChange: (bf: BriefingFilter) => void;
-  quickFilter: QuickFilter;
-  onQuickFilterChange: (qf: QuickFilter) => void;
+  /** Tags seleccionados (multi-select desde tag-cloud). */
+  selectedTags: string[];
+  onSelectedTagsChange: (next: string[]) => void;
   sortMode: SortMode;
   onSortModeChange: (m: SortMode) => void;
-  showRezagadas: boolean;
-  onShowRezagadasChange: (v: boolean) => void;
   search: string;
   onSearchChange: (s: string) => void;
-  /** Extra controls rendered on the same toolbar row, after the Rezagadas toggle. */
+  /** Extras (Fechas, Archivadas) en la fila del toolbar. */
   toolbarExtras?: React.ReactNode;
-  /** Optional footer (active-filter chips) rendered under the toolbar row when expanded. */
-  toolbarFooter?: React.ReactNode;
 }
-
-const PILLS: { value: QuickFilter; label: string }[] = [
-  { value: "all", label: "Todo" },
-  { value: "publicidad", label: "Publicidad" },
-  { value: "consumidor", label: "Consumidor" },
-  { value: "aml", label: "AML / UIF" },
-  { value: "fintech", label: "Pagos / Fintech" },
-  { value: "tributario", label: "Tributario" },
-  { value: "privacidad", label: "Privacidad / ANPD" },
-  { value: "deportiva", label: "Integridad deportiva" },
-  { value: "ciberseguridad", label: "Ciberseguridad" },
-  { value: "societario", label: "Societario" },
-  { value: "bookmarks", label: "Bookmarks" },
-  { value: "otros", label: "Otros" },
-];
 
 const SORT_LABELS: Record<SortMode, string> = {
   movement: "Último movimiento",
@@ -133,46 +113,49 @@ export function InboxBriefingHeader({
   alerts,
   briefingFilter,
   onBriefingFilterChange,
-  quickFilter,
-  onQuickFilterChange,
+  selectedTags,
+  onSelectedTagsChange,
   sortMode,
   onSortModeChange,
-  showRezagadas,
-  onShowRezagadasChange,
   search,
   onSearchChange,
   toolbarExtras,
-  toolbarFooter,
 }: InboxBriefingHeaderProps) {
   const counts = useMemo(() => countBriefing(alerts), [alerts]);
   const briefingDate = useMemo(() => formatBriefingDate(new Date()), []);
+  const tagCounts = useMemo(() => aggregateTagCounts(alerts), [alerts]);
 
   const [topicsOpen, setTopicsOpen] = useState(false);
   const [toolbarOpen, setToolbarOpen] = useState(false);
 
-  const activePillLabel =
-    quickFilter !== "all" ? PILLS.find((p) => p.value === quickFilter)?.label : null;
   const activeBriefingLabel = briefingFilter ? BRIEFING_LABELS[briefingFilter] : null;
-  const activeFilterChip = activeBriefingLabel || activePillLabel;
+  const activeFilterChip =
+    activeBriefingLabel ||
+    (selectedTags.length > 0
+      ? selectedTags.length === 1
+        ? selectedTags[0]
+        : `${selectedTags.length} temáticas`
+      : null);
 
   const toggleBriefing = (bf: Exclude<BriefingFilter, null>) => {
     if (briefingFilter === bf) {
       onBriefingFilterChange(null);
     } else {
       onBriefingFilterChange(bf);
-      // Mutually exclusive with topic pill
-      if (quickFilter !== "all") onQuickFilterChange("all");
+      if (selectedTags.length) onSelectedTagsChange([]);
     }
   };
 
-  const setPill = (qf: QuickFilter) => {
-    onQuickFilterChange(qf);
-    if (qf !== "all" && briefingFilter) onBriefingFilterChange(null);
+  const toggleTag = (tag: string) => {
+    const has = selectedTags.includes(tag);
+    const next = has ? selectedTags.filter((t) => t !== tag) : [...selectedTags, tag];
+    onSelectedTagsChange(next);
+    if (next.length > 0 && briefingFilter) onBriefingFilterChange(null);
   };
 
   const clearActiveFilter = () => {
     if (briefingFilter) onBriefingFilterChange(null);
-    if (quickFilter !== "all") onQuickFilterChange("all");
+    if (selectedTags.length) onSelectedTagsChange([]);
   };
 
   return (
@@ -216,52 +199,76 @@ export function InboxBriefingHeader({
 
       <div className="border-t border-border/30" />
 
-      {/* ZONE 2 — TOPIC PILLS */}
+      {/* ZONE 2 — TAG CLOUD (filtros por temática reales) */}
       <Collapsible open={topicsOpen} onOpenChange={setTopicsOpen}>
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {topicsOpen ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )}
-            <span>Filtrar por temática</span>
-            {!topicsOpen && activePillLabel && (
-              <span className="text-foreground">· {activePillLabel}</span>
-            )}
-          </button>
-        </CollapsibleTrigger>
+        <div className="flex items-center justify-between gap-3">
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {topicsOpen ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+              <span>Filtrar por temática</span>
+              {!topicsOpen && selectedTags.length > 0 && (
+                <span className="text-foreground">· {selectedTags.length} seleccionadas</span>
+              )}
+            </button>
+          </CollapsibleTrigger>
+          {topicsOpen && selectedTags.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onSelectedTagsChange([])}
+              className="text-xs text-primary hover:underline"
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
         <CollapsibleContent className="pt-3">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {PILLS.map((p) => {
-              const isActive = quickFilter === p.value;
-              return (
-                <Button
-                  key={p.value}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPill(p.value)}
-                  className={cn(
-                    "h-8 rounded-full text-xs whitespace-nowrap shrink-0 border-border/50",
-                    isActive
-                      ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-                      : "bg-muted/30 hover:bg-muted/50"
-                  )}
-                >
-                  {p.label}
-                </Button>
-              );
-            })}
-          </div>
+          {tagCounts.length === 0 ? (
+            <div className="text-xs text-muted-foreground italic px-1">
+              No hay temáticas en el dataset actual.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pb-1">
+              {tagCounts.map(({ tag, count }) => {
+                const isActive = selectedTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs border transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+                        : "bg-muted/30 border-border/50 text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <span className="truncate max-w-[220px]">{tag}</span>
+                    <span
+                      className={cn(
+                        "tabular-nums text-[10px] px-1 rounded",
+                        isActive ? "bg-primary-foreground/20" : "bg-muted/60 text-muted-foreground"
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </CollapsibleContent>
       </Collapsible>
 
       <div className="border-t border-border/30" />
 
-      {/* ZONE 3 — TOOLBAR */}
+      {/* ZONE 3 — TOOLBAR: search · Orden · Fechas · Archivadas */}
       <Collapsible open={toolbarOpen} onOpenChange={setToolbarOpen}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <CollapsibleTrigger asChild>
@@ -322,19 +329,8 @@ export function InboxBriefingHeader({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Toggle
-              pressed={showRezagadas}
-              onPressedChange={onShowRezagadasChange}
-              className="gap-1.5 h-8 text-xs data-[state=on]:bg-muted data-[state=on]:text-foreground"
-              aria-label="Mostrar rezagadas"
-            >
-              <Hourglass className="h-3.5 w-3.5" />
-              <span>Rezagadas</span>
-            </Toggle>
-
             {toolbarExtras}
           </div>
-          {toolbarFooter && <div className="pt-3">{toolbarFooter}</div>}
         </CollapsibleContent>
       </Collapsible>
     </div>
