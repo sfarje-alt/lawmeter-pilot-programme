@@ -260,77 +260,29 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
 
   return (
     <div className="space-y-4">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <InboxIcon className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{pendingCount}</div>
-                <div className="text-xs text-muted-foreground">Pendientes</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Briefing diario */}
+      <BriefingKPIRow alerts={billAlerts} />
 
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Scale className="h-4 w-4 text-blue-400" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.byStage.comision}</div>
-                <div className="text-xs text-muted-foreground">En Comisión</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Scale className="h-4 w-4 text-purple-400" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.byStage.pleno}</div>
-                <div className="text-xs text-muted-foreground">En Pleno</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-500/10">
-                <Scale className="h-4 w-4 text-orange-400" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{alertCounts.byStage.tramite_final}</div>
-                <div className="text-xs text-muted-foreground">Trámite Final</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Pin className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">{pinnedCount}</div>
-                <div className="text-xs text-muted-foreground">Pineados</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Pills + toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <QuickFilterPills
+          active={quickFilter}
+          onChange={setQuickFilter}
+          counts={{
+            all: billAlerts.length,
+            action: billAlerts.filter(isActionRequired).length,
+            bookmarks: billAlerts.filter(a => a.is_pinned_for_publication).length,
+            recent: billAlerts.filter(a => isRecentMovement(a, 7)).length,
+            low: billAlerts.filter(a => getImpactScore(a) < 40).length,
+          }}
+        />
+        <InboxToolbar
+          sortMode={sortMode}
+          onSortModeChange={setSortMode}
+          showRezagadas={showRezagadas}
+          onShowRezagadasChange={setShowRezagadas}
+          rezagadasCount={billAlerts.filter(a => isRezagada(a, 30)).length}
+        />
       </div>
 
       {/* Filters */}
