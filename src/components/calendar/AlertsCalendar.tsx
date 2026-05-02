@@ -354,15 +354,6 @@ export function AlertsCalendar() {
             <Settings className="h-4 w-4" />
             Reglas de Fecha
           </Button>
-          <Button
-            variant={showFilters ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowFilters((v) => !v)}
-            className="gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filtros{activeCount > 0 ? ` · ${activeCount}` : ""}
-          </Button>
         </div>
       </div>
 
