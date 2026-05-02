@@ -519,6 +519,8 @@ export function InboxAlertCard({
           </div>
         )}
       </div>
+        </div>
+      </div>
     </Card>
   );
 }
