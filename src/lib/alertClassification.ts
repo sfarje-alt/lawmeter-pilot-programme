@@ -73,7 +73,14 @@ export function isRecentMovement(a: PeruAlert, days = 7): boolean {
   return d !== null && d <= days;
 }
 
-export type SortMode = "movement" | "impact" | "urgency";
+export type SortMode = "movement" | "impact" | "urgency" | "date";
+
+function getIngestionTime(a: PeruAlert): number {
+  const raw = (a as any).created_at || a.updated_at;
+  if (!raw) return 0;
+  const t = new Date(raw).getTime();
+  return isNaN(t) ? 0 : t;
+}
 
 export function sortAlerts(alerts: PeruAlert[], mode: SortMode): PeruAlert[] {
   const copy = [...alerts];
@@ -84,12 +91,34 @@ export function sortAlerts(alerts: PeruAlert[], mode: SortMode): PeruAlert[] {
     }
     if (mode === "impact") return getImpactScore(b) - getImpactScore(a);
     if (mode === "urgency") return getUrgencyScore(b) - getUrgencyScore(a);
+    if (mode === "date") return getIngestionTime(b) - getIngestionTime(a);
     // movement (most recent first)
     const da = getLastMovementDate(a)?.getTime() ?? 0;
     const db = getLastMovementDate(b)?.getTime() ?? 0;
     return db - da;
   });
   return copy;
+}
+
+/** Briefing filter: top-level filter activated from the briefing cards. */
+export type BriefingFilter = "action" | "new24" | "bookmarks" | "lagging" | null;
+
+export function applyBriefingFilter(alerts: PeruAlert[], bf: BriefingFilter): PeruAlert[] {
+  if (!bf) return alerts;
+  if (bf === "action") return alerts.filter(isActionRequired);
+  if (bf === "new24") return alerts.filter((a) => isRecentMovement(a, 1));
+  if (bf === "bookmarks") return alerts.filter((a) => a.is_pinned_for_publication);
+  if (bf === "lagging") return alerts.filter(isRezagada);
+  return alerts;
+}
+
+export function countBriefing(alerts: PeruAlert[]): Record<Exclude<BriefingFilter, null>, number> {
+  return {
+    action: alerts.filter(isActionRequired).length,
+    new24: alerts.filter((a) => isRecentMovement(a, 1)).length,
+    bookmarks: alerts.filter((a) => a.is_pinned_for_publication).length,
+    lagging: alerts.filter(isRezagada).length,
+  };
 }
 
 /**
