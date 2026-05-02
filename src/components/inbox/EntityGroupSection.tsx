@@ -37,37 +37,42 @@ export function EntityGroupSection({
   const Icon = ICONS[meta.iconName];
   return (
     <Collapsible open={open} onOpenChange={onToggle}>
-      <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/30 transition-colors text-left"
-        >
-          <ChevronDown
+      <div className="rounded-lg border border-border/40 bg-card/40 overflow-hidden">
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
             className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform shrink-0",
-              !open && "-rotate-90",
-            )}
-          />
-          <div
-            className={cn(
-              "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
-              meta.bgClass,
+              "flex items-center gap-3 w-full px-3 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left",
+              open && "border-b border-border/40",
             )}
           >
-            <Icon className={cn("h-4 w-4", meta.toneClass)} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-foreground truncate">{meta.label}</div>
-            <div className="text-[11px] text-muted-foreground truncate">{meta.subtitle}</div>
-          </div>
-          <Badge variant="secondary" className="h-5 px-2 text-xs shrink-0">
-            {count}
-          </Badge>
-        </button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="flex flex-col gap-2 pt-3 pb-1">{children}</div>
-      </CollapsibleContent>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                !open && "-rotate-90",
+              )}
+            />
+            <div
+              className={cn(
+                "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
+                meta.bgClass,
+              )}
+            >
+              <Icon className={cn("h-4 w-4", meta.toneClass)} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-foreground truncate">{meta.label}</div>
+              <div className="text-[11px] text-muted-foreground truncate">{meta.subtitle}</div>
+            </div>
+            <Badge variant="secondary" className="h-5 px-2 text-xs shrink-0">
+              {count}
+            </Badge>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="flex flex-col gap-2 px-3 py-3">{children}</div>
+        </CollapsibleContent>
+      </div>
     </Collapsible>
   );
 }
