@@ -42,6 +42,10 @@ interface InboxBriefingHeaderProps {
   onShowRezagadasChange: (v: boolean) => void;
   search: string;
   onSearchChange: (s: string) => void;
+  /** Extra controls rendered on the same toolbar row, after the Rezagadas toggle. */
+  toolbarExtras?: React.ReactNode;
+  /** Optional footer (active-filter chips) rendered under the toolbar row when expanded. */
+  toolbarFooter?: React.ReactNode;
 }
 
 const PILLS: { value: QuickFilter; label: string }[] = [
@@ -137,6 +141,8 @@ export function InboxBriefingHeader({
   onShowRezagadasChange,
   search,
   onSearchChange,
+  toolbarExtras,
+  toolbarFooter,
 }: InboxBriefingHeaderProps) {
   const counts = useMemo(() => countBriefing(alerts), [alerts]);
   const briefingDate = useMemo(() => formatBriefingDate(new Date()), []);
@@ -325,7 +331,10 @@ export function InboxBriefingHeader({
               <Hourglass className="h-3.5 w-3.5" />
               <span>Rezagadas</span>
             </Toggle>
+
+            {toolbarExtras}
           </div>
+          {toolbarFooter && <div className="pt-3">{toolbarFooter}</div>}
         </CollapsibleContent>
       </Collapsible>
     </div>

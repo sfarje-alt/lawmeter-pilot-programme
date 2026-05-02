@@ -1,10 +1,20 @@
 import { useState, useMemo, useEffect } from "react";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
-import { RegulationsFilterBar } from "./RegulationsFilterBar";
 import { InboxAlertCard } from "./InboxAlertCard";
 import { InboxBriefingHeader } from "./InboxBriefingHeader";
+import {
+  AdvancedFiltersButton,
+  ArchivedToggle,
+  DateRangeButton,
+  FilterGroup,
+} from "./InboxToolbarExtras";
 import { EntityGroupSection } from "./EntityGroupSection";
-import { PeruAlert } from "@/data/peruAlertsMockData";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { PeruAlert, IMPACT_LEVELS } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
 import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
@@ -208,6 +218,139 @@ export function RegulationsInbox({
     });
   };
 
+  const setF = (patch: Partial<RegulationsFilters>) => setFilters((f) => ({ ...f, ...patch }));
+
+  const advancedGroups: FilterGroup[] = [
+    {
+      key: "impact",
+      placeholder: "Impacto: Todos",
+      options: availableImpactLevels.map((level) => {
+        const info = IMPACT_LEVELS.find((l) => l.value === level);
+        return {
+          value: level,
+          label: info?.label || level,
+          icon: (
+            <div
+              className={cn(
+                "w-2 h-2 rounded-full",
+                level === "positivo" && "bg-green-500",
+                level === "leve" && "bg-gray-400",
+                level === "medio" && "bg-yellow-500",
+                level === "grave" && "bg-red-500"
+              )}
+            />
+          ),
+        };
+      }),
+      selected: filters.impactLevels,
+      onChange: (impactLevels) => setF({ impactLevels }),
+    },
+    {
+      key: "sectors",
+      placeholder: "Sector: Todos",
+      options: availableSectors.map((s) => ({ value: s, label: s })),
+      selected: filters.sectors,
+      onChange: (sectors) => setF({ sectors }),
+    },
+    {
+      key: "entities",
+      placeholder: "Institución: Todas",
+      options: availableEntities.map((e) => ({ value: e, label: e })),
+      selected: filters.entities,
+      onChange: (entities) => setF({ entities }),
+    },
+    {
+      key: "areas",
+      placeholder: "Área: Todas",
+      options: availableAreas.map((a) => ({ value: a, label: a })),
+      selected: filters.areas,
+      onChange: (areas) => setF({ areas }),
+    },
+  ];
+
+  const hasActiveFilters =
+    filters.impactLevels.length > 0 ||
+    filters.sectors.length > 0 ||
+    filters.entities.length > 0 ||
+    filters.areas.length > 0 ||
+    !!filters.dateFrom ||
+    !!filters.dateTo;
+
+  const activeFilterChips = (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-xs text-muted-foreground">
+        Mostrando {alertCounts.filtered} de {alertCounts.total} normas:
+      </span>
+      {filters.impactLevels.map((level) => (
+        <Badge
+          key={level}
+          variant="secondary"
+          className={cn("gap-1 text-xs", IMPACT_LEVELS.find((l) => l.value === level)?.color)}
+        >
+          Impacto: {IMPACT_LEVELS.find((l) => l.value === level)?.label || level}
+          <button
+            onClick={() => setF({ impactLevels: filters.impactLevels.filter((l) => l !== level) })}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {filters.sectors.map((sector) => (
+        <Badge key={sector} variant="secondary" className="gap-1 text-xs">
+          Sector: {sector}
+          <button onClick={() => setF({ sectors: filters.sectors.filter((s) => s !== sector) })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {filters.entities.map((entity) => (
+        <Badge key={entity} variant="secondary" className="gap-1 text-xs">
+          Institución: {entity}
+          <button onClick={() => setF({ entities: filters.entities.filter((e) => e !== entity) })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {filters.areas.map((area) => (
+        <Badge key={area} variant="secondary" className="gap-1 text-xs">
+          Área: {area}
+          <button onClick={() => setF({ areas: filters.areas.filter((a) => a !== area) })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      {(filters.dateFrom || filters.dateTo) && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {filters.dateFrom && filters.dateTo
+            ? `${format(filters.dateFrom, "dd/MM/yy")} - ${format(filters.dateTo, "dd/MM/yy")}`
+            : filters.dateFrom
+            ? `Desde ${format(filters.dateFrom, "dd/MM/yy")}`
+            : `Hasta ${format(filters.dateTo!, "dd/MM/yy")}`}
+          <button onClick={() => setF({ dateFrom: undefined, dateTo: undefined })}>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() =>
+          setF({
+            impactLevels: [],
+            sectors: [],
+            entities: [],
+            areas: [],
+            dateFrom: undefined,
+            dateTo: undefined,
+          })
+        }
+        className="h-6 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-3 w-3 mr-1" /> Limpiar
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       <InboxBriefingHeader
@@ -221,21 +364,23 @@ export function RegulationsInbox({
         showRezagadas={showRezagadas}
         onShowRezagadasChange={setShowRezagadas}
         search={filters.search}
-        onSearchChange={(s) => setFilters((f) => ({ ...f, search: s }))}
-      />
-
-      {/* Filters */}
-      <RegulationsFilterBar
-        filters={filters}
-        onFiltersChange={setFilters}
-        availableEntities={availableEntities}
-        availableSectors={availableSectors}
-        availableImpactLevels={availableImpactLevels}
-        availableAreas={availableAreas}
-        totalCount={alertCounts.total}
-        filteredCount={alertCounts.filtered}
-        pinnedCount={pinnedCount}
-        archivedCount={archivedCount}
+        onSearchChange={(s) => setF({ search: s })}
+        toolbarExtras={
+          <>
+            <DateRangeButton
+              dateFrom={filters.dateFrom}
+              dateTo={filters.dateTo}
+              onChange={(from, to) => setF({ dateFrom: from, dateTo: to })}
+            />
+            <ArchivedToggle
+              pressed={filters.showArchived}
+              onPressedChange={(v) => setF({ showArchived: v })}
+              count={archivedCount}
+            />
+            <AdvancedFiltersButton groups={advancedGroups} />
+          </>
+        }
+        toolbarFooter={hasActiveFilters ? activeFilterChips : null}
       />
 
       {/* Feed agrupado por entidad */}
