@@ -205,8 +205,8 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
       return true;
     });
 
-    return applyQuickFilter(base, quickFilter);
-  }, [billAlerts, filters, quickFilter]);
+    return applyBriefingFilter(applyQuickFilter(base, quickFilter), briefingFilter);
+  }, [billAlerts, filters, quickFilter, briefingFilter]);
 
   // Group alerts by kanban stage (legislative stage)
   const alertsByStage = useMemo(() => {
@@ -256,24 +256,19 @@ export function BillsInbox({ alerts, onTogglePin, onArchive, onUnarchive, onUpda
 
   return (
     <div className="space-y-4">
-      {/* Briefing diario */}
-      <BriefingKPIRow alerts={billAlerts} />
-
-      {/* Pills + toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <QuickFilterPills
-          active={quickFilter}
-          onChange={setQuickFilter}
-          counts={countByQuickFilter(billAlerts)}
-        />
-        <InboxToolbar
-          sortMode={sortMode}
-          onSortModeChange={setSortMode}
-          showRezagadas={showRezagadas}
-          onShowRezagadasChange={setShowRezagadas}
-          rezagadasCount={billAlerts.filter(a => isRezagada(a)).length}
-        />
-      </div>
+      <InboxBriefingHeader
+        alerts={billAlerts}
+        briefingFilter={briefingFilter}
+        onBriefingFilterChange={setBriefingFilter}
+        quickFilter={quickFilter}
+        onQuickFilterChange={setQuickFilter}
+        sortMode={sortMode}
+        onSortModeChange={setSortMode}
+        showRezagadas={showRezagadas}
+        onShowRezagadasChange={setShowRezagadas}
+        search={filters.search}
+        onSearchChange={(s) => setFilters((f) => ({ ...f, search: s }))}
+      />
 
       {/* Filters */}
       <BillsFilterBar
