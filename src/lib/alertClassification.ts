@@ -43,16 +43,19 @@ export function getDaysSinceMovement(a: PeruAlert): number | null {
   return Math.floor((Date.now() - d.getTime()) / DAY_MS);
 }
 
-/** Lagging: no movement in N days (default 30) and not bookmarked. */
-export function isRezagada(a: PeruAlert, days = 30): boolean {
+/** Lagging: no movement in 6 months (or 12 months if impacto >= 70). Bookmarks excluded. */
+export function isRezagada(a: PeruAlert): boolean {
   if (a.is_pinned_for_publication) return false;
-  const d = getDaysSinceMovement(a);
-  return d !== null && d >= days;
+  const days = getDaysSinceMovement(a);
+  if (days === null) return false;
+  const months = days / 30;
+  const thresholdMonths = getImpactScore(a) >= 70 ? 12 : 6;
+  return months >= thresholdMonths;
 }
 
-/** Action required: high impact AND high urgency, not bookmark-protected from view. */
+/** Action required: high impact OR high urgency (>= 70). */
 export function isActionRequired(a: PeruAlert): boolean {
-  return getImpactScore(a) >= 60 && getUrgencyScore(a) >= 60;
+  return getImpactScore(a) >= 70 || getUrgencyScore(a) >= 70;
 }
 
 /** Recent movement (last N days, default 7). */
