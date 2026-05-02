@@ -87,8 +87,12 @@ export function sortAlerts(alerts: PeruAlert[], mode: SortMode): PeruAlert[] {
   copy.sort((a, b) => {
     if (mode === "impact") return getImpactScore(b) - getImpactScore(a);
     if (mode === "urgency") return getUrgencyScore(b) - getUrgencyScore(a);
-    // movement & date → ordenar por fecha de ingesta (más reciente primero)
-    return getIngestionTime(b) - getIngestionTime(a);
+    // movement & date → fecha real de movimiento legislativo
+    // (stage_date → project_date/fecha_presentacion → publication_date → updated_at).
+    // Si falta, cae a fecha de ingesta para no perder la tarjeta.
+    const da = getLastMovementDate(a)?.getTime() ?? getIngestionTime(a);
+    const db = getLastMovementDate(b)?.getTime() ?? getIngestionTime(b);
+    return db - da;
   });
   return copy;
 }
