@@ -236,18 +236,26 @@ export function InboxAlertCard({
             </button>
           )}
           {!isArchived && onTogglePin && (
-            <button
-              onClick={handlePinClick}
-              className="p-1 rounded hover:bg-white/10 transition-colors"
-              title={isPinned ? "Quitar bookmark" : "Marcar bookmark"}
-            >
-              <Bookmark
-                className={cn(
-                  "h-3.5 w-3.5 transition-colors",
-                  isPinned ? "fill-primary text-primary" : "text-muted-foreground"
-                )}
-              />
-            </button>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handlePinClick}
+                    className="p-1 rounded hover:bg-white/10 transition-colors"
+                  >
+                    <Bookmark
+                      className={cn(
+                        "h-3.5 w-3.5 transition-colors",
+                        isPinned ? "fill-primary text-primary" : "text-muted-foreground"
+                      )}
+                    />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">Bookmark protege esta alerta de ser archivada automáticamente a los 30 días y de pasar a Rezagadas por inactividad.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           {(onArchive || onUnarchive) && (
             <button
