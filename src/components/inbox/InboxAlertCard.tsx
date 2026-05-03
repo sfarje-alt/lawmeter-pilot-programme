@@ -252,7 +252,7 @@ export function InboxAlertCard({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-xs">Bookmark protege esta alerta de ser archivada automáticamente a los 30 días y de pasar a Rezagadas por inactividad.</p>
+                  <p className="text-xs">Bookmark evita que esta alerta se archive automáticamente a los 30 días. Las alertas bookmarkeadas permanecen en la bandeja indefinidamente — si llevan más de 6 meses sin movimiento (o 12 meses si son de alto impacto), pasan a la sección Rezagadas pero no desaparecen.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
