@@ -295,7 +295,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap))
       .filter((a): a is PeruAlert => a !== null);
 
-    setAlerts(purgeOldArchivedAlerts(applyAutoArchive(mapped)));
+    setAlerts(purgeOldArchivedAlerts(mapped));
     setLoading(false);
   }, [orgId]);
 
@@ -324,7 +324,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const interval = setInterval(() => {
       setAlerts((prev) => {
-        const next = purgeOldArchivedAlerts(applyAutoArchive(prev));
+        const next = purgeOldArchivedAlerts(prev);
         return next.length === prev.length ? prev : next;
       });
     }, 60 * 60 * 1000);

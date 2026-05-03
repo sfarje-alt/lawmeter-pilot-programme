@@ -249,7 +249,7 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
   lagging: {
     id: "lagging",
     label: "Rezagadas",
-    hint: "Sin movimiento en el Congreso: +6 meses (o +12 meses si impacto alto).",
+    hint: "Sin movimiento en el Congreso: +6 meses (o +12 meses si impacto alto). Bookmark protege de esto.",
     dot: "bg-slate-500",
     text: "text-slate-400",
   },
