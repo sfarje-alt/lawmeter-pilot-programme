@@ -5,6 +5,7 @@ import { InboxBriefingHeader } from "./InboxBriefingHeader";
 import { ArchivedToggle, QuickDateButton } from "./InboxToolbarExtras";
 import { PeruAlert, BILLS_KANBAN_COLUMNS } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   applyBriefingFilter,
   filterByTags,
@@ -38,12 +39,12 @@ export function BillsInbox({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const { isRead, markAsRead } = useReadAlerts();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("movement");
-  const [search, setSearch] = useState("");
-  const [quickDate, setQuickDate] = useState<QuickDateRange>(null);
-  const [showArchived, setShowArchived] = useState(false);
+  const [selectedTags, setSelectedTags] = usePersistedState<string[]>("inbox:bills:tags", []);
+  const [briefingFilter, setBriefingFilter] = usePersistedState<BriefingFilter>("inbox:bills:briefing", null);
+  const [sortMode, setSortMode] = usePersistedState<SortMode>("inbox:bills:sort", "movement");
+  const [search, setSearch] = usePersistedState<string>("inbox:bills:search", "");
+  const [quickDate, setQuickDate] = usePersistedState<QuickDateRange>("inbox:bills:quickDate", null);
+  const [showArchived, setShowArchived] = usePersistedState<boolean>("inbox:bills:showArchived", false);
 
   const billAlerts = useMemo(() => {
     return alerts.filter((a) => {

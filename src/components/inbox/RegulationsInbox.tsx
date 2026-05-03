@@ -6,6 +6,7 @@ import { EntityGroupSection } from "./EntityGroupSection";
 import { EntityZoneStack } from "./EntityZoneStack";
 import { PeruAlert } from "@/data/peruAlertsMockData";
 import { useReadAlerts } from "@/hooks/useReadAlerts";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { normalizeEntityName } from "@/lib/entityNormalization";
 import {
   applyBriefingFilter,
@@ -42,13 +43,14 @@ export function RegulationsInbox({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const { isRead, markAsRead } = useReadAlerts();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("movement");
-  const [search, setSearch] = useState("");
-  const [quickDate, setQuickDate] = useState<QuickDateRange>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<NormaEntityGroup>>(new Set());
+  const [selectedTags, setSelectedTags] = usePersistedState<string[]>("inbox:regs:tags", []);
+  const [briefingFilter, setBriefingFilter] = usePersistedState<BriefingFilter>("inbox:regs:briefing", null);
+  const [sortMode, setSortMode] = usePersistedState<SortMode>("inbox:regs:sort", "movement");
+  const [search, setSearch] = usePersistedState<string>("inbox:regs:search", "");
+  const [quickDate, setQuickDate] = usePersistedState<QuickDateRange>("inbox:regs:quickDate", null);
+  const [showArchived, setShowArchived] = usePersistedState<boolean>("inbox:regs:showArchived", false);
+  const [collapsedGroupsArr, setCollapsedGroupsArr] = usePersistedState<NormaEntityGroup[]>("inbox:regs:collapsedGroups", []);
+  const collapsedGroups = useMemo(() => new Set(collapsedGroupsArr), [collapsedGroupsArr]);
 
   const regulationAlerts = useMemo(() => {
     return alerts.filter((a) => {
@@ -127,11 +129,11 @@ export function RegulationsInbox({
   );
 
   const toggleGroup = (g: NormaEntityGroup) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(g)) next.delete(g);
-      else next.add(g);
-      return next;
+    setCollapsedGroupsArr((prev) => {
+      const set = new Set(prev);
+      if (set.has(g)) set.delete(g);
+      else set.add(g);
+      return Array.from(set);
     });
   };
 
