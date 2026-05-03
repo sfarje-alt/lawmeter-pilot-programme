@@ -129,11 +129,11 @@ export function RegulationsInbox({
   );
 
   const toggleGroup = (g: NormaEntityGroup) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(g)) next.delete(g);
-      else next.add(g);
-      return next;
+    setCollapsedGroupsArr((prev) => {
+      const set = new Set(prev);
+      if (set.has(g)) set.delete(g);
+      else set.add(g);
+      return Array.from(set);
     });
   };
 
