@@ -68,6 +68,7 @@ export function AlertDetailDrawer({
   onUpdateExpertCommentary,
   onArchive,
   onUnarchive,
+  onTogglePin,
 }: AlertDetailDrawerProps) {
   const { updateAttachments } = useAlerts();
   const [sharedCommentary, setSharedCommentary] = useState("");
