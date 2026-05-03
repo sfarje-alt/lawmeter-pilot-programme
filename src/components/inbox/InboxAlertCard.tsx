@@ -252,7 +252,7 @@ export function InboxAlertCard({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-xs">Evita el archivo automático a los 30 días.</p>
+                  <p className="text-xs">Evita que esta alerta pase a Rezagadas por inactividad.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
