@@ -53,7 +53,15 @@ const SidebarProvider = React.forwardRef<
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen);
+  // Hydrate from cookie so the user's collapse preference persists across reloads.
+  const [_open, _setOpen] = React.useState<boolean>(() => {
+    if (typeof document === "undefined") return defaultOpen;
+    const match = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith(`${SIDEBAR_COOKIE_NAME}=`));
+    if (!match) return defaultOpen;
+    return match.split("=")[1] === "true";
+  });
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
