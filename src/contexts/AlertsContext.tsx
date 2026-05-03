@@ -57,6 +57,34 @@ function savePinnedIds(ids: Set<string>) {
   saveJSON(PINNED_STORAGE_KEY, Array.from(ids));
 }
 
+const AUTO_ARCHIVE_DAYS = 30;
+
+/**
+ * Auto-archive any non-pinned alert that has been in the inbox for more than
+ * AUTO_ARCHIVE_DAYS days (based on created_at). Bookmarked alerts are protected.
+ * Mutates the archived_at field in-place on returned alerts and persists to
+ * localStorage so it sticks across reloads.
+ */
+function applyAutoArchive(alerts: PeruAlert[]): PeruAlert[] {
+  const now = Date.now();
+  const cutoffMs = AUTO_ARCHIVE_DAYS * 24 * 60 * 60 * 1000;
+  const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+  let mutated = false;
+  const out = alerts.map((a) => {
+    if (a.archived_at) return a;
+    if (a.is_pinned_for_publication) return a;
+    const createdMs = a.created_at ? new Date(a.created_at).getTime() : NaN;
+    if (!Number.isFinite(createdMs)) return a;
+    if (now - createdMs <= cutoffMs) return a;
+    const archivedIso = new Date(createdMs + cutoffMs).toISOString();
+    archivedMap[a.id] = archivedIso;
+    mutated = true;
+    return { ...a, archived_at: archivedIso };
+  });
+  if (mutated) saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
+  return out;
+}
+
 /** Normalize DB legislation_type to UI value. */
 function normalizeType(t: string | null): "proyecto_de_ley" | "norma" | null {
   if (!t) return null;
