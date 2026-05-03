@@ -171,6 +171,7 @@ export function BillsInbox({
         onUpdateExpertCommentary={onUpdateExpertCommentary}
         onArchive={onArchive}
         onUnarchive={onUnarchive}
+        onTogglePin={onTogglePin}
       />
     </div>
   );
