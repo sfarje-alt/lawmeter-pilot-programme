@@ -43,13 +43,14 @@ export function RegulationsInbox({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [processedInitialAlert, setProcessedInitialAlert] = useState(false);
   const { isRead, markAsRead } = useReadAlerts();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("movement");
-  const [search, setSearch] = useState("");
-  const [quickDate, setQuickDate] = useState<QuickDateRange>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<NormaEntityGroup>>(new Set());
+  const [selectedTags, setSelectedTags] = usePersistedState<string[]>("inbox:regs:tags", []);
+  const [briefingFilter, setBriefingFilter] = usePersistedState<BriefingFilter>("inbox:regs:briefing", null);
+  const [sortMode, setSortMode] = usePersistedState<SortMode>("inbox:regs:sort", "movement");
+  const [search, setSearch] = usePersistedState<string>("inbox:regs:search", "");
+  const [quickDate, setQuickDate] = usePersistedState<QuickDateRange>("inbox:regs:quickDate", null);
+  const [showArchived, setShowArchived] = usePersistedState<boolean>("inbox:regs:showArchived", false);
+  const [collapsedGroupsArr, setCollapsedGroupsArr] = usePersistedState<NormaEntityGroup[]>("inbox:regs:collapsedGroups", []);
+  const collapsedGroups = useMemo(() => new Set(collapsedGroupsArr), [collapsedGroupsArr]);
 
   const regulationAlerts = useMemo(() => {
     return alerts.filter((a) => {
