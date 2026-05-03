@@ -51,6 +51,7 @@ interface AlertDetailDrawerProps {
   onUpdateExpertCommentary?: (alertId: string, commentary: string) => void;
   onArchive?: (alertId: string) => void;
   onUnarchive?: (alertId: string) => void;
+  onTogglePin?: (alertId: string) => void;
 }
 
 const URGENCY_OPTIONS = [
