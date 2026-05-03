@@ -157,12 +157,6 @@ export default function LawMeterDashboard() {
         </SidebarInset>
 
         <AlertSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-        {!isClientUser && (
-          <DailySummaryPopup 
-            open={showDailyPopup} 
-            onOpenChange={setShowDailyPopup} 
-          />
-        )}
       </div>
     </SidebarProvider>
   );
