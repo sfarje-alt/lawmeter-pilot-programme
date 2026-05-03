@@ -249,7 +249,7 @@ export const ZONE_META: Record<CardZone, ZoneMeta> = {
   lagging: {
     id: "lagging",
     label: "Rezagadas",
-    hint: "Los proyectos pasan a Rezagadas automáticamente cuando llevan mucho tiempo sin movimiento en el Congreso: 6 meses si su score es menor a 70, o 12 meses si es mayor. Las alertas sin bookmark desaparecen de la bandeja a los 30 días de haber entrado al sistema. El bookmark protege una alerta de ambas reglas.",
+    hint: "Alertas bookmarkeadas que llevan mucho tiempo sin movimiento en el Congreso: 6 meses si su score es menor a 70, o 12 meses si es mayor. Las alertas sin bookmark nunca llegan aquí — se archivan automáticamente a los 30 días.",
     dot: "bg-slate-500",
     text: "text-slate-400",
   },
