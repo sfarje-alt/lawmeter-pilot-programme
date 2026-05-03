@@ -25,7 +25,9 @@ import {
   History,
   CalendarClock,
   Link2,
+  Bookmark,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   PeruAlert,
   getTypeLabel,
