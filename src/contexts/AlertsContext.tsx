@@ -295,7 +295,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap))
       .filter((a): a is PeruAlert => a !== null);
 
-    setAlerts(purgeOldArchivedAlerts(mapped));
+    setAlerts(purgeOldArchivedAlerts(applyAutoArchive(mapped)));
     setLoading(false);
   }, [orgId]);
 
