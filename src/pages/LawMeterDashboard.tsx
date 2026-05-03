@@ -61,13 +61,6 @@ export default function LawMeterDashboard() {
     }
   }, [isClientUser, activeTab, sectionParam]);
 
-  // Show daily popup on first render if needed (only for admin users)
-  useEffect(() => {
-    if (shouldShowDailyPopup && !isClientUser) {
-      setShowDailyPopup(true);
-    }
-  }, [shouldShowDailyPopup, isClientUser]);
-
   const renderContent = () => {
     // Client user views
     if (isClientUser) {
