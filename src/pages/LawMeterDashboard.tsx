@@ -32,11 +32,10 @@ import {
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { shouldShowDailyPopup, profile } = useAuth();
+  const { profile } = useAuth();
   const { isClientUser, clientName } = useClientUser();
   const [activeTab, setActiveTab] = useState(""); 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [showDailyPopup, setShowDailyPopup] = useState(false);
 
 
   // Get URL parameters for navigation from calendar
