@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useClientUser } from "@/hooks/useClientUser";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { DailySummaryPopup } from "@/components/landing/DailySummaryPopup";
+
 import { SessionsPage } from "@/components/sessions";
 import { AlertsCalendar } from "@/components/calendar/AlertsCalendar";
 import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
@@ -32,11 +32,10 @@ import {
 export default function LawMeterDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { shouldShowDailyPopup, profile } = useAuth();
+  const { profile } = useAuth();
   const { isClientUser, clientName } = useClientUser();
   const [activeTab, setActiveTab] = useState(""); 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [showDailyPopup, setShowDailyPopup] = useState(false);
 
 
   // Get URL parameters for navigation from calendar
@@ -61,13 +60,6 @@ export default function LawMeterDashboard() {
       setActiveTab(isClientUser ? "client-inbox" : "inbox");
     }
   }, [isClientUser, activeTab, sectionParam]);
-
-  // Show daily popup on first render if needed (only for admin users)
-  useEffect(() => {
-    if (shouldShowDailyPopup && !isClientUser) {
-      setShowDailyPopup(true);
-    }
-  }, [shouldShowDailyPopup, isClientUser]);
 
   const renderContent = () => {
     // Client user views
@@ -165,12 +157,6 @@ export default function LawMeterDashboard() {
         </SidebarInset>
 
         <AlertSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-        {!isClientUser && (
-          <DailySummaryPopup 
-            open={showDailyPopup} 
-            onOpenChange={setShowDailyPopup} 
-          />
-        )}
       </div>
     </SidebarProvider>
   );

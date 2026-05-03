@@ -194,6 +194,7 @@ export function RegulationsInbox({
         onUpdateExpertCommentary={onUpdateExpertCommentary}
         onArchive={onArchive}
         onUnarchive={onUnarchive}
+        onTogglePin={onTogglePin}
       />
     </div>
   );

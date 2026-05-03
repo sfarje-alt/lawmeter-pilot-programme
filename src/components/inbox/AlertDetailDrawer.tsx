@@ -25,7 +25,9 @@ import {
   History,
   CalendarClock,
   Link2,
+  Bookmark,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   PeruAlert,
   getTypeLabel,
@@ -49,6 +51,7 @@ interface AlertDetailDrawerProps {
   onUpdateExpertCommentary?: (alertId: string, commentary: string) => void;
   onArchive?: (alertId: string) => void;
   onUnarchive?: (alertId: string) => void;
+  onTogglePin?: (alertId: string) => void;
 }
 
 const URGENCY_OPTIONS = [
@@ -65,6 +68,7 @@ export function AlertDetailDrawer({
   onUpdateExpertCommentary,
   onArchive,
   onUnarchive,
+  onTogglePin,
 }: AlertDetailDrawerProps) {
   const { updateAttachments } = useAlerts();
   const [sharedCommentary, setSharedCommentary] = useState("");
@@ -159,27 +163,68 @@ export function AlertDetailDrawer({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <AlertFeedbackPopover alert={alert} />
-                  {(onArchive || onUnarchive) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleArchiveToggle}
-                      className="gap-1.5"
-                    >
-                      {isArchived ? (
-                        <>
-                          <ArchiveRestore className="h-3.5 w-3.5" />
-                          Restaurar
-                        </>
-                      ) : (
-                        <>
-                          <Archive className="h-3.5 w-3.5" />
-                          Archivar
-                        </>
-                      )}
-                    </Button>
-                  )}
+                  <TooltipProvider delayDuration={200}>
+                    {alert.source_url && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(alert.source_url!, "_blank")}
+                            className="gap-1.5"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Fuente
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom"><p className="text-xs">Ver documento original</p></TooltipContent>
+                      </Tooltip>
+                    )}
+                    {!isArchived && onTogglePin && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onTogglePin(alert.id)}
+                            className="gap-1.5"
+                          >
+                            <Bookmark
+                              className={cn(
+                                "h-3.5 w-3.5",
+                                alert.is_pinned_for_publication && "fill-primary text-primary",
+                              )}
+                            />
+                            {alert.is_pinned_for_publication ? "Bookmarkeada" : "Bookmark"}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-xs">
+                          <p className="text-xs">Bookmark protege esta alerta de ser archivada automáticamente a los 30 días y de pasar a Rezagadas por inactividad.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {(onArchive || onUnarchive) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleArchiveToggle}
+                        className="gap-1.5"
+                      >
+                        {isArchived ? (
+                          <>
+                            <ArchiveRestore className="h-3.5 w-3.5" />
+                            Restaurar
+                          </>
+                        ) : (
+                          <>
+                            <Archive className="h-3.5 w-3.5" />
+                            Archivar
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    <AlertFeedbackPopover alert={alert} />
+                  </TooltipProvider>
                 </div>
               </div>
               <SheetTitle className="text-left text-lg font-semibold leading-tight">
