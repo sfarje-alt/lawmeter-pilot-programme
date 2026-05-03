@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useClientUser } from "@/hooks/useClientUser";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { DailySummaryPopup } from "@/components/landing/DailySummaryPopup";
+
 import { SessionsPage } from "@/components/sessions";
 import { AlertsCalendar } from "@/components/calendar/AlertsCalendar";
 import { SocialListeningDemo } from "@/components/media/SocialListeningDemo";
