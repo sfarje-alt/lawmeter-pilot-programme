@@ -324,7 +324,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const interval = setInterval(() => {
       setAlerts((prev) => {
-        const next = purgeOldArchivedAlerts(prev);
+        const next = purgeOldArchivedAlerts(applyAutoArchive(prev));
         return next.length === prev.length ? prev : next;
       });
     }, 60 * 60 * 1000);
