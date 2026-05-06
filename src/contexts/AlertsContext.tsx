@@ -33,6 +33,8 @@ const PINNED_STORAGE_KEY = "lawmeter:pinned-alerts";
 const ARCHIVED_STORAGE_KEY = "lawmeter:archived-alerts"; // alertId -> ISO archived_at
 const COMMENTARY_STORAGE_KEY = "lawmeter:expert-commentary"; // alertId -> string
 const ATTACHMENTS_STORAGE_KEY = "lawmeter:alert-attachments"; // alertId -> AttachedFileMetaRef[]
+const OWNERS_STORAGE_KEY = "lawmeter:alert-owners"; // alertId -> string[]
+const DECISION_STORAGE_KEY = "lawmeter:alert-requires-decision"; // alertId -> boolean
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
