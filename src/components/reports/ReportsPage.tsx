@@ -225,11 +225,27 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
 
-  header: { marginBottom: 22 },
+  header: { marginBottom: 18 },
   brand: { fontSize: 8, color: COLORS.brandLine, letterSpacing: 3, fontFamily: "Helvetica-Bold", marginBottom: 6 },
   title: { fontSize: 24, fontFamily: "Helvetica-Bold", color: COLORS.brand, marginBottom: 4 },
   subtitle: { fontSize: 10.5, color: COLORS.inkMuted, marginBottom: 1 },
   headerDivider: { marginTop: 14, height: 2, backgroundColor: COLORS.brand, width: 48 },
+
+  // Control header (datos editoriales del reporte)
+  controlBox: {
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 6,
+    padding: 10,
+    backgroundColor: COLORS.surfaceAlt,
+  },
+  controlRow: { flexDirection: "row", flexWrap: "wrap" },
+  controlCell: { width: "50%", paddingVertical: 3, paddingRight: 8 },
+  controlLabel: {
+    fontSize: 7, color: COLORS.inkSubtle, fontFamily: "Helvetica-Bold", letterSpacing: 1.1, marginBottom: 2,
+  },
+  controlValue: { fontSize: 9.5, color: COLORS.ink },
 
   pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 12 },
   pill: {
@@ -237,13 +253,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
     fontFamily: "Helvetica-Bold", letterSpacing: 0.4,
   },
+  pillRed: {
+    fontSize: 8, color: "#7f1d1d", backgroundColor: "#fee2e2",
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
+    fontFamily: "Helvetica-Bold", letterSpacing: 0.4,
+  },
 
   summary: {
-    backgroundColor: COLORS.surfaceAlt, padding: 16, marginBottom: 20, borderRadius: 6,
+    backgroundColor: COLORS.surfaceAlt, padding: 16, marginBottom: 18, borderRadius: 6,
     borderLeftWidth: 3, borderLeftColor: COLORS.brand,
   },
   summaryTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", letterSpacing: 1.2, marginBottom: 8, color: COLORS.brand },
   summaryItem: { fontSize: 10, marginBottom: 3, color: COLORS.ink },
+
+  // Executive Snapshot
+  snapshotGrid: { marginBottom: 18 },
+  snapshotBlock: {
+    marginBottom: 10,
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 6,
+    padding: 12,
+  },
+  snapshotBlockAlert: {
+    marginBottom: 10,
+    borderWidth: 1, borderColor: "#fecaca", borderRadius: 6,
+    padding: 12, backgroundColor: "#fef2f2",
+  },
+  snapshotKicker: {
+    fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.brandLine,
+    letterSpacing: 1.2, marginBottom: 6,
+  },
+  snapshotKickerRed: {
+    fontSize: 7.5, fontFamily: "Helvetica-Bold", color: "#991b1b",
+    letterSpacing: 1.2, marginBottom: 6,
+  },
+  snapshotItem: { fontSize: 9.5, color: COLORS.ink, lineHeight: 1.4, marginBottom: 3 },
 
   section: { marginBottom: 22 },
   sectionHeader: {
@@ -257,7 +300,33 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica-Bold", letterSpacing: 0.6,
   },
 
-  // Premium content card
+  // Heatmap table
+  table: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 4, marginBottom: 14 },
+  tHeadRow: {
+    flexDirection: "row", backgroundColor: COLORS.brand,
+  },
+  tHead: {
+    fontSize: 7.5, color: "#ffffff", fontFamily: "Helvetica-Bold",
+    letterSpacing: 0.6, padding: 6,
+  },
+  tRow: {
+    flexDirection: "row", borderTopWidth: 1, borderTopColor: COLORS.borderSoft,
+  },
+  tCell: { fontSize: 8, padding: 6, color: COLORS.ink },
+  // column widths sum 100
+  cId:     { width: "12%" },
+  cTitle:  { width: "30%" },
+  cRisk:   { width: "11%" },
+  cStage:  { width: "15%" },
+  cOwner:  { width: "16%" },
+  cAction: { width: "16%" },
+  riskTag: {
+    fontSize: 7.5, fontFamily: "Helvetica-Bold",
+    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+
+  // Premium content card (alert sheet)
   card: {
     marginBottom: 14, padding: 16, backgroundColor: COLORS.surface, borderRadius: 6,
     borderWidth: 1, borderColor: COLORS.border,
@@ -275,11 +344,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8,
   },
   cardDivider: { height: 1, backgroundColor: COLORS.borderSoft, marginVertical: 8 },
+  // Standardized 6-field grid
+  fieldGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
+  fieldHalf: { width: "50%", paddingRight: 6, marginBottom: 8 },
+  fieldFull: { width: "100%", marginBottom: 8 },
   bodyLabel: {
     fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.inkSubtle,
     letterSpacing: 1.1, marginBottom: 3,
   },
   cardBody: { fontSize: 9.5, color: COLORS.ink, lineHeight: 1.45, marginBottom: 4 },
+  fieldText: { fontSize: 9, color: COLORS.ink, lineHeight: 1.4 },
 
   ia: {
     marginTop: 8, padding: 8, backgroundColor: COLORS.iaBg, borderRadius: 4,
@@ -304,6 +378,16 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica-Bold", letterSpacing: 0.4,
   },
   empty: { fontSize: 9.5, color: COLORS.inkSubtle, fontStyle: "italic", paddingVertical: 12, textAlign: "center" },
+
+  // Sources appendix
+  sourceRow: {
+    flexDirection: "row", paddingVertical: 6,
+    borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+  },
+  sourceIdx: { width: 22, fontSize: 8, color: COLORS.inkSubtle, fontFamily: "Helvetica-Bold" },
+  sourceBody: { flex: 1 },
+  sourceTitle: { fontSize: 9, color: COLORS.ink, marginBottom: 2 },
+  sourceLink: { fontSize: 8, color: COLORS.brandLine, textDecoration: "underline" },
 
   footer: {
     position: "absolute", bottom: 24, left: 44, right: 44, textAlign: "center",
@@ -375,16 +459,42 @@ function paginateAnalyticsSnapshots(images: AnalyticsSnapshot[]): AnalyticsSnaps
   return pages;
 }
 
+// ── Helpers for the new structure ──────────────────────────────────────────
+function impactRank(level?: string): number {
+  switch ((level || "").toLowerCase()) {
+    case "grave": case "alto": case "high": case "critical": return 4;
+    case "medio": case "medium": case "moderate": return 3;
+    case "leve": case "low": return 2;
+    case "positivo": return 1;
+    default: return 0;
+  }
+}
+
+function riskColor(level?: string): { bg: string; fg: string; label: string } {
+  const l = (level || "").toLowerCase();
+  if (["grave", "alto", "high", "critical"].includes(l)) return { bg: "#fee2e2", fg: "#7f1d1d", label: level || "—" };
+  if (["medio", "medium", "moderate"].includes(l))      return { bg: "#fef3c7", fg: "#78350f", label: level || "—" };
+  if (["leve", "low"].includes(l))                      return { bg: "#fefce8", fg: "#713f12", label: level || "—" };
+  if (l === "positivo")                                 return { bg: "#dcfce7", fg: "#14532d", label: level || "—" };
+  return { bg: COLORS.surfaceAlt, fg: COLORS.inkMuted, label: level || "—" };
+}
+
+function truncate(s: string | undefined | null, n: number): string {
+  if (!s) return "";
+  return s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s;
+}
+
 interface PDFProps {
   alerts: PeruAlert[];
   sessions: PeruSession[];
-  /** HD analytics snapshots with explicit dimensions for PDF pagination. */
   analyticsImages: AnalyticsSnapshot[];
   source: SourceMode;
   inclusion: InclusionMode;
   includeAnalytics: boolean;
   profileName: string;
   periodLabel: string;
+  /** Optional report author (logged-in user). */
+  authorName?: string;
 }
 
 const ReportPDF = ({
@@ -396,6 +506,7 @@ const ReportPDF = ({
   includeAnalytics,
   profileName,
   periodLabel,
+  authorName,
 }: PDFProps) => {
   const showAlerts = source === "alertas" || source === "mixto";
   const showSessions = source === "sesiones" || source === "mixto";
@@ -405,12 +516,41 @@ const ReportPDF = ({
   const inclusionLabel = inclusion === "todas" ? "Todas dentro del período" : "Solo pineadas";
   const hasAnalyticsAppendix = includeAnalytics && analyticsImages.length > 0;
 
+  // ── Executive snapshot computations
+  const sortedAlertsByImpact = [...alerts].sort(
+    (a, b) => impactRank((b as any).impact_level) - impactRank((a as any).impact_level),
+  );
+  const topDevelopments = sortedAlertsByImpact.slice(0, 3);
+  const watchlist = sortedAlertsByImpact.slice(3, 8);
+  const decisionsNeeded = alerts.filter((a) => (a as any).requires_decision === true);
+
+  // Heatmap = pinned (if available) else top alerts by impact
+  const pinned = alerts.filter((a) => (a as any).is_pinned_for_publication);
+  const heatmap = (pinned.length > 0 ? pinned : sortedAlertsByImpact).slice(0, 12);
+
+  // Sources (consolidated, deduped)
+  const sourceList: { title: string; url: string }[] = [];
+  const seen = new Set<string>();
+  [...alerts, ...sessions as any[]].forEach((it: any) => {
+    const url = it.source_url || it.url || it?.recording?.video_url;
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    sourceList.push({
+      title: it.legislation_title || it.session_title || it.commission_name || "Documento",
+      url,
+    });
+  });
+
+  const reportVersion = `v${format(new Date(), "yyyyMMdd-HHmm")}`;
+
   return (
     <Document>
+      {/* ═══════════════════════════════════════════════════════════════════
+          PÁGINA 1 — Portada + Header de control + Executive Snapshot
+          ═══════════════════════════════════════════════════════════════════ */}
       <Page size="A4" style={styles.page}>
-        {/* ── Cover header */}
         <View style={styles.header}>
-          <Text style={styles.brand}>LAWMETER</Text>
+          <Text style={styles.brand}>LAWMETER · REGULATORY AFFAIRS BRIEF</Text>
           <Text style={styles.title}>Reporte Regulatorio</Text>
           <Text style={styles.subtitle}>{profileName}</Text>
           <Text style={styles.subtitle}>{format(new Date(), "d 'de' MMMM yyyy", { locale: es })}</Text>
@@ -420,25 +560,177 @@ const ReportPDF = ({
             <Text style={styles.pill}>{inclusionLabel.toUpperCase()}</Text>
             <Text style={styles.pill}>{periodLabel.toUpperCase()}</Text>
             {hasAnalyticsAppendix && <Text style={styles.pill}>+ ANALÍTICAS</Text>}
+            {decisionsNeeded.length > 0 && (
+              <Text style={styles.pillRed}>{decisionsNeeded.length} REQUIEREN DECISIÓN</Text>
+            )}
+          </View>
+
+          {/* Header de control (datos editoriales del reporte) */}
+          <View style={styles.controlBox}>
+            <View style={styles.controlRow}>
+              <View style={styles.controlCell}>
+                <Text style={styles.controlLabel}>PERÍODO</Text>
+                <Text style={styles.controlValue}>{periodLabel}</Text>
+              </View>
+              <View style={styles.controlCell}>
+                <Text style={styles.controlLabel}>JURISDICCIÓN</Text>
+                <Text style={styles.controlValue}>Perú</Text>
+              </View>
+              <View style={styles.controlCell}>
+                <Text style={styles.controlLabel}>AUTOR / EQUIPO</Text>
+                <Text style={styles.controlValue}>{authorName || "Equipo Legal · LawMeter"}</Text>
+              </View>
+              <View style={styles.controlCell}>
+                <Text style={styles.controlLabel}>VERSIÓN</Text>
+                <Text style={styles.controlValue}>{reportVersion}</Text>
+              </View>
+              <View style={styles.controlCell}>
+                <Text style={styles.controlLabel}>DISTRIBUCIÓN</Text>
+                <Text style={styles.controlValue}>{profileName} (confidencial)</Text>
+              </View>
+              <View style={styles.controlCell}>
+                <Text style={styles.controlLabel}>COBERTURA</Text>
+                <Text style={styles.controlValue}>
+                  {alerts.length} alertas · {sessions.length} sesiones
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* ── Executive summary */}
-        <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>RESUMEN EJECUTIVO</Text>
-          {showAlerts && <Text style={styles.summaryItem}>• {alerts.length} alertas regulatorias</Text>}
-          {showSessions && <Text style={styles.summaryItem}>• {sessions.length} alertas de sesiones</Text>}
-          {hasAnalyticsAppendix && (
-            <Text style={styles.summaryItem}>• Anexo de analíticas ({analyticsImages.length} pág.)</Text>
-          )}
+        {/* ── Executive Snapshot */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionAccent} />
+            <Text style={styles.sectionTitle}>EXECUTIVE SNAPSHOT</Text>
+          </View>
+
+          <View style={styles.snapshotGrid}>
+            {/* Top developments */}
+            <View style={styles.snapshotBlock}>
+              <Text style={styles.snapshotKicker}>TOP DEVELOPMENTS</Text>
+              {topDevelopments.length === 0 ? (
+                <Text style={styles.empty}>Sin desarrollos relevantes en el período.</Text>
+              ) : (
+                topDevelopments.map((a) => (
+                  <Text key={a.id} style={styles.snapshotItem}>
+                    • {a.legislation_id ? `[${a.legislation_id}] ` : ""}
+                    {truncate(a.legislation_title, 140)}
+                    {(a as any).impact_level ? `  —  Impacto: ${(a as any).impact_level}` : ""}
+                  </Text>
+                ))
+              )}
+            </View>
+
+            {/* Watchlist */}
+            <View style={styles.snapshotBlock}>
+              <Text style={styles.snapshotKicker}>WATCHLIST</Text>
+              {watchlist.length === 0 ? (
+                <Text style={styles.empty}>Sin temas en watchlist.</Text>
+              ) : (
+                watchlist.map((a) => (
+                  <Text key={a.id} style={styles.snapshotItem}>
+                    • {truncate(a.legislation_title, 130)}
+                    {a.current_stage ? `  ·  ${a.current_stage}` : ""}
+                  </Text>
+                ))
+              )}
+            </View>
+
+            {/* Decisions / Support needed */}
+            <View style={styles.snapshotBlockAlert}>
+              <Text style={styles.snapshotKickerRed}>DECISIONES / SOPORTE REQUERIDO</Text>
+              {decisionsNeeded.length === 0 ? (
+                <Text style={styles.empty}>Ninguna decisión pendiente esta semana.</Text>
+              ) : (
+                decisionsNeeded.map((a) => {
+                  const owners = ((a as any).owners as string[] | undefined)?.join(", ");
+                  return (
+                    <Text key={a.id} style={styles.snapshotItem}>
+                      • {truncate(a.legislation_title, 130)}
+                      {owners ? `  —  Owner: ${owners}` : ""}
+                    </Text>
+                  );
+                })
+              )}
+            </View>
+          </View>
         </View>
 
-        {/* ── Alertas regulatorias */}
+        <Text style={styles.footer}>
+          Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
+        </Text>
+      </Page>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          PÁGINA 2 — Heatmap (resumen tabular)
+          ═══════════════════════════════════════════════════════════════════ */}
+      {showAlerts && heatmap.length > 0 && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionTitle}>HEATMAP REGULATORIO</Text>
+              <Text style={styles.sectionCount}>
+                {heatmap.length} ALERTA{heatmap.length === 1 ? "" : "S"} {pinned.length > 0 ? "PINEADAS" : "PRIORIZADAS"}
+              </Text>
+            </View>
+
+            <View style={styles.table}>
+              <View style={styles.tHeadRow} fixed>
+                <Text style={[styles.tHead, styles.cId]}>ID / TIPO</Text>
+                <Text style={[styles.tHead, styles.cTitle]}>TEMA</Text>
+                <Text style={[styles.tHead, styles.cRisk]}>IMPACTO</Text>
+                <Text style={[styles.tHead, styles.cStage]}>ESTADO</Text>
+                <Text style={[styles.tHead, styles.cOwner]}>OWNER</Text>
+                <Text style={[styles.tHead, styles.cAction]}>PRÓX. ACCIÓN</Text>
+              </View>
+              {heatmap.map((a) => {
+                const r = riskColor((a as any).impact_level);
+                const owners = ((a as any).owners as string[] | undefined)?.join(", ") || "—";
+                const action = (a as any).requires_decision
+                  ? "Decisión requerida"
+                  : a.current_stage
+                    ? `Seguir: ${a.current_stage}`
+                    : "Monitoreo";
+                return (
+                  <View key={a.id} style={styles.tRow} wrap={false}>
+                    <Text style={[styles.tCell, styles.cId]}>
+                      {a.legislation_id || (a.legislation_type === "norma" ? "Norma" : "PL")}
+                    </Text>
+                    <Text style={[styles.tCell, styles.cTitle]}>
+                      {truncate(a.legislation_title, 110)}
+                    </Text>
+                    <View style={[styles.cRisk, { padding: 6 }]}>
+                      <Text style={[styles.riskTag, { backgroundColor: r.bg, color: r.fg }]}>
+                        {r.label}
+                      </Text>
+                    </View>
+                    <Text style={[styles.tCell, styles.cStage]}>
+                      {a.current_stage || "—"}
+                    </Text>
+                    <Text style={[styles.tCell, styles.cOwner]}>{owners}</Text>
+                    <Text style={[styles.tCell, styles.cAction]}>{action}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+          <Text style={styles.footer}>
+            Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
+          </Text>
+        </Page>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          PÁGINA 3+ — Fichas estandarizadas (alertas) y sesiones
+          ═══════════════════════════════════════════════════════════════════ */}
+      <Page size="A4" style={styles.page}>
         {showAlerts && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionAccent} />
-              <Text style={styles.sectionTitle}>ALERTAS REGULATORIAS</Text>
+              <Text style={styles.sectionTitle}>FICHAS DE ALERTA</Text>
               <Text style={styles.sectionCount}>{alerts.length} ÍTEM{alerts.length === 1 ? "" : "S"}</Text>
             </View>
 
@@ -446,22 +738,19 @@ const ReportPDF = ({
               <Text style={styles.empty}>Sin alertas en el período seleccionado.</Text>
             ) : (
               alerts.map((a) => {
-                const kicker =
-                  a.legislation_type === "norma" ? "NORMA" : "PROYECTO DE LEY";
-
+                const kicker = a.legislation_type === "norma" ? "NORMA" : "PROYECTO DE LEY";
                 const meta: string[] = [];
                 if (a.legislation_id) meta.push(a.legislation_id);
                 if (a.legislation_type === "proyecto_de_ley" && a.author) meta.push(`Autor: ${a.author}`);
                 if (a.legislation_type === "norma" && a.entity) meta.push(`Entidad: ${normalizeEntityName(a.entity)}`);
                 if (a.legislation_type === "norma" && a.publication_date) meta.push(`Publicado: ${a.publication_date}`);
 
-                const iaParts: string[] = [];
-                if ((a as any).impact_level) iaParts.push(`Impacto: ${(a as any).impact_level}`);
-                if ((a as any).urgency_level) iaParts.push(`Urgencia: ${(a as any).urgency_level}`);
-                if (a.current_stage) iaParts.push(`Etapa: ${a.current_stage}`);
-                const iaLine = iaParts.join("   ·   ");
-
+                const owners = ((a as any).owners as string[] | undefined) || [];
+                const requiresDecision = (a as any).requires_decision === true;
                 const commentary = a.expert_commentary?.replace(/<[^>]+>/g, "").trim();
+                const sourceAuth = a.legislation_type === "norma"
+                  ? (a.entity ? normalizeEntityName(a.entity) : "Diario Oficial El Peruano")
+                  : "Congreso de la República del Perú";
 
                 return (
                   <View key={a.id} style={styles.card} wrap={false}>
@@ -473,35 +762,66 @@ const ReportPDF = ({
                         {meta.map((m, i) => (
                           <Text key={i} style={styles.metaChip}>{m}</Text>
                         ))}
+                        {requiresDecision && (
+                          <Text style={styles.pillRed}>DECISIÓN REQUERIDA</Text>
+                        )}
                       </View>
                     )}
 
-                    {a.legislation_summary && (
-                      <>
-                        <View style={styles.cardDivider} />
-                        <Text style={styles.bodyLabel}>RESUMEN</Text>
-                        <Text style={styles.cardBody}>{a.legislation_summary.slice(0, 360)}</Text>
-                      </>
-                    )}
+                    <View style={styles.cardDivider} />
 
-                    {iaLine && (
-                      <View style={styles.ia}>
-                        <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
-                        <Text style={styles.iaText}>{iaLine}</Text>
+                    {/* Standardized 6 fields */}
+                    <View style={styles.fieldGrid}>
+                      <View style={styles.fieldFull}>
+                        <Text style={styles.bodyLabel}>QUÉ CAMBIÓ</Text>
+                        <Text style={styles.fieldText}>
+                          {a.legislation_summary
+                            ? truncate(a.legislation_summary, 480)
+                            : "Sin resumen disponible."}
+                        </Text>
                       </View>
-                    )}
+
+                      <View style={styles.fieldHalf}>
+                        <Text style={styles.bodyLabel}>FUENTE / AUTORIDAD</Text>
+                        <Text style={styles.fieldText}>{sourceAuth}</Text>
+                      </View>
+                      <View style={styles.fieldHalf}>
+                        <Text style={styles.bodyLabel}>PRÓXIMO HITO</Text>
+                        <Text style={styles.fieldText}>{a.current_stage || "Por confirmar"}</Text>
+                      </View>
+
+                      <View style={styles.fieldHalf}>
+                        <Text style={styles.bodyLabel}>OWNER / ETA</Text>
+                        <Text style={styles.fieldText}>
+                          {owners.length > 0 ? owners.join(", ") : "Sin asignar"}
+                        </Text>
+                      </View>
+                      <View style={styles.fieldHalf}>
+                        <Text style={styles.bodyLabel}>PRÓXIMOS PASOS</Text>
+                        <Text style={styles.fieldText}>
+                          {requiresDecision
+                            ? "Decisión interna pendiente. Definir postura."
+                            : "Monitoreo continuo del avance legislativo."}
+                        </Text>
+                      </View>
+                    </View>
 
                     {commentary && (
                       <View style={styles.commentary}>
-                        <Text style={styles.commentaryLabel}>COMENTARIO EXPERTO</Text>
+                        <Text style={styles.commentaryLabel}>POSICIÓN / COMENTARIO EXPERTO</Text>
                         <Text style={styles.commentaryText}>{commentary}</Text>
                       </View>
                     )}
 
-                    {a.source_url && (
-                      <Link src={a.source_url} style={styles.link}>
-                        FUENTE OFICIAL →
-                      </Link>
+                    {((a as any).impact_level || (a as any).urgency_level) && (
+                      <View style={styles.ia}>
+                        <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
+                        <Text style={styles.iaText}>
+                          {(a as any).impact_level ? `Impacto: ${(a as any).impact_level}` : ""}
+                          {(a as any).impact_level && (a as any).urgency_level ? "   ·   " : ""}
+                          {(a as any).urgency_level ? `Urgencia: ${(a as any).urgency_level}` : ""}
+                        </Text>
+                      </View>
                     )}
                   </View>
                 );
@@ -510,7 +830,6 @@ const ReportPDF = ({
           </View>
         )}
 
-        {/* ── Sesiones */}
         {showSessions && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -526,49 +845,33 @@ const ReportPDF = ({
                 const item = s.agenda_item;
                 const title = item ? `Ítem ${item.item_number} · ${item.title}` : (s.session_title ?? s.commission_name);
                 const when = s.scheduled_date_text ?? (s.scheduled_at ? format(parseISO(s.scheduled_at), "dd/MM/yyyy HH:mm") : "");
-
-                const meta: string[] = [];
-                meta.push(`Comisión: ${s.commission_name}`);
+                const meta: string[] = [`Comisión: ${s.commission_name}`];
                 if (when) meta.push(when);
-
-                const iaParts: string[] = [];
-                if (s.impact_level) iaParts.push(`Impacto: ${s.impact_level}`);
-                if (s.urgency_level) iaParts.push(`Urgencia: ${s.urgency_level}`);
-                if (s.etiqueta_ia) iaParts.push(`Etiqueta: ${s.etiqueta_ia}`);
-                const iaLine = iaParts.join("   ·   ");
-
                 const summary = (s.executive_summary || s.chatbot_summary || "").trim();
 
                 return (
                   <View key={s.id} style={styles.card} wrap={false}>
                     <Text style={styles.cardKicker}>SESIÓN</Text>
                     <Text style={styles.cardTitle}>{title}</Text>
-
                     <View style={styles.metaRow}>
-                      {meta.map((m, i) => (
-                        <Text key={i} style={styles.metaChip}>{m}</Text>
-                      ))}
+                      {meta.map((m, i) => (<Text key={i} style={styles.metaChip}>{m}</Text>))}
                     </View>
-
                     {summary && (
                       <>
                         <View style={styles.cardDivider} />
                         <Text style={styles.bodyLabel}>RESUMEN DE LA SESIÓN</Text>
-                        <Text style={styles.cardBody}>{summary.slice(0, 460)}</Text>
+                        <Text style={styles.cardBody}>{truncate(summary, 460)}</Text>
                       </>
                     )}
-
-                    {iaLine && (
+                    {(s.impact_level || s.urgency_level) && (
                       <View style={styles.ia}>
                         <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
-                        <Text style={styles.iaText}>{iaLine}</Text>
+                        <Text style={styles.iaText}>
+                          {s.impact_level ? `Impacto: ${s.impact_level}` : ""}
+                          {s.impact_level && s.urgency_level ? "   ·   " : ""}
+                          {s.urgency_level ? `Urgencia: ${s.urgency_level}` : ""}
+                        </Text>
                       </View>
-                    )}
-
-                    {s.recording?.video_url && (
-                      <Link src={s.recording.video_url} style={styles.link}>
-                        GRABACIÓN OFICIAL →
-                      </Link>
                     )}
                   </View>
                 );
@@ -582,7 +885,36 @@ const ReportPDF = ({
         </Text>
       </Page>
 
-      {/* ── ANEXO: Analíticas — cover + HD snapshots of the live dashboard */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          ANEXO — Fuentes oficiales (consolidado)
+          ═══════════════════════════════════════════════════════════════════ */}
+      {sourceList.length > 0 && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionTitle}>FUENTES OFICIALES</Text>
+              <Text style={styles.sectionCount}>{sourceList.length} REFERENCIA{sourceList.length === 1 ? "" : "S"}</Text>
+            </View>
+            {sourceList.map((s, i) => (
+              <View key={i} style={styles.sourceRow} wrap={false}>
+                <Text style={styles.sourceIdx}>{String(i + 1).padStart(2, "0")}</Text>
+                <View style={styles.sourceBody}>
+                  <Text style={styles.sourceTitle}>{truncate(s.title, 140)}</Text>
+                  <Link src={s.url} style={styles.sourceLink}>{s.url}</Link>
+                </View>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.footer}>
+            Generado por LawMeter • {format(new Date(), "dd/MM/yyyy HH:mm")} • Confidencial
+          </Text>
+        </Page>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          ANEXO — Analíticas (snapshots)
+          ═══════════════════════════════════════════════════════════════════ */}
       {hasAnalyticsAppendix && (
         <>
           <Page size="A4" style={styles.page}>
@@ -893,6 +1225,7 @@ export function ReportsPage() {
           includeAnalytics={includeAnalytics}
           profileName={profileName}
           periodLabel={periodLabel}
+          authorName={profile?.full_name || profile?.email || undefined}
         />
       ).toBlob();
 
@@ -1020,6 +1353,7 @@ export function ReportsPage() {
         includeAnalytics={s.includeAnalytics}
         profileName={profileName}
         periodLabel={buildPeriodLabel(s.daysBack)}
+        authorName={profile?.full_name || profile?.email || undefined}
       />
     ).toBlob();
     const url = URL.createObjectURL(blob);
