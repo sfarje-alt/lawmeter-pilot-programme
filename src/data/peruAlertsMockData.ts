@@ -140,6 +140,29 @@ export interface PeruAlert extends BasePeruAlert {
   comentario?: string;
   /** Bill follow-up timeline (PL only). Array sorted descending by date. */
   seguimiento?: SeguimientoEvent[];
+  /** Current version number (1-indexed). */
+  version?: number;
+  /** Source ref codigo — canonical bill identifier across versions. */
+  source_codigo?: string;
+  /** Prior versions of this alert (excludes current). Ordered v1..v(n-1). */
+  version_history?: VersionHistoryEntry[];
+}
+
+/** A previous version snapshot of an alert (from ai_analysis.version_history). */
+export interface VersionHistoryEntry {
+  version: number;
+  alerta_id?: string;
+  generated_at: string;
+  impacto?: number;
+  urgencia?: number;
+  impacto_categoria?: string;
+  urgencia_categoria?: string;
+  comentario?: string;
+  model?: string;
+  estado_actual?: string;
+  estado_anterior?: string;
+  seguimiento_hash?: string;
+  es_cambio_estado?: boolean;
 }
 
 /** One event in a Bill's follow-up timeline (Congress SPLEY tracking). */

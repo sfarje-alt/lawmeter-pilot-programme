@@ -491,6 +491,125 @@ export function AlertDetailDrawer({
                 </div>
               </>
             )}
+
+            {/* Version history (AI re-evaluations) */}
+            {isBill && Array.isArray(alert.version_history) && alert.version_history.length > 0 && (
+              <>
+                <Separator className="bg-border/30" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <History className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Historial de versiones
+                    </h3>
+                    <Badge variant="outline" className="text-[10px] bg-muted/40 border-border/40 text-muted-foreground">
+                      v1 → v{alert.version ?? alert.version_history.length + 1}
+                    </Badge>
+                  </div>
+                  <ol className="relative border-l border-border/40 ml-2 space-y-3 pl-5">
+                    {[
+                      ...alert.version_history,
+                      {
+                        version: alert.version ?? alert.version_history.length + 1,
+                        generated_at: alert.updated_at,
+                        impacto: alert.impacto_score,
+                        impacto_categoria: alert.impact_category ?? undefined,
+                        urgencia: alert.urgencia_score,
+                        estado_actual: alert.current_stage,
+                        estado_anterior: alert.previous_stage ?? undefined,
+                        es_cambio_estado: alert.is_state_change,
+                        comentario: alert.comentario,
+                        model: undefined,
+                      },
+                    ].map((v, i, arr) => {
+                      const prev = i > 0 ? arr[i - 1] : null;
+                      const impactoChanged = prev && typeof v.impacto === "number" && typeof prev.impacto === "number" && v.impacto !== prev.impacto;
+                      const stateChanged = !!v.es_cambio_estado || (prev && v.estado_actual && prev.estado_actual && v.estado_actual !== prev.estado_actual);
+                      const highlight = !!(impactoChanged || stateChanged);
+                      const isCurrent = i === arr.length - 1;
+                      let formatted = v.generated_at ?? "";
+                      try {
+                        if (v.generated_at) formatted = format(new Date(v.generated_at), "dd MMM yyyy HH:mm", { locale: es });
+                      } catch { /* keep raw */ }
+                      const dotStyle = highlight
+                        ? "bg-amber-500"
+                        : isCurrent
+                          ? "bg-primary"
+                          : "bg-muted-foreground/40";
+                      return (
+                        <li key={`${v.version}-${i}`} className="relative">
+                          <span
+                            className={cn(
+                              "absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-2 ring-background",
+                              dotStyle,
+                            )}
+                          />
+                          <div
+                            className={cn(
+                              "rounded-md border px-3 py-2 space-y-1.5",
+                              highlight
+                                ? "border-amber-500/40 bg-amber-500/10"
+                                : "border-border/30 bg-muted/20",
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] bg-background/40 border-border/40">
+                                  v{v.version}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">{formatted}</span>
+                                {isCurrent && (
+                                  <Badge variant="outline" className="text-[10px] bg-primary/15 text-primary border-primary/35">
+                                    actual
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {typeof v.impacto === "number" && (
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-[10px]",
+                                      impactoChanged
+                                        ? "bg-amber-500/15 text-amber-400 border-amber-500/40"
+                                        : "bg-muted/40 border-border/40 text-muted-foreground",
+                                    )}
+                                  >
+                                    Impacto {v.impacto}
+                                    {impactoChanged && prev && typeof prev.impacto === "number" && (
+                                      <span className="ml-1 opacity-80">
+                                        ({v.impacto > prev.impacto ? "+" : ""}{v.impacto - prev.impacto})
+                                      </span>
+                                    )}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            {v.estado_actual && (
+                              <div className="text-xs text-foreground/90">
+                                Estado:{" "}
+                                <span className={cn("font-medium", stateChanged && "text-amber-400")}>
+                                  {v.estado_actual}
+                                </span>
+                                {stateChanged && v.estado_anterior && (
+                                  <span className="text-muted-foreground"> · antes: {v.estado_anterior}</span>
+                                )}
+                              </div>
+                            )}
+                            {v.comentario && (
+                              <p className="text-xs text-foreground/80 leading-relaxed line-clamp-3">{v.comentario}</p>
+                            )}
+                            {v.model && (
+                              <p className="text-[10px] text-muted-foreground/70 italic">{v.model}</p>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              </>
+            )}
             {alert.rationale && alert.rationale.length > 0 && (
               <>
                 <Separator className="bg-border/30" />
