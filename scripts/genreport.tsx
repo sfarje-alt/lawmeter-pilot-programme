@@ -518,7 +518,7 @@ function HeatmapTable({ items }: { items: Alert[] }) {
         const owners = a.owners?.join(", ") || "—";
         const action = a.requires_decision ? "Decisión requerida" : a.current_stage ? `Seguir: ${truncate(a.current_stage, 22)}` : "Monitoreo";
         return (
-          <View key={a.id} style={styles.tRow}>
+          <View key={a.id} style={styles.tRow} wrap={false}>
             <Text style={[styles.tCell, styles.cId]}>{a.legislation_id || "—"}</Text>
             <Text style={[styles.tCell, styles.cTitle]}>{truncate(a.legislation_title, 110)}</Text>
             <View style={[styles.cRisk, { padding: 4 }]}>
