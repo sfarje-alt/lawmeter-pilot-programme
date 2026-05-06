@@ -26,6 +26,9 @@ import {
   CalendarClock,
   Link2,
   Bookmark,
+  Users,
+  Settings2,
+  AlertOctagon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
