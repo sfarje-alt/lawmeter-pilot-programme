@@ -128,6 +128,9 @@ function mapDbRowToAlert(
   archivedMap: Record<string, string>,
   commentaryMap: Record<string, string>,
   attachmentsMap: Record<string, AttachedFileMetaRef[]>,
+  ownersMap: Record<string, string[]>,
+  decisionMap: Record<string, boolean>,
+  defaultOwners: string[],
 ): PeruAlert | null {
   const type = normalizeType(row.legislation_type);
   if (!type) return null;
