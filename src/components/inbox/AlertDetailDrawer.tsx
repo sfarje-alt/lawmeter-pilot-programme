@@ -130,6 +130,7 @@ export function AlertDetailDrawer({
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl bg-card border-border/50 p-0">
         <ScrollArea className="h-full">
