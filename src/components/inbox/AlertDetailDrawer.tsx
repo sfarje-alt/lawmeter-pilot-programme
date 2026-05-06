@@ -76,12 +76,14 @@ export function AlertDetailDrawer({
   onUnarchive,
   onTogglePin,
 }: AlertDetailDrawerProps) {
-  const { updateAttachments } = useAlerts();
+  const { updateAttachments, updateOwners, updateRequiresDecision } = useAlerts();
+  const { roster } = useOwnersRoster();
   const [sharedCommentary, setSharedCommentary] = useState("");
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
   const [urgency, setUrgency] = useState<string>("medium");
   const [tagsText, setTagsText] = useState("");
+  const [rosterOpen, setRosterOpen] = useState(false);
 
   useEffect(() => {
     if (alert) {
