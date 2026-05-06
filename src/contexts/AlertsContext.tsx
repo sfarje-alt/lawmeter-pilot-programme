@@ -22,6 +22,8 @@ interface AlertsContextType {
   unarchiveAlert: (alertId: string) => void;
   updateSharedCommentary: (alertId: string, commentary: string) => void;
   updateAttachments: (alertId: string, attachments: AttachedFileMetaRef[]) => void;
+  updateOwners: (alertId: string, owners: string[]) => void;
+  updateRequiresDecision: (alertId: string, requires: boolean) => void;
   getPinnedAlerts: () => PeruAlert[];
 }
 
