@@ -1353,6 +1353,7 @@ export function ReportsPage() {
         includeAnalytics={s.includeAnalytics}
         profileName={profileName}
         periodLabel={buildPeriodLabel(s.daysBack)}
+        authorName={profile?.full_name || profile?.email || undefined}
       />
     ).toBlob();
     const url = URL.createObjectURL(blob);
