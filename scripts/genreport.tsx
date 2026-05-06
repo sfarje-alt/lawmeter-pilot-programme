@@ -247,7 +247,7 @@ function truncate(s: string | undefined | null, n: number) {
 
 const sortedByImpact = [...ALERTS].sort((a, b) => impactRank(b.impact_level) - impactRank(a.impact_level));
 const topDevelopments = sortedByImpact.slice(0, 3);
-const watchlist = sortedByImpact.slice(3, 8);
+const watchlist = sortedByImpact.slice(3, 7);
 const decisionsNeeded = ALERTS.filter((a) => a.requires_decision);
 const pinned = ALERTS.filter((a) => a.is_pinned_for_publication);
 const heatmap = (pinned.length > 0 ? pinned : sortedByImpact).slice(0, 12);
