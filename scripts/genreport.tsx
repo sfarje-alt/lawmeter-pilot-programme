@@ -510,7 +510,7 @@ function HeatmapTable({ items }: { items: Alert[] }) {
         <Text style={[styles.tHead, styles.cTitle]}>TEMA</Text>
         <Text style={[styles.tHead, styles.cRisk]}>IMPACTO</Text>
         <Text style={[styles.tHead, styles.cStage]}>ESTADO</Text>
-        <Text style={[styles.tHead, styles.cOwner]}>OWNER</Text>
+        <Text style={[styles.tHead, styles.cOwner]}>RESPONSABLE</Text>
         <Text style={[styles.tHead, styles.cAction]}>PRÓX. ACCIÓN</Text>
       </View>
       {items.map((a) => {
@@ -518,10 +518,10 @@ function HeatmapTable({ items }: { items: Alert[] }) {
         const owners = a.owners?.join(", ") || "—";
         const action = a.requires_decision ? "Decisión requerida" : a.current_stage ? `Seguir: ${truncate(a.current_stage, 22)}` : "Monitoreo";
         return (
-          <View key={a.id} style={styles.tRow} wrap={false}>
+          <View key={a.id} style={styles.tRow}>
             <Text style={[styles.tCell, styles.cId]}>{a.legislation_id || "—"}</Text>
             <Text style={[styles.tCell, styles.cTitle]}>{truncate(a.legislation_title, 110)}</Text>
-            <View style={[styles.cRisk, { padding: 6 }]}>
+            <View style={[styles.cRisk, { padding: 4 }]}>
               <Text style={[styles.riskTag, { backgroundColor: r.bg, color: r.fg }]}>{r.label}</Text>
             </View>
             <Text style={[styles.tCell, styles.cStage]}>{truncate(a.current_stage, 26) || "—"}</Text>
@@ -546,7 +546,7 @@ function AlertCard({ a }: { a: Alert }) {
     ? (a.entity || "Diario Oficial El Peruano")
     : "Congreso de la República del Perú";
   return (
-    <View style={styles.card} wrap={false}>
+    <View style={styles.card}>
       <Text style={styles.cardKicker}>{kicker}</Text>
       <Text style={styles.cardTitle}>{a.legislation_title}</Text>
       <View style={styles.metaRow}>
@@ -557,41 +557,43 @@ function AlertCard({ a }: { a: Alert }) {
       <View style={styles.fieldGrid}>
         <View style={styles.fieldFull}>
           <Text style={styles.bodyLabel}>QUÉ CAMBIÓ</Text>
-          <Text style={styles.fieldText}>{truncate(a.legislation_summary, 480) || "Sin resumen disponible."}</Text>
+          <Text style={styles.fieldText}>{truncate(a.legislation_summary, 360) || "Sin resumen disponible."}</Text>
         </View>
-        <View style={styles.fieldHalf}>
-          <Text style={styles.bodyLabel}>FUENTE / AUTORIDAD</Text>
+        <View style={styles.fieldQuarter}>
+          <Text style={styles.bodyLabel}>FUENTE</Text>
           <Text style={styles.fieldText}>{sourceAuth}</Text>
         </View>
-        <View style={styles.fieldHalf}>
+        <View style={styles.fieldQuarter}>
           <Text style={styles.bodyLabel}>PRÓXIMO HITO</Text>
           <Text style={styles.fieldText}>{a.current_stage || "Por confirmar"}</Text>
         </View>
-        <View style={styles.fieldHalf}>
-          <Text style={styles.bodyLabel}>OWNER / ETA</Text>
+        <View style={styles.fieldQuarter}>
+          <Text style={styles.bodyLabel}>RESPONSABLE</Text>
           <Text style={styles.fieldText}>{owners.length ? owners.join(", ") : "Sin asignar"}</Text>
         </View>
-        <View style={styles.fieldHalf}>
+        <View style={styles.fieldQuarter}>
           <Text style={styles.bodyLabel}>PRÓXIMOS PASOS</Text>
-          <Text style={styles.fieldText}>{a.requires_decision ? "Decisión interna pendiente. Definir postura y comunicar a owners." : "Monitoreo continuo del avance."}</Text>
+          <Text style={styles.fieldText}>{a.requires_decision ? "Decisión interna pendiente." : "Monitoreo continuo."}</Text>
         </View>
       </View>
-      {a.expert_commentary && (
-        <View style={styles.commentary}>
-          <Text style={styles.commentaryLabel}>POSICIÓN / COMENTARIO EXPERTO</Text>
-          <Text style={styles.commentaryText}>{a.expert_commentary}</Text>
-        </View>
-      )}
-      {(a.impact_level || a.urgency_level) && (
-        <View style={styles.ia}>
-          <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
-          <Text style={styles.iaText}>
-            {a.impact_level ? `Impacto: ${a.impact_level}` : ""}
-            {a.impact_level && a.urgency_level ? "   ·   " : ""}
-            {a.urgency_level ? `Urgencia: ${a.urgency_level}` : ""}
-          </Text>
-        </View>
-      )}
+      <View style={{ flexDirection: "row", gap: 6 }}>
+        {a.expert_commentary && (
+          <View style={[styles.commentary, { flex: 1, marginTop: 4 }]}>
+            <Text style={styles.commentaryLabel}>COMENTARIO EXPERTO</Text>
+            <Text style={styles.commentaryText}>{a.expert_commentary}</Text>
+          </View>
+        )}
+        {(a.impact_level || a.urgency_level) && (
+          <View style={[styles.ia, { flex: 1, marginTop: 4 }]}>
+            <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
+            <Text style={styles.iaText}>
+              {a.impact_level ? `Impacto: ${a.impact_level}` : ""}
+              {a.impact_level && a.urgency_level ? "   ·   " : ""}
+              {a.urgency_level ? `Urgencia: ${a.urgency_level}` : ""}
+            </Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
