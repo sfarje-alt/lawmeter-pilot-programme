@@ -253,7 +253,41 @@ function mapDbRowToAlert(
     fecha_presentacion: row.fecha_presentacion ?? undefined,
     comentario: row.comentario ?? undefined,
     seguimiento: Array.isArray(row.seguimiento) ? row.seguimiento : [],
+    version: typeof row.version === "number" ? row.version : undefined,
+    source_codigo: sourceRef.codigo ?? row.codigo ?? undefined,
+    version_history: Array.isArray(ai.version_history) ? ai.version_history : [],
   };
+}
+
+/**
+ * Dedupe PL alerts by source_ref.codigo (or codigo): keep only the row with
+ * the highest `version`. Normas and rows without codigo pass through.
+ */
+function dedupeByCodigoLatestVersion(alerts: PeruAlert[]): PeruAlert[] {
+  const byKey = new Map<string, PeruAlert>();
+  const passthrough: PeruAlert[] = [];
+  for (const a of alerts) {
+    const key = a.source_codigo || a.legislation_id;
+    if (!key || a.legislation_type !== "proyecto_de_ley") {
+      passthrough.push(a);
+      continue;
+    }
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, a);
+      continue;
+    }
+    const va = a.version ?? 0;
+    const ve = existing.version ?? 0;
+    if (va > ve) {
+      byKey.set(key, a);
+    } else if (va === ve) {
+      const ta = new Date(a.updated_at || a.created_at || 0).getTime();
+      const te = new Date(existing.updated_at || existing.created_at || 0).getTime();
+      if (ta > te) byKey.set(key, a);
+    }
+  }
+  return [...byKey.values(), ...passthrough];
 }
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
