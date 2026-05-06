@@ -416,94 +416,72 @@ const sourceDist = countBy(ALERTS, (a) =>
   a.legislation_type === "norma" ? (a.entity || "Otro") : "Congreso de la República"
 );
 
-// Vertical bar chart
-function VBarChart({ data, width = 220, height = 110 }: { data: { label: string; value: number; color?: string }[]; width?: number; height?: number }) {
-  const pad = { l: 22, r: 8, t: 6, b: 22 };
-  const W = width - pad.l - pad.r;
-  const H = height - pad.t - pad.b;
+// View-based bar charts (avoid SVG layout flakiness inside flex grids).
+function VBarChart({ data, height = 100 }: { data: { label: string; value: number; color?: string }[]; height?: number }) {
   const max = Math.max(1, ...data.map((d) => d.value));
-  const bw = W / data.length;
-  const yTicks = 4;
   return (
-    <Svg width={width} height={height}>
-      {/* y axis grid */}
-      {Array.from({ length: yTicks + 1 }).map((_, i) => {
-        const y = pad.t + (H * i) / yTicks;
-        const v = Math.round((max * (yTicks - i)) / yTicks);
-        return (
-          <G key={i}>
-            <Path d={`M ${pad.l} ${y} L ${pad.l + W} ${y}`} stroke={COLORS.borderSoft} strokeWidth={0.5} />
-            <Text x={pad.l - 3} y={y + 3} style={{ fontSize: 6, fill: COLORS.inkSubtle }} textAnchor="end">{v}</Text>
-          </G>
-        );
-      })}
-      {data.map((d, i) => {
-        const h = (d.value / max) * H;
-        const x = pad.l + i * bw + bw * 0.18;
-        const y = pad.t + H - h;
-        const w = bw * 0.64;
-        return (
-          <G key={i}>
-            <Rect x={x} y={y} width={w} height={h} fill={d.color || COLORS.c2} rx={2} />
-            <Text x={x + w / 2} y={y - 2} style={{ fontSize: 6.5, fill: COLORS.ink, fontFamily: "Helvetica-Bold" }} textAnchor="middle">{d.value}</Text>
-            <Text x={x + w / 2} y={pad.t + H + 10} style={{ fontSize: 6.5, fill: COLORS.inkMuted }} textAnchor="middle">{d.label}</Text>
-          </G>
-        );
-      })}
-    </Svg>
+    <View>
+      <View style={{ flexDirection: "row", height, alignItems: "flex-end", borderBottomWidth: 1, borderBottomColor: COLORS.border, paddingHorizontal: 4 }}>
+        {data.map((d, i) => {
+          const h = Math.max(2, (d.value / max) * (height - 14));
+          return (
+            <View key={i} style={{ flex: 1, alignItems: "center", marginHorizontal: 4 }}>
+              <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: COLORS.ink, marginBottom: 2 }}>{d.value}</Text>
+              <View style={{ width: "70%", height: h, backgroundColor: d.color || COLORS.c2, borderTopLeftRadius: 2, borderTopRightRadius: 2 }} />
+            </View>
+          );
+        })}
+      </View>
+      <View style={{ flexDirection: "row", paddingHorizontal: 4, marginTop: 4 }}>
+        {data.map((d, i) => (
+          <Text key={i} style={{ flex: 1, fontSize: 7, color: COLORS.inkMuted, textAlign: "center" }}>{d.label}</Text>
+        ))}
+      </View>
+    </View>
   );
 }
 
-// Horizontal bar chart
-function HBarChart({ data, width = 240, height = 130 }: { data: { label: string; value: number; color?: string }[]; width?: number; height?: number }) {
-  const pad = { l: 92, r: 18, t: 4, b: 4 };
-  const W = width - pad.l - pad.r;
-  const rows = Math.max(1, data.length);
-  const rowH = (height - pad.t - pad.b) / rows;
+function HBarChart({ data }: { data: { label: string; value: number; color?: string }[] }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
-    <Svg width={width} height={height}>
+    <View>
       {data.map((d, i) => {
-        const y = pad.t + i * rowH + 2;
-        const h = rowH - 4;
-        const w = (d.value / max) * W;
+        const pct = (d.value / max) * 100;
         return (
-          <G key={i}>
-            <Text x={pad.l - 4} y={y + h / 2 + 2} style={{ fontSize: 7, fill: COLORS.inkMuted }} textAnchor="end">{truncate(d.label, 20)}</Text>
-            <Rect x={pad.l} y={y} width={W} height={h} fill={COLORS.borderSoft} rx={2} />
-            <Rect x={pad.l} y={y} width={w} height={h} fill={d.color || COLORS.c2} rx={2} />
-            <Text x={pad.l + w + 3} y={y + h / 2 + 2} style={{ fontSize: 7, fill: COLORS.ink, fontFamily: "Helvetica-Bold" }}>{d.value}</Text>
-          </G>
+          <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+            <Text style={{ width: 90, fontSize: 7, color: COLORS.inkMuted }}>{truncate(d.label, 22)}</Text>
+            <View style={{ flex: 1, height: 10, backgroundColor: COLORS.borderSoft, borderRadius: 2, overflow: "hidden" }}>
+              <View style={{ width: `${pct}%`, height: "100%", backgroundColor: d.color || COLORS.c2 }} />
+            </View>
+            <Text style={{ width: 18, fontSize: 7, fontFamily: "Helvetica-Bold", color: COLORS.ink, textAlign: "right" }}>{d.value}</Text>
+          </View>
         );
       })}
-    </Svg>
+    </View>
   );
 }
 
-// Donut chart
-function DonutChart({ data, size = 130 }: { data: { label: string; value: number; color: string }[]; size?: number }) {
-  const total = Math.max(1, data.reduce((s, d) => s + d.value, 0));
-  const cx = size / 2, cy = size / 2, r = size * 0.42, rin = r * 0.6;
-  let acc = 0;
-  const arcs = data.map((d, i) => {
-    const start = (acc / total) * Math.PI * 2 - Math.PI / 2;
-    acc += d.value;
-    const end = (acc / total) * Math.PI * 2 - Math.PI / 2;
-    const large = end - start > Math.PI ? 1 : 0;
-    const x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
-    const x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
-    const xi1 = cx + rin * Math.cos(end), yi1 = cy + rin * Math.sin(end);
-    const xi2 = cx + rin * Math.cos(start), yi2 = cy + rin * Math.sin(start);
-    const dPath = `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${xi1} ${yi1} A ${rin} ${rin} 0 ${large} 0 ${xi2} ${yi2} Z`;
-    return <Path key={i} d={dPath} fill={d.color} />;
-  });
+// Stacked horizontal bar (single bar with multiple segments) — replaces donut.
+function StackedBar({ data, total }: { data: { label: string; value: number; color: string }[]; total: number }) {
+  const safeTotal = Math.max(1, total);
   return (
-    <Svg width={size} height={size}>
-      {arcs}
-      <Circle cx={cx} cy={cy} r={rin - 0.5} fill={COLORS.surface} />
-      <Text x={cx} y={cy - 1} style={{ fontSize: 12, fontFamily: "Helvetica-Bold", fill: COLORS.brand }} textAnchor="middle">{total}</Text>
-      <Text x={cx} y={cy + 9} style={{ fontSize: 6.5, fill: COLORS.inkSubtle }} textAnchor="middle">ALERTAS</Text>
-    </Svg>
+    <View>
+      <View style={{ flexDirection: "row", height: 22, borderRadius: 4, overflow: "hidden", borderWidth: 1, borderColor: COLORS.border }}>
+        {data.map((d, i) => (
+          <View key={i} style={{ width: `${(d.value / safeTotal) * 100}%`, backgroundColor: d.color, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#fff" }}>{d.value}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={{ marginTop: 6 }}>
+        {data.map((d, i) => (
+          <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
+            <View style={{ width: 8, height: 8, backgroundColor: d.color, borderRadius: 2, marginRight: 6 }} />
+            <Text style={{ fontSize: 8, color: COLORS.inkMuted }}>{d.label} · {d.value} ({Math.round((d.value / safeTotal) * 100)}%)</Text>
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }
 
