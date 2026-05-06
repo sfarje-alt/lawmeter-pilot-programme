@@ -263,6 +263,18 @@ function mapDbRowToAlert(
     version: typeof row.version === "number" ? row.version : undefined,
     source_codigo: sourceRef.codigo ?? row.codigo ?? undefined,
     version_history: Array.isArray(ai.version_history) ? ai.version_history : [],
+    owners: (() => {
+      const fromMap = ownersMap[row.id];
+      if (Array.isArray(fromMap)) return fromMap;
+      const fromUi = Array.isArray(ui.owners) ? ui.owners.filter((o: any) => typeof o === "string") : null;
+      if (fromUi && fromUi.length > 0) return fromUi;
+      return defaultOwners;
+    })(),
+    requires_decision: (() => {
+      if (typeof decisionMap[row.id] === "boolean") return decisionMap[row.id];
+      if (typeof ui.requires_decision === "boolean") return ui.requires_decision;
+      return false;
+    })(),
   };
 }
 
