@@ -814,5 +814,7 @@ export function AlertDetailDrawer({
         </ScrollArea>
       </SheetContent>
     </Sheet>
+    <OwnersRosterDialog open={rosterOpen} onOpenChange={setRosterOpen} />
+    </>
   );
 }
