@@ -45,6 +45,10 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { RichTextEditor, AttachedFile } from "./RichTextEditor";
 import { useAlerts } from "@/contexts/AlertsContext";
+import { useOwnersRoster } from "@/hooks/useOwnersRoster";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { Switch } from "@/components/ui/switch";
+import { OwnersRosterDialog } from "./OwnersRosterDialog";
 
 interface AlertDetailDrawerProps {
   alert: PeruAlert | null;
