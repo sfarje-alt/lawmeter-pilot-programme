@@ -675,33 +675,28 @@ const Doc = (
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>DISTRIBUCIÓN POR IMPACTO</Text>
               <Text style={styles.vizSub}>Clasificación IA por nivel</Text>
-              <VBarChart data={impactDist} width={230} height={120} />
+              <VBarChart data={impactDist} height={110} />
             </View>
           </View>
           <View style={styles.vizCell}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>PROYECTOS DE LEY vs NORMAS</Text>
               <Text style={styles.vizSub}>Composición del período</Text>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <DonutChart data={typeDist} size={130} />
-                <View style={{ marginLeft: 12, flex: 1 }}>
-                  <Legend items={typeDist.map((d) => ({ label: d.label, color: d.color, value: d.value }))} />
-                </View>
-              </View>
+              <StackedBar data={typeDist} total={typeDist.reduce((s, d) => s + d.value, 0)} />
             </View>
           </View>
           <View style={styles.vizCell}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>OWNERS / ÁREAS INTERNAS</Text>
               <Text style={styles.vizSub}>Cantidad de alertas asignadas</Text>
-              <HBarChart data={ownerDist.map((d) => ({ ...d, color: COLORS.c2 }))} width={240} height={140} />
+              <HBarChart data={ownerDist.map((d) => ({ ...d, color: COLORS.c2 }))} />
             </View>
           </View>
           <View style={styles.vizCell}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>FUENTE / AUTORIDAD</Text>
               <Text style={styles.vizSub}>Origen institucional de la alerta</Text>
-              <HBarChart data={sourceDist.map((d) => ({ ...d, color: COLORS.c3 }))} width={240} height={140} />
+              <HBarChart data={sourceDist.map((d) => ({ ...d, color: COLORS.c3 }))} />
             </View>
           </View>
         </View>
