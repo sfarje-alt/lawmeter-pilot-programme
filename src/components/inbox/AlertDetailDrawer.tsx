@@ -26,6 +26,8 @@ import {
   CalendarClock,
   Link2,
   Bookmark,
+  Settings2,
+  AlertOctagon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -43,6 +45,10 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { RichTextEditor, AttachedFile } from "./RichTextEditor";
 import { useAlerts } from "@/contexts/AlertsContext";
+import { useOwnersRoster } from "@/hooks/useOwnersRoster";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { Switch } from "@/components/ui/switch";
+import { OwnersRosterDialog } from "./OwnersRosterDialog";
 
 interface AlertDetailDrawerProps {
   alert: PeruAlert | null;
@@ -70,12 +76,14 @@ export function AlertDetailDrawer({
   onUnarchive,
   onTogglePin,
 }: AlertDetailDrawerProps) {
-  const { updateAttachments } = useAlerts();
+  const { updateAttachments, updateOwners, updateRequiresDecision } = useAlerts();
+  const { roster } = useOwnersRoster();
   const [sharedCommentary, setSharedCommentary] = useState("");
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
   const [urgency, setUrgency] = useState<string>("medium");
   const [tagsText, setTagsText] = useState("");
+  const [rosterOpen, setRosterOpen] = useState(false);
 
   useEffect(() => {
     if (alert) {
@@ -122,6 +130,7 @@ export function AlertDetailDrawer({
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl bg-card border-border/50 p-0">
         <ScrollArea className="h-full">
@@ -713,6 +722,61 @@ export function AlertDetailDrawer({
 
             <Separator className="bg-border/30" />
 
+            {/* Owners + Decision required */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    Responsables y decisión
+                  </h3>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs gap-1.5"
+                  onClick={() => setRosterOpen(true)}
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                  Gestionar lista
+                </Button>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Responsables (Owner)</Label>
+                <MultiSelect
+                  options={roster.map((o) => ({ value: o, label: o }))}
+                  selected={alert.owners ?? []}
+                  onChange={(next) => updateOwners(alert.id, next)}
+                  placeholder={roster.length === 0 ? "Configura la lista primero…" : "Selecciona responsables…"}
+                  emptyText="Sin responsables. Añade desde 'Gestionar lista'."
+                  className="w-full"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Aparecen en los reportes PDF y se aplican a las alertas siguientes que ingresen.
+                </p>
+              </div>
+
+              <div className="flex items-start justify-between gap-3 rounded-md border border-border/40 bg-muted/20 px-3 py-2.5">
+                <div className="space-y-0.5">
+                  <Label className="text-sm flex items-center gap-1.5">
+                    <AlertOctagon className="h-3.5 w-3.5 text-destructive" />
+                    Requiere decisión / soporte
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Marca cuando el cliente deba tomar una decisión explícita.
+                  </p>
+                </div>
+                <Switch
+                  checked={!!alert.requires_decision}
+                  onCheckedChange={(v) => updateRequiresDecision(alert.id, v)}
+                />
+              </div>
+            </div>
+
+            <Separator className="bg-border/30" />
+
             {/* Expert commentary — rich text + attachments */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -751,5 +815,7 @@ export function AlertDetailDrawer({
         </ScrollArea>
       </SheetContent>
     </Sheet>
+    <OwnersRosterDialog open={rosterOpen} onOpenChange={setRosterOpen} />
+    </>
   );
 }

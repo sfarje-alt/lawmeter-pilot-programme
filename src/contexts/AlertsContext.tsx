@@ -22,6 +22,8 @@ interface AlertsContextType {
   unarchiveAlert: (alertId: string) => void;
   updateSharedCommentary: (alertId: string, commentary: string) => void;
   updateAttachments: (alertId: string, attachments: AttachedFileMetaRef[]) => void;
+  updateOwners: (alertId: string, owners: string[]) => void;
+  updateRequiresDecision: (alertId: string, requires: boolean) => void;
   getPinnedAlerts: () => PeruAlert[];
 }
 
@@ -31,6 +33,8 @@ const PINNED_STORAGE_KEY = "lawmeter:pinned-alerts";
 const ARCHIVED_STORAGE_KEY = "lawmeter:archived-alerts"; // alertId -> ISO archived_at
 const COMMENTARY_STORAGE_KEY = "lawmeter:expert-commentary"; // alertId -> string
 const ATTACHMENTS_STORAGE_KEY = "lawmeter:alert-attachments"; // alertId -> AttachedFileMetaRef[]
+const OWNERS_STORAGE_KEY = "lawmeter:alert-owners"; // alertId -> string[]
+const DECISION_STORAGE_KEY = "lawmeter:alert-requires-decision"; // alertId -> boolean
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -124,6 +128,9 @@ function mapDbRowToAlert(
   archivedMap: Record<string, string>,
   commentaryMap: Record<string, string>,
   attachmentsMap: Record<string, AttachedFileMetaRef[]>,
+  ownersMap: Record<string, string[]>,
+  decisionMap: Record<string, boolean>,
+  defaultOwners: string[],
 ): PeruAlert | null {
   const type = normalizeType(row.legislation_type);
   if (!type) return null;
@@ -256,6 +263,18 @@ function mapDbRowToAlert(
     version: typeof row.version === "number" ? row.version : undefined,
     source_codigo: sourceRef.codigo ?? row.codigo ?? undefined,
     version_history: Array.isArray(ai.version_history) ? ai.version_history : [],
+    owners: (() => {
+      const fromMap = ownersMap[row.id];
+      if (Array.isArray(fromMap)) return fromMap;
+      const fromUi = Array.isArray(ui.owners) ? ui.owners.filter((o: any) => typeof o === "string") : null;
+      if (fromUi && fromUi.length > 0) return fromUi;
+      return defaultOwners;
+    })(),
+    requires_decision: (() => {
+      if (typeof decisionMap[row.id] === "boolean") return decisionMap[row.id];
+      if (typeof ui.requires_decision === "boolean") return ui.requires_decision;
+      return false;
+    })(),
   };
 }
 
@@ -324,9 +343,13 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
     const commentaryMap = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
     const attachmentsMap = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
+    const ownersMap = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
+    const decisionMap = loadJSON<Record<string, boolean>>(DECISION_STORAGE_KEY, {});
+    // Roster configured by the user — applied as default owners for new alerts
+    const defaultOwners = loadJSON<string[]>(`lawmeter:owners-roster:${orgId ?? "default"}`, []);
 
     const mapped = (data ?? [])
-      .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap))
+      .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap, ownersMap, decisionMap, defaultOwners))
       .filter((a): a is PeruAlert => a !== null);
 
     setAlerts(purgeOldArchivedAlerts(dedupeByCodigoLatestVersion(mapped)));
@@ -434,6 +457,24 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     saveJSON(ATTACHMENTS_STORAGE_KEY, map);
   }, []);
 
+  const updateOwners = useCallback((alertId: string, owners: string[]) => {
+    setAlerts((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, owners } : a)),
+    );
+    const map = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
+    map[alertId] = owners;
+    saveJSON(OWNERS_STORAGE_KEY, map);
+  }, []);
+
+  const updateRequiresDecision = useCallback((alertId: string, requires: boolean) => {
+    setAlerts((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, requires_decision: requires } : a)),
+    );
+    const map = loadJSON<Record<string, boolean>>(DECISION_STORAGE_KEY, {});
+    map[alertId] = requires;
+    saveJSON(DECISION_STORAGE_KEY, map);
+  }, []);
+
   const getPinnedAlerts = useCallback((): PeruAlert[] => {
     return alerts.filter((a) => a.is_pinned_for_publication);
   }, [alerts]);
@@ -450,6 +491,8 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         unarchiveAlert,
         updateSharedCommentary,
         updateAttachments,
+        updateOwners,
+        updateRequiresDecision,
         getPinnedAlerts,
       }}
     >

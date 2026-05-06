@@ -146,6 +146,10 @@ export interface PeruAlert extends BasePeruAlert {
   source_codigo?: string;
   /** Prior versions of this alert (excludes current). Ordered v1..v(n-1). */
   version_history?: VersionHistoryEntry[];
+  /** Owners asignados (multi). Picked from the org-wide roster. */
+  owners?: string[];
+  /** True when this alert requires explicit decision/support from the client. */
+  requires_decision?: boolean;
 }
 
 /** A previous version snapshot of an alert (from ai_analysis.version_history). */
