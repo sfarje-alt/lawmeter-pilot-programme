@@ -343,9 +343,12 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
     const commentaryMap = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
     const attachmentsMap = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
+    const ownersMap = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
+    const decisionMap = loadJSON<Record<string, boolean>>(DECISION_STORAGE_KEY, {});
+    const defaultOwners = loadJSON<string[]>(`lawmeter:owners-roster-default:${orgId}`, []);
 
     const mapped = (data ?? [])
-      .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap))
+      .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap, ownersMap, decisionMap, defaultOwners))
       .filter((a): a is PeruAlert => a !== null);
 
     setAlerts(purgeOldArchivedAlerts(dedupeByCodigoLatestVersion(mapped)));
