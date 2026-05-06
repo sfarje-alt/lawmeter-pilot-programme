@@ -603,17 +603,17 @@ function AlertCard({ a }: { a: Alert }) {
 // ============================================================================
 const Doc = (
   <Document>
-    {/* PAGE 1 — Cover + Snapshot */}
     <Page size="A4" style={styles.page}>
+      {/* Cover + Snapshot */}
       <View style={styles.header}>
-        <Text style={styles.brand}>LAWMETER · REGULATORY AFFAIRS BRIEF</Text>
+        <Text style={styles.brand}>LAWMETER · INFORME DE ASUNTOS REGULATORIOS</Text>
         <Text style={styles.title}>Reporte Regulatorio</Text>
         <Text style={styles.subtitle}>{PROFILE_NAME} — {PROFILE_BRANDS}</Text>
         <Text style={styles.subtitle}>Período: {PERIOD_LABEL}</Text>
         <View style={styles.headerDivider} />
         <View style={styles.pillRow}>
-          <Text style={styles.pill}>ALERTAS + SESIONES</Text>
-          <Text style={styles.pill}>SOLO PINEADAS</Text>
+          <Text style={styles.pill}>ALERTAS Y SESIONES</Text>
+          <Text style={styles.pill}>SOLO DESTACADAS</Text>
           <Text style={styles.pill}>{PERIOD_PILL}</Text>
           <Text style={styles.pillRed}>{decisionsNeeded.length} REQUIEREN DECISIÓN</Text>
         </View>
@@ -632,10 +632,10 @@ const Doc = (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>EXECUTIVE SNAPSHOT</Text>
+          <Text style={styles.sectionTitle}>RESUMEN EJECUTIVO</Text>
         </View>
         <View style={styles.snapshotBlock}>
-          <Text style={styles.snapshotKicker}>TOP DEVELOPMENTS</Text>
+          <Text style={styles.snapshotKicker}>DESARROLLOS PRINCIPALES</Text>
           {topDevelopments.map((a) => (
             <Text key={a.id} style={styles.snapshotItem}>
               • {a.legislation_id ? `[${a.legislation_id}] ` : ""}{truncate(a.legislation_title, 130)}
@@ -644,7 +644,7 @@ const Doc = (
           ))}
         </View>
         <View style={styles.snapshotBlock}>
-          <Text style={styles.snapshotKicker}>WATCHLIST</Text>
+          <Text style={styles.snapshotKicker}>EN OBSERVACIÓN</Text>
           {watchlist.map((a) => (
             <Text key={a.id} style={styles.snapshotItem}>
               • {truncate(a.legislation_title, 120)}{a.current_stage ? `  ·  ${a.current_stage}` : ""}
@@ -657,45 +657,42 @@ const Doc = (
             <Text style={styles.empty}>Ninguna decisión pendiente.</Text>
           ) : decisionsNeeded.map((a) => (
             <Text key={a.id} style={styles.snapshotItem}>
-              • {truncate(a.legislation_title, 120)}{a.owners?.length ? `  —  Owner: ${a.owners.join(", ")}` : ""}
+              • {truncate(a.legislation_title, 120)}{a.owners?.length ? `  —  Responsable: ${a.owners.join(", ")}` : ""}
             </Text>
           ))}
         </View>
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE 2 — Visualizaciones */}
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
+      {/* Visualizaciones */}
+      <View style={styles.section} break>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
           <Text style={styles.sectionTitle}>VISUALIZACIONES</Text>
-          <Text style={styles.sectionCount}>{ALERTS.length} ALERTAS · PERÍODO {PERIOD_LABEL.toUpperCase()}</Text>
+          <Text style={styles.sectionCount}>{ALERTS.length} ALERTAS · {PERIOD_LABEL.toUpperCase()}</Text>
         </View>
-        <View style={styles.vizGrid}>
-          <View style={styles.vizCell}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>DISTRIBUCIÓN POR IMPACTO</Text>
               <Text style={styles.vizSub}>Clasificación IA por nivel</Text>
-              <VBarChart data={impactDist} height={110} />
+              <VBarChart data={impactDist} height={100} />
             </View>
           </View>
-          <View style={styles.vizCell}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>PROYECTOS DE LEY vs NORMAS</Text>
               <Text style={styles.vizSub}>Composición del período</Text>
               <StackedBar data={typeDist} total={typeDist.reduce((s, d) => s + d.value, 0)} />
             </View>
           </View>
-          <View style={styles.vizCell}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
-              <Text style={styles.vizTitle}>OWNERS / ÁREAS INTERNAS</Text>
+              <Text style={styles.vizTitle}>RESPONSABLES / ÁREAS INTERNAS</Text>
               <Text style={styles.vizSub}>Cantidad de alertas asignadas</Text>
               <HBarChart data={ownerDist.map((d) => ({ ...d, color: COLORS.c2 }))} />
             </View>
           </View>
-          <View style={styles.vizCell}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>FUENTE / AUTORIDAD</Text>
               <Text style={styles.vizSub}>Origen institucional de la alerta</Text>
@@ -704,65 +701,51 @@ const Doc = (
           </View>
         </View>
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE 3 — Heatmap PL */}
-    <Page size="A4" style={styles.page}>
+      {/* Heatmap */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>HEATMAP REGULATORIO</Text>
+          <Text style={styles.sectionTitle}>MAPA DE CALOR REGULATORIO</Text>
           <Text style={styles.sectionCount}>PL: {pinnedBills.length} · NORMAS: {pinnedNorms.length}</Text>
         </View>
-
         <View style={styles.subSectionHeader}>
           <Text style={styles.subSectionTitle}>PROYECTOS DE LEY</Text>
-          <Text style={styles.subSectionCount}>{pinnedBills.length} PINEADOS</Text>
+          <Text style={styles.subSectionCount}>{pinnedBills.length} DESTACADOS</Text>
         </View>
         {pinnedBills.length === 0
-          ? <Text style={styles.empty}>Sin proyectos de ley pineados.</Text>
+          ? <Text style={styles.empty}>Sin proyectos de ley destacados.</Text>
           : <HeatmapTable items={pinnedBills} />}
-
         <View style={styles.subSectionHeader}>
           <Text style={styles.subSectionTitle}>NORMAS</Text>
-          <Text style={styles.subSectionCount}>{pinnedNorms.length} PINEADAS</Text>
+          <Text style={styles.subSectionCount}>{pinnedNorms.length} DESTACADAS</Text>
         </View>
         {pinnedNorms.length === 0
-          ? <Text style={styles.empty}>Sin normas pineadas.</Text>
+          ? <Text style={styles.empty}>Sin normas destacadas.</Text>
           : <HeatmapTable items={pinnedNorms} />}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE 4+ — Fichas PL */}
-    <Page size="A4" style={styles.page}>
+      {/* Detalle PL */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>FICHAS — PROYECTOS DE LEY</Text>
+          <Text style={styles.sectionTitle}>DETALLE — PROYECTOS DE LEY</Text>
           <Text style={styles.sectionCount}>{bills.length} ÍTEMS</Text>
         </View>
         {bills.map((a) => <AlertCard key={a.id} a={a} />)}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE N — Fichas Normas */}
-    <Page size="A4" style={styles.page}>
+      {/* Detalle Normas */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>FICHAS — NORMAS</Text>
+          <Text style={styles.sectionTitle}>DETALLE — NORMAS</Text>
           <Text style={styles.sectionCount}>{norms.length} ÍTEMS</Text>
         </View>
         {norms.map((a) => <AlertCard key={a.id} a={a} />)}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE N+1 — Sesiones */}
-    <Page size="A4" style={styles.page}>
+      {/* Sesiones */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
@@ -772,7 +755,7 @@ const Doc = (
         {SESSIONS.length === 0 ? (
           <Text style={styles.empty}>Sin sesiones registradas en el período seleccionado.</Text>
         ) : SESSIONS.map((s) => (
-          <View key={s.id} style={styles.sessionCard} wrap={false}>
+          <View key={s.id} style={styles.sessionCard}>
             <Text style={styles.sessionMeta}>{s.commission} · {formatDateEs(s.date)}</Text>
             <Text style={styles.sessionTitle}>{s.title}</Text>
             <View style={styles.cardDivider} />
@@ -787,7 +770,7 @@ const Doc = (
               </View>
             )}
             {s.video_url && (
-              <View style={{ marginTop: 8 }}>
+              <View style={{ marginTop: 6 }}>
                 <Text style={styles.bodyLabel}>VIDEO OFICIAL</Text>
                 <Link src={s.video_url} style={styles.sourceLink}>{s.video_url}</Link>
               </View>
@@ -795,11 +778,8 @@ const Doc = (
           </View>
         ))}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* Sources */}
-    <Page size="A4" style={styles.page}>
+      {/* Fuentes */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
@@ -807,7 +787,7 @@ const Doc = (
           <Text style={styles.sectionCount}>{sourceList.length} REFERENCIAS</Text>
         </View>
         {sourceList.map((s, i) => (
-          <View key={i} style={styles.sourceRow} wrap={false}>
+          <View key={i} style={styles.sourceRow}>
             <Text style={styles.sourceIdx}>{String(i + 1).padStart(2, "0")}</Text>
             <View style={styles.sourceBody}>
               <Text style={styles.sourceTitle}>{truncate(s.title, 140)}</Text>
@@ -816,7 +796,8 @@ const Doc = (
           </View>
         ))}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
+
+      <Text style={styles.footer} fixed>Generado por LawMeter • {NOW} • Confidencial</Text>
     </Page>
   </Document>
 );
