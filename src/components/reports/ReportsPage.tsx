@@ -1225,6 +1225,7 @@ export function ReportsPage() {
           includeAnalytics={includeAnalytics}
           profileName={profileName}
           periodLabel={periodLabel}
+          authorName={profile?.full_name || profile?.email || undefined}
         />
       ).toBlob();
 
