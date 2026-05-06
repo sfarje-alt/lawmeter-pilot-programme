@@ -450,8 +450,8 @@ function HBarChart({ data }: { data: { label: string; value: number; color?: str
         return (
           <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
             <Text style={{ width: 90, fontSize: 7, color: COLORS.inkMuted }}>{truncate(d.label, 22)}</Text>
-            <View style={{ flex: 1, height: 10, backgroundColor: COLORS.borderSoft, borderRadius: 2, overflow: "hidden" }}>
-              <View style={{ width: `${pct}%`, height: "100%", backgroundColor: d.color || COLORS.c2 }} />
+            <View style={{ flex: 1, height: 10, backgroundColor: COLORS.borderSoft, borderRadius: 2 }}>
+              <View style={{ width: `${pct}%`, height: 10, backgroundColor: d.color || COLORS.c2, borderRadius: 2 }} />
             </View>
             <Text style={{ width: 18, fontSize: 7, fontFamily: "Helvetica-Bold", color: COLORS.ink, textAlign: "right" }}>{d.value}</Text>
           </View>
