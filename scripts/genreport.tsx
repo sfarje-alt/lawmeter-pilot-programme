@@ -77,9 +77,9 @@ const styles = StyleSheet.create({
   sourceLink: { fontSize: 8, color: COLORS.brandLine, textDecoration: "underline" },
   footer: { position: "absolute", bottom: 24, left: 44, right: 44, textAlign: "center", fontSize: 7.5, color: COLORS.inkSubtle, borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 8, letterSpacing: 0.4 },
   // viz
-  vizGrid: { flexDirection: "row", flexWrap: "wrap" },
-  vizCell: { width: "50%", padding: 6 },
-  vizCard: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 6, padding: 10, backgroundColor: COLORS.surface },
+  vizGrid: {},
+  vizCell: { marginBottom: 10 },
+  vizCard: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 6, padding: 12, backgroundColor: COLORS.surface },
   vizTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", color: COLORS.brand, letterSpacing: 0.6, marginBottom: 6 },
   vizSub: { fontSize: 7.5, color: COLORS.inkSubtle, marginBottom: 8 },
   legendRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 6 },
