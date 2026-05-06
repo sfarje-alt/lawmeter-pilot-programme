@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
   pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 12 },
   pill: { fontSize: 8, color: COLORS.brand, backgroundColor: COLORS.brandSoft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, fontFamily: "Helvetica-Bold", letterSpacing: 0.4 },
   pillRed: { fontSize: 8, color: "#7f1d1d", backgroundColor: "#fee2e2", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, fontFamily: "Helvetica-Bold", letterSpacing: 0.4 },
-  section: { marginBottom: 22 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  section: { marginBottom: 14 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   sectionAccent: { width: 3, height: 14, backgroundColor: COLORS.brand, marginRight: 8 },
   sectionTitle: { fontSize: 13, fontFamily: "Helvetica-Bold", color: COLORS.brand, letterSpacing: 0.5 },
   sectionCount: { marginLeft: "auto", fontSize: 8, color: COLORS.inkMuted, fontFamily: "Helvetica-Bold", letterSpacing: 0.6 },
@@ -48,27 +48,28 @@ const styles = StyleSheet.create({
   tHeadRow: { flexDirection: "row", backgroundColor: COLORS.brand },
   tHead: { fontSize: 7.5, color: "#ffffff", fontFamily: "Helvetica-Bold", letterSpacing: 0.6, padding: 6 },
   tRow: { flexDirection: "row", borderTopWidth: 1, borderTopColor: COLORS.borderSoft },
-  tCell: { fontSize: 8, padding: 6, color: COLORS.ink },
+  tCell: { fontSize: 7.5, padding: 4, color: COLORS.ink },
   cId: { width: "13%" }, cTitle: { width: "32%" }, cRisk: { width: "11%" },
   cStage: { width: "14%" }, cOwner: { width: "15%" }, cAction: { width: "15%" },
-  riskTag: { fontSize: 7.5, fontFamily: "Helvetica-Bold", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8, alignSelf: "flex-start" },
-  card: { marginBottom: 14, padding: 16, backgroundColor: COLORS.surface, borderRadius: 6, borderWidth: 1, borderColor: COLORS.border, borderLeftWidth: 3, borderLeftColor: COLORS.brand },
-  cardKicker: { fontSize: 7.5, color: COLORS.brandLine, fontFamily: "Helvetica-Bold", letterSpacing: 1.2, marginBottom: 4 },
-  cardTitle: { fontSize: 11.5, fontFamily: "Helvetica-Bold", color: COLORS.ink, lineHeight: 1.35, marginBottom: 6 },
-  metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginBottom: 8 },
-  metaChip: { fontSize: 7.5, color: COLORS.inkMuted, backgroundColor: COLORS.surfaceAlt, borderWidth: 1, borderColor: COLORS.borderSoft, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
-  cardDivider: { height: 1, backgroundColor: COLORS.borderSoft, marginVertical: 8 },
-  fieldGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
-  fieldHalf: { width: "50%", paddingRight: 6, marginBottom: 8 },
-  fieldFull: { width: "100%", marginBottom: 8 },
-  bodyLabel: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.inkSubtle, letterSpacing: 1.1, marginBottom: 3 },
-  fieldText: { fontSize: 9, color: COLORS.ink, lineHeight: 1.4 },
-  ia: { marginTop: 8, padding: 8, backgroundColor: COLORS.iaBg, borderRadius: 4, borderWidth: 1, borderColor: COLORS.iaBorder },
-  iaLabel: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.iaInk, letterSpacing: 1.1, marginBottom: 3 },
-  iaText: { fontSize: 9, color: COLORS.iaInk, lineHeight: 1.4 },
-  commentary: { marginTop: 8, padding: 10, backgroundColor: COLORS.expertBg, borderRadius: 4, borderWidth: 1, borderColor: COLORS.expertBorder, borderLeftWidth: 3, borderLeftColor: COLORS.expertInk },
-  commentaryLabel: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COLORS.expertInk, letterSpacing: 1.1, marginBottom: 3 },
-  commentaryText: { fontSize: 9, color: COLORS.expertInk, lineHeight: 1.5, fontStyle: "italic" },
+  riskTag: { fontSize: 7, fontFamily: "Helvetica-Bold", paddingHorizontal: 4, paddingVertical: 1, borderRadius: 8, alignSelf: "flex-start" },
+  card: { marginBottom: 8, padding: 10, backgroundColor: COLORS.surface, borderRadius: 6, borderWidth: 1, borderColor: COLORS.border, borderLeftWidth: 3, borderLeftColor: COLORS.brand },
+  cardKicker: { fontSize: 7, color: COLORS.brandLine, fontFamily: "Helvetica-Bold", letterSpacing: 1.2, marginBottom: 3 },
+  cardTitle: { fontSize: 10.5, fontFamily: "Helvetica-Bold", color: COLORS.ink, lineHeight: 1.3, marginBottom: 5 },
+  metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginBottom: 6 },
+  metaChip: { fontSize: 7, color: COLORS.inkMuted, backgroundColor: COLORS.surfaceAlt, borderWidth: 1, borderColor: COLORS.borderSoft, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 8 },
+  cardDivider: { height: 1, backgroundColor: COLORS.borderSoft, marginVertical: 6 },
+  fieldGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 2 },
+  fieldHalf: { width: "50%", paddingRight: 6, marginBottom: 5 },
+  fieldQuarter: { width: "25%", paddingRight: 6, marginBottom: 5 },
+  fieldFull: { width: "100%", marginBottom: 5 },
+  bodyLabel: { fontSize: 7, fontFamily: "Helvetica-Bold", color: COLORS.inkSubtle, letterSpacing: 1.1, marginBottom: 2 },
+  fieldText: { fontSize: 8.5, color: COLORS.ink, lineHeight: 1.3 },
+  ia: { marginTop: 6, padding: 6, backgroundColor: COLORS.iaBg, borderRadius: 4, borderWidth: 1, borderColor: COLORS.iaBorder },
+  iaLabel: { fontSize: 7, fontFamily: "Helvetica-Bold", color: COLORS.iaInk, letterSpacing: 1.1, marginBottom: 2 },
+  iaText: { fontSize: 8.5, color: COLORS.iaInk, lineHeight: 1.3 },
+  commentary: { marginTop: 6, padding: 8, backgroundColor: COLORS.expertBg, borderRadius: 4, borderWidth: 1, borderColor: COLORS.expertBorder, borderLeftWidth: 3, borderLeftColor: COLORS.expertInk },
+  commentaryLabel: { fontSize: 7, fontFamily: "Helvetica-Bold", color: COLORS.expertInk, letterSpacing: 1.1, marginBottom: 2 },
+  commentaryText: { fontSize: 8.5, color: COLORS.expertInk, lineHeight: 1.35, fontStyle: "italic" },
   empty: { fontSize: 9.5, color: COLORS.inkSubtle, fontStyle: "italic", paddingVertical: 12, textAlign: "center" },
   sourceRow: { flexDirection: "row", paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft },
   sourceIdx: { width: 22, fontSize: 8, color: COLORS.inkSubtle, fontFamily: "Helvetica-Bold" },
@@ -509,7 +510,7 @@ function HeatmapTable({ items }: { items: Alert[] }) {
         <Text style={[styles.tHead, styles.cTitle]}>TEMA</Text>
         <Text style={[styles.tHead, styles.cRisk]}>IMPACTO</Text>
         <Text style={[styles.tHead, styles.cStage]}>ESTADO</Text>
-        <Text style={[styles.tHead, styles.cOwner]}>OWNER</Text>
+        <Text style={[styles.tHead, styles.cOwner]}>RESPONSABLE</Text>
         <Text style={[styles.tHead, styles.cAction]}>PRÓX. ACCIÓN</Text>
       </View>
       {items.map((a) => {
@@ -520,7 +521,7 @@ function HeatmapTable({ items }: { items: Alert[] }) {
           <View key={a.id} style={styles.tRow} wrap={false}>
             <Text style={[styles.tCell, styles.cId]}>{a.legislation_id || "—"}</Text>
             <Text style={[styles.tCell, styles.cTitle]}>{truncate(a.legislation_title, 110)}</Text>
-            <View style={[styles.cRisk, { padding: 6 }]}>
+            <View style={[styles.cRisk, { padding: 4 }]}>
               <Text style={[styles.riskTag, { backgroundColor: r.bg, color: r.fg }]}>{r.label}</Text>
             </View>
             <Text style={[styles.tCell, styles.cStage]}>{truncate(a.current_stage, 26) || "—"}</Text>
@@ -545,7 +546,7 @@ function AlertCard({ a }: { a: Alert }) {
     ? (a.entity || "Diario Oficial El Peruano")
     : "Congreso de la República del Perú";
   return (
-    <View style={styles.card} wrap={false}>
+    <View style={styles.card}>
       <Text style={styles.cardKicker}>{kicker}</Text>
       <Text style={styles.cardTitle}>{a.legislation_title}</Text>
       <View style={styles.metaRow}>
@@ -556,41 +557,43 @@ function AlertCard({ a }: { a: Alert }) {
       <View style={styles.fieldGrid}>
         <View style={styles.fieldFull}>
           <Text style={styles.bodyLabel}>QUÉ CAMBIÓ</Text>
-          <Text style={styles.fieldText}>{truncate(a.legislation_summary, 480) || "Sin resumen disponible."}</Text>
+          <Text style={styles.fieldText}>{truncate(a.legislation_summary, 360) || "Sin resumen disponible."}</Text>
         </View>
-        <View style={styles.fieldHalf}>
-          <Text style={styles.bodyLabel}>FUENTE / AUTORIDAD</Text>
+        <View style={styles.fieldQuarter}>
+          <Text style={styles.bodyLabel}>FUENTE</Text>
           <Text style={styles.fieldText}>{sourceAuth}</Text>
         </View>
-        <View style={styles.fieldHalf}>
+        <View style={styles.fieldQuarter}>
           <Text style={styles.bodyLabel}>PRÓXIMO HITO</Text>
           <Text style={styles.fieldText}>{a.current_stage || "Por confirmar"}</Text>
         </View>
-        <View style={styles.fieldHalf}>
-          <Text style={styles.bodyLabel}>OWNER / ETA</Text>
+        <View style={styles.fieldQuarter}>
+          <Text style={styles.bodyLabel}>RESPONSABLE</Text>
           <Text style={styles.fieldText}>{owners.length ? owners.join(", ") : "Sin asignar"}</Text>
         </View>
-        <View style={styles.fieldHalf}>
+        <View style={styles.fieldQuarter}>
           <Text style={styles.bodyLabel}>PRÓXIMOS PASOS</Text>
-          <Text style={styles.fieldText}>{a.requires_decision ? "Decisión interna pendiente. Definir postura y comunicar a owners." : "Monitoreo continuo del avance."}</Text>
+          <Text style={styles.fieldText}>{a.requires_decision ? "Decisión interna pendiente." : "Monitoreo continuo."}</Text>
         </View>
       </View>
-      {a.expert_commentary && (
-        <View style={styles.commentary}>
-          <Text style={styles.commentaryLabel}>POSICIÓN / COMENTARIO EXPERTO</Text>
-          <Text style={styles.commentaryText}>{a.expert_commentary}</Text>
-        </View>
-      )}
-      {(a.impact_level || a.urgency_level) && (
-        <View style={styles.ia}>
-          <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
-          <Text style={styles.iaText}>
-            {a.impact_level ? `Impacto: ${a.impact_level}` : ""}
-            {a.impact_level && a.urgency_level ? "   ·   " : ""}
-            {a.urgency_level ? `Urgencia: ${a.urgency_level}` : ""}
-          </Text>
-        </View>
-      )}
+      <View style={{ flexDirection: "row", gap: 6 }}>
+        {a.expert_commentary && (
+          <View style={[styles.commentary, { flex: 1, marginTop: 4 }]}>
+            <Text style={styles.commentaryLabel}>COMENTARIO EXPERTO</Text>
+            <Text style={styles.commentaryText}>{a.expert_commentary}</Text>
+          </View>
+        )}
+        {(a.impact_level || a.urgency_level) && (
+          <View style={[styles.ia, { flex: 1, marginTop: 4 }]}>
+            <Text style={styles.iaLabel}>CLASIFICACIÓN IA</Text>
+            <Text style={styles.iaText}>
+              {a.impact_level ? `Impacto: ${a.impact_level}` : ""}
+              {a.impact_level && a.urgency_level ? "   ·   " : ""}
+              {a.urgency_level ? `Urgencia: ${a.urgency_level}` : ""}
+            </Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -600,17 +603,17 @@ function AlertCard({ a }: { a: Alert }) {
 // ============================================================================
 const Doc = (
   <Document>
-    {/* PAGE 1 — Cover + Snapshot */}
     <Page size="A4" style={styles.page}>
+      {/* Cover + Snapshot */}
       <View style={styles.header}>
-        <Text style={styles.brand}>LAWMETER · REGULATORY AFFAIRS BRIEF</Text>
+        <Text style={styles.brand}>LAWMETER · INFORME DE ASUNTOS REGULATORIOS</Text>
         <Text style={styles.title}>Reporte Regulatorio</Text>
         <Text style={styles.subtitle}>{PROFILE_NAME} — {PROFILE_BRANDS}</Text>
         <Text style={styles.subtitle}>Período: {PERIOD_LABEL}</Text>
         <View style={styles.headerDivider} />
         <View style={styles.pillRow}>
-          <Text style={styles.pill}>ALERTAS + SESIONES</Text>
-          <Text style={styles.pill}>SOLO PINEADAS</Text>
+          <Text style={styles.pill}>ALERTAS Y SESIONES</Text>
+          <Text style={styles.pill}>SOLO DESTACADAS</Text>
           <Text style={styles.pill}>{PERIOD_PILL}</Text>
           <Text style={styles.pillRed}>{decisionsNeeded.length} REQUIEREN DECISIÓN</Text>
         </View>
@@ -629,10 +632,10 @@ const Doc = (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>EXECUTIVE SNAPSHOT</Text>
+          <Text style={styles.sectionTitle}>RESUMEN EJECUTIVO</Text>
         </View>
         <View style={styles.snapshotBlock}>
-          <Text style={styles.snapshotKicker}>TOP DEVELOPMENTS</Text>
+          <Text style={styles.snapshotKicker}>DESARROLLOS PRINCIPALES</Text>
           {topDevelopments.map((a) => (
             <Text key={a.id} style={styles.snapshotItem}>
               • {a.legislation_id ? `[${a.legislation_id}] ` : ""}{truncate(a.legislation_title, 130)}
@@ -641,7 +644,7 @@ const Doc = (
           ))}
         </View>
         <View style={styles.snapshotBlock}>
-          <Text style={styles.snapshotKicker}>WATCHLIST</Text>
+          <Text style={styles.snapshotKicker}>EN OBSERVACIÓN</Text>
           {watchlist.map((a) => (
             <Text key={a.id} style={styles.snapshotItem}>
               • {truncate(a.legislation_title, 120)}{a.current_stage ? `  ·  ${a.current_stage}` : ""}
@@ -654,45 +657,42 @@ const Doc = (
             <Text style={styles.empty}>Ninguna decisión pendiente.</Text>
           ) : decisionsNeeded.map((a) => (
             <Text key={a.id} style={styles.snapshotItem}>
-              • {truncate(a.legislation_title, 120)}{a.owners?.length ? `  —  Owner: ${a.owners.join(", ")}` : ""}
+              • {truncate(a.legislation_title, 120)}{a.owners?.length ? `  —  Responsable: ${a.owners.join(", ")}` : ""}
             </Text>
           ))}
         </View>
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE 2 — Visualizaciones */}
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
+      {/* Visualizaciones */}
+      <View style={styles.section} break>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
           <Text style={styles.sectionTitle}>VISUALIZACIONES</Text>
-          <Text style={styles.sectionCount}>{ALERTS.length} ALERTAS · PERÍODO {PERIOD_LABEL.toUpperCase()}</Text>
+          <Text style={styles.sectionCount}>{ALERTS.length} ALERTAS · {PERIOD_LABEL.toUpperCase()}</Text>
         </View>
-        <View style={styles.vizGrid}>
-          <View style={styles.vizCell}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>DISTRIBUCIÓN POR IMPACTO</Text>
               <Text style={styles.vizSub}>Clasificación IA por nivel</Text>
-              <VBarChart data={impactDist} height={110} />
+              <VBarChart data={impactDist} height={100} />
             </View>
           </View>
-          <View style={styles.vizCell}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>PROYECTOS DE LEY vs NORMAS</Text>
               <Text style={styles.vizSub}>Composición del período</Text>
               <StackedBar data={typeDist} total={typeDist.reduce((s, d) => s + d.value, 0)} />
             </View>
           </View>
-          <View style={styles.vizCell}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
-              <Text style={styles.vizTitle}>OWNERS / ÁREAS INTERNAS</Text>
+              <Text style={styles.vizTitle}>RESPONSABLES / ÁREAS INTERNAS</Text>
               <Text style={styles.vizSub}>Cantidad de alertas asignadas</Text>
               <HBarChart data={ownerDist.map((d) => ({ ...d, color: COLORS.c2 }))} />
             </View>
           </View>
-          <View style={styles.vizCell}>
+          <View style={{ width: "50%", padding: 4 }}>
             <View style={styles.vizCard}>
               <Text style={styles.vizTitle}>FUENTE / AUTORIDAD</Text>
               <Text style={styles.vizSub}>Origen institucional de la alerta</Text>
@@ -701,65 +701,51 @@ const Doc = (
           </View>
         </View>
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE 3 — Heatmap PL */}
-    <Page size="A4" style={styles.page}>
+      {/* Heatmap */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>HEATMAP REGULATORIO</Text>
+          <Text style={styles.sectionTitle}>MAPA DE CALOR REGULATORIO</Text>
           <Text style={styles.sectionCount}>PL: {pinnedBills.length} · NORMAS: {pinnedNorms.length}</Text>
         </View>
-
         <View style={styles.subSectionHeader}>
           <Text style={styles.subSectionTitle}>PROYECTOS DE LEY</Text>
-          <Text style={styles.subSectionCount}>{pinnedBills.length} PINEADOS</Text>
+          <Text style={styles.subSectionCount}>{pinnedBills.length} DESTACADOS</Text>
         </View>
         {pinnedBills.length === 0
-          ? <Text style={styles.empty}>Sin proyectos de ley pineados.</Text>
+          ? <Text style={styles.empty}>Sin proyectos de ley destacados.</Text>
           : <HeatmapTable items={pinnedBills} />}
-
         <View style={styles.subSectionHeader}>
           <Text style={styles.subSectionTitle}>NORMAS</Text>
-          <Text style={styles.subSectionCount}>{pinnedNorms.length} PINEADAS</Text>
+          <Text style={styles.subSectionCount}>{pinnedNorms.length} DESTACADAS</Text>
         </View>
         {pinnedNorms.length === 0
-          ? <Text style={styles.empty}>Sin normas pineadas.</Text>
+          ? <Text style={styles.empty}>Sin normas destacadas.</Text>
           : <HeatmapTable items={pinnedNorms} />}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE 4+ — Fichas PL */}
-    <Page size="A4" style={styles.page}>
+      {/* Detalle PL */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>FICHAS — PROYECTOS DE LEY</Text>
+          <Text style={styles.sectionTitle}>DETALLE — PROYECTOS DE LEY</Text>
           <Text style={styles.sectionCount}>{bills.length} ÍTEMS</Text>
         </View>
         {bills.map((a) => <AlertCard key={a.id} a={a} />)}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE N — Fichas Normas */}
-    <Page size="A4" style={styles.page}>
+      {/* Detalle Normas */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
-          <Text style={styles.sectionTitle}>FICHAS — NORMAS</Text>
+          <Text style={styles.sectionTitle}>DETALLE — NORMAS</Text>
           <Text style={styles.sectionCount}>{norms.length} ÍTEMS</Text>
         </View>
         {norms.map((a) => <AlertCard key={a.id} a={a} />)}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* PAGE N+1 — Sesiones */}
-    <Page size="A4" style={styles.page}>
+      {/* Sesiones */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
@@ -769,7 +755,7 @@ const Doc = (
         {SESSIONS.length === 0 ? (
           <Text style={styles.empty}>Sin sesiones registradas en el período seleccionado.</Text>
         ) : SESSIONS.map((s) => (
-          <View key={s.id} style={styles.sessionCard} wrap={false}>
+          <View key={s.id} style={styles.sessionCard}>
             <Text style={styles.sessionMeta}>{s.commission} · {formatDateEs(s.date)}</Text>
             <Text style={styles.sessionTitle}>{s.title}</Text>
             <View style={styles.cardDivider} />
@@ -784,7 +770,7 @@ const Doc = (
               </View>
             )}
             {s.video_url && (
-              <View style={{ marginTop: 8 }}>
+              <View style={{ marginTop: 6 }}>
                 <Text style={styles.bodyLabel}>VIDEO OFICIAL</Text>
                 <Link src={s.video_url} style={styles.sourceLink}>{s.video_url}</Link>
               </View>
@@ -792,11 +778,8 @@ const Doc = (
           </View>
         ))}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
-    </Page>
 
-    {/* Sources */}
-    <Page size="A4" style={styles.page}>
+      {/* Fuentes */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionAccent} />
@@ -804,7 +787,7 @@ const Doc = (
           <Text style={styles.sectionCount}>{sourceList.length} REFERENCIAS</Text>
         </View>
         {sourceList.map((s, i) => (
-          <View key={i} style={styles.sourceRow} wrap={false}>
+          <View key={i} style={styles.sourceRow}>
             <Text style={styles.sourceIdx}>{String(i + 1).padStart(2, "0")}</Text>
             <View style={styles.sourceBody}>
               <Text style={styles.sourceTitle}>{truncate(s.title, 140)}</Text>
@@ -813,7 +796,8 @@ const Doc = (
           </View>
         ))}
       </View>
-      <Text style={styles.footer}>Generado por LawMeter • {NOW} • Confidencial</Text>
+
+      <Text style={styles.footer} fixed>Generado por LawMeter • {NOW} • Confidencial</Text>
     </Page>
   </Document>
 );
