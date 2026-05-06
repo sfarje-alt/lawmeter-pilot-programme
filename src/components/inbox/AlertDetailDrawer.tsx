@@ -26,7 +26,6 @@ import {
   CalendarClock,
   Link2,
   Bookmark,
-  Users,
   Settings2,
   AlertOctagon,
 } from "lucide-react";
