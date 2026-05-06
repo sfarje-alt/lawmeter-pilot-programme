@@ -456,6 +456,24 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     saveJSON(ATTACHMENTS_STORAGE_KEY, map);
   }, []);
 
+  const updateOwners = useCallback((alertId: string, owners: string[]) => {
+    setAlerts((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, owners } : a)),
+    );
+    const map = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
+    map[alertId] = owners;
+    saveJSON(OWNERS_STORAGE_KEY, map);
+  }, []);
+
+  const updateRequiresDecision = useCallback((alertId: string, requires: boolean) => {
+    setAlerts((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, requires_decision: requires } : a)),
+    );
+    const map = loadJSON<Record<string, boolean>>(DECISION_STORAGE_KEY, {});
+    map[alertId] = requires;
+    saveJSON(DECISION_STORAGE_KEY, map);
+  }, []);
+
   const getPinnedAlerts = useCallback((): PeruAlert[] => {
     return alerts.filter((a) => a.is_pinned_for_publication);
   }, [alerts]);
@@ -472,6 +490,8 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         unarchiveAlert,
         updateSharedCommentary,
         updateAttachments,
+        updateOwners,
+        updateRequiresDecision,
         getPinnedAlerts,
       }}
     >
