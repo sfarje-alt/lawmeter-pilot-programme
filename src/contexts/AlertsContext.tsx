@@ -345,7 +345,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     const attachmentsMap = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
     const ownersMap = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
     const decisionMap = loadJSON<Record<string, boolean>>(DECISION_STORAGE_KEY, {});
-    const defaultOwners = loadJSON<string[]>(`lawmeter:owners-roster-default:${orgId}`, []);
+    const defaultOwners = loadJSON<string[]>(`lawmeter:owners-roster:${orgId ?? "default"}`, []);
 
     const mapped = (data ?? [])
       .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap, ownersMap, decisionMap, defaultOwners))
