@@ -456,7 +456,35 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const updateAttachments = useCallback((alertId: string, attachments: AttachedFileMetaRef[]) => {
+  const addCommentaryEntry = useCallback((alertId: string, body: string, author: string) => {
+    const entry: CommentaryEntry = {
+      id: `cmt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      author: author || "Usuario",
+      created_at: new Date().toISOString(),
+      body,
+    };
+    setAlerts((prev) =>
+      prev.map((a) => {
+        if (a.id !== alertId) return a;
+        const next = [entry, ...(a.commentary_history ?? [])];
+        return { ...a, commentary_history: next, expert_commentary: body };
+      }),
+    );
+    const map = loadJSON<Record<string, CommentaryEntry[]>>(COMMENTARY_HISTORY_STORAGE_KEY, {});
+    map[alertId] = [entry, ...(Array.isArray(map[alertId]) ? map[alertId] : [])];
+    saveJSON(COMMENTARY_HISTORY_STORAGE_KEY, map);
+    // Also keep latest as expert_commentary for reports
+    const cmap = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
+    cmap[alertId] = body;
+    saveJSON(COMMENTARY_STORAGE_KEY, cmap);
+    supabase
+      .from("alerts")
+      .update({ expert_commentary: body })
+      .eq("id", alertId)
+      .then(({ error: e }) => {
+        if (e) console.warn("[AlertsContext] could not persist commentary:", e.message);
+      });
+  }, []);
     setAlerts((prev) =>
       prev.map((a) => (a.id === alertId ? { ...a, attachments } : a)),
     );
