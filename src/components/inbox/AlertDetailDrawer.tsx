@@ -774,14 +774,23 @@ export function AlertDetailDrawer({
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Responsables (Owner)</Label>
-                <MultiSelect
-                  options={roster.map((o) => ({ value: o, label: o }))}
-                  selected={alert.owners ?? []}
-                  onChange={(next) => updateOwners(alert.id, next)}
-                  placeholder={roster.length === 0 ? "Configura la lista primero…" : "Selecciona responsables…"}
-                  emptyText="Sin responsables. Añade desde 'Gestionar lista'."
-                  className="w-full"
-                />
+                <div
+                  className={cn(
+                    archiveError?.owner && "rounded-md ring-2 ring-destructive ring-offset-1 ring-offset-background",
+                  )}
+                >
+                  <MultiSelect
+                    options={roster.map((o) => ({ value: o, label: o }))}
+                    selected={alert.owners ?? []}
+                    onChange={(next) => {
+                      updateOwners(alert.id, next);
+                      if (next.length > 0) setArchiveError((prev) => (prev ? { ...prev, owner: false } : null));
+                    }}
+                    placeholder={roster.length === 0 ? "Configura la lista primero…" : "Selecciona responsables…"}
+                    emptyText="Sin responsables. Añade desde 'Gestionar lista'."
+                    className="w-full"
+                  />
+                </div>
                 <p className="text-[11px] text-muted-foreground">
                   Aparecen en los reportes PDF y se aplican a las alertas siguientes que ingresen.
                 </p>
