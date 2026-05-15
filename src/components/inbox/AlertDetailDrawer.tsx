@@ -815,7 +815,7 @@ export function AlertDetailDrawer({
 
             <Separator className="bg-border/30" />
 
-            {/* Expert commentary — rich text + attachments */}
+            {/* Expert commentary — versioned with explicit save */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <PenLine className="h-4 w-4 text-primary" />
@@ -823,17 +823,77 @@ export function AlertDetailDrawer({
                   Comentario experto
                 </h3>
               </div>
-              <RichTextEditor
-                value={sharedCommentary}
-                onChange={handleCommentaryChange}
-                attachments={attachments}
-                onAttachmentsChange={handleAttachmentsChange}
-                placeholder="Documenta el criterio interno: cómo afecta a la organización, supuestos, postura sugerida..."
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Este comentario reemplaza o complementa el análisis generado por IA. Se guarda automáticamente.
-                Puedes usar formato (negrita, cursiva, listas) y adjuntar documentos de soporte.
-              </p>
+              <div
+                className={cn(
+                  archiveError?.comment && "rounded-md ring-2 ring-destructive ring-offset-1 ring-offset-background",
+                )}
+              >
+                <RichTextEditor
+                  value={draftCommentary}
+                  onChange={setDraftCommentary}
+                  attachments={attachments}
+                  onAttachmentsChange={handleAttachmentsChange}
+                  placeholder="Documenta la postura de tu organización: cómo afecta, supuestos, decisión tomada..."
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] text-muted-foreground">
+                  Cada guardado queda registrado con autor y fecha en el historial.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveCommentary}
+                  disabled={getTextLength(draftCommentary) === 0}
+                  className="gap-1.5"
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  Guardar comentario
+                </Button>
+              </div>
+
+              {alert.commentary_history && alert.commentary_history.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2">
+                    <History className="h-3.5 w-3.5 text-muted-foreground" />
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Historial de comentarios
+                    </h4>
+                    <Badge variant="outline" className="text-[10px] bg-muted/40 border-border/40 text-muted-foreground">
+                      {alert.commentary_history.length}
+                    </Badge>
+                  </div>
+                  <ol className="space-y-2">
+                    {alert.commentary_history.map((entry) => {
+                      let stamp = entry.created_at;
+                      try {
+                        stamp = format(new Date(entry.created_at), "dd/MM/yyyy HH:mm", { locale: es });
+                      } catch { /* keep raw */ }
+                      return (
+                        <li
+                          key={entry.id}
+                          className="rounded-md border border-border/30 bg-muted/20 px-3 py-2 space-y-1"
+                        >
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-xs font-semibold text-foreground">{entry.author}</span>
+                            <span className="text-[10px] text-muted-foreground">{stamp}</span>
+                          </div>
+                          <div
+                            className="text-xs text-foreground/90 leading-relaxed prose prose-sm prose-invert max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                            dangerouslySetInnerHTML={{ __html: entry.body }}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              )}
+
+              {archiveError && (archiveError.owner || archiveError.comment) && (
+                <p className="text-xs text-destructive leading-relaxed pt-1">
+                  Para cerrar esta alerta, asigna un responsable y documenta la decisión en el Comentario Experto.
+                </p>
+              )}
             </div>
 
             {/* Source */}
