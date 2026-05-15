@@ -485,6 +485,8 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         if (e) console.warn("[AlertsContext] could not persist commentary:", e.message);
       });
   }, []);
+
+  const updateAttachments = useCallback((alertId: string, attachments: AttachedFileMetaRef[]) => {
     setAlerts((prev) =>
       prev.map((a) => (a.id === alertId ? { ...a, attachments } : a)),
     );
