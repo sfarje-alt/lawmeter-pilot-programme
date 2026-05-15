@@ -279,6 +279,9 @@ function mapDbRowToAlert(
       if (typeof ui.requires_decision === "boolean") return ui.requires_decision;
       return false;
     })(),
+    commentary_history: Array.isArray(commentaryHistoryMap[row.id])
+      ? commentaryHistoryMap[row.id]
+      : (Array.isArray(ui.commentary_history) ? ui.commentary_history : []),
   };
 }
 
