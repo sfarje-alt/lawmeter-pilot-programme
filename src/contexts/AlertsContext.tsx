@@ -37,6 +37,7 @@ const COMMENTARY_STORAGE_KEY = "lawmeter:expert-commentary"; // alertId -> strin
 const ATTACHMENTS_STORAGE_KEY = "lawmeter:alert-attachments"; // alertId -> AttachedFileMetaRef[]
 const OWNERS_STORAGE_KEY = "lawmeter:alert-owners"; // alertId -> string[]
 const DECISION_STORAGE_KEY = "lawmeter:alert-requires-decision"; // alertId -> boolean
+const COMMENTARY_HISTORY_STORAGE_KEY = "lawmeter:expert-commentary-history"; // alertId -> CommentaryEntry[]
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
