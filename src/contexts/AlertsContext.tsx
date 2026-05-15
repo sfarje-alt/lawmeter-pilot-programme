@@ -7,6 +7,7 @@ import {
   getStateFamily,
   purgeOldArchivedAlerts,
   KeyDate,
+  CommentaryEntry,
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ interface AlertsContextType {
   archiveAlert: (alertId: string) => void;
   unarchiveAlert: (alertId: string) => void;
   updateSharedCommentary: (alertId: string, commentary: string) => void;
+  addCommentaryEntry: (alertId: string, body: string, author: string) => void;
   updateAttachments: (alertId: string, attachments: AttachedFileMetaRef[]) => void;
   updateOwners: (alertId: string, owners: string[]) => void;
   updateRequiresDecision: (alertId: string, requires: boolean) => void;
@@ -35,6 +37,7 @@ const COMMENTARY_STORAGE_KEY = "lawmeter:expert-commentary"; // alertId -> strin
 const ATTACHMENTS_STORAGE_KEY = "lawmeter:alert-attachments"; // alertId -> AttachedFileMetaRef[]
 const OWNERS_STORAGE_KEY = "lawmeter:alert-owners"; // alertId -> string[]
 const DECISION_STORAGE_KEY = "lawmeter:alert-requires-decision"; // alertId -> boolean
+const COMMENTARY_HISTORY_STORAGE_KEY = "lawmeter:expert-commentary-history"; // alertId -> CommentaryEntry[]
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -131,6 +134,7 @@ function mapDbRowToAlert(
   ownersMap: Record<string, string[]>,
   decisionMap: Record<string, boolean>,
   defaultOwners: string[],
+  commentaryHistoryMap: Record<string, CommentaryEntry[]>,
 ): PeruAlert | null {
   const type = normalizeType(row.legislation_type);
   if (!type) return null;
@@ -275,6 +279,9 @@ function mapDbRowToAlert(
       if (typeof ui.requires_decision === "boolean") return ui.requires_decision;
       return false;
     })(),
+    commentary_history: Array.isArray(commentaryHistoryMap[row.id])
+      ? commentaryHistoryMap[row.id]
+      : (Array.isArray(ui.commentary_history) ? ui.commentary_history : []),
   };
 }
 
@@ -345,11 +352,12 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     const attachmentsMap = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
     const ownersMap = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
     const decisionMap = loadJSON<Record<string, boolean>>(DECISION_STORAGE_KEY, {});
+    const commentaryHistoryMap = loadJSON<Record<string, CommentaryEntry[]>>(COMMENTARY_HISTORY_STORAGE_KEY, {});
     // Roster configured by the user — applied as default owners for new alerts
     const defaultOwners = loadJSON<string[]>(`lawmeter:owners-roster:${orgId ?? "default"}`, []);
 
     const mapped = (data ?? [])
-      .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap, ownersMap, decisionMap, defaultOwners))
+      .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap, ownersMap, decisionMap, defaultOwners, commentaryHistoryMap))
       .filter((a): a is PeruAlert => a !== null);
 
     setAlerts(purgeOldArchivedAlerts(dedupeByCodigoLatestVersion(mapped)));
@@ -448,6 +456,36 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  const addCommentaryEntry = useCallback((alertId: string, body: string, author: string) => {
+    const entry: CommentaryEntry = {
+      id: `cmt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      author: author || "Usuario",
+      created_at: new Date().toISOString(),
+      body,
+    };
+    setAlerts((prev) =>
+      prev.map((a) => {
+        if (a.id !== alertId) return a;
+        const next = [entry, ...(a.commentary_history ?? [])];
+        return { ...a, commentary_history: next, expert_commentary: body };
+      }),
+    );
+    const map = loadJSON<Record<string, CommentaryEntry[]>>(COMMENTARY_HISTORY_STORAGE_KEY, {});
+    map[alertId] = [entry, ...(Array.isArray(map[alertId]) ? map[alertId] : [])];
+    saveJSON(COMMENTARY_HISTORY_STORAGE_KEY, map);
+    // Also keep latest as expert_commentary for reports
+    const cmap = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
+    cmap[alertId] = body;
+    saveJSON(COMMENTARY_STORAGE_KEY, cmap);
+    supabase
+      .from("alerts")
+      .update({ expert_commentary: body })
+      .eq("id", alertId)
+      .then(({ error: e }) => {
+        if (e) console.warn("[AlertsContext] could not persist commentary:", e.message);
+      });
+  }, []);
+
   const updateAttachments = useCallback((alertId: string, attachments: AttachedFileMetaRef[]) => {
     setAlerts((prev) =>
       prev.map((a) => (a.id === alertId ? { ...a, attachments } : a)),
@@ -490,6 +528,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         archiveAlert,
         unarchiveAlert,
         updateSharedCommentary,
+        addCommentaryEntry,
         updateAttachments,
         updateOwners,
         updateRequiresDecision,

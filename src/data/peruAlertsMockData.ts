@@ -150,6 +150,18 @@ export interface PeruAlert extends BasePeruAlert {
   owners?: string[];
   /** True when this alert requires explicit decision/support from the client. */
   requires_decision?: boolean;
+  /** Versioned expert commentary entries (most recent first). */
+  commentary_history?: CommentaryEntry[];
+}
+
+/** A single saved expert commentary entry (versioned). */
+export interface CommentaryEntry {
+  id: string;
+  author: string;
+  /** ISO timestamp. */
+  created_at: string;
+  /** HTML body produced by the rich text editor. */
+  body: string;
 }
 
 /** A previous version snapshot of an alert (from ai_analysis.version_history). */

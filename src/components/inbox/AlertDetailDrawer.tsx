@@ -42,9 +42,10 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { RichTextEditor, AttachedFile } from "./RichTextEditor";
 import { useAlerts } from "@/contexts/AlertsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOwnersRoster } from "@/hooks/useOwnersRoster";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Switch } from "@/components/ui/switch";
@@ -76,24 +77,27 @@ export function AlertDetailDrawer({
   onUnarchive,
   onTogglePin,
 }: AlertDetailDrawerProps) {
-  const { updateAttachments, updateOwners, updateRequiresDecision } = useAlerts();
+  const { updateAttachments, updateOwners, updateRequiresDecision, addCommentaryEntry } = useAlerts();
+  const { profile } = useAuth();
   const { roster } = useOwnersRoster();
-  const [sharedCommentary, setSharedCommentary] = useState("");
+  const [draftCommentary, setDraftCommentary] = useState("");
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [impact, setImpact] = useState<ImpactLevel | undefined>(undefined);
   const [urgency, setUrgency] = useState<string>("medium");
   const [tagsText, setTagsText] = useState("");
   const [rosterOpen, setRosterOpen] = useState(false);
+  const [archiveError, setArchiveError] = useState<{ owner: boolean; comment: boolean } | null>(null);
 
   useEffect(() => {
     if (alert) {
-      setSharedCommentary(alert.expert_commentary || "");
+      setDraftCommentary("");
       setAttachments((alert.attachments as AttachedFile[]) || []);
       setImpact(alert.impact_level);
       // Map urgency_category ("alta/media/baja") → drawer value ("high/medium/low")
       const uc = alert.urgency_category;
       setUrgency(uc === "alta" ? "high" : uc === "baja" ? "low" : "medium");
       setTagsText((alert.affected_areas || []).join(", "));
+      setArchiveError(null);
     }
   }, [alert?.id]);
 
@@ -101,6 +105,19 @@ export function AlertDetailDrawer({
     setAttachments(files);
     if (alert) updateAttachments(alert.id, files);
   };
+
+  // Strip HTML and check minimum text length across saved history
+  const getTextLength = (html: string) => {
+    if (typeof document === "undefined") return html.replace(/<[^>]*>/g, "").trim().length;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return (tmp.textContent || "").trim().length;
+  };
+
+  const hasValidSavedComment = useMemo(() => {
+    const history = alert?.commentary_history ?? [];
+    return history.some((e) => getTextLength(e.body) >= 10);
+  }, [alert?.commentary_history]);
 
   if (!alert) return null;
 
@@ -113,20 +130,32 @@ export function AlertDetailDrawer({
     ? format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es })
     : format(new Date(alert.created_at), "dd 'de' MMMM, yyyy", { locale: es });
 
-  const handleCommentaryChange = (commentary: string) => {
-    setSharedCommentary(commentary);
-    if (onUpdateExpertCommentary) {
-      onUpdateExpertCommentary(alert.id, commentary);
-    }
+  const handleSaveCommentary = () => {
+    if (!alert) return;
+    if (getTextLength(draftCommentary) === 0) return;
+    const author = profile?.full_name?.trim() || profile?.email || "Usuario";
+    addCommentaryEntry(alert.id, draftCommentary, author);
+    onUpdateExpertCommentary?.(alert.id, draftCommentary);
+    setDraftCommentary("");
+    setArchiveError((prev) => (prev ? { ...prev, comment: false } : null));
   };
 
   const handleArchiveToggle = () => {
     if (isArchived) {
       onUnarchive?.(alert.id);
-    } else {
-      onArchive?.(alert.id);
-      onOpenChange(false);
+      return;
     }
+    if (alert.requires_decision) {
+      const ownerOk = (alert.owners ?? []).length > 0;
+      const commentOk = hasValidSavedComment;
+      if (!ownerOk || !commentOk) {
+        setArchiveError({ owner: !ownerOk, comment: !commentOk });
+        return;
+      }
+    }
+    setArchiveError(null);
+    onArchive?.(alert.id);
+    onOpenChange(false);
   };
 
   return (
@@ -240,6 +269,15 @@ export function AlertDetailDrawer({
                 {alert.legislation_title}
               </SheetTitle>
             </SheetHeader>
+
+            {archiveError && (archiveError.owner || archiveError.comment) && (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2">
+                <AlertOctagon className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive leading-relaxed">
+                  Para cerrar esta alerta, asigna un responsable y documenta la decisión en el Comentario Experto.
+                </p>
+              </div>
+            )}
 
             {/* AI disclaimer */}
             <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
@@ -745,14 +783,23 @@ export function AlertDetailDrawer({
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Responsables (Owner)</Label>
-                <MultiSelect
-                  options={roster.map((o) => ({ value: o, label: o }))}
-                  selected={alert.owners ?? []}
-                  onChange={(next) => updateOwners(alert.id, next)}
-                  placeholder={roster.length === 0 ? "Configura la lista primero…" : "Selecciona responsables…"}
-                  emptyText="Sin responsables. Añade desde 'Gestionar lista'."
-                  className="w-full"
-                />
+                <div
+                  className={cn(
+                    archiveError?.owner && "rounded-md ring-2 ring-destructive ring-offset-1 ring-offset-background",
+                  )}
+                >
+                  <MultiSelect
+                    options={roster.map((o) => ({ value: o, label: o }))}
+                    selected={alert.owners ?? []}
+                    onChange={(next) => {
+                      updateOwners(alert.id, next);
+                      if (next.length > 0) setArchiveError((prev) => (prev ? { ...prev, owner: false } : null));
+                    }}
+                    placeholder={roster.length === 0 ? "Configura la lista primero…" : "Selecciona responsables…"}
+                    emptyText="Sin responsables. Añade desde 'Gestionar lista'."
+                    className="w-full"
+                  />
+                </div>
                 <p className="text-[11px] text-muted-foreground">
                   Aparecen en los reportes PDF y se aplican a las alertas siguientes que ingresen.
                 </p>
@@ -777,7 +824,7 @@ export function AlertDetailDrawer({
 
             <Separator className="bg-border/30" />
 
-            {/* Expert commentary — rich text + attachments */}
+            {/* Expert commentary — versioned with explicit save */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <PenLine className="h-4 w-4 text-primary" />
@@ -785,17 +832,72 @@ export function AlertDetailDrawer({
                   Comentario experto
                 </h3>
               </div>
-              <RichTextEditor
-                value={sharedCommentary}
-                onChange={handleCommentaryChange}
-                attachments={attachments}
-                onAttachmentsChange={handleAttachmentsChange}
-                placeholder="Documenta el criterio interno: cómo afecta a la organización, supuestos, postura sugerida..."
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Este comentario reemplaza o complementa el análisis generado por IA. Se guarda automáticamente.
-                Puedes usar formato (negrita, cursiva, listas) y adjuntar documentos de soporte.
-              </p>
+              <div
+                className={cn(
+                  archiveError?.comment && "rounded-md ring-2 ring-destructive ring-offset-1 ring-offset-background",
+                )}
+              >
+                <RichTextEditor
+                  value={draftCommentary}
+                  onChange={setDraftCommentary}
+                  attachments={attachments}
+                  onAttachmentsChange={handleAttachmentsChange}
+                  placeholder="Documenta la postura de tu organización: cómo afecta, supuestos, decisión tomada..."
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] text-muted-foreground">
+                  Cada guardado queda registrado con autor y fecha en el historial.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveCommentary}
+                  disabled={getTextLength(draftCommentary) === 0}
+                  className="gap-1.5"
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  Guardar comentario
+                </Button>
+              </div>
+
+              {alert.commentary_history && alert.commentary_history.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2">
+                    <History className="h-3.5 w-3.5 text-muted-foreground" />
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Historial de comentarios
+                    </h4>
+                    <Badge variant="outline" className="text-[10px] bg-muted/40 border-border/40 text-muted-foreground">
+                      {alert.commentary_history.length}
+                    </Badge>
+                  </div>
+                  <ol className="space-y-2">
+                    {alert.commentary_history.map((entry) => {
+                      let stamp = entry.created_at;
+                      try {
+                        stamp = format(new Date(entry.created_at), "dd/MM/yyyy HH:mm", { locale: es });
+                      } catch { /* keep raw */ }
+                      return (
+                        <li
+                          key={entry.id}
+                          className="rounded-md border border-border/30 bg-muted/20 px-3 py-2 space-y-1"
+                        >
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-xs font-semibold text-foreground">{entry.author}</span>
+                            <span className="text-[10px] text-muted-foreground">{stamp}</span>
+                          </div>
+                          <div
+                            className="text-xs text-foreground/90 leading-relaxed prose prose-sm prose-invert max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                            dangerouslySetInnerHTML={{ __html: entry.body }}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              )}
+
             </div>
 
             {/* Source */}
