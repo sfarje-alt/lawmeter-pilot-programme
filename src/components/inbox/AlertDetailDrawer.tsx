@@ -270,6 +270,15 @@ export function AlertDetailDrawer({
               </SheetTitle>
             </SheetHeader>
 
+            {archiveError && (archiveError.owner || archiveError.comment) && (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2">
+                <AlertOctagon className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive leading-relaxed">
+                  Para cerrar esta alerta, asigna un responsable y documenta la decisión en el Comentario Experto.
+                </p>
+              </div>
+            )}
+
             {/* AI disclaimer */}
             <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
               <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
