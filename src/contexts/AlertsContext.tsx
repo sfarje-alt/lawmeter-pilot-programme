@@ -528,6 +528,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         archiveAlert,
         unarchiveAlert,
         updateSharedCommentary,
+        addCommentaryEntry,
         updateAttachments,
         updateOwners,
         updateRequiresDecision,
