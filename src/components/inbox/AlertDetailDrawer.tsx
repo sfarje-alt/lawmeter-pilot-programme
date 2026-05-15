@@ -42,9 +42,10 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { RichTextEditor, AttachedFile } from "./RichTextEditor";
 import { useAlerts } from "@/contexts/AlertsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOwnersRoster } from "@/hooks/useOwnersRoster";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Switch } from "@/components/ui/switch";
