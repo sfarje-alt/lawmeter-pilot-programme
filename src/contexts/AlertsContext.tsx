@@ -7,6 +7,7 @@ import {
   getStateFamily,
   purgeOldArchivedAlerts,
   KeyDate,
+  CommentaryEntry,
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
