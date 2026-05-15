@@ -6,6 +6,8 @@
 export const EMPTY_DATA_ORG_IDS = new Set<string>([
   // Betsson Group (piloto)
   'b7e15500-0001-4000-8000-000000000001',
+  // ISA (piloto)
+  'b7e15500-0004-4000-8000-000000000001',
 ]);
 
 /**
