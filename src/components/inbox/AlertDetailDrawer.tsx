@@ -90,13 +90,14 @@ export function AlertDetailDrawer({
 
   useEffect(() => {
     if (alert) {
-      setSharedCommentary(alert.expert_commentary || "");
+      setDraftCommentary("");
       setAttachments((alert.attachments as AttachedFile[]) || []);
       setImpact(alert.impact_level);
       // Map urgency_category ("alta/media/baja") → drawer value ("high/medium/low")
       const uc = alert.urgency_category;
       setUrgency(uc === "alta" ? "high" : uc === "baja" ? "low" : "medium");
       setTagsText((alert.affected_areas || []).join(", "));
+      setArchiveError(null);
     }
   }, [alert?.id]);
 
@@ -104,6 +105,19 @@ export function AlertDetailDrawer({
     setAttachments(files);
     if (alert) updateAttachments(alert.id, files);
   };
+
+  // Strip HTML and check minimum text length across saved history
+  const getTextLength = (html: string) => {
+    if (typeof document === "undefined") return html.replace(/<[^>]*>/g, "").trim().length;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return (tmp.textContent || "").trim().length;
+  };
+
+  const hasValidSavedComment = useMemo(() => {
+    const history = alert?.commentary_history ?? [];
+    return history.some((e) => getTextLength(e.body) >= 10);
+  }, [alert?.commentary_history]);
 
   if (!alert) return null;
 
@@ -116,20 +130,32 @@ export function AlertDetailDrawer({
     ? format(new Date(displayDate), "dd 'de' MMMM, yyyy", { locale: es })
     : format(new Date(alert.created_at), "dd 'de' MMMM, yyyy", { locale: es });
 
-  const handleCommentaryChange = (commentary: string) => {
-    setSharedCommentary(commentary);
-    if (onUpdateExpertCommentary) {
-      onUpdateExpertCommentary(alert.id, commentary);
-    }
+  const handleSaveCommentary = () => {
+    if (!alert) return;
+    if (getTextLength(draftCommentary) === 0) return;
+    const author = profile?.full_name?.trim() || profile?.email || "Usuario";
+    addCommentaryEntry(alert.id, draftCommentary, author);
+    onUpdateExpertCommentary?.(alert.id, draftCommentary);
+    setDraftCommentary("");
+    setArchiveError((prev) => (prev ? { ...prev, comment: false } : null));
   };
 
   const handleArchiveToggle = () => {
     if (isArchived) {
       onUnarchive?.(alert.id);
-    } else {
-      onArchive?.(alert.id);
-      onOpenChange(false);
+      return;
     }
+    if (alert.requires_decision) {
+      const ownerOk = (alert.owners ?? []).length > 0;
+      const commentOk = hasValidSavedComment;
+      if (!ownerOk || !commentOk) {
+        setArchiveError({ owner: !ownerOk, comment: !commentOk });
+        return;
+      }
+    }
+    setArchiveError(null);
+    onArchive?.(alert.id);
+    onOpenChange(false);
   };
 
   return (
