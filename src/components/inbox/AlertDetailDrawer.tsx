@@ -898,11 +898,6 @@ export function AlertDetailDrawer({
                 </div>
               )}
 
-              {archiveError && (archiveError.owner || archiveError.comment) && (
-                <p className="text-xs text-destructive leading-relaxed pt-1">
-                  Para cerrar esta alerta, asigna un responsable y documenta la decisión en el Comentario Experto.
-                </p>
-              )}
             </div>
 
             {/* Source */}
