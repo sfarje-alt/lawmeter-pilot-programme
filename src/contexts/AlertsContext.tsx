@@ -134,6 +134,7 @@ function mapDbRowToAlert(
   ownersMap: Record<string, string[]>,
   decisionMap: Record<string, boolean>,
   defaultOwners: string[],
+  commentaryHistoryMap: Record<string, CommentaryEntry[]>,
 ): PeruAlert | null {
   const type = normalizeType(row.legislation_type);
   if (!type) return null;
