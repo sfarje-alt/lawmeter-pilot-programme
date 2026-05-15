@@ -22,6 +22,7 @@ interface AlertsContextType {
   archiveAlert: (alertId: string) => void;
   unarchiveAlert: (alertId: string) => void;
   updateSharedCommentary: (alertId: string, commentary: string) => void;
+  addCommentaryEntry: (alertId: string, body: string, author: string) => void;
   updateAttachments: (alertId: string, attachments: AttachedFileMetaRef[]) => void;
   updateOwners: (alertId: string, owners: string[]) => void;
   updateRequiresDecision: (alertId: string, requires: boolean) => void;
