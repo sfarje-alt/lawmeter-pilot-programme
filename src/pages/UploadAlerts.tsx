@@ -9,7 +9,7 @@ import {
   parseManualPayload,
   PL_TEMPLATE,
   NORMA_TEMPLATE,
-  type ManualPayload,
+  type NormalizedItem,
 } from "@/lib/manualAlertSchema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,8 @@ interface UploadAlertsProps {
 
 export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
   const [activeTipo, setActiveTipo] = useState<Tipo>("pl");
-  const [payload, setPayload] = useState<ManualPayload | null>(null);
+  const [items, setItems] = useState<NormalizedItem[] | null>(null);
+  const [itemsTipo, setItemsTipo] = useState<Tipo>("pl");
   const [filename, setFilename] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
@@ -48,7 +49,8 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
       });
       return;
     }
-    setPayload(result.data);
+    setItems(result.items);
+    setItemsTipo(tipo);
     setFilename(name);
   };
 
@@ -66,12 +68,12 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
   };
 
   const confirmUpload = async () => {
-    if (!payload) return;
+    if (!items) return;
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke(
         "ingest-alerts-manual",
-        { body: payload },
+        { body: { tipo: itemsTipo, items } },
       );
       if (error) throw error;
       const result = data as {
@@ -86,9 +88,10 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
           result.failed?.length ? ` · ${result.failed.length} fallidas` : ""
         }`,
       });
-      setPayload(null);
+      const goTo = itemsTipo;
+      setItems(null);
       setFilename("");
-      onGoToInbox?.(payload.tipo === "pl" ? "bills" : "regulations");
+      onGoToInbox?.(goTo === "pl" ? "bills" : "regulations");
     } catch (e) {
       toast({
         title: "Error al cargar",
@@ -101,8 +104,8 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
   };
 
   const renderTabContent = (tipo: Tipo) => {
-    const isPreview = payload && payload.tipo === tipo;
-    if (isPreview && payload) {
+    const isPreview = items && itemsTipo === tipo;
+    if (isPreview && items) {
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -111,7 +114,7 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setPayload(null);
+                  setItems(null);
                   setFilename("");
                 }}
               >
@@ -120,7 +123,7 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
               </Button>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  {payload.items.length}{" "}
+                  {items.length}{" "}
                   {tipo === "pl" ? "proyecto(s) de ley" : "norma(s)"} detectada(s)
                 </p>
                 {filename && (
@@ -135,7 +138,7 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
                 : "Confirmar e ingresar al inbox"}
             </Button>
           </div>
-          <AlertsPreviewList items={payload.items} tipo={tipo} />
+          <AlertsPreviewList items={items} />
         </div>
       );
     }
@@ -183,7 +186,7 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
         value={activeTipo}
         onValueChange={(v) => {
           setActiveTipo(v as Tipo);
-          setPayload(null);
+          setItems(null);
           setFilename("");
         }}
       >
