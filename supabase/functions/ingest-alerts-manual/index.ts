@@ -1,7 +1,7 @@
 // Edge function: ingest-alerts-manual
 // Subida manual de alertas (PL o Norma) desde el portal interno.
 // Auth: JWT del usuario logueado (admin de una org marcada como "manual ingest").
-// El organization_id y client_id se determinan server-side a partir del perfil.
+// Schema esperado (Diez Canseco): items normalizados por el front (NormalizedItem[]).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { v5 as uuidv5 } from "https://esm.sh/uuid@9.0.1";
@@ -16,50 +16,55 @@ const corsHeaders = {
 const NAMESPACE_OID = "6ba7b812-9dad-11d1-80b4-00c04fd430c8";
 const ALLOWED_TIPOS = new Set(["norma", "pl"]);
 
-// Orgs autorizadas a usar este endpoint (Diez Canseco, piloto).
 const MANUAL_INGEST_ORG_IDS = new Set<string>([
   "b7e15500-0006-4000-8000-000000000001",
 ]);
 
-// Client por defecto para cada org de subida manual.
 const DEFAULT_CLIENT_FOR_ORG: Record<string, string> = {
   "b7e15500-0006-4000-8000-000000000001":
     "b7e15500-0007-4000-8000-000000000001",
 };
 
-const IMPACT_TO_RISK: Record<string, string> = {
-  Alta: "grave",
-  Media: "medio",
-  Baja: "leve",
-};
+// Mapeo de categorías a niveles internos (risk_level / urgency_level / impact_level).
+function mapCategoria(value?: string | null): string | null {
+  if (!value) return null;
+  const v = String(value).trim().toLowerCase();
+  if (v === "grave") return "grave";
+  if (v === "alto" || v === "alta") return "alto";
+  if (v === "medio" || v === "media") return "medio";
+  if (v === "leve" || v === "bajo" || v === "baja") return "leve";
+  if (v === "positivo") return "positivo";
+  return null;
+}
 
-const IMPACT_TO_LEVEL: Record<string, string> = {
-  Alta: "grave",
-  Media: "medio",
-  Baja: "leve",
-};
+interface ClientAnnotation {
+  client_key?: string;
+  comentario_experto?: string;
+  impacto?: string;
+  urgencia?: string;
+  area_interes?: string[];
+}
 
 interface ManualItem {
+  tipo: "pl" | "norma";
   external_id: string;
-  titulo: string;
-  resumen?: string;
-  comentario?: string;
-  impacto_categoria?: "Alta" | "Media" | "Baja";
-  urgencia_categoria?: "Alta" | "Media" | "Baja";
-  area_de_interes?: string[];
-  url?: string;
-  fuente?: string;
   // PL
-  fecha_presentacion?: string;
-  codigo?: string;
-  estado_actual?: string;
-  autores?: string[];
-  proponente?: string;
+  num_proyecto?: string;
+  periodo_parlamentario?: string;
+  nivel?: string;
+  fecha_proyecto?: string;
+  grupo_parlamentario?: string;
+  autor?: string;
+  ult_estado?: string;
+  fecha_ult_estado?: string;
   // Norma
-  fecha_publicacion?: string;
-  entity?: string;
-  reference_number?: string;
-  sumilla?: string;
+  institucion?: string;
+  num_norma?: string;
+  fecha?: string;
+  // Comunes
+  texto_completo?: string;
+  enlace?: string;
+  annotation?: ClientAnnotation | null;
 }
 
 interface ManualBody {
@@ -113,7 +118,6 @@ Deno.serve(async (req) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  // Cliente con el JWT del usuario para identificarlo
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
@@ -126,7 +130,6 @@ Deno.serve(async (req) => {
   }
   const user = userData.user;
 
-  // Cliente con service role para resolver perfil y escribir
   const admin = createClient(supabaseUrl, serviceKey);
 
   const { data: profile, error: profErr } = await admin
@@ -199,9 +202,7 @@ Deno.serve(async (req) => {
 
   for (const item of body.items) {
     try {
-      if (!item.external_id || !item.titulo) {
-        throw new Error("missing external_id or titulo");
-      }
+      if (!item.external_id) throw new Error("missing external_id");
       const tipo = body.tipo;
       const seed = `${orgId}|${clientId}|${tipo}|${item.external_id}|v1`;
       const id = uuidv5(seed, NAMESPACE_OID);
@@ -212,10 +213,22 @@ Deno.serve(async (req) => {
         .eq("id", id)
         .maybeSingle();
 
-      const fechaPubIso = normalizeDate(item.fecha_publicacion);
-      const fechaPresIso = normalizeDate(item.fecha_presentacion);
-      const fuenteLabel =
-        item.fuente && /^https?:\/\//i.test(item.fuente) ? item.url ?? item.fuente : item.fuente ?? null;
+      const ann = item.annotation ?? null;
+      const impactoLevel = mapCategoria(ann?.impacto);
+      const urgenciaLevel = mapCategoria(ann?.urgencia);
+      const areas = Array.isArray(ann?.area_interes) ? ann!.area_interes! : [];
+
+      const titulo =
+        tipo === "pl"
+          ? `Proyecto de Ley N° ${item.num_proyecto ?? item.external_id}`
+          : item.num_norma ?? item.external_id;
+
+      const fechaPubIso =
+        tipo === "norma" ? normalizeDate(item.fecha) : null;
+      const fechaPresIso =
+        tipo === "pl" ? normalizeDate(item.fecha_proyecto) : null;
+      const fechaEstadoIso =
+        tipo === "pl" ? normalizeDate(item.fecha_ult_estado) : null;
 
       const aiAnalysis = {
         impacto: null,
@@ -227,18 +240,30 @@ Deno.serve(async (req) => {
         ui_extras: {
           kanban_stage:
             tipo === "pl"
-              ? (item.estado_actual ?? "comision").toLowerCase()
+              ? (item.ult_estado ?? "comision").toString().toLowerCase()
               : "publicado",
-          impact_level: item.impacto_categoria
-            ? (IMPACT_TO_LEVEL[item.impacto_categoria] ?? null)
-            : null,
-          entity: item.entity ?? null,
+          impact_level: impactoLevel,
+          entity: tipo === "norma" ? item.institucion ?? null : null,
           publication_date: fechaPubIso,
           approval_probability: null,
           is_pinned_for_publication: false,
-          client_commentaries: [],
-          source_label: fuenteLabel,
+          client_commentaries: ann?.comentario_experto
+            ? [
+                {
+                  client_key: ann.client_key ?? null,
+                  comentario: ann.comentario_experto,
+                },
+              ]
+            : [],
+          source_label: item.enlace ?? null,
           manual_upload: true,
+          raw: {
+            periodo_parlamentario: item.periodo_parlamentario ?? null,
+            nivel: item.nivel ?? null,
+            grupo_parlamentario: item.grupo_parlamentario ?? null,
+            fecha_ult_estado: fechaEstadoIso,
+            texto_completo: item.texto_completo ?? null,
+          },
         },
       };
 
@@ -246,63 +271,59 @@ Deno.serve(async (req) => {
         id,
         organization_id: orgId,
         client_id: clientId,
-        legislation_title: item.titulo,
+        legislation_title: titulo,
         legislation_id: item.external_id,
         legislation_type: tipo,
-        legislation_summary: item.resumen ?? item.comentario ?? null,
-        ai_summary: item.comentario ?? null,
-        affected_areas: Array.isArray(item.area_de_interes) ? item.area_de_interes : [],
-        risk_level: item.impacto_categoria
-          ? (IMPACT_TO_RISK[item.impacto_categoria] ?? "medium")
-          : "medium",
-        urgency_level: item.urgencia_categoria
-          ? item.urgencia_categoria.toLowerCase()
-          : "media",
+        legislation_summary: item.texto_completo ?? null,
+        ai_summary: ann?.comentario_experto ?? null,
+        affected_areas: areas,
+        risk_level: impactoLevel ?? "medio",
+        urgency_level: urgenciaLevel ?? "medio",
         deadline: fechaPubIso ?? fechaPresIso,
         published_at: fechaPubIso,
-        source_url: item.url ?? null,
+        source_url: item.enlace ?? null,
         ai_analysis: aiAnalysis,
         updated_at: new Date().toISOString(),
 
-        url: item.url ?? null,
-        fuente: fuenteLabel,
-        comentario: item.comentario ?? null,
+        url: item.enlace ?? null,
+        fuente: tipo === "norma" ? item.institucion ?? null : null,
+        comentario: ann?.comentario_experto ?? null,
+        expert_commentary: ann?.comentario_experto ?? null,
 
         impacto: null,
         urgencia: null,
-        impacto_categoria: item.impacto_categoria ?? null,
-        urgencia_categoria: item.urgencia_categoria ?? null,
+        impacto_categoria: ann?.impacto ?? null,
+        urgencia_categoria: ann?.urgencia ?? null,
 
-        area_de_interes: Array.isArray(item.area_de_interes) ? item.area_de_interes : [],
+        area_de_interes: areas,
         racional: [],
         fechas_identificadas: [],
 
         // PL
-        codigo: item.codigo ?? null,
-        estado_actual: item.estado_actual ?? null,
+        codigo: tipo === "pl" ? item.num_proyecto ?? null : null,
+        estado_actual: tipo === "pl" ? item.ult_estado ?? null : null,
         estado_anterior: null,
         es_cambio_estado: null,
         seguimiento_hash: null,
-        autores: Array.isArray(item.autores) ? item.autores : [],
-        proponente: item.proponente ?? null,
+        autores: tipo === "pl" && item.autor ? [item.autor] : [],
+        proponente: tipo === "pl" ? item.grupo_parlamentario ?? null : null,
         fecha_presentacion: fechaPresIso,
         seguimiento: null,
 
-        // Sesion (no aplica)
         comision: null,
         fecha_sesion: null,
 
         // Norma
         fecha_publicacion: fechaPubIso,
-        reference_number: item.reference_number ?? null,
-        entity: item.entity ?? null,
-        sumilla: item.sumilla ?? item.resumen ?? null,
+        reference_number: tipo === "norma" ? item.num_norma ?? null : null,
+        entity: tipo === "norma" ? item.institucion ?? null : null,
+        sumilla: tipo === "norma" ? item.texto_completo ?? null : null,
       };
 
       if (!existing) {
         const { error: insErr } = await admin
           .from("alerts")
-          .insert({ ...baseRow, status: "inbox", expert_commentary: null });
+          .insert({ ...baseRow, status: "inbox" });
         if (insErr) throw insErr;
         inserted++;
       } else {
