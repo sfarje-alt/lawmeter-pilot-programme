@@ -1,104 +1,236 @@
 import { z } from "zod";
 
-const categoria = z.enum(["Alta", "Media", "Baja"]);
+// Categorías que envía Diez Canseco (mixtas: impacto y urgencia).
+// Aceptamos cualquier string para no bloquear, pero conocemos estos valores.
+export const KNOWN_CATEGORIAS = [
+  "Grave",
+  "Alto",
+  "Medio",
+  "Leve",
+  "Bajo",
+  "Positivo",
+] as const;
 
-const baseItem = z.object({
-  external_id: z.string().min(1, "external_id requerido"),
-  titulo: z.string().min(1, "titulo requerido"),
-  resumen: z.string().optional(),
-  comentario: z.string().optional(),
-  impacto_categoria: categoria.optional(),
-  urgencia_categoria: categoria.optional(),
-  area_de_interes: z.array(z.string()).optional(),
-  url: z.string().optional(),
-  fuente: z.string().optional(),
+const clientBlock = z.object({
+  comentario_experto: z.string().optional(),
+  impacto: z.string().optional(),
+  urgencia: z.string().optional(),
+  area_interes: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
-const plItem = baseItem.extend({
-  fecha_presentacion: z.string().optional(),
-  codigo: z.string().optional(),
-  estado_actual: z.string().optional(),
-  autores: z.array(z.string()).optional(),
-  proponente: z.string().optional(),
-});
+const plRawItem = z
+  .object({
+    id: z.string().min(1, "id requerido"),
+    num_proyecto: z.string().optional(),
+    periodo_parlamentario: z.string().optional(),
+    nivel: z.string().optional(),
+    texto_completo: z.string().optional(),
+    fecha_proyecto: z.string().optional(),
+    grupo_parlamentario: z.string().optional(),
+    autor: z.string().optional(),
+    ult_estado: z.string().optional(),
+    fecha_ult_estado: z.string().optional(),
+    enlace: z.string().optional(),
+  })
+  .catchall(z.unknown());
 
-const normaItem = baseItem.extend({
-  fecha_publicacion: z.string().optional(),
-  entity: z.string().optional(),
-  reference_number: z.string().optional(),
-  sumilla: z.string().optional(),
-});
+const normaRawItem = z
+  .object({
+    id: z.string().min(1, "id requerido"),
+    institucion: z.string().optional(),
+    num_norma: z.string().optional(),
+    texto_completo: z.string().optional(),
+    fecha: z.string().optional(),
+    enlace: z.string().optional(),
+  })
+  .catchall(z.unknown());
 
-export const manualPLPayloadSchema = z.object({
-  tipo: z.literal("pl"),
-  items: z.array(plItem).min(1, "Debe incluir al menos 1 item"),
-});
+const RESERVED_KEYS_PL = new Set([
+  "id",
+  "num_proyecto",
+  "periodo_parlamentario",
+  "nivel",
+  "texto_completo",
+  "fecha_proyecto",
+  "grupo_parlamentario",
+  "autor",
+  "ult_estado",
+  "fecha_ult_estado",
+  "enlace",
+]);
+const RESERVED_KEYS_NORMA = new Set([
+  "id",
+  "institucion",
+  "num_norma",
+  "texto_completo",
+  "fecha",
+  "enlace",
+]);
 
-export const manualNormaPayloadSchema = z.object({
-  tipo: z.literal("norma"),
-  items: z.array(normaItem).min(1, "Debe incluir al menos 1 item"),
-});
+export interface ClientAnnotation {
+  client_key: string;
+  comentario_experto?: string;
+  impacto?: string;
+  urgencia?: string;
+  area_interes: string[];
+}
 
-export type ManualPLPayload = z.infer<typeof manualPLPayloadSchema>;
-export type ManualNormaPayload = z.infer<typeof manualNormaPayloadSchema>;
-export type ManualPayload = ManualPLPayload | ManualNormaPayload;
-export type ManualItem = ManualPayload["items"][number];
+export interface NormalizedPL {
+  tipo: "pl";
+  external_id: string;
+  num_proyecto?: string;
+  periodo_parlamentario?: string;
+  nivel?: string;
+  texto_completo?: string;
+  fecha_proyecto?: string;
+  grupo_parlamentario?: string;
+  autor?: string;
+  ult_estado?: string;
+  fecha_ult_estado?: string;
+  enlace?: string;
+  annotation: ClientAnnotation | null;
+}
+
+export interface NormalizedNorma {
+  tipo: "norma";
+  external_id: string;
+  institucion?: string;
+  num_norma?: string;
+  texto_completo?: string;
+  fecha?: string;
+  enlace?: string;
+  annotation: ClientAnnotation | null;
+}
+
+export type NormalizedItem = NormalizedPL | NormalizedNorma;
+
+function extractAnnotation(
+  raw: Record<string, unknown>,
+  reserved: Set<string>,
+): ClientAnnotation | null {
+  const dynamicEntries = Object.entries(raw).filter(
+    ([k, v]) =>
+      !reserved.has(k) &&
+      v !== null &&
+      typeof v === "object" &&
+      !Array.isArray(v),
+  );
+  if (dynamicEntries.length === 0) return null;
+  const [client_key, value] = dynamicEntries[0];
+  const parsed = clientBlock.safeParse(value);
+  if (!parsed.success) return null;
+  const area = parsed.data.area_interes;
+  return {
+    client_key,
+    comentario_experto: parsed.data.comentario_experto,
+    impacto: parsed.data.impacto,
+    urgencia: parsed.data.urgencia,
+    area_interes: Array.isArray(area)
+      ? area
+      : typeof area === "string" && area.trim()
+        ? [area]
+        : [],
+  };
+}
+
+function toArray<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[];
+  if (raw && typeof raw === "object") return [raw as T];
+  return [];
+}
 
 export function parseManualPayload(
   raw: unknown,
   tipo: "pl" | "norma",
-): { ok: true; data: ManualPayload } | { ok: false; error: string } {
-  const schema = tipo === "pl" ? manualPLPayloadSchema : manualNormaPayloadSchema;
-  const parsed = schema.safeParse(raw);
-  if (!parsed.success) {
-    const first = parsed.error.errors[0];
-    return {
-      ok: false,
-      error: `${first.path.join(".") || "raíz"}: ${first.message}`,
-    };
+): { ok: true; items: NormalizedItem[] } | { ok: false; error: string } {
+  const arr = toArray<Record<string, unknown>>(raw);
+  if (arr.length === 0) {
+    return { ok: false, error: "El archivo no contiene items" };
   }
-  return { ok: true, data: parsed.data };
+  const items: NormalizedItem[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const obj = arr[i];
+    if (tipo === "pl") {
+      const parsed = plRawItem.safeParse(obj);
+      if (!parsed.success) {
+        const first = parsed.error.errors[0];
+        return {
+          ok: false,
+          error: `Item ${i + 1} → ${first.path.join(".") || "raíz"}: ${first.message}`,
+        };
+      }
+      const annotation = extractAnnotation(obj, RESERVED_KEYS_PL);
+      items.push({
+        tipo: "pl",
+        external_id: parsed.data.id,
+        num_proyecto: parsed.data.num_proyecto,
+        periodo_parlamentario: parsed.data.periodo_parlamentario,
+        nivel: parsed.data.nivel,
+        texto_completo: parsed.data.texto_completo,
+        fecha_proyecto: parsed.data.fecha_proyecto,
+        grupo_parlamentario: parsed.data.grupo_parlamentario,
+        autor: parsed.data.autor,
+        ult_estado: parsed.data.ult_estado,
+        fecha_ult_estado: parsed.data.fecha_ult_estado,
+        enlace: parsed.data.enlace,
+        annotation,
+      });
+    } else {
+      const parsed = normaRawItem.safeParse(obj);
+      if (!parsed.success) {
+        const first = parsed.error.errors[0];
+        return {
+          ok: false,
+          error: `Item ${i + 1} → ${first.path.join(".") || "raíz"}: ${first.message}`,
+        };
+      }
+      const annotation = extractAnnotation(obj, RESERVED_KEYS_NORMA);
+      items.push({
+        tipo: "norma",
+        external_id: parsed.data.id,
+        institucion: parsed.data.institucion,
+        num_norma: parsed.data.num_norma,
+        texto_completo: parsed.data.texto_completo,
+        fecha: parsed.data.fecha,
+        enlace: parsed.data.enlace,
+        annotation,
+      });
+    }
+  }
+  return { ok: true, items };
 }
 
-export const PL_TEMPLATE: ManualPLPayload = {
-  tipo: "pl",
-  items: [
-    {
-      external_id: "PL-00001-2026",
-      titulo: "Proyecto de Ley que regula ejemplo",
-      resumen: "Breve resumen del proyecto de ley.",
-      comentario: "Comentario interno del equipo legal.",
-      impacto_categoria: "Alta",
-      urgencia_categoria: "Media",
-      area_de_interes: ["Energía", "Regulación"],
-      url: "https://www.congreso.gob.pe/...",
-      fuente: "Congreso de la República",
-      fecha_presentacion: "15/05/2026",
-      codigo: "00001/2026-CR",
-      estado_actual: "Comisión",
-      autores: ["Apellido, Nombre"],
-      proponente: "Bancada X",
-    },
-  ],
+export const PL_TEMPLATE = {
+  bcp: {
+    comentario_experto: "Esta iniciativa va sobre chocolates",
+    impacto: "Alto",
+    urgencia: "Grave",
+    area_interes: "Financiero",
+  },
+  num_proyecto: "1002",
+  id: "1002_XY",
+  periodo_parlamentario: "2021-2026",
+  nivel: "Senado",
+  texto_completo: "XXXXXXXXXXXXXXXXXXXXXXX",
+  fecha_proyecto: "19/05/2026",
+  grupo_parlamentario: "Fuerza Popular",
+  autor: "Juan Pérez",
+  ult_estado: "DICTAMEN",
+  fecha_ult_estado: "19/08/2026",
+  enlace: "https://wb2server.congreso.gob.pe/spley-portal/#/expediente/2021/14594",
 };
 
-export const NORMA_TEMPLATE: ManualNormaPayload = {
-  tipo: "norma",
-  items: [
-    {
-      external_id: "DS-001-2026-EM",
-      titulo: "Decreto Supremo Nº 001-2026-EM",
-      resumen: "Resumen de la norma publicada.",
-      comentario: "Comentario interno del equipo legal.",
-      impacto_categoria: "Media",
-      urgencia_categoria: "Alta",
-      area_de_interes: ["Minería"],
-      url: "https://busquedas.elperuano.pe/...",
-      fuente: "El Peruano",
-      fecha_publicacion: "10/05/2026",
-      entity: "Ministerio de Energía y Minas",
-      reference_number: "DS-001-2026-EM",
-      sumilla: "Sumilla oficial de la norma.",
-    },
-  ],
+export const NORMA_TEMPLATE = {
+  nombre_cliente: {
+    comentario_experto: "Este es un comentario experto",
+    impacto: "Grave",
+    urgencia: "Alto",
+    area_interes: "Financiero",
+  },
+  institucion: "MINSA",
+  id: "109_XYZ",
+  texto_completo: "XXXXXXX",
+  fecha: "19/05/2026",
+  num_norma: "109877-MINSA",
+  enlace: "https://wb2server.congreso.gob.pe/spley-portal/#/expediente/2021/14594",
 };
