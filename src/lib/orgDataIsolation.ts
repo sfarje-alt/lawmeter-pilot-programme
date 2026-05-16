@@ -8,7 +8,20 @@ export const EMPTY_DATA_ORG_IDS = new Set<string>([
   'b7e15500-0001-4000-8000-000000000001',
   // ISA (piloto)
   'b7e15500-0004-4000-8000-000000000001',
+  // Diez Canseco (piloto - subida manual JSON)
+  'b7e15500-0006-4000-8000-000000000001',
 ]);
+
+// Organizaciones cuya única fuente de alertas es la subida manual de JSON
+// (no scrapers ni ingest automático). Habilita el portal "Cargar alertas".
+export const MANUAL_INGEST_ORG_IDS = new Set<string>([
+  'b7e15500-0006-4000-8000-000000000001', // Diez Canseco
+]);
+
+export function isManualIngestOrg(organizationId: string | null | undefined): boolean {
+  if (!organizationId) return false;
+  return MANUAL_INGEST_ORG_IDS.has(organizationId);
+}
 
 /**
  * Devuelve true si la organización debe ver bandejas, sesiones, calendario,
