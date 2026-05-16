@@ -1,4 +1,4 @@
-import { Inbox, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock } from "lucide-react";
+import { Inbox, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock, Upload } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { isManualIngestOrg } from "@/lib/orgDataIsolation";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
 import lawmeterIcon from "@/assets/lawmeter-icon.png";
 
@@ -25,7 +26,7 @@ interface AppSidebarProps {
 }
 
 // Operational menu items (single user type — internal compliance team, single profile)
-const menuItems = [
+const baseMenuItems = [
   { id: "inbox", title: "Alertas", icon: Inbox },
   { id: "sessions", title: "Sesiones", icon: Video },
   { id: "reports", title: "Reportes", icon: FileText },
@@ -36,9 +37,16 @@ const menuItems = [
 export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const menuItems = [
+    ...baseMenuItems,
+    ...(isManualIngestOrg(profile?.organization_id) && profile?.account_type === "admin"
+      ? [{ id: "upload-alerts", title: "Cargar alertas", icon: Upload }]
+      : []),
+  ];
 
   const handleLogout = async () => {
     await signOut();

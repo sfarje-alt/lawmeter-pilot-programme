@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.ingest-analisis-sesion]
 verify_jwt = false
+
+[functions.ingest-alerts-manual]
+verify_jwt = true

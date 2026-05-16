@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import Inbox from "@/pages/Inbox";
+import UploadAlerts from "@/pages/UploadAlerts";
 
 // Client Portal Components
 import {
@@ -91,6 +92,15 @@ export default function LawMeterDashboard() {
       case "inbox":
         // Include timestamp in key to force re-mount when navigating from calendar multiple times
         return <Inbox key={`inbox-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;
+      case "upload-alerts":
+        return (
+          <UploadAlerts
+            onGoToInbox={(tab) => {
+              setActiveTab("inbox");
+              setSearchParams({ tab });
+            }}
+          />
+        );
       case "clients":
         return <ClientsPage />;
       case "reports":
@@ -117,6 +127,7 @@ export default function LawMeterDashboard() {
       reports: "Reportes",
       analytics: "Analíticas",
       calendar: "Calendario",
+      "upload-alerts": "Cargar alertas",
     };
     return tabNames[activeTab] || activeTab;
   };

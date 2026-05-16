@@ -1,52 +1,130 @@
-## Problema
+## Objetivo
 
-El PDF actual tiene páginas casi vacías y otras con una sola ficha. Causas:
+Crear un nuevo tenant **Diez Canseco** cuyo flujo de ingreso de alertas NO depende de scrapers/ingest automáticos, sino de un **portal interno de subida de JSON** (PLs y Normas por separado) con un **preview** antes de empujar al inbox.
 
-1. Cada sección grande está envuelta en su propio `<Page>`, así que cuando el contenido se desborda crea una página nueva con apenas una ficha. La paginación natural de `@react-pdf/renderer` queda bloqueada.
-2. `AlertCard` usa `wrap={false}` + padding/margenes generosos → cada ficha ocupa ~⅔ de página, y cuando dos no caben juntas, una salta sola dejando hueco grande.
-3. Filas del Heatmap también con `wrap={false}` + sub‑headers que rompen la tabla en dos bloques con poco contenido.
-4. Algunos textos quedaron en inglés ("EXECUTIVE SNAPSHOT", "TOP DEVELOPMENTS", "WATCHLIST", pills "ALERTAS + SESIONES / SOLO PINEADAS", "FICHAS", etc.).
+---
 
-## Cambios
+## 1. Provisión de la cuenta (migration SQL)
 
-### 1. Una sola `<Page>` con flujo continuo
-- Reemplazar las 6 `<Page>` separadas por **una única `<Page>`** y dejar que el motor pagine.
-- Usar `break` solo en headers de bloque mayor (Visualizaciones, Heatmap, Fichas PL, Fichas Normas, Sesiones, Fuentes) cuando realmente convenga arrancar en página nueva — sin forzarlo si quedan ≥40% de página libre.
+Crear vía migración (mismo patrón que ISA):
 
-### 2. Fichas más compactas (`AlertCard`)
-- Quitar `wrap={false}` para que puedan dividirse entre páginas si hace falta.
-- Reducir paddings (16→10), `marginBottom` (14→8), tipografías de cuerpo (9→8.5), `lineHeight` (1.4→1.3).
-- Compactar grid: "QUÉ CAMBIÓ" en `fieldFull` con resumen recortado a ~320 chars, y los 4 metadatos en una sola fila de 4 columnas (25% c/u) en lugar de 2×2.
-- Comentario experto y "Clasificación IA" en una misma fila lado a lado (50/50) cuando ambos existen.
+- **Organization**: `Diez Canseco` — UUID `b7e15500-0006-4000-8000-000000000001`
+- **Client**: `Diez Canseco` (vacío) — UUID `b7e15500-0007-4000-8000-000000000001`
+- **Auth user**: `pmalca@dclegal.pe` / password `070398`  
+  (bcrypt vía `crypt(..., gen_salt('bf'))`, entradas en `auth.users` + `auth.identities`)
+- **Profile**: `P. Malca`, `account_type='admin'`, ligado a la org
+- **user_roles**: rol `admin`
+- Añadir el org id a `EMPTY_DATA_ORG_IDS` en `src/lib/orgDataIsolation.ts` para arrancar todas las secciones vacías.
 
-### 3. Heatmap denso
-- Quitar `wrap={false}` de las filas para permitir corte natural entre páginas.
-- Mantener `fixed` solo en el header de tabla.
-- Reducir padding de celdas (6→4) y fuente (8→7.5).
+---
 
-### 4. Sesiones y Snapshot
-- `sessionCard`: quitar `wrap={false}`, compactar paddings.
-- `snapshotBlock`: reducir margen entre los 3 bloques.
+## 2. Schema JSON propio simplificado
 
-### 5. Traducción completa al español
-- "EXECUTIVE SNAPSHOT" → "RESUMEN EJECUTIVO"
-- "TOP DEVELOPMENTS" → "DESARROLLOS PRINCIPALES"
-- "WATCHLIST" → "EN OBSERVACIÓN"
-- "DECISIONES / SOPORTE REQUERIDO" (ya está)
-- Pills: "ALERTAS + SESIONES", "SOLO PINEADAS" → "ALERTAS Y SESIONES", "SOLO DESTACADAS"
-- "REQUIEREN DECISIÓN" (ok)
-- "FICHAS — PROYECTOS DE LEY" → "DETALLE — PROYECTOS DE LEY"
-- "FICHAS — NORMAS" → "DETALLE — NORMAS"
-- "VISUALIZACIONES" (ok), subtítulos ya en español
-- Brand chip: "LAWMETER · REGULATORY AFFAIRS BRIEF" → "LAWMETER · INFORME DE ASUNTOS REGULATORIOS"
-- Cabeceras de tabla ya están en español.
+Documento a aceptar en el portal (un archivo por tipo):
 
-### 6. QA obligatorio
-- Regenerar PDF a `/mnt/documents/reporte-betsson-2026-05-06_v2.pdf`.
-- `pdftoppm -jpeg -r 110` y revisar **cada página** buscando: páginas vacías, fichas solas, overflow, textos cortados. Iterar hasta que no haya huecos.
+```json
+{
+  "tipo": "pl" | "norma",
+  "items": [
+    {
+      "external_id": "string (requerido, único)",
+      "titulo": "string (requerido)",
+      "resumen": "string opcional",
+      "comentario": "string opcional",
+      "impacto_categoria": "Alta|Media|Baja",
+      "urgencia_categoria": "Alta|Media|Baja",
+      "area_de_interes": ["string"],
+      "url": "string opcional",
+      "fuente": "string opcional",
+      "fecha_publicacion": "DD/MM/YYYY o ISO (norma)",
+      "fecha_presentacion": "DD/MM/YYYY o ISO (pl)",
+      "codigo": "string opcional (pl)",
+      "estado_actual": "string opcional (pl)",
+      "autores": ["string"] (pl),
+      "entity": "string opcional (norma)",
+      "reference_number": "string opcional (norma)",
+      "sumilla": "string opcional (norma)"
+    }
+  ]
+}
+```
 
-### Archivo afectado
-- `scripts/genreport.tsx` (reestructuración del `<Document>`, ajustes de estilos y traducciones).
-- Salida: `/mnt/documents/reporte-betsson-2026-05-06_v2.pdf`.
+Mapeo interno al schema canónico de `ingest-alerts` (impacto/urgencia categóricos → numéricos, normalización de fechas, construcción de `ai_analysis.ui_extras`, etc).
 
-¿Procedo?
+---
+
+## 3. Edge function nueva: `ingest-alerts-manual`
+
+- Auth: **JWT del usuario logueado** (no INGEST_TOKEN); valida que el caller pertenece a la org Diez Canseco vía `profiles.organization_id`.
+- Acepta body `{ tipo, items[] }` con el schema simplificado, valida con zod.
+- Reusa la lógica de mapeo de `ingest-alerts` (upsert idempotente por UUIDv5 con seed `org|client|tipo|external_id|v1`).
+- Inyecta `organization_id` y `client_id` desde el server (no del cliente).
+- Devuelve `{ processed, inserted, updated, failed }`.
+
+> Alternativa más simple: llamar al `ingest-alerts` existente desde el frontend con `INGEST_TOKEN`. Se descarta porque exponer el token al browser es inseguro. Por eso una función dedicada con JWT.
+
+---
+
+## 4. Portal de subida (UI)
+
+Nueva ruta `/upload-alerts` accesible solo para admins de orgs marcadas como "manual ingest" (Diez Canseco). Entrada en el sidebar: **"Cargar alertas"** con icono `Upload`.
+
+### Layout
+
+- **Header**: título "Cargar alertas (JSON)" + descripción corta.
+- **Tabs** (selector explícito de tipo):
+  - **Proyectos de Ley**
+  - **Normas**
+
+### Por cada tab, dos estados:
+
+**Estado A — Upload**
+- Dropzone para `.json` (drag&drop + input file).
+- Link "Descargar plantilla" → genera JSON de ejemplo del tipo seleccionado.
+- Al soltar archivo: parseo client-side, validación con zod del schema simplificado.
+- Errores de parseo → toast rojo con detalle de campo.
+
+**Estado B — Preview**
+- Cabecera: "N alertas detectadas" + botones **Cancelar** / **Confirmar e ingresar al inbox**.
+- Lista de cards (read-only) con: título, código/reference_number, fecha, impacto/urgencia (badges), resumen truncado, fuente/url.
+- No hay edición ni selección por item — confirmación all-or-nothing.
+
+### Acción "Confirmar"
+- POST a `ingest-alerts-manual` con el JSON original.
+- Toast con resumen (`X insertadas, Y actualizadas, Z fallidas`).
+- Redirige a `/inbox?tab={bills|regulations}`.
+
+---
+
+## 5. Marca de "manual ingest org"
+
+- Añadir `MANUAL_INGEST_ORG_IDS` en `src/lib/orgDataIsolation.ts` (set con el id de Diez Canseco).
+- Helper `isManualIngestOrg(orgId)`.
+- `AppSidebar` muestra el item "Cargar alertas" solo si `isManualIngestOrg(currentOrgId)` Y `account_type === 'admin'`.
+- La ruta también protege con el mismo check.
+
+---
+
+## 6. Archivos nuevos / modificados
+
+**Nuevos**
+- `supabase/migrations/<timestamp>_diez_canseco_tenant.sql`
+- `supabase/functions/ingest-alerts-manual/index.ts`
+- `src/pages/UploadAlerts.tsx`
+- `src/components/upload/JsonDropzone.tsx`
+- `src/components/upload/AlertsPreviewList.tsx`
+- `src/lib/manualAlertSchema.ts` (zod schema + ejemplo plantilla)
+
+**Modificados**
+- `src/lib/orgDataIsolation.ts` (añade org Diez Canseco a empty + manual ingest set)
+- `src/App.tsx` (ruta `/upload-alerts`)
+- `src/components/layout/AppSidebar.tsx` (item condicional)
+
+---
+
+## 7. Notas técnicas
+
+- El portal NO toca el flujo actual de ISA/Betsson — solo Diez Canseco lo verá.
+- El edge function reutiliza casi todo el código de mapeo de `ingest-alerts`; se puede extraer un módulo `_shared/mapAlertItem.ts` si quieres evitar duplicación (recomendado pero opcional, se puede hacer copy en una primera iteración).
+- RLS existente de `alerts` ya garantiza aislamiento: el `organization_id` se setea server-side a partir del JWT del caller.
+- Sin cambios en `peruAlertsMockData` ni componentes de inbox — los datos cargados aparecen automáticamente porque vienen de la tabla `alerts` ya consumida por `useAlerts`.
