@@ -127,6 +127,7 @@ export default function LawMeterDashboard() {
       reports: "Reportes",
       analytics: "Analíticas",
       calendar: "Calendario",
+      "upload-alerts": "Cargar alertas",
     };
     return tabNames[activeTab] || activeTab;
   };
