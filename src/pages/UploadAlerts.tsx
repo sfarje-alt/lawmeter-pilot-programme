@@ -40,7 +40,7 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
       return;
     }
     const result = parseManualPayload(raw, tipo);
-    if (!result.ok) {
+    if (result.ok === false) {
       toast({
         title: "Schema inválido",
         description: result.error,
