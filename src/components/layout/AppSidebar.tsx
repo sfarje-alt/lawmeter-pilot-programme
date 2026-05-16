@@ -37,9 +37,16 @@ const baseMenuItems = [
 export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const menuItems = [
+    ...baseMenuItems,
+    ...(isManualIngestOrg(profile?.organization_id) && profile?.account_type === "admin"
+      ? [{ id: "upload-alerts", title: "Cargar alertas", icon: Upload }]
+      : []),
+  ];
 
   const handleLogout = async () => {
     await signOut();
