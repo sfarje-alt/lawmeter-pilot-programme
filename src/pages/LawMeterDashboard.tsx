@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import Inbox from "@/pages/Inbox";
+import UploadAlerts from "@/pages/UploadAlerts";
 
 // Client Portal Components
 import {
