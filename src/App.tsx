@@ -34,44 +34,49 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/auth" element={<Auth />} />
-    <Route
-      path="/"
-      element={
-        <ProtectedRoute>
-          <LawMeterDashboard />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/documentation"
-      element={
-        <ProtectedRoute>
-          <Documentation />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/business-intelligence"
-      element={
-        <ProtectedRoute>
-          <BusinessIntelligence />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/settings"
-      element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      }
-    />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+import { usePageTracking } from "@/hooks/usePageTracking";
+
+const AppRoutes = () => {
+  usePageTracking();
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <LawMeterDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/documentation"
+        element={
+          <ProtectedRoute>
+            <Documentation />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/business-intelligence"
+        element={
+          <ProtectedRoute>
+            <BusinessIntelligence />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

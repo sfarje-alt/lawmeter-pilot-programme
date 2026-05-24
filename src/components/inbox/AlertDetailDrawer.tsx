@@ -98,6 +98,19 @@ export function AlertDetailDrawer({
       setUrgency(uc === "alta" ? "high" : uc === "baja" ? "low" : "medium");
       setTagsText((alert.affected_areas || []).join(", "));
       setArchiveError(null);
+
+      // Analytics: alerta abierta
+      import("@/lib/analytics/mixpanel").then(({ trackEvent }) => {
+        import("@/lib/analytics/events").then(({ AnalyticsEvents }) => {
+          trackEvent(AnalyticsEvents.AlertOpened, {
+            alert_id: alert.id,
+            legislation_type: alert.legislation_type,
+            stage: alert.kanban_stage,
+            impact_level: alert.impact_level,
+            status: alert.status,
+          });
+        });
+      });
     }
   }, [alert?.id]);
 
@@ -136,6 +149,14 @@ export function AlertDetailDrawer({
     const author = profile?.full_name?.trim() || profile?.email || "Usuario";
     addCommentaryEntry(alert.id, draftCommentary, author);
     onUpdateExpertCommentary?.(alert.id, draftCommentary);
+    import("@/lib/analytics/mixpanel").then(({ trackEvent }) => {
+      import("@/lib/analytics/events").then(({ AnalyticsEvents }) => {
+        trackEvent(AnalyticsEvents.AlertCommentarySaved, {
+          alert_id: alert.id,
+          length: getTextLength(draftCommentary),
+        });
+      });
+    });
     setDraftCommentary("");
     setArchiveError((prev) => (prev ? { ...prev, comment: false } : null));
   };
