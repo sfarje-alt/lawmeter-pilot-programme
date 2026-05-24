@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { identifyUser, resetUser, trackEvent } from '@/lib/analytics/mixpanel';
+import { AnalyticsEvents } from '@/lib/analytics/events';
 
 interface Profile {
   id: string;
@@ -79,9 +81,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const profileData = await fetchProfile(session.user.id);
             setProfile(profileData);
             setShouldShowDailyPopup(checkDailyPopup(profileData));
-            
+
+            if (profileData) {
+              identifyUser(profileData);
+            }
+
             if (event === 'SIGNED_IN') {
               await updateLastLogin(session.user.id);
+              trackEvent(AnalyticsEvents.UserSignedIn, {
+                account_type: profileData?.account_type,
+              });
             }
           }, 0);
         } else {
@@ -100,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchProfile(session.user.id).then(profileData => {
           setProfile(profileData);
           setShouldShowDailyPopup(checkDailyPopup(profileData));
+          if (profileData) identifyUser(profileData);
           setLoading(false);
         });
       } else {
@@ -160,10 +170,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    trackEvent(AnalyticsEvents.UserSignedOut);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setProfile(null);
+    resetUser();
   };
 
   const resetPassword = async (email: string) => {
@@ -171,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
+    trackEvent(AnalyticsEvents.PasswordResetRequested);
     return { error };
   };
 
