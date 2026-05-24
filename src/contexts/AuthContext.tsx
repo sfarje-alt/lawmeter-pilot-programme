@@ -149,6 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', data.user.id);
     }
 
+    if (!error) {
+      trackEvent(AnalyticsEvents.UserSignedUp, { account_type: accountType });
+    }
+
     return { error };
   };
 
