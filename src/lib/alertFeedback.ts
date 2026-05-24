@@ -3,6 +3,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { PeruAlert } from "@/data/peruAlertsMockData";
+import { trackEvent } from "@/lib/analytics/mixpanel";
+import { AnalyticsEvents } from "@/lib/analytics/events";
 
 export type FeedbackRating = "very_useful" | "useful" | "not_relevant";
 
@@ -56,6 +58,13 @@ export async function submitAlertFeedback(
   });
 
   if (error) throw error;
+
+  trackEvent(AnalyticsEvents.AlertFeedbackSubmitted, {
+    alert_id: alert.id,
+    rating: payload.rating,
+    reason: payload.reason ?? null,
+    has_comment: Boolean(payload.comment?.trim()),
+  });
 }
 
 export const POSITIVE_REASONS = [
