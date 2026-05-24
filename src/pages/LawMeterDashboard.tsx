@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useClientUser } from "@/hooks/useClientUser";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { trackEvent } from "@/lib/analytics/mixpanel";
+import { AnalyticsEvents } from "@/lib/analytics/events";
 
 import { SessionsPage } from "@/components/sessions";
 import { AlertsCalendar } from "@/components/calendar/AlertsCalendar";
@@ -135,6 +137,7 @@ export default function LawMeterDashboard() {
   // Handle tab changes - clear URL params when manually switching tabs
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    trackEvent(AnalyticsEvents.TabChanged, { tab });
     // Clear deep-link parameters when switching tabs manually via sidebar
     if (searchParams.has('alertId') || searchParams.has('sessionId') || searchParams.has('section') || searchParams.has('tab') || searchParams.has('t')) {
       setSearchParams({});
