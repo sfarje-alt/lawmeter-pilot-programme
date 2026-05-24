@@ -17,6 +17,8 @@ export function initMixpanel() {
       track_pageview: false,
       persistence: "localStorage",
       ignore_dnt: true,
+      autocapture: true,
+      record_sessions_percent: 100,
     });
     initialized = true;
   } catch (err) {
