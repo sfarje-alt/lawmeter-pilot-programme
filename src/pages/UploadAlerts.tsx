@@ -13,6 +13,8 @@ import {
 } from "@/lib/manualAlertSchema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics/mixpanel";
+import { AnalyticsEvents } from "@/lib/analytics/events";
 
 type Tipo = "pl" | "norma";
 
@@ -52,6 +54,10 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
     setItems(result.items);
     setItemsTipo(tipo);
     setFilename(name);
+    trackEvent(AnalyticsEvents.ManualAlertsUploadStarted, {
+      tipo,
+      count: result.items.length,
+    });
   };
 
   const downloadTemplate = (tipo: Tipo) => {
@@ -87,6 +93,12 @@ export default function UploadAlerts({ onGoToInbox }: UploadAlertsProps) {
         description: `${result.inserted} nuevas · ${result.updated} actualizadas${
           result.failed?.length ? ` · ${result.failed.length} fallidas` : ""
         }`,
+      });
+      trackEvent(AnalyticsEvents.ManualAlertsUploadConfirmed, {
+        tipo: itemsTipo,
+        inserted: result.inserted,
+        updated: result.updated,
+        failed: result.failed?.length ?? 0,
       });
       const goTo = itemsTipo;
       setItems(null);
