@@ -196,7 +196,7 @@ function deriveImpactLevel(score: number | null | undefined, fallback?: string |
 function mapDbRowToAlert(
   row: any,
   pinned: Set<string>,
-  archivedMap: Record<string, string>,
+  archivedMap: Record<string, ArchivedEntry>,
   commentaryMap: Record<string, string>,
   attachmentsMap: Record<string, AttachedFileMetaRef[]>,
   ownersMap: Record<string, string[]>,
