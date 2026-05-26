@@ -5,13 +5,18 @@ import {
   ImpactLevel,
   STAGE_TO_KANBAN,
   getStateFamily,
-  purgeOldArchivedAlerts,
   KeyDate,
   CommentaryEntry,
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeEntityName } from "@/lib/entityNormalization";
+import {
+  getLastMovementDate,
+  getImpactScore,
+  isRezagada,
+} from "@/lib/alertClassification";
+import { restoreRecentlyArchivedAlerts } from "@/lib/archiveRecovery";
 
 interface AlertsContextType {
   alerts: PeruAlert[];
@@ -64,31 +69,94 @@ function savePinnedIds(ids: Set<string>) {
   saveJSON(PINNED_STORAGE_KEY, Array.from(ids));
 }
 
-const AUTO_ARCHIVE_DAYS = 30;
+/**
+ * Umbrales de auto-archivado (basados en inactividad legislativa real,
+ * nunca en created_at). El auto-archivado además exige que la alerta ya
+ * esté clasificada como rezagada y no esté pinneada/bookmarked.
+ *  - impacto < 70: 365 días sin movimiento
+ *  - impacto >= 70 (alto impacto): 540 días sin movimiento (protección reforzada)
+ */
+const AUTO_ARCHIVE_INACTIVITY_DAYS = 365;
+const AUTO_ARCHIVE_HIGH_IMPACT_INACTIVITY_DAYS = 540;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Entrada persistida por alerta en localStorage. */
+export interface ArchivedEntry {
+  archived_at: string;
+  reason: "manual" | "auto_inactivity";
+  last_movement_at?: string | null;
+}
 
 /**
- * Auto-archive any non-pinned alert that has been in the inbox for more than
- * AUTO_ARCHIVE_DAYS days (based on created_at). Bookmarked alerts are protected.
- * Mutates the archived_at field in-place on returned alerts and persists to
- * localStorage so it sticks across reloads.
+ * Lee el map de archivado con migración tolerante:
+ * - Formato viejo: Record<string, string>  (solo ISO archived_at, archivado manual histórico)
+ * - Formato nuevo: Record<string, ArchivedEntry>
+ */
+export function readArchivedMap(): Record<string, ArchivedEntry> {
+  const raw = loadJSON<Record<string, unknown>>(ARCHIVED_STORAGE_KEY, {});
+  const out: Record<string, ArchivedEntry> = {};
+  for (const [id, value] of Object.entries(raw)) {
+    if (typeof value === "string") {
+      out[id] = { archived_at: value, reason: "manual", last_movement_at: null };
+    } else if (value && typeof value === "object") {
+      const v = value as Partial<ArchivedEntry>;
+      if (typeof v.archived_at === "string") {
+        out[id] = {
+          archived_at: v.archived_at,
+          reason: v.reason === "auto_inactivity" ? "auto_inactivity" : "manual",
+          last_movement_at: typeof v.last_movement_at === "string" ? v.last_movement_at : null,
+        };
+      }
+    }
+  }
+  return out;
+}
+
+export function writeArchivedMap(map: Record<string, ArchivedEntry>): void {
+  saveJSON(ARCHIVED_STORAGE_KEY, map);
+}
+
+/**
+ * Auto-archive sólo por inactividad legislativa real prolongada. Reglas:
+ *   1) la alerta no está ya archivada
+ *   2) no está pinneada/bookmarked
+ *   3) ya clasifica como rezagada (isRezagada)
+ *   4) existe getLastMovementDate(a)
+ *   5) días sin movimiento >= 540 si impacto>=70, sino >= 365
+ * Persiste la entrada con razón "auto_inactivity" y la fecha real de último movimiento.
  */
 function applyAutoArchive(alerts: PeruAlert[]): PeruAlert[] {
-  const now = Date.now();
-  const cutoffMs = AUTO_ARCHIVE_DAYS * 24 * 60 * 60 * 1000;
-  const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+  const archivedMap = readArchivedMap();
   let mutated = false;
+  const nowMs = Date.now();
   const out = alerts.map((a) => {
     if (a.archived_at) return a;
     if (a.is_pinned_for_publication) return a;
-    const createdMs = a.created_at ? new Date(a.created_at).getTime() : NaN;
-    if (!Number.isFinite(createdMs)) return a;
-    if (now - createdMs <= cutoffMs) return a;
-    const archivedIso = new Date(createdMs + cutoffMs).toISOString();
-    archivedMap[a.id] = archivedIso;
+    if (!isRezagada(a)) return a;
+    const lastMov = getLastMovementDate(a);
+    if (!lastMov) return a;
+    const daysSince = Math.floor((nowMs - lastMov.getTime()) / DAY_MS);
+    const threshold = getImpactScore(a) >= 70
+      ? AUTO_ARCHIVE_HIGH_IMPACT_INACTIVITY_DAYS
+      : AUTO_ARCHIVE_INACTIVITY_DAYS;
+    if (daysSince < threshold) return a;
+
+    const archivedIso = new Date().toISOString();
+    const lastMovIso = lastMov.toISOString();
+    archivedMap[a.id] = {
+      archived_at: archivedIso,
+      reason: "auto_inactivity",
+      last_movement_at: lastMovIso,
+    };
     mutated = true;
-    return { ...a, archived_at: archivedIso };
+    return {
+      ...a,
+      archived_at: archivedIso,
+      archive_reason: "auto_inactivity" as const,
+      archived_last_movement_at: lastMovIso,
+    };
   });
-  if (mutated) saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
+  if (mutated) writeArchivedMap(archivedMap);
   return out;
 }
 
@@ -128,7 +196,7 @@ function deriveImpactLevel(score: number | null | undefined, fallback?: string |
 function mapDbRowToAlert(
   row: any,
   pinned: Set<string>,
-  archivedMap: Record<string, string>,
+  archivedMap: Record<string, ArchivedEntry>,
   commentaryMap: Record<string, string>,
   attachmentsMap: Record<string, AttachedFileMetaRef[]>,
   ownersMap: Record<string, string[]>,
@@ -229,7 +297,9 @@ function mapDbRowToAlert(
     is_pinned_for_publication: pinned.has(row.id) || !!ui.is_pinned_for_publication,
     client_commentaries: Array.isArray(ui.client_commentaries) ? ui.client_commentaries : [],
     primary_client_id: ui.primary_client_id ?? undefined,
-    archived_at: archivedMap[row.id] ?? null,
+    archived_at: archivedMap[row.id]?.archived_at ?? null,
+    archive_reason: archivedMap[row.id]?.reason ?? null,
+    archived_last_movement_at: archivedMap[row.id]?.last_movement_at ?? null,
     approval_probability: ui.approval_probability ?? undefined,
     attachments: attachmentsMap[row.id] ?? [],
 
@@ -347,7 +417,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     }
 
     const pinned = loadPinnedIds();
-    const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+    const archivedMap = readArchivedMap();
     const commentaryMap = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
     const attachmentsMap = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
     const ownersMap = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
@@ -360,9 +430,11 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap, ownersMap, decisionMap, defaultOwners, commentaryHistoryMap))
       .filter((a): a is PeruAlert => a !== null);
 
-    setAlerts(purgeOldArchivedAlerts(dedupeByCodigoLatestVersion(mapped)));
+    // Aplicar auto-archivado por inactividad real (no purga, solo archiva).
+    setAlerts(applyAutoArchive(dedupeByCodigoLatestVersion(mapped)));
     setLoading(false);
   }, [orgId]);
+
 
   // Initial load + reload when org changes
   useEffect(() => {
@@ -385,16 +457,39 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     };
   }, [orgId, fetchAlerts]);
 
-  // Auto-purge archived periodically
+  // Re-evaluate inactivity-based auto-archive periodically. NUNCA purga.
   useEffect(() => {
     const interval = setInterval(() => {
-      setAlerts((prev) => {
-        const next = purgeOldArchivedAlerts(prev);
-        return next.length === prev.length ? prev : next;
-      });
+      setAlerts((prev) => applyAutoArchive(prev));
     }, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Expose recovery utility in dev/console: window.__lawmeterRestoreArchived(30)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    (window as any).__lawmeterRestoreArchived = (days = 30) => {
+      const knownIds = (typeof (window as any).__lawmeterAlertIds === "function"
+        ? (window as any).__lawmeterAlertIds()
+        : undefined) as string[] | undefined;
+      const summary = restoreRecentlyArchivedAlerts(days, knownIds);
+      // Refrescar el estado en memoria a partir del map persistido.
+      setAlerts((prev) =>
+        prev.map((a) => {
+          if (!a.archived_at) return a;
+          const ts = new Date(a.archived_at).getTime();
+          if (!Number.isFinite(ts)) return a;
+          if (ts < Date.now() - days * 24 * 60 * 60 * 1000) return a;
+          return { ...a, archived_at: null, archive_reason: null, archived_last_movement_at: null };
+        }),
+      );
+      return summary;
+    };
+    return () => {
+      try { delete (window as any).__lawmeterRestoreArchived; } catch { /* ignore */ }
+    };
+  }, []);
+
 
   const togglePinAlert = useCallback((alertId: string) => {
     setAlerts((prev) => {
@@ -412,14 +507,27 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   const archiveAlert = useCallback((alertId: string) => {
     const nowIso = new Date().toISOString();
     setAlerts((prev) => {
+      const target = prev.find((a) => a.id === alertId);
+      const lastMovIso = target ? getLastMovementDate(target)?.toISOString() ?? null : null;
       const next = prev.map((a) =>
         a.id === alertId
-          ? { ...a, archived_at: nowIso, is_pinned_for_publication: false, updated_at: nowIso }
+          ? {
+              ...a,
+              archived_at: nowIso,
+              archive_reason: "manual" as const,
+              archived_last_movement_at: lastMovIso,
+              is_pinned_for_publication: false,
+              updated_at: nowIso,
+            }
           : a,
       );
-      const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
-      archivedMap[alertId] = nowIso;
-      saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
+      const archivedMap = readArchivedMap();
+      archivedMap[alertId] = {
+        archived_at: nowIso,
+        reason: "manual",
+        last_movement_at: lastMovIso,
+      };
+      writeArchivedMap(archivedMap);
       const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
       savePinnedIds(pinnedIds);
       return next;
@@ -430,14 +538,21 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     setAlerts((prev) =>
       prev.map((a) =>
         a.id === alertId
-          ? { ...a, archived_at: null, updated_at: new Date().toISOString() }
+          ? {
+              ...a,
+              archived_at: null,
+              archive_reason: null,
+              archived_last_movement_at: null,
+              updated_at: new Date().toISOString(),
+            }
           : a,
       ),
     );
-    const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+    const archivedMap = readArchivedMap();
     delete archivedMap[alertId];
-    saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
+    writeArchivedMap(archivedMap);
   }, []);
+
 
   const updateSharedCommentary = useCallback((alertId: string, commentary: string) => {
     setAlerts((prev) =>

@@ -100,12 +100,20 @@ export interface PeruAlert extends BasePeruAlert {
   is_pinned_for_publication: boolean;  // Whether this alert is marked for publication / pinned to top
   client_commentaries: ClientCommentary[];  // Commentaries per client
   primary_client_id?: string;  // Primary client assigned to this alert
-  /** Archive timestamp — when set, alert is in archive (auto-purged after 30 days). */
+  /** Archive timestamp — when set, alert is in archive. Archived alerts are
+   *  kept indefinitely (no automatic purge) so trazabilidad regulatoria
+   *  histórica permanece disponible. */
   archived_at?: string | null;
+  /** Razón de archivado. "manual" = acción del usuario; "auto_inactivity" =
+   *  auto-archivado por inactividad legislativa real prolongada. */
+  archive_reason?: "manual" | "auto_inactivity" | null;
+  /** Fecha del último movimiento legislativo relevante al momento del archivado. */
+  archived_last_movement_at?: string | null;
   /** AI-generated approval probability (0-100). Only meaningful for bills. */
   approval_probability?: number;
   /** Attachments uploaded by users alongside the expert commentary. */
   attachments?: AttachedFileMetaRef[];
+
 
   // ---- New fields backed by the real DB schema (ai_analysis + extras) ----
   /** Numeric AI impact score 0-100 (from ai_analysis.impacto). */
@@ -199,17 +207,10 @@ export interface AttachedFileMetaRef {
   dataUrl?: string;
 }
 
-/** Days an archived alert is kept before being purged automatically. */
-export const ARCHIVE_RETENTION_DAYS = 30;
+// Archive retention purge removed: alertas archivadas se conservan
+// indefinidamente. La lógica de auto-archivado por inactividad vive en
+// AlertsContext (no toca created_at).
 
-/** Returns days remaining before an archived alert is purged. */
-export function getArchiveDaysRemaining(archived_at: string | null | undefined): number | null {
-  if (!archived_at) return null;
-  const archivedDate = new Date(archived_at);
-  const purgeDate = new Date(archivedDate.getTime() + ARCHIVE_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-  const diffMs = purgeDate.getTime() - Date.now();
-  return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
-}
 
 /** Deterministic mock approval probability based on alert id (0-100). */
 export function getMockApprovalProbability(alertId: string): number {
@@ -239,14 +240,9 @@ export interface AttachedFileMeta {
   dataUrl?: string;
 }
 
-/** Removes alerts that have been archived for more than ARCHIVE_RETENTION_DAYS. */
-export function purgeOldArchivedAlerts(alerts: PeruAlert[]): PeruAlert[] {
-  const cutoffMs = Date.now() - ARCHIVE_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  return alerts.filter((a) => {
-    if (!a.archived_at) return true;
-    return new Date(a.archived_at).getTime() > cutoffMs;
-  });
-}
+// purgeOldArchivedAlerts eliminado: las alertas archivadas se conservan
+// indefinidamente para trazabilidad, búsqueda y reportes históricos.
+
 
 // Mock clients for matching
 export interface AffectedClient {
