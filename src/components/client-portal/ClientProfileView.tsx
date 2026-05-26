@@ -6,14 +6,25 @@ import {
   Eye, CheckCircle2,
 } from "lucide-react";
 import { BEDSON_CLIENT_PROFILE } from "@/data/bedsonClientProfile";
+import { ISA_CLIENT_PROFILE } from "@/data/isaClientProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { ISA_ORG_ID, BETSSON_ORG_ID } from "@/lib/orgDataIsolation";
 
 /**
  * Vista de perfil read-only para el portal cliente.
- * Renderiza el perfil rígido de Bedson Group (cliente piloto) leyendo el
- * mismo objeto fuente que se usa para el formulario de admin.
+ * Selecciona el perfil rígido correspondiente a la organización del usuario
+ * autenticado (Betsson, ISA Energía, …). Por defecto cae a Betsson para no
+ * romper organizaciones piloto previas.
  */
 export function ClientProfileView() {
-  const profile = BEDSON_CLIENT_PROFILE;
+  const { profile: authProfile } = useAuth();
+  const orgId = authProfile?.organization_id ?? null;
+  const profile =
+    orgId === ISA_ORG_ID
+      ? ISA_CLIENT_PROFILE
+      : orgId === BETSSON_ORG_ID
+        ? BEDSON_CLIENT_PROFILE
+        : BEDSON_CLIENT_PROFILE;
 
   const Section = ({
     title,
