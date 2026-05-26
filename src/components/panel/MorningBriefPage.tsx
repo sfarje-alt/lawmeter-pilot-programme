@@ -537,7 +537,7 @@ function UpcomingMilestones({
   if (top.length === 0) {
     return (
       <div className="text-sm text-muted-foreground py-4 text-center">
-        No hay hitos próximos registrados para Perú.
+        No hay sesiones próximas registradas para Perú o Chile.
       </div>
     );
   }
