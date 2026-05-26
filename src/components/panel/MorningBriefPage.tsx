@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { usePeruSessions } from "@/hooks/usePeruSessions";
 import { AlertDetailDrawer } from "@/components/inbox/AlertDetailDrawer";
-import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { CountryFlag } from "@/components/regional/CountryFlag";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,9 +21,14 @@ import {
 import { cn } from "@/lib/utils";
 import type { PeruAlert } from "@/data/peruAlertsMockData";
 import type { PeruSession } from "@/types/peruSessions";
+import {
+  BETSSON_PANEL_CONFIG,
+  type PanelClientConfig,
+} from "@/lib/panelConfig";
 
 interface MorningBriefPageProps {
   onNavigate: (tab: string) => void;
+  config?: PanelClientConfig;
 }
 
 const PLACEHOLDER = "—";
