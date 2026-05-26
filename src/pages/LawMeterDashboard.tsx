@@ -173,10 +173,18 @@ export default function LawMeterDashboard() {
             <SidebarTrigger className="text-foreground hover:bg-white/10" />
             <span className="text-sm font-medium text-muted-foreground">{getTabDisplayName()}</span>
 
-            <div className="ml-auto flex items-center gap-2">
-              <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
-                Perú
-              </Badge>
+            <div className="ml-auto flex items-center gap-2 flex-wrap">
+              {isBetsson ? (
+                <div className="hidden md:flex items-center gap-1.5">
+                  {BETSSON_COUNTRIES.map((c) => (
+                    <CountryStatusChip key={c.code} country={c} compact />
+                  ))}
+                </div>
+              ) : (
+                <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
+                  Perú
+                </Badge>
+              )}
             </div>
           </header>
 
