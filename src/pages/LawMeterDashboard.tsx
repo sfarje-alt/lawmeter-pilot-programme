@@ -61,12 +61,20 @@ export default function LawMeterDashboard() {
     }
   }, [sectionParam, timestampParam]); // Also react to timestamp changes
 
+  const isBetsson = isBetssonOrg(profile?.organization_id);
+
   // Set default tab based on user type
   useEffect(() => {
     if (activeTab === "" && !sectionParam) {
-      setActiveTab(isClientUser ? "client-inbox" : "inbox");
+      if (isClientUser) {
+        setActiveTab("client-inbox");
+      } else if (isBetsson) {
+        setActiveTab("panel");
+      } else {
+        setActiveTab("inbox");
+      }
     }
-  }, [isClientUser, activeTab, sectionParam]);
+  }, [isClientUser, isBetsson, activeTab, sectionParam]);
 
   const renderContent = () => {
     // Client user views
