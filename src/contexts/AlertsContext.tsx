@@ -5,13 +5,18 @@ import {
   ImpactLevel,
   STAGE_TO_KANBAN,
   getStateFamily,
-  purgeOldArchivedAlerts,
   KeyDate,
   CommentaryEntry,
 } from "@/data/peruAlertsMockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeEntityName } from "@/lib/entityNormalization";
+import {
+  getLastMovementDate,
+  getImpactScore,
+  isRezagada,
+} from "@/lib/alertClassification";
+import { restoreRecentlyArchivedAlerts } from "@/lib/archiveRecovery";
 
 interface AlertsContextType {
   alerts: PeruAlert[];
