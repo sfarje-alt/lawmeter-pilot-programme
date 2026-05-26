@@ -100,12 +100,20 @@ export interface PeruAlert extends BasePeruAlert {
   is_pinned_for_publication: boolean;  // Whether this alert is marked for publication / pinned to top
   client_commentaries: ClientCommentary[];  // Commentaries per client
   primary_client_id?: string;  // Primary client assigned to this alert
-  /** Archive timestamp — when set, alert is in archive (auto-purged after 30 days). */
+  /** Archive timestamp — when set, alert is in archive. Archived alerts are
+   *  kept indefinitely (no automatic purge) so trazabilidad regulatoria
+   *  histórica permanece disponible. */
   archived_at?: string | null;
+  /** Razón de archivado. "manual" = acción del usuario; "auto_inactivity" =
+   *  auto-archivado por inactividad legislativa real prolongada. */
+  archive_reason?: "manual" | "auto_inactivity" | null;
+  /** Fecha del último movimiento legislativo relevante al momento del archivado. */
+  archived_last_movement_at?: string | null;
   /** AI-generated approval probability (0-100). Only meaningful for bills. */
   approval_probability?: number;
   /** Attachments uploaded by users alongside the expert commentary. */
   attachments?: AttachedFileMetaRef[];
+
 
   // ---- New fields backed by the real DB schema (ai_analysis + extras) ----
   /** Numeric AI impact score 0-100 (from ai_analysis.impacto). */
