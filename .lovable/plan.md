@@ -1,90 +1,88 @@
-# Plan: Integración de Mixpanel
+## Goal
+Add a **Panel / Morning Brief** as the executive entry point for the Betsson Group organization and surface country activation status (Perú activo; Chile, Colombia, Argentina en activación). Frontend-only, scoped to Betsson, zero changes to operational modules, data layer, auth, or backend.
 
-## 1. Setup base
+## Scope guard (Betsson only)
+Gate every new piece of UI behind:
+```
+profile?.organization_id === 'b7e15500-0001-4000-8000-000000000001'
+```
+For any other org the app renders exactly as today. Add a tiny helper `isBetssonOrg(orgId)` in `src/lib/orgDataIsolation.ts` (alongside existing `isEmptyDataOrg` / `isManualIngestOrg`) to centralize the check.
 
-- Instalar `mixpanel-browser`.
-- Agregar `VITE_MIXPANEL_TOKEN` como variable de entorno (te lo pediré con el tool de secrets/env al iniciar la implementación).
-- Crear `src/lib/analytics/mixpanel.ts` con:
-  - `initMixpanel()` — inicialización idempotente, `debug: false` en prod, `track_pageview: false` (lo manejamos manual con React Router).
-  - `identifyUser(profile)` — llama `mixpanel.identify(user.id)` + `people.set` con `email`, `account_type`, `organization_id`, `client_id`, `created_at`.
-  - `resetUser()` — `mixpanel.reset()` en logout.
-  - `track(event, props?)` — wrapper que mergea super properties y hace no-op si el token no está configurado.
-  - `registerSuperProperties(profile)` — `account_type`, `organization_id`, `client_id`, `environment` (dev/prod).
+## 1. Flag assets + component
+- Add SVG flags: `src/assets/flags/peru.svg`, `chile.svg`, `colombia.svg`, `argentina.svg` (downloaded from flagcdn / inlined SVG, ~24×16).
+- New component `src/components/regional/CountryFlag.tsx`:
+  - Props: `country: 'PE'|'CL'|'CO'|'AR'`, `size?: number` (default 20), `showName?: boolean`.
+  - Renders `<img>` with the local SVG + Spanish country name. On `onError`, hides the image and falls back to the name alone (no ISO code, no emoji).
+- New component `src/components/regional/CountryStatusChip.tsx`: flag + name + small status pill (`Activo` / `En activación`) using existing semantic tokens (`bg-success/20 text-success-foreground` vs `bg-muted/40 text-muted-foreground`).
 
-## 2. Bootstrapping
+## 2. Country status data
+New file `src/lib/betssonCountries.ts`:
+```ts
+export const BETSSON_COUNTRIES = [
+  { code: 'PE', name: 'Perú', status: 'active',
+    description: 'Monitoreo operativo habilitado.' },
+  { code: 'CL', name: 'Chile', status: 'activating',
+    description: 'Fuentes, taxonomía y criterios de relevancia pendientes de calibración.' },
+  { code: 'CO', name: 'Colombia', status: 'activating',
+    description: 'Fuentes, taxonomía y criterios de relevancia pendientes de calibración.' },
+  { code: 'AR', name: 'Argentina', status: 'activating',
+    description: 'Fuentes, taxonomía y criterios de relevancia pendientes de calibración.' },
+] as const;
+```
 
-- `src/main.tsx`: llamar `initMixpanel()`.
-- `src/contexts/AuthContext.tsx`: al cargar `profile` → `identifyUser` + `registerSuperProperties`. En `signOut` → `resetUser`.
-- `src/App.tsx`: hook `usePageTracking` que escucha cambios de ruta y dispara `Page Viewed` con `{ path, tab }`.
+## 3. Morning Brief page
+New folder `src/components/panel/`:
+- `MorningBriefPage.tsx` — main container.
+- `MorningBriefHeader.tsx` — title "Betsson · Morning Brief", subtitle "Perú activo · Chile, Colombia y Argentina en activación", executive summary paragraph from the spec.
+- `KpiStrip.tsx` — derives values **only** from the existing `useInboxAlerts()` / sessions / calendar hooks already used by the operational tabs. Cards:
+  - Alertas activas (count of non-archived)
+  - Críticas sin revisar (high-risk + unread)
+  - Nuevas últimas 24h (filter by `created_at`)
+  - Próximos vencimientos (next 7 days from existing deadlines)
+  - Sesiones próximas (from existing sessions hook)
+  - Países en activación (= 3, static)
+  - If any value cannot be derived safely → render `—` / `Pendiente`. **No hardcoded numbers.**
+- `TopAlertsToMonitor.tsx` — pulls from `useInboxAlerts().allAlerts`, sorts by `(risk_score desc, urgency desc, deadline asc, unread first)`, slices top 5. Each card shows title, source/authority, reference, risk, urgency, deadline, status, recommended action when present. CTA `Ver alerta` calls `navigate('/?section=inbox&alertId=' + alert.id + '&t=' + Date.now())` — same deep-link pattern already supported in `LawMeterDashboard`. No new alert-detail logic.
+- `WhereToLookFirst.tsx` — four link cards routing to existing tabs via the same `setActiveTab` mechanism (passed in as props): Alertas críticas → inbox, Sesiones próximas → sessions, Vencimientos → calendar, Resumen ejecutivo → reports.
+- `CountryStatusSection.tsx` — renders four `CountryStatusChip` rows with descriptions per spec.
+- `UpcomingItemsSection.tsx` — reads existing sessions + calendar arrays; if empty, shows compact "Pendiente" state. No invented events.
 
-## 3. Eventos a trackear (nivel completo)
+All styling uses existing dark-mode tokens (`bg-card`, `border-white/10`, gradients matching `LawMeterDashboard` shell). No new color tokens.
 
-**Auth & sesión**
-- `User Signed Up`, `User Signed In`, `User Signed Out`, `Password Reset Requested`
+## 4. Wiring into the shell
+Edit two files only:
 
-**Navegación**
-- `Page Viewed` (auto), `Tab Changed` (sidebar)
+**`src/components/layout/AppSidebar.tsx`**
+- Import `isBetssonOrg`.
+- If Betsson, prepend a menu item `{ id: 'panel', title: 'Panel', icon: LayoutDashboard }` to `menuItems`. Otherwise sidebar is unchanged.
 
-**Alertas (Inbox)**
-- `Alert Opened` (id, tipo PL/norma, stage, impacto)
-- `Alert Filter Applied` (filter_type, value)
-- `Alert Search Performed` (query_length)
-- `Alert Pinned` / `Alert Unpinned`
-- `Alert Published` (client_ids[], has_commentary)
-- `Alert Commentary Saved` (length)
-- `Alert Feedback Submitted` (rating, reason)
-- `Alert Stage Changed`
+**`src/pages/LawMeterDashboard.tsx`**
+- Add `import { MorningBriefPage } from '@/components/panel/MorningBriefPage'`.
+- In admin `renderContent()` switch, add `case 'panel': return <MorningBriefPage onNavigate={setActiveTab} />;`.
+- For Betsson admins only, change the default initial tab from `'inbox'` to `'panel'` (the existing default-tab `useEffect`). Non-Betsson behavior untouched.
+- Add `panel: 'Panel'` to `getTabDisplayName` map.
+- Optional: in the top header, when `isBetssonOrg`, render a compact row of four `CountryStatusChip`s next to the existing "Perú" badge. Strictly read-only — no click handlers, no filter wiring.
 
-**Reportes**
-- `Report Generated` (manual/scheduled, include_analytics)
-- `Report PDF Downloaded`
-- `Report Config Created` / `Updated` / `Deleted`
+## 5. Explicit non-changes
+- `useInboxAlerts`, `AlertsContext`, sessions hooks, calendar, analytics, reports, auth, Supabase, edge functions, scrapers, RLS: untouched.
+- No country selector added to Alertas / Sesiones / Calendario / Analíticas / Reportes.
+- No new alerts/sessions/analytics fixtures. No demo/mock/placeholder copy.
+- Other orgs (ISA, Diez Canseco, etc.) see zero UI change.
 
-**Sesiones**
-- `Session Opened`, `Session Published`, `Session QA Asked`, `Session Transcript Requested`
+## Technical notes
+- `src/lib/orgDataIsolation.ts` gains `BETSSON_ORG_ID` constant + `isBetssonOrg()` helper; existing `EMPTY_DATA_ORG_IDS` set is **not** modified (Betsson stays empty-data per current behavior — the Morning Brief simply renders `—` / `Pendiente` blocks if `useInboxAlerts` returns zero rows, which is the spec's intended fallback).
+- Sort/derivation helpers for the KPI strip and Top Alerts live inside the panel components — no changes to shared hooks.
+- All flag rendering goes through `CountryFlag`; on image error it falls back to plain country name (never ISO code, never emoji).
 
-**Analíticas**
-- `Analytics Dashboard Viewed` (view: internal/client)
-- `Analytics Drilldown Opened` (metric)
-- `Analytics Layout Customized`
+## Deliverables
+New files:
+- `src/assets/flags/{peru,chile,colombia,argentina}.svg`
+- `src/components/regional/CountryFlag.tsx`
+- `src/components/regional/CountryStatusChip.tsx`
+- `src/lib/betssonCountries.ts`
+- `src/components/panel/MorningBriefPage.tsx` (+ subcomponents listed above)
 
-**Calendario**
-- `Calendar Event Clicked` (deep-link target)
-
-**Carga manual (DC Legal)**
-- `Manual Alerts Upload Started`, `Manual Alerts Upload Confirmed` (count, tipo)
-
-**IA**
-- `AI Feature Used` (feature_name, model) — espejo ligero de `ai_usage_logs`
-
-## 4. Segmentación admin vs cliente
-
-Todos los eventos llevan super property `account_type`. En Mixpanel podrás filtrar dashboards por `account_type = user` para uso real de clientes y excluir admins de DC Legal. No bloqueamos tracking de admins (útil para QA), solo lo dejas segmentable.
-
-## 5. Detalles técnicos
-
-- Helper `trackEvent` se importa donde se necesite; nunca rompe la UI si Mixpanel falla (try/catch silencioso).
-- Token vive en `import.meta.env.VITE_MIXPANEL_TOKEN` (público, seguro para frontend).
-- Sin PII sensible en propiedades (no enviamos contenido de alertas, solo IDs y metadata).
-- Respeta el principio de aislamiento por org: `organization_id` y `client_id` van como super properties para que cada cohorte sea filtrable.
-
-## 6. Archivos a crear/editar
-
-**Crear**
-- `src/lib/analytics/mixpanel.ts` (core)
-- `src/lib/analytics/events.ts` (constantes de nombres de eventos)
-- `src/hooks/usePageTracking.ts`
-
-**Editar**
-- `src/main.tsx` — init
-- `src/contexts/AuthContext.tsx` — identify / reset
-- `src/App.tsx` — page tracking hook
-- `src/pages/Inbox.tsx` + componentes de alert (open, filter, search, pin, publish, feedback)
-- `src/components/reports/ReportsPage.tsx` (generate, download, config CRUD)
-- `src/components/sessions/SessionsPage.tsx` + `SesionDetailDrawer.tsx` + `SesionQABox.tsx`
-- `src/components/analytics/*Dashboard.tsx` (view + drilldown + customization)
-- `src/components/calendar/AlertsCalendar.tsx`
-- `src/pages/UploadAlerts.tsx`
-- `src/pages/Auth.tsx` (signup/signin events)
-
-Al implementar pediré el token con el tool de secrets para que lo agregues como `VITE_MIXPANEL_TOKEN`.
+Edited files (additive only):
+- `src/lib/orgDataIsolation.ts` — add Betsson constant + helper
+- `src/components/layout/AppSidebar.tsx` — conditional `Panel` entry
+- `src/pages/LawMeterDashboard.tsx` — register `panel` case, default tab for Betsson, optional header chips
