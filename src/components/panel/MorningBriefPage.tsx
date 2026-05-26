@@ -413,9 +413,10 @@ function TopAlertRow({
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-medium text-foreground line-clamp-2">
+            <h4 className="text-sm font-medium text-foreground line-clamp-2 flex-1">
               {alert.legislation_title}
             </h4>
+            <CountryFlag country="PE" size={18} showName={false} className="shrink-0 mt-0.5" />
           </div>
           <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
             {alert.legislation_id && (
