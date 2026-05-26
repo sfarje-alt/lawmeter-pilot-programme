@@ -333,26 +333,74 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
         </Card>
       </div>
 
-      {/* Country status */}
-      <Card className="bg-white/[0.02] border-white/10">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Globe2 className="h-4 w-4 text-primary" />
-            Estado por país
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {BETSSON_COUNTRIES.map((country) => {
-            const isActive = country.status === "active";
-            return (
+      {/* Country status — only in regional mode */}
+      {isRegional && (
+        <Card className="bg-white/[0.02] border-white/10">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Globe2 className="h-4 w-4 text-primary" />
+              Estado por país
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {config.countries.map((country) => {
+              const isActive = country.status === "active";
+              return (
+                <div
+                  key={country.code}
+                  className={cn(
+                    "rounded-lg border p-4 flex items-start gap-3",
+                    isActive
+                      ? "bg-emerald-500/5 border-emerald-500/20"
+                      : "bg-amber-500/5 border-amber-500/15",
+                  )}
+                >
+                  <CountryFlag country={country.code} size={28} showName={false} />
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-foreground">{country.name}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] uppercase tracking-wide",
+                          isActive
+                            ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                            : "bg-amber-500/10 border-amber-500/25 text-amber-300/90",
+                        )}
+                      >
+                        {isActive ? (
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                        ) : (
+                          <Clock className="h-3 w-3 mr-1" />
+                        )}
+                        {country.statusLabel}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {country.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Jurisdiction status — single-country profiles */}
+      {!isRegional && config.countries.length > 0 && (
+        <Card className="bg-white/[0.02] border-white/10">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Globe2 className="h-4 w-4 text-primary" />
+              Jurisdicción
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {config.countries.map((country) => (
               <div
                 key={country.code}
-                className={cn(
-                  "rounded-lg border p-4 flex items-start gap-3",
-                  isActive
-                    ? "bg-emerald-500/5 border-emerald-500/20"
-                    : "bg-amber-500/5 border-amber-500/15",
-                )}
+                className="rounded-lg border bg-emerald-500/5 border-emerald-500/20 p-4 flex items-start gap-3"
               >
                 <CountryFlag country={country.code} size={28} showName={false} />
                 <div className="space-y-1 flex-1 min-w-0">
@@ -360,18 +408,9 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
                     <span className="font-semibold text-foreground">{country.name}</span>
                     <Badge
                       variant="outline"
-                      className={cn(
-                        "text-[10px] uppercase tracking-wide",
-                        isActive
-                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
-                          : "bg-amber-500/10 border-amber-500/25 text-amber-300/90",
-                      )}
+                      className="text-[10px] uppercase tracking-wide bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
                     >
-                      {isActive ? (
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                      ) : (
-                        <Clock className="h-3 w-3 mr-1" />
-                      )}
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
                       {country.statusLabel}
                     </Badge>
                   </div>
@@ -380,10 +419,10 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
                   </p>
                 </div>
               </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Upcoming items */}
       <Card className="bg-white/[0.02] border-white/10">
