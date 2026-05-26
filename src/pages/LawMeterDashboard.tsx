@@ -26,6 +26,7 @@ import { CountryStatusChip } from "@/components/regional/CountryStatusChip";
 import { BetssonCountryScopeWrapper } from "@/components/regional/BetssonCountryScopeWrapper";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { isBetssonOrg } from "@/lib/orgDataIsolation";
+import { getPanelConfigForOrg, hasPanelForOrg } from "@/lib/panelConfig";
 
 // Client Portal Components
 import {
@@ -64,18 +65,21 @@ export default function LawMeterDashboard() {
 
   const isBetsson = isBetssonOrg(profile?.organization_id);
 
+  const panelConfig = getPanelConfigForOrg(profile?.organization_id);
+  const hasPanel = hasPanelForOrg(profile?.organization_id);
+
   // Set default tab based on user type
   useEffect(() => {
     if (activeTab === "" && !sectionParam) {
       if (isClientUser) {
         setActiveTab("client-inbox");
-      } else if (isBetsson) {
+      } else if (hasPanel) {
         setActiveTab("panel");
       } else {
         setActiveTab("inbox");
       }
     }
-  }, [isClientUser, isBetsson, activeTab, sectionParam]);
+  }, [isClientUser, hasPanel, activeTab, sectionParam]);
 
   const renderContent = () => {
     // Client user views
@@ -114,7 +118,7 @@ export default function LawMeterDashboard() {
           </BetssonCountryScopeWrapper>
         );
       case "panel":
-        return <MorningBriefPage onNavigate={setActiveTab} />;
+        return <MorningBriefPage onNavigate={setActiveTab} config={panelConfig ?? undefined} />;
       case "upload-alerts":
         return (
           <UploadAlerts

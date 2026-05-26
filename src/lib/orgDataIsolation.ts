@@ -4,16 +4,21 @@
 // Este módulo centraliza la decisión para no esparcir IDs por toda la app.
 
 export const BETSSON_ORG_ID = "b7e15500-0001-4000-8000-000000000001";
+export const ISA_ORG_ID = "b7e15500-0004-4000-8000-000000000001";
 
 export function isBetssonOrg(organizationId: string | null | undefined): boolean {
   return organizationId === BETSSON_ORG_ID;
 }
 
+export function isISAOrg(organizationId: string | null | undefined): boolean {
+  return organizationId === ISA_ORG_ID;
+}
+
 export const EMPTY_DATA_ORG_IDS = new Set<string>([
   // Betsson Group (piloto)
   BETSSON_ORG_ID,
-  // ISA (piloto)
-  'b7e15500-0004-4000-8000-000000000001',
+  // ISA Energía (piloto)
+  ISA_ORG_ID,
   // Diez Canseco (piloto - subida manual JSON)
   'b7e15500-0006-4000-8000-000000000001',
 ]);
