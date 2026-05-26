@@ -172,6 +172,10 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
 
   const peruActiveCount = stats.active;
   const hasPeruPriority = stats.criticalUnreviewed > 0 || stats.upcomingDeadlines > 0;
+  const hasAnyAlerts = stats.active > 0;
+  const executiveSummary = hasAnyAlerts
+    ? config.executiveSummaryFull
+    : config.executiveSummaryEmpty;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -179,16 +183,31 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
       <div className="space-y-3">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-semibold text-foreground">
-            Betsson · Morning Brief Regional
+            {config.headerTitle}
           </h1>
           <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
-            Betsson · LATAM
+            {config.headerBadge}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Lectura rápida del monitoreo regulatorio · Perú y Chile activos · Colombia y Argentina en activación
-        </p>
+        <p className="text-sm text-muted-foreground">{config.headerSubtitle}</p>
       </div>
+
+      {/* Executive summary paragraph (single-country profiles) */}
+      {!isRegional && executiveSummary && (
+        <Card className="bg-white/[0.02] border-white/10">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              Resumen ejecutivo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+              {executiveSummary}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Executive summary strip */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -201,8 +220,14 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
           }
         />
         <ExecCard
-          title="País con mayor carga regulatoria"
-          body="Perú concentra la carga activa actual. Chile se encuentra habilitado a nivel frontend y pendiente de conexión de datos."
+          title={isRegional ? "País con mayor carga regulatoria" : "Fuente o autoridad con mayor movimiento"}
+          body={
+            isRegional
+              ? "Perú concentra la carga activa actual. Chile se encuentra habilitado a nivel frontend y pendiente de conexión de datos."
+              : hasAnyAlerts
+              ? "Concentrar la revisión en las fuentes con mayor movimiento entre las alertas activas."
+              : "Sin concentración clara de actividad por fuente en este momento."
+          }
         />
         <ExecCard
           title="Próxima acción recomendada"
@@ -211,13 +236,13 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
               ? "Revisar la alerta de mayor impacto y validar si debe incluirse en el próximo resumen ejecutivo."
               : nextDeadline
               ? "Revisar el próximo vencimiento registrado en Perú y confirmar responsable."
-              : "Mantener el monitoreo. No hay acción prioritaria pendiente en este momento."
+              : "Mantener revisión ordinaria de Alertas y Calendario."
           }
         />
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+      <div className={cn("grid gap-3", isRegional ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-7" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5")}>
         {kpis.map((kpi) => (
           <Card key={kpi.label} className="bg-white/[0.02] border-white/10">
             <CardContent className="p-4 space-y-1">
