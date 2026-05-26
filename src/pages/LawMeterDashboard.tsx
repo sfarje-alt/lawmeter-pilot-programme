@@ -106,6 +106,8 @@ export default function LawMeterDashboard() {
       case "inbox":
         // Include timestamp in key to force re-mount when navigating from calendar multiple times
         return <Inbox key={`inbox-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;
+      case "panel":
+        return <MorningBriefPage onNavigate={setActiveTab} />;
       case "upload-alerts":
         return (
           <UploadAlerts
