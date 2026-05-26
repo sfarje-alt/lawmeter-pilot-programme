@@ -387,52 +387,111 @@ function QuickLink({
   );
 }
 
-function UpcomingDeadlines({
+type Milestone =
+  | { kind: "alert"; date: Date; rol: string; alert: PeruAlert }
+  | { kind: "session"; date: Date; session: PeruSession };
+
+function UpcomingMilestones({
   alerts,
-  onOpen,
+  sessions,
+  loading,
+  onOpenAlert,
+  onOpenSessions,
 }: {
   alerts: PeruAlert[];
-  onOpen: (id: string) => void;
+  sessions: PeruSession[];
+  loading: boolean;
+  onOpenAlert: (id: string) => void;
+  onOpenSessions: () => void;
 }) {
   const now = Date.now();
-  const weekAhead = now + 7 * 24 * 60 * 60 * 1000;
-  const items: { alert: PeruAlert; date: Date; rol: string }[] = [];
+  const weekAhead = now + 14 * 24 * 60 * 60 * 1000;
+  const items: Milestone[] = [];
+
   alerts.forEach((a) => {
-    if (a.kanban_stage === "archivado" || !a.key_dates) return;
+    if (a.kanban_stage === "archivado" || a.archived_at || !a.key_dates) return;
     a.key_dates.forEach((kd) => {
       const t = new Date(kd.fecha).getTime();
       if (!isNaN(t) && t >= now && t <= weekAhead) {
-        items.push({ alert: a, date: new Date(t), rol: kd.rol });
+        items.push({ kind: "alert", date: new Date(t), rol: kd.rol, alert: a });
       }
     });
   });
+
+  sessions.forEach((s) => {
+    if (!s.scheduled_at) return;
+    const t = new Date(s.scheduled_at).getTime();
+    if (!isNaN(t) && t >= now && t <= weekAhead) {
+      items.push({ kind: "session", date: new Date(t), session: s });
+    }
+  });
+
   items.sort((a, b) => a.date.getTime() - b.date.getTime());
-  const top = items.slice(0, 6);
+  const top = items.slice(0, 8);
+
+  if (loading) {
+    return <div className="text-sm text-muted-foreground py-4 text-center">Cargando…</div>;
+  }
 
   if (top.length === 0) {
-    return <div className="text-sm text-muted-foreground py-4 text-center">Pendiente</div>;
+    return (
+      <div className="text-sm text-muted-foreground py-4 text-center">
+        No hay hitos próximos registrados para Perú.
+      </div>
+    );
   }
 
   return (
     <div className="space-y-2">
-      {top.map((it, idx) => (
-        <button
-          key={`${it.alert.id}-${idx}`}
-          onClick={() => onOpen(it.alert.id)}
-          className="w-full flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-2 text-left transition-colors"
-        >
-          <div className="text-xs font-medium text-foreground bg-white/5 rounded px-2 py-1 shrink-0">
-            {it.date.toLocaleDateString("es-PE", { day: "2-digit", month: "short" })}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm text-foreground line-clamp-1">
-              {it.alert.legislation_title}
+      {top.map((it, idx) => {
+        const dateLabel = it.date.toLocaleDateString("es-PE", { day: "2-digit", month: "short" });
+        if (it.kind === "alert") {
+          return (
+            <button
+              key={`alert-${it.alert.id}-${idx}`}
+              onClick={() => onOpenAlert(it.alert.id)}
+              className="w-full flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-2 text-left transition-colors"
+            >
+              <div className="text-xs font-medium text-foreground bg-white/5 rounded px-2 py-1 shrink-0">
+                {dateLabel}
+              </div>
+              <Badge variant="outline" className="text-[10px] bg-white/5 border-white/10 shrink-0">
+                Alerta
+              </Badge>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-foreground line-clamp-1">
+                  {it.alert.legislation_title}
+                </div>
+                <div className="text-[11px] text-muted-foreground line-clamp-1">{it.rol}</div>
+              </div>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            </button>
+          );
+        }
+        return (
+          <button
+            key={`session-${it.session.id}-${idx}`}
+            onClick={onOpenSessions}
+            className="w-full flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-2 text-left transition-colors"
+          >
+            <div className="text-xs font-medium text-foreground bg-white/5 rounded px-2 py-1 shrink-0">
+              {dateLabel}
             </div>
-            <div className="text-[11px] text-muted-foreground">{it.rol}</div>
-          </div>
-          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        </button>
-      ))}
+            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shrink-0">
+              Sesión
+            </Badge>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-foreground line-clamp-1">
+                {it.session.session_title || it.session.commission_name}
+              </div>
+              <div className="text-[11px] text-muted-foreground line-clamp-1">
+                {it.session.commission_name}
+              </div>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          </button>
+        );
+      })}
     </div>
   );
 }
