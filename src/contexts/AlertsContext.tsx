@@ -69,31 +69,94 @@ function savePinnedIds(ids: Set<string>) {
   saveJSON(PINNED_STORAGE_KEY, Array.from(ids));
 }
 
-const AUTO_ARCHIVE_DAYS = 30;
+/**
+ * Umbrales de auto-archivado (basados en inactividad legislativa real,
+ * nunca en created_at). El auto-archivado además exige que la alerta ya
+ * esté clasificada como rezagada y no esté pinneada/bookmarked.
+ *  - impacto < 70: 365 días sin movimiento
+ *  - impacto >= 70 (alto impacto): 540 días sin movimiento (protección reforzada)
+ */
+const AUTO_ARCHIVE_INACTIVITY_DAYS = 365;
+const AUTO_ARCHIVE_HIGH_IMPACT_INACTIVITY_DAYS = 540;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Entrada persistida por alerta en localStorage. */
+export interface ArchivedEntry {
+  archived_at: string;
+  reason: "manual" | "auto_inactivity";
+  last_movement_at?: string | null;
+}
 
 /**
- * Auto-archive any non-pinned alert that has been in the inbox for more than
- * AUTO_ARCHIVE_DAYS days (based on created_at). Bookmarked alerts are protected.
- * Mutates the archived_at field in-place on returned alerts and persists to
- * localStorage so it sticks across reloads.
+ * Lee el map de archivado con migración tolerante:
+ * - Formato viejo: Record<string, string>  (solo ISO archived_at, archivado manual histórico)
+ * - Formato nuevo: Record<string, ArchivedEntry>
+ */
+export function readArchivedMap(): Record<string, ArchivedEntry> {
+  const raw = loadJSON<Record<string, unknown>>(ARCHIVED_STORAGE_KEY, {});
+  const out: Record<string, ArchivedEntry> = {};
+  for (const [id, value] of Object.entries(raw)) {
+    if (typeof value === "string") {
+      out[id] = { archived_at: value, reason: "manual", last_movement_at: null };
+    } else if (value && typeof value === "object") {
+      const v = value as Partial<ArchivedEntry>;
+      if (typeof v.archived_at === "string") {
+        out[id] = {
+          archived_at: v.archived_at,
+          reason: v.reason === "auto_inactivity" ? "auto_inactivity" : "manual",
+          last_movement_at: typeof v.last_movement_at === "string" ? v.last_movement_at : null,
+        };
+      }
+    }
+  }
+  return out;
+}
+
+export function writeArchivedMap(map: Record<string, ArchivedEntry>): void {
+  saveJSON(ARCHIVED_STORAGE_KEY, map);
+}
+
+/**
+ * Auto-archive sólo por inactividad legislativa real prolongada. Reglas:
+ *   1) la alerta no está ya archivada
+ *   2) no está pinneada/bookmarked
+ *   3) ya clasifica como rezagada (isRezagada)
+ *   4) existe getLastMovementDate(a)
+ *   5) días sin movimiento >= 540 si impacto>=70, sino >= 365
+ * Persiste la entrada con razón "auto_inactivity" y la fecha real de último movimiento.
  */
 function applyAutoArchive(alerts: PeruAlert[]): PeruAlert[] {
-  const now = Date.now();
-  const cutoffMs = AUTO_ARCHIVE_DAYS * 24 * 60 * 60 * 1000;
-  const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+  const archivedMap = readArchivedMap();
   let mutated = false;
+  const nowMs = Date.now();
   const out = alerts.map((a) => {
     if (a.archived_at) return a;
     if (a.is_pinned_for_publication) return a;
-    const createdMs = a.created_at ? new Date(a.created_at).getTime() : NaN;
-    if (!Number.isFinite(createdMs)) return a;
-    if (now - createdMs <= cutoffMs) return a;
-    const archivedIso = new Date(createdMs + cutoffMs).toISOString();
-    archivedMap[a.id] = archivedIso;
+    if (!isRezagada(a)) return a;
+    const lastMov = getLastMovementDate(a);
+    if (!lastMov) return a;
+    const daysSince = Math.floor((nowMs - lastMov.getTime()) / DAY_MS);
+    const threshold = getImpactScore(a) >= 70
+      ? AUTO_ARCHIVE_HIGH_IMPACT_INACTIVITY_DAYS
+      : AUTO_ARCHIVE_INACTIVITY_DAYS;
+    if (daysSince < threshold) return a;
+
+    const archivedIso = new Date().toISOString();
+    const lastMovIso = lastMov.toISOString();
+    archivedMap[a.id] = {
+      archived_at: archivedIso,
+      reason: "auto_inactivity",
+      last_movement_at: lastMovIso,
+    };
     mutated = true;
-    return { ...a, archived_at: archivedIso };
+    return {
+      ...a,
+      archived_at: archivedIso,
+      archive_reason: "auto_inactivity" as const,
+      archived_last_movement_at: lastMovIso,
+    };
   });
-  if (mutated) saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
+  if (mutated) writeArchivedMap(archivedMap);
   return out;
 }
 
