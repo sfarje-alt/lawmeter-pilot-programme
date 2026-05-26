@@ -352,7 +352,7 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
       {/* Upcoming items */}
       <Card className="bg-white/[0.02] border-white/10">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Próximos hitos</CardTitle>
+          <CardTitle className="text-base">Próximas sesiones y plazos</CardTitle>
         </CardHeader>
         <CardContent>
           <UpcomingMilestones
