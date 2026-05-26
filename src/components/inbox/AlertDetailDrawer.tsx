@@ -136,7 +136,14 @@ export function AlertDetailDrawer({
 
   const isBill = alert.legislation_type === "proyecto_de_ley";
   const isArchived = !!alert.archived_at;
-  const archiveDaysRemaining = getArchiveDaysRemaining(alert.archived_at);
+  const archiveReasonLabel = isArchived
+    ? alert.archive_reason === "auto_inactivity"
+      ? "Archivada automáticamente por inactividad"
+      : "Archivada manualmente"
+    : null;
+  const archiveLastMovementIso = isArchived
+    ? alert.archived_last_movement_at || getLastMovementDate(alert)?.toISOString() || null
+    : null;
 
   const displayDate = isBill ? alert.stage_date || alert.project_date : alert.publication_date;
   const formattedDate = displayDate
