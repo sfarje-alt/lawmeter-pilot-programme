@@ -77,6 +77,20 @@ export function ClientAlertCard({ alert, onClick, clientId }: ClientAlertCardPro
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {hasCommentary && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="p-1 hover:bg-white/10 rounded transition-colors cursor-default">
+                    <PenLine className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">Comentario experto disponible</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {alert.source_url && (
             <button
               onClick={handleLinkClick}
