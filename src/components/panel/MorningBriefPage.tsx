@@ -138,14 +138,31 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
     return n;
   };
 
+  const activeCountries = BETSSON_COUNTRIES.filter((c) => c.status === "active");
+  const activatingCountries = BETSSON_COUNTRIES.filter((c) => c.status === "activating");
+
+  const topAlert = topAlerts[0];
+  const nextDeadline = useMemo(() => {
+    const candidates = allAlerts
+      .flatMap((a) => (a.key_dates ?? []).map((kd) => ({ alert: a, fecha: kd.fecha, rol: kd.rol })))
+      .map((x) => ({ ...x, t: new Date(x.fecha).getTime() }))
+      .filter((x) => !isNaN(x.t) && x.t >= Date.now())
+      .sort((a, b) => a.t - b.t);
+    return candidates[0] ?? null;
+  }, [allAlerts]);
+
   const kpis: { label: string; value: string | number; icon: any }[] = [
     { label: "Alertas activas", value: metricValue(stats.active), icon: InboxIcon },
     { label: "Críticas sin revisar", value: metricValue(stats.criticalUnreviewed), icon: AlertTriangle },
     { label: "Nuevas últimas 24h", value: metricValue(stats.newLast24h), icon: Clock },
     { label: "Próximos vencimientos", value: metricValue(stats.upcomingDeadlines), icon: CalendarIcon },
     { label: "Sesiones próximas", value: sessionsLoading ? PLACEHOLDER : upcomingSessions.length, icon: Video },
-    { label: "Países en activación", value: 3, icon: Globe2 },
+    { label: "Países activos", value: activeCountries.length, icon: Globe2 },
+    { label: "Países en activación", value: activatingCountries.length, icon: Clock },
   ];
+
+  const peruActiveCount = stats.active;
+  const hasPeruPriority = stats.criticalUnreviewed > 0 || stats.upcomingDeadlines > 0;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -153,24 +170,45 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
       <div className="space-y-3">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-semibold text-foreground">
-            Betsson · Morning Brief
+            Betsson · Morning Brief Regional
           </h1>
-          <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300">
-            Perú activo
+          <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
+            Betsson · LATAM
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          Perú activo · Chile, Colombia y Argentina en activación
-        </p>
-        <p className="text-sm text-muted-foreground/90 max-w-3xl leading-relaxed">
-          Perú es actualmente la jurisdicción activa del perfil Betsson. El panel
-          prioriza las alertas y sesiones que requieren revisión operativa,
-          mientras Chile, Colombia y Argentina permanecen en proceso de activación.
+          Lectura rápida del monitoreo regulatorio · Perú y Chile activos · Colombia y Argentina en activación
         </p>
       </div>
 
+      {/* Executive summary strip */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <ExecCard
+          title="Qué requiere atención hoy"
+          body={
+            hasPeruPriority
+              ? "Perú concentra las alertas prioritarias actualmente disponibles. Revisar las alertas de mayor impacto y próximos vencimientos."
+              : "Sin prioridades críticas detectadas en Perú en este momento. Mantener el monitoreo y revisar nuevas entradas."
+          }
+        />
+        <ExecCard
+          title="País con mayor carga regulatoria"
+          body="Perú concentra la carga activa actual. Chile se encuentra habilitado a nivel frontend y pendiente de conexión de datos."
+        />
+        <ExecCard
+          title="Próxima acción recomendada"
+          body={
+            topAlert
+              ? "Revisar la alerta de mayor impacto y validar si debe incluirse en el próximo resumen ejecutivo."
+              : nextDeadline
+              ? "Revisar el próximo vencimiento registrado en Perú y confirmar responsable."
+              : "Mantener el monitoreo. No hay acción prioritaria pendiente en este momento."
+          }
+        />
+      </div>
+
       {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
         {kpis.map((kpi) => (
           <Card key={kpi.label} className="bg-white/[0.02] border-white/10">
             <CardContent className="p-4 space-y-1">
@@ -186,13 +224,49 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
         ))}
       </div>
 
+      {/* Snapshot regional */}
+      <Card className="bg-white/[0.02] border-white/10">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Globe2 className="h-4 w-4 text-primary" />
+            Snapshot regional
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {BETSSON_COUNTRIES.map((country) => {
+            const isPeru = country.code === "PE";
+            const isChile = country.code === "CL";
+            const value = isPeru ? metricValue(peruActiveCount) : 0;
+            const sub = isPeru
+              ? "alertas activas"
+              : isChile
+              ? "sin datos conectados"
+              : "en activación";
+            return (
+              <div
+                key={country.code}
+                className="rounded-lg border border-white/10 bg-white/[0.02] p-3 flex items-center gap-3"
+              >
+                <CountryFlag country={country.code} size={24} showName={false} />
+                <div className="min-w-0">
+                  <div className="text-xs text-muted-foreground truncate">{country.name}</div>
+                  <div className="text-lg font-semibold text-foreground leading-tight">{value}</div>
+                  <div className="text-[10px] text-muted-foreground/80 truncate">{sub}</div>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Top alerts */}
         <Card className="bg-white/[0.02] border-white/10 lg:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-400" />
-              Top alertas por monitorear
+              Top alertas prioritarias
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -228,7 +302,7 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Globe2 className="h-4 w-4 text-primary" />
-            Países del perfil Betsson
+            Estado por país
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -278,7 +352,7 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
       {/* Upcoming items */}
       <Card className="bg-white/[0.02] border-white/10">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Próximos hitos</CardTitle>
+          <CardTitle className="text-base">Próximas sesiones y plazos</CardTitle>
         </CardHeader>
         <CardContent>
           <UpcomingMilestones
@@ -300,6 +374,17 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
         onTogglePin={togglePinAlert}
       />
     </div>
+  );
+}
+
+function ExecCard({ title, body }: { title: string; body: string }) {
+  return (
+    <Card className="bg-white/[0.02] border-white/10 h-full">
+      <CardContent className="p-4 space-y-2">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+        <p className="text-sm text-foreground/90 leading-relaxed">{body}</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -328,9 +413,10 @@ function TopAlertRow({
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-medium text-foreground line-clamp-2">
+            <h4 className="text-sm font-medium text-foreground line-clamp-2 flex-1">
               {alert.legislation_title}
             </h4>
+            <CountryFlag country="PE" size={18} showName={false} className="shrink-0 mt-0.5" />
           </div>
           <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
             {alert.legislation_id && (
@@ -451,7 +537,7 @@ function UpcomingMilestones({
   if (top.length === 0) {
     return (
       <div className="text-sm text-muted-foreground py-4 text-center">
-        No hay hitos próximos registrados para Perú.
+        No hay sesiones próximas registradas para Perú o Chile.
       </div>
     );
   }

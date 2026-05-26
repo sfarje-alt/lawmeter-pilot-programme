@@ -20,10 +20,10 @@ export const BETSSON_COUNTRIES: BetssonCountry[] = [
   {
     code: "CL",
     name: "Chile",
-    status: "activating",
-    statusLabel: "En proceso de activación",
+    status: "active",
+    statusLabel: "Activo",
     description:
-      "Fuentes, taxonomía y criterios de relevancia pendientes de calibración.",
+      "Estructura frontend habilitada para conexión de fuentes y datos.",
   },
   {
     code: "CO",
@@ -42,3 +42,18 @@ export const BETSSON_COUNTRIES: BetssonCountry[] = [
       "Fuentes, taxonomía y criterios de relevancia pendientes de calibración.",
   },
 ];
+
+export const BETSSON_ACTIVE_COUNTRIES = BETSSON_COUNTRIES.filter(
+  (c) => c.status === "active",
+);
+export const BETSSON_ACTIVATING_COUNTRIES = BETSSON_COUNTRIES.filter(
+  (c) => c.status === "activating",
+);
+
+/**
+ * Country that holds real connected data today. The rest are frontend-only
+ * structural placeholders (Chile) or activation-only stubs (Colombia, Argentina).
+ */
+export const BETSSON_DATA_CONNECTED_COUNTRIES: BetssonCountryCode[] = ["PE"];
+
+export type BetssonCountryScope = "ALL" | BetssonCountryCode;

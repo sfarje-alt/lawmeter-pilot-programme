@@ -23,6 +23,7 @@ import Inbox from "@/pages/Inbox";
 import UploadAlerts from "@/pages/UploadAlerts";
 import { MorningBriefPage } from "@/components/panel/MorningBriefPage";
 import { CountryStatusChip } from "@/components/regional/CountryStatusChip";
+import { BetssonCountryScopeWrapper } from "@/components/regional/BetssonCountryScopeWrapper";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { isBetssonOrg } from "@/lib/orgDataIsolation";
 
@@ -101,11 +102,17 @@ export default function LawMeterDashboard() {
     // Admin user views
     switch (activeTab) {
       case "sessions":
-        // Include sessionId and timestamp in key to force re-mount when navigating from calendar
-        return <SessionsPage key={`sessions-${sessionIdParam}-${timestampParam}`} initialSessionId={sessionIdParam} />;
+        return (
+          <BetssonCountryScopeWrapper module="sessions">
+            <SessionsPage key={`sessions-${sessionIdParam}-${timestampParam}`} initialSessionId={sessionIdParam} />
+          </BetssonCountryScopeWrapper>
+        );
       case "inbox":
-        // Include timestamp in key to force re-mount when navigating from calendar multiple times
-        return <Inbox key={`inbox-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;
+        return (
+          <BetssonCountryScopeWrapper module="alerts">
+            <Inbox key={`inbox-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />
+          </BetssonCountryScopeWrapper>
+        );
       case "panel":
         return <MorningBriefPage onNavigate={setActiveTab} />;
       case "upload-alerts":
@@ -122,15 +129,27 @@ export default function LawMeterDashboard() {
       case "reports":
         return <ReportsPage />;
       case "analytics":
-        return <LegalTeamAnalyticsDashboard />;
+        return (
+          <BetssonCountryScopeWrapper module="analytics">
+            <LegalTeamAnalyticsDashboard />
+          </BetssonCountryScopeWrapper>
+        );
       case "calendar":
-        return <AlertsCalendar />;
+        return (
+          <BetssonCountryScopeWrapper module="calendar">
+            <AlertsCalendar />
+          </BetssonCountryScopeWrapper>
+        );
       case "social":
         return <SocialListeningDemo />;
       case "contact":
         return <ContactForm />;
       default:
-        return <Inbox key={`inbox-default-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;
+        return (
+          <BetssonCountryScopeWrapper module="alerts">
+            <Inbox key={`inbox-default-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />
+          </BetssonCountryScopeWrapper>
+        );
     }
   };
 
