@@ -454,12 +454,30 @@ export function InboxAlertCard({
           </TooltipProvider>
         )}
 
-        {isArchived && alert.archived_at && (
-          <div className="flex items-center gap-1 ml-auto">
-            <Archive className="h-3 w-3" />
-            <span>Archivada {formatDate(alert.archived_at)}</span>
-          </div>
-        )}
+        {isArchived && alert.archived_at && (() => {
+          const reasonLabel =
+            alert.archive_reason === "auto_inactivity"
+              ? "Archivada automáticamente por inactividad"
+              : "Archivada manualmente";
+          const lastMovIso =
+            alert.archived_last_movement_at ||
+            getLastMovementDate(alert)?.toISOString() ||
+            null;
+          return (
+            <div className="flex flex-col items-end gap-0.5 ml-auto text-right">
+              <div className="flex items-center gap-1">
+                <Archive className="h-3 w-3" />
+                <span>{reasonLabel}</span>
+              </div>
+              {lastMovIso && (
+                <span className="text-[10px] text-muted-foreground">
+                  Último movimiento: {formatDate(lastMovIso)}
+                </span>
+              )}
+            </div>
+          );
+        })()}
+
       </div>
     </Card>
   );
