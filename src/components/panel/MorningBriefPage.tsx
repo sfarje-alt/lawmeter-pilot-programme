@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { usePeruSessions } from "@/hooks/usePeruSessions";
+import { AlertDetailDrawer } from "@/components/inbox/AlertDetailDrawer";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { CountryFlag } from "@/components/regional/CountryFlag";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
