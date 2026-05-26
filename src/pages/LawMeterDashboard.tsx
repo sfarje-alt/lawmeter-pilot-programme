@@ -21,6 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import Inbox from "@/pages/Inbox";
 import UploadAlerts from "@/pages/UploadAlerts";
+import { MorningBriefPage } from "@/components/panel/MorningBriefPage";
+import { CountryStatusChip } from "@/components/regional/CountryStatusChip";
+import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
+import { isBetssonOrg } from "@/lib/orgDataIsolation";
 
 // Client Portal Components
 import {
@@ -57,12 +61,20 @@ export default function LawMeterDashboard() {
     }
   }, [sectionParam, timestampParam]); // Also react to timestamp changes
 
+  const isBetsson = isBetssonOrg(profile?.organization_id);
+
   // Set default tab based on user type
   useEffect(() => {
     if (activeTab === "" && !sectionParam) {
-      setActiveTab(isClientUser ? "client-inbox" : "inbox");
+      if (isClientUser) {
+        setActiveTab("client-inbox");
+      } else if (isBetsson) {
+        setActiveTab("panel");
+      } else {
+        setActiveTab("inbox");
+      }
     }
-  }, [isClientUser, activeTab, sectionParam]);
+  }, [isClientUser, isBetsson, activeTab, sectionParam]);
 
   const renderContent = () => {
     // Client user views
@@ -94,6 +106,8 @@ export default function LawMeterDashboard() {
       case "inbox":
         // Include timestamp in key to force re-mount when navigating from calendar multiple times
         return <Inbox key={`inbox-${alertIdParam}-${tabParam}-${timestampParam}`} initialTab={tabParam} initialAlertId={alertIdParam} />;
+      case "panel":
+        return <MorningBriefPage onNavigate={setActiveTab} />;
       case "upload-alerts":
         return (
           <UploadAlerts
@@ -123,6 +137,7 @@ export default function LawMeterDashboard() {
   // Get display name for current tab
   const getTabDisplayName = () => {
     const tabNames: Record<string, string> = {
+      panel: "Panel",
       sessions: "Sesiones",
       inbox: "Alertas",
       clients: "Perfiles",
@@ -158,10 +173,18 @@ export default function LawMeterDashboard() {
             <SidebarTrigger className="text-foreground hover:bg-white/10" />
             <span className="text-sm font-medium text-muted-foreground">{getTabDisplayName()}</span>
 
-            <div className="ml-auto flex items-center gap-2">
-              <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
-                Perú
-              </Badge>
+            <div className="ml-auto flex items-center gap-2 flex-wrap">
+              {isBetsson ? (
+                <div className="hidden md:flex items-center gap-1.5">
+                  {BETSSON_COUNTRIES.map((c) => (
+                    <CountryStatusChip key={c.code} country={c} compact />
+                  ))}
+                </div>
+              ) : (
+                <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
+                  Perú
+                </Badge>
+              )}
             </div>
           </header>
 

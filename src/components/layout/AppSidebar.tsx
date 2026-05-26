@@ -1,4 +1,4 @@
-import { Inbox, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock, Upload } from "lucide-react";
+import { Inbox, FileText, BarChart3, Calendar, Settings, Video, LogOut, Clock, Upload, LayoutDashboard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { isManualIngestOrg } from "@/lib/orgDataIsolation";
+import { isManualIngestOrg, isBetssonOrg } from "@/lib/orgDataIsolation";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
 import lawmeterIcon from "@/assets/lawmeter-icon.png";
 
@@ -41,7 +41,10 @@ export function AppSidebar({ activeTab, onTabChange, onSettingsOpen }: AppSideba
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const isBetsson = isBetssonOrg(profile?.organization_id);
+
   const menuItems = [
+    ...(isBetsson ? [{ id: "panel", title: "Panel", icon: LayoutDashboard }] : []),
     ...baseMenuItems,
     ...(isManualIngestOrg(profile?.organization_id) && profile?.account_type === "admin"
       ? [{ id: "upload-alerts", title: "Cargar alertas", icon: Upload }]
