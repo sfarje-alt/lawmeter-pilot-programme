@@ -124,8 +124,14 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
   }, [allAlerts]);
 
   const openAlert = (alertId: string) => {
-    navigate(`/?section=inbox&alertId=${alertId}&t=${Date.now()}`);
+    setSelectedAlertId(alertId);
+    setDrawerOpen(true);
   };
+
+  const selectedAlert = useMemo(
+    () => allAlerts.find((a) => a.id === selectedAlertId) ?? null,
+    [allAlerts, selectedAlertId],
+  );
 
   const metricValue = (n: number): string | number => {
     if (alertsLoading || alertsError) return PLACEHOLDER;
