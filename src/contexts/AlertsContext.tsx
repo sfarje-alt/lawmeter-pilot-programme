@@ -415,7 +415,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     }
 
     const pinned = loadPinnedIds();
-    const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+    const archivedMap = readArchivedMap();
     const commentaryMap = loadJSON<Record<string, string>>(COMMENTARY_STORAGE_KEY, {});
     const attachmentsMap = loadJSON<Record<string, AttachedFileMetaRef[]>>(ATTACHMENTS_STORAGE_KEY, {});
     const ownersMap = loadJSON<Record<string, string[]>>(OWNERS_STORAGE_KEY, {});
@@ -428,9 +428,11 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       .map((row) => mapDbRowToAlert(row, pinned, archivedMap, commentaryMap, attachmentsMap, ownersMap, decisionMap, defaultOwners, commentaryHistoryMap))
       .filter((a): a is PeruAlert => a !== null);
 
-    setAlerts(purgeOldArchivedAlerts(dedupeByCodigoLatestVersion(mapped)));
+    // Aplicar auto-archivado por inactividad real (no purga, solo archiva).
+    setAlerts(applyAutoArchive(dedupeByCodigoLatestVersion(mapped)));
     setLoading(false);
   }, [orgId]);
+
 
   // Initial load + reload when org changes
   useEffect(() => {
