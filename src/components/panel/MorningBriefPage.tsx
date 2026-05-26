@@ -275,13 +275,13 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
           <CardTitle className="text-base">Próximos hitos</CardTitle>
         </CardHeader>
         <CardContent>
-          {stats.upcomingDeadlines === 0 ? (
-            <div className="text-sm text-muted-foreground py-4 text-center">
-              {PENDING}
-            </div>
-          ) : (
-            <UpcomingDeadlines alerts={allAlerts} onOpen={openAlert} />
-          )}
+          <UpcomingMilestones
+            alerts={allAlerts}
+            sessions={upcomingSessions}
+            loading={alertsLoading || sessionsLoading}
+            onOpenAlert={openAlert}
+            onOpenSessions={() => onNavigate("sessions")}
+          />
         </CardContent>
       </Card>
     </div>
