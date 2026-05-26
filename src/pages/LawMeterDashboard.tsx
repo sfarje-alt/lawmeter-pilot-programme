@@ -26,6 +26,7 @@ import { CountryStatusChip } from "@/components/regional/CountryStatusChip";
 import { BetssonCountryScopeWrapper } from "@/components/regional/BetssonCountryScopeWrapper";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { isBetssonOrg } from "@/lib/orgDataIsolation";
+import { getPanelConfigForOrg, hasPanelForOrg } from "@/lib/panelConfig";
 
 // Client Portal Components
 import {
