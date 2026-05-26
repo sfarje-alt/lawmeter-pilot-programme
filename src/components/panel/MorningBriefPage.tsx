@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInboxAlerts } from "@/hooks/useInboxAlerts";
+import { useAlerts } from "@/contexts/AlertsContext";
+import { usePeruSessions } from "@/hooks/usePeruSessions";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { CountryFlag } from "@/components/regional/CountryFlag";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,13 +21,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PeruAlert } from "@/data/peruAlertsMockData";
+import type { PeruSession } from "@/types/peruSessions";
 
 interface MorningBriefPageProps {
   onNavigate: (tab: string) => void;
 }
 
 const PLACEHOLDER = "—";
-const PENDING = "Pendiente";
 
 function getAlertScore(a: PeruAlert): number {
   const impact = typeof a.impacto_score === "number" ? a.impacto_score : 0;
@@ -50,17 +51,36 @@ function getNearestDeadline(a: PeruAlert): number {
 
 export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
   const navigate = useNavigate();
-  const { allAlerts } = useInboxAlerts();
+  const { alerts: allAlerts, loading: alertsLoading, error: alertsError } = useAlerts();
+  const { sessions, isLoading: sessionsLoading } = usePeruSessions();
+
+  const upcomingSessions = useMemo<PeruSession[]>(() => {
+    const now = Date.now();
+    return sessions
+      .filter((s) => {
+        if (!s.scheduled_at) return false;
+        const t = new Date(s.scheduled_at).getTime();
+        return !isNaN(t) && t >= now;
+      })
+      .sort((a, b) => {
+        const ta = new Date(a.scheduled_at!).getTime();
+        const tb = new Date(b.scheduled_at!).getTime();
+        return ta - tb;
+      });
+  }, [sessions]);
 
   const stats = useMemo(() => {
     const now = Date.now();
     const dayAgo = now - 24 * 60 * 60 * 1000;
     const weekAhead = now + 7 * 24 * 60 * 60 * 1000;
 
-    const active = allAlerts.filter((a) => a.kanban_stage !== "archivado");
+    const active = allAlerts.filter((a) => a.kanban_stage !== "archivado" && !a.archived_at);
     const criticalUnreviewed = active.filter(
       (a) =>
-        (a.urgency_category === "alta" || a.impact_category === "alta") &&
+        (a.urgency_category === "alta" ||
+          a.impact_category === "alta" ||
+          (typeof a.impacto_score === "number" && a.impacto_score >= 70) ||
+          (typeof a.urgencia_score === "number" && a.urgencia_score >= 70)) &&
         a.status === "inbox",
     );
     const newLast24h = allAlerts.filter((a) => {
@@ -85,8 +105,10 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
 
   const topAlerts = useMemo(() => {
     return [...allAlerts]
-      .filter((a) => a.kanban_stage !== "archivado")
+      .filter((a) => a.kanban_stage !== "archivado" && !a.archived_at)
       .sort((a, b) => {
+        const pinDiff = (b.is_pinned_for_publication ? 1 : 0) - (a.is_pinned_for_publication ? 1 : 0);
+        if (pinDiff !== 0) return pinDiff;
         const scoreDiff = getAlertScore(b) - getAlertScore(a);
         if (scoreDiff !== 0) return scoreDiff;
         const urgDiff = getUrgencyRank(b) - getUrgencyRank(a);
@@ -104,12 +126,17 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
     navigate(`/?section=inbox&alertId=${alertId}&t=${Date.now()}`);
   };
 
+  const metricValue = (n: number): string | number => {
+    if (alertsLoading || alertsError) return PLACEHOLDER;
+    return n;
+  };
+
   const kpis: { label: string; value: string | number; icon: any }[] = [
-    { label: "Alertas activas", value: allAlerts.length === 0 ? PLACEHOLDER : stats.active, icon: InboxIcon },
-    { label: "Críticas sin revisar", value: allAlerts.length === 0 ? PLACEHOLDER : stats.criticalUnreviewed, icon: AlertTriangle },
-    { label: "Nuevas últimas 24h", value: allAlerts.length === 0 ? PLACEHOLDER : stats.newLast24h, icon: Clock },
-    { label: "Próximos vencimientos", value: allAlerts.length === 0 ? PLACEHOLDER : stats.upcomingDeadlines, icon: CalendarIcon },
-    { label: "Sesiones próximas", value: PENDING, icon: Video },
+    { label: "Alertas activas", value: metricValue(stats.active), icon: InboxIcon },
+    { label: "Críticas sin revisar", value: metricValue(stats.criticalUnreviewed), icon: AlertTriangle },
+    { label: "Nuevas últimas 24h", value: metricValue(stats.newLast24h), icon: Clock },
+    { label: "Próximos vencimientos", value: metricValue(stats.upcomingDeadlines), icon: CalendarIcon },
+    { label: "Sesiones próximas", value: sessionsLoading ? PLACEHOLDER : upcomingSessions.length, icon: Video },
     { label: "Países en activación", value: 3, icon: Globe2 },
   ];
 
@@ -162,9 +189,11 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {topAlerts.length === 0 ? (
+            {alertsLoading ? (
+              <div className="text-sm text-muted-foreground py-6 text-center">Cargando…</div>
+            ) : topAlerts.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center">
-                {PENDING}
+                No hay alertas activas para Perú en este momento.
               </div>
             ) : (
               topAlerts.map((a) => <TopAlertRow key={a.id} alert={a} onOpen={openAlert} />)
@@ -245,13 +274,13 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
           <CardTitle className="text-base">Próximos hitos</CardTitle>
         </CardHeader>
         <CardContent>
-          {stats.upcomingDeadlines === 0 ? (
-            <div className="text-sm text-muted-foreground py-4 text-center">
-              {PENDING}
-            </div>
-          ) : (
-            <UpcomingDeadlines alerts={allAlerts} onOpen={openAlert} />
-          )}
+          <UpcomingMilestones
+            alerts={allAlerts}
+            sessions={upcomingSessions}
+            loading={alertsLoading || sessionsLoading}
+            onOpenAlert={openAlert}
+            onOpenSessions={() => onNavigate("sessions")}
+          />
         </CardContent>
       </Card>
     </div>
@@ -357,52 +386,111 @@ function QuickLink({
   );
 }
 
-function UpcomingDeadlines({
+type Milestone =
+  | { kind: "alert"; date: Date; rol: string; alert: PeruAlert }
+  | { kind: "session"; date: Date; session: PeruSession };
+
+function UpcomingMilestones({
   alerts,
-  onOpen,
+  sessions,
+  loading,
+  onOpenAlert,
+  onOpenSessions,
 }: {
   alerts: PeruAlert[];
-  onOpen: (id: string) => void;
+  sessions: PeruSession[];
+  loading: boolean;
+  onOpenAlert: (id: string) => void;
+  onOpenSessions: () => void;
 }) {
   const now = Date.now();
-  const weekAhead = now + 7 * 24 * 60 * 60 * 1000;
-  const items: { alert: PeruAlert; date: Date; rol: string }[] = [];
+  const weekAhead = now + 14 * 24 * 60 * 60 * 1000;
+  const items: Milestone[] = [];
+
   alerts.forEach((a) => {
-    if (a.kanban_stage === "archivado" || !a.key_dates) return;
+    if (a.kanban_stage === "archivado" || a.archived_at || !a.key_dates) return;
     a.key_dates.forEach((kd) => {
       const t = new Date(kd.fecha).getTime();
       if (!isNaN(t) && t >= now && t <= weekAhead) {
-        items.push({ alert: a, date: new Date(t), rol: kd.rol });
+        items.push({ kind: "alert", date: new Date(t), rol: kd.rol, alert: a });
       }
     });
   });
+
+  sessions.forEach((s) => {
+    if (!s.scheduled_at) return;
+    const t = new Date(s.scheduled_at).getTime();
+    if (!isNaN(t) && t >= now && t <= weekAhead) {
+      items.push({ kind: "session", date: new Date(t), session: s });
+    }
+  });
+
   items.sort((a, b) => a.date.getTime() - b.date.getTime());
-  const top = items.slice(0, 6);
+  const top = items.slice(0, 8);
+
+  if (loading) {
+    return <div className="text-sm text-muted-foreground py-4 text-center">Cargando…</div>;
+  }
 
   if (top.length === 0) {
-    return <div className="text-sm text-muted-foreground py-4 text-center">Pendiente</div>;
+    return (
+      <div className="text-sm text-muted-foreground py-4 text-center">
+        No hay hitos próximos registrados para Perú.
+      </div>
+    );
   }
 
   return (
     <div className="space-y-2">
-      {top.map((it, idx) => (
-        <button
-          key={`${it.alert.id}-${idx}`}
-          onClick={() => onOpen(it.alert.id)}
-          className="w-full flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-2 text-left transition-colors"
-        >
-          <div className="text-xs font-medium text-foreground bg-white/5 rounded px-2 py-1 shrink-0">
-            {it.date.toLocaleDateString("es-PE", { day: "2-digit", month: "short" })}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm text-foreground line-clamp-1">
-              {it.alert.legislation_title}
+      {top.map((it, idx) => {
+        const dateLabel = it.date.toLocaleDateString("es-PE", { day: "2-digit", month: "short" });
+        if (it.kind === "alert") {
+          return (
+            <button
+              key={`alert-${it.alert.id}-${idx}`}
+              onClick={() => onOpenAlert(it.alert.id)}
+              className="w-full flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-2 text-left transition-colors"
+            >
+              <div className="text-xs font-medium text-foreground bg-white/5 rounded px-2 py-1 shrink-0">
+                {dateLabel}
+              </div>
+              <Badge variant="outline" className="text-[10px] bg-white/5 border-white/10 shrink-0">
+                Alerta
+              </Badge>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-foreground line-clamp-1">
+                  {it.alert.legislation_title}
+                </div>
+                <div className="text-[11px] text-muted-foreground line-clamp-1">{it.rol}</div>
+              </div>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            </button>
+          );
+        }
+        return (
+          <button
+            key={`session-${it.session.id}-${idx}`}
+            onClick={onOpenSessions}
+            className="w-full flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-2 text-left transition-colors"
+          >
+            <div className="text-xs font-medium text-foreground bg-white/5 rounded px-2 py-1 shrink-0">
+              {dateLabel}
             </div>
-            <div className="text-[11px] text-muted-foreground">{it.rol}</div>
-          </div>
-          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        </button>
-      ))}
+            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shrink-0">
+              Sesión
+            </Badge>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-foreground line-clamp-1">
+                {it.session.session_title || it.session.commission_name}
+              </div>
+              <div className="text-[11px] text-muted-foreground line-clamp-1">
+                {it.session.commission_name}
+              </div>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          </button>
+        );
+      })}
     </div>
   );
 }
