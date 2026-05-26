@@ -23,6 +23,7 @@ import Inbox from "@/pages/Inbox";
 import UploadAlerts from "@/pages/UploadAlerts";
 import { MorningBriefPage } from "@/components/panel/MorningBriefPage";
 import { CountryStatusChip } from "@/components/regional/CountryStatusChip";
+import { BetssonCountryScopeWrapper } from "@/components/regional/BetssonCountryScopeWrapper";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { isBetssonOrg } from "@/lib/orgDataIsolation";
 
