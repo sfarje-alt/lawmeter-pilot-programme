@@ -507,14 +507,27 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   const archiveAlert = useCallback((alertId: string) => {
     const nowIso = new Date().toISOString();
     setAlerts((prev) => {
+      const target = prev.find((a) => a.id === alertId);
+      const lastMovIso = target ? getLastMovementDate(target)?.toISOString() ?? null : null;
       const next = prev.map((a) =>
         a.id === alertId
-          ? { ...a, archived_at: nowIso, is_pinned_for_publication: false, updated_at: nowIso }
+          ? {
+              ...a,
+              archived_at: nowIso,
+              archive_reason: "manual" as const,
+              archived_last_movement_at: lastMovIso,
+              is_pinned_for_publication: false,
+              updated_at: nowIso,
+            }
           : a,
       );
-      const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
-      archivedMap[alertId] = nowIso;
-      saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
+      const archivedMap = readArchivedMap();
+      archivedMap[alertId] = {
+        archived_at: nowIso,
+        reason: "manual",
+        last_movement_at: lastMovIso,
+      };
+      writeArchivedMap(archivedMap);
       const pinnedIds = new Set(next.filter((a) => a.is_pinned_for_publication).map((a) => a.id));
       savePinnedIds(pinnedIds);
       return next;
@@ -525,14 +538,21 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     setAlerts((prev) =>
       prev.map((a) =>
         a.id === alertId
-          ? { ...a, archived_at: null, updated_at: new Date().toISOString() }
+          ? {
+              ...a,
+              archived_at: null,
+              archive_reason: null,
+              archived_last_movement_at: null,
+              updated_at: new Date().toISOString(),
+            }
           : a,
       ),
     );
-    const archivedMap = loadJSON<Record<string, string>>(ARCHIVED_STORAGE_KEY, {});
+    const archivedMap = readArchivedMap();
     delete archivedMap[alertId];
-    saveJSON(ARCHIVED_STORAGE_KEY, archivedMap);
+    writeArchivedMap(archivedMap);
   }, []);
+
 
   const updateSharedCommentary = useCallback((alertId: string, commentary: string) => {
     setAlerts((prev) =>
