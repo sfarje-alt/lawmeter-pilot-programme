@@ -190,9 +190,11 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {topAlerts.length === 0 ? (
+            {alertsLoading ? (
+              <div className="text-sm text-muted-foreground py-6 text-center">Cargando…</div>
+            ) : topAlerts.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center">
-                {PENDING}
+                No hay alertas activas para Perú en este momento.
               </div>
             ) : (
               topAlerts.map((a) => <TopAlertRow key={a.id} alert={a} onOpen={openAlert} />)
