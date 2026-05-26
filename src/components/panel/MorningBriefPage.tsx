@@ -290,6 +290,15 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
           />
         </CardContent>
       </Card>
+
+      <AlertDetailDrawer
+        alert={selectedAlert}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onArchive={archiveAlert}
+        onUnarchive={unarchiveAlert}
+        onTogglePin={togglePinAlert}
+      />
     </div>
   );
 }
