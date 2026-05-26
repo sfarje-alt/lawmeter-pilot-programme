@@ -28,7 +28,6 @@ interface MorningBriefPageProps {
 }
 
 const PLACEHOLDER = "—";
-const PENDING = "Pendiente";
 
 function getAlertScore(a: PeruAlert): number {
   const impact = typeof a.impacto_score === "number" ? a.impacto_score : 0;
