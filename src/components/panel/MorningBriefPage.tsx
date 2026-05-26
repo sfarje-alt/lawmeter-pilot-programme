@@ -50,9 +50,10 @@ function getNearestDeadline(a: PeruAlert): number {
 }
 
 export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
-  const navigate = useNavigate();
-  const { alerts: allAlerts, loading: alertsLoading, error: alertsError } = useAlerts();
+  const { alerts: allAlerts, loading: alertsLoading, error: alertsError, updateExpertCommentary, archiveAlert, unarchiveAlert, togglePinForPublication } = useAlerts();
   const { sessions, isLoading: sessionsLoading } = usePeruSessions();
+  const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const upcomingSessions = useMemo<PeruSession[]>(() => {
     const now = Date.now();
