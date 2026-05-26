@@ -17,6 +17,7 @@ import {
   Sparkles,
   CalendarClock,
   ArrowUpRight,
+  PenLine,
 } from "lucide-react";
 import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
 
@@ -221,6 +222,20 @@ export function InboxAlertCard({
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {hasCommentary && !isArchived && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="p-1 hover:bg-white/10 rounded transition-colors cursor-default">
+                    <PenLine className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">Comentario experto disponible</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {isPinned && !isArchived && hasCommentary && (
             <Badge variant="secondary" className="text-xs bg-[hsl(var(--success)/0.18)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.35)] py-0 px-1.5">
               <CheckCircle2 className="h-3 w-3" />

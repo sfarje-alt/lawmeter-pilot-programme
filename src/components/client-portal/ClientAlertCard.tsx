@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ExternalLink, Clock, Building2, User, Users, FileText, Tag, Briefcase, Eye } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { ExternalLink, Clock, Building2, User, Users, FileText, Tag, Briefcase, Eye, PenLine } from "lucide-react";
 import { PeruAlert, getTypeLabel, getTypeColor, getImpactLevelInfo, MOCK_CLIENTS } from "@/data/peruAlertsMockData";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -20,6 +21,7 @@ export function ClientAlertCard({ alert, onClick, clientId }: ClientAlertCardPro
   // Get client-specific or shared commentary
   const clientCommentary = alert.client_commentaries?.find(c => c.clientId === clientId);
   const commentary = clientCommentary?.commentary || alert.expert_commentary;
+  const hasCommentary = !!(commentary && commentary.trim());
 
   // Get primary client name
   const primaryClient = alert.primary_client_id 
@@ -75,6 +77,20 @@ export function ClientAlertCard({ alert, onClick, clientId }: ClientAlertCardPro
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {hasCommentary && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="p-1 hover:bg-white/10 rounded transition-colors cursor-default">
+                    <PenLine className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">Comentario experto disponible</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {alert.source_url && (
             <button
               onClick={handleLinkClick}
