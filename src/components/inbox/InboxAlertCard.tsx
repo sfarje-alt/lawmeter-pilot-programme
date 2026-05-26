@@ -215,12 +215,13 @@ export function InboxAlertCard({
             </span>
           )}
 
-          {isArchived && daysRemaining !== null && (
+          {isArchived && (
             <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border/50">
               <Archive className="h-3 w-3 mr-1" />
-              {daysRemaining}d restantes
+              {alert.archive_reason === "auto_inactivity" ? "Archivada (auto)" : "Archivada"}
             </Badge>
           )}
+
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {isPinned && !isArchived && hasCommentary && (
