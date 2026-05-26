@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInboxAlerts } from "@/hooks/useInboxAlerts";
+import { useAlerts } from "@/contexts/AlertsContext";
+import { usePeruSessions } from "@/hooks/usePeruSessions";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { CountryFlag } from "@/components/regional/CountryFlag";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PeruAlert } from "@/data/peruAlertsMockData";
+import type { PeruSession } from "@/types/peruSessions";
 
 interface MorningBriefPageProps {
   onNavigate: (tab: string) => void;
