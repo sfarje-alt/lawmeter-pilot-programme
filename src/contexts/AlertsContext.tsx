@@ -455,16 +455,39 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     };
   }, [orgId, fetchAlerts]);
 
-  // Auto-purge archived periodically
+  // Re-evaluate inactivity-based auto-archive periodically. NUNCA purga.
   useEffect(() => {
     const interval = setInterval(() => {
-      setAlerts((prev) => {
-        const next = purgeOldArchivedAlerts(prev);
-        return next.length === prev.length ? prev : next;
-      });
+      setAlerts((prev) => applyAutoArchive(prev));
     }, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Expose recovery utility in dev/console: window.__lawmeterRestoreArchived(30)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    (window as any).__lawmeterRestoreArchived = (days = 30) => {
+      const knownIds = (typeof (window as any).__lawmeterAlertIds === "function"
+        ? (window as any).__lawmeterAlertIds()
+        : undefined) as string[] | undefined;
+      const summary = restoreRecentlyArchivedAlerts(days, knownIds);
+      // Refrescar el estado en memoria a partir del map persistido.
+      setAlerts((prev) =>
+        prev.map((a) => {
+          if (!a.archived_at) return a;
+          const ts = new Date(a.archived_at).getTime();
+          if (!Number.isFinite(ts)) return a;
+          if (ts < Date.now() - days * 24 * 60 * 60 * 1000) return a;
+          return { ...a, archived_at: null, archive_reason: null, archived_last_movement_at: null };
+        }),
+      );
+      return summary;
+    };
+    return () => {
+      try { delete (window as any).__lawmeterRestoreArchived; } catch { /* ignore */ }
+    };
+  }, []);
+
 
   const togglePinAlert = useCallback((alertId: string) => {
     setAlerts((prev) => {
