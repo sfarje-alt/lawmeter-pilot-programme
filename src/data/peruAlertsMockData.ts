@@ -240,14 +240,9 @@ export interface AttachedFileMeta {
   dataUrl?: string;
 }
 
-/** Removes alerts that have been archived for more than ARCHIVE_RETENTION_DAYS. */
-export function purgeOldArchivedAlerts(alerts: PeruAlert[]): PeruAlert[] {
-  const cutoffMs = Date.now() - ARCHIVE_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  return alerts.filter((a) => {
-    if (!a.archived_at) return true;
-    return new Date(a.archived_at).getTime() > cutoffMs;
-  });
-}
+// purgeOldArchivedAlerts eliminado: las alertas archivadas se conservan
+// indefinidamente para trazabilidad, búsqueda y reportes históricos.
+
 
 // Mock clients for matching
 export interface AffectedClient {
