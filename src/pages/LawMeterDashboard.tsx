@@ -137,6 +137,7 @@ export default function LawMeterDashboard() {
   // Get display name for current tab
   const getTabDisplayName = () => {
     const tabNames: Record<string, string> = {
+      panel: "Panel",
       sessions: "Sesiones",
       inbox: "Alertas",
       clients: "Perfiles",
