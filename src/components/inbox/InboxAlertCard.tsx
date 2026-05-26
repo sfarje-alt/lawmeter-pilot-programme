@@ -121,7 +121,8 @@ export function InboxAlertCard({
   const isBill = alert.legislation_type === "proyecto_de_ley";
   const isPinned = alert.is_pinned_for_publication;
   const isArchived = !!alert.archived_at;
-  const daysRemaining = getArchiveDaysRemaining(alert.archived_at);
+
+
 
   const hasCommentary = !!(alert.expert_commentary && alert.expert_commentary.trim());
   const hasAiScores =
