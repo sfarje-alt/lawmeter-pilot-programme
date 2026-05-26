@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { isManualIngestOrg, isBetssonOrg } from "@/lib/orgDataIsolation";
+import { isManualIngestOrg, isBetssonOrg, isISAOrg } from "@/lib/orgDataIsolation";
 import lawmeterLogo from "@/assets/logo-legal-tech.png";
 import lawmeterIcon from "@/assets/lawmeter-icon.png";
 
