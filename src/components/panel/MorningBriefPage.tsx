@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { useAlerts } from "@/contexts/AlertsContext";
 import { usePeruSessions } from "@/hooks/usePeruSessions";
+import { AlertDetailDrawer } from "@/components/inbox/AlertDetailDrawer";
 import { BETSSON_COUNTRIES } from "@/lib/betssonCountries";
 import { CountryFlag } from "@/components/regional/CountryFlag";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,9 +50,10 @@ function getNearestDeadline(a: PeruAlert): number {
 }
 
 export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
-  const navigate = useNavigate();
-  const { alerts: allAlerts, loading: alertsLoading, error: alertsError } = useAlerts();
+  const { alerts: allAlerts, loading: alertsLoading, error: alertsError, archiveAlert, unarchiveAlert, togglePinAlert } = useAlerts();
   const { sessions, isLoading: sessionsLoading } = usePeruSessions();
+  const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const upcomingSessions = useMemo<PeruSession[]>(() => {
     const now = Date.now();
@@ -123,8 +124,14 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
   }, [allAlerts]);
 
   const openAlert = (alertId: string) => {
-    navigate(`/?section=inbox&alertId=${alertId}&t=${Date.now()}`);
+    setSelectedAlertId(alertId);
+    setDrawerOpen(true);
   };
+
+  const selectedAlert = useMemo(
+    () => allAlerts.find((a) => a.id === selectedAlertId) ?? null,
+    [allAlerts, selectedAlertId],
+  );
 
   const metricValue = (n: number): string | number => {
     if (alertsLoading || alertsError) return PLACEHOLDER;
@@ -283,6 +290,15 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
           />
         </CardContent>
       </Card>
+
+      <AlertDetailDrawer
+        alert={selectedAlert}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onArchive={archiveAlert}
+        onUnarchive={unarchiveAlert}
+        onTogglePin={togglePinAlert}
+      />
     </div>
   );
 }
