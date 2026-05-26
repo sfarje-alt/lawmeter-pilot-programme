@@ -25,10 +25,11 @@ import {
   getTypeLabel,
   getTypeColor,
   getImpactLevelInfo,
-  getArchiveDaysRemaining,
   getStateFamilyStyle,
   KeyDate,
 } from "@/data/peruAlertsMockData";
+import { getLastMovementDate } from "@/lib/alertClassification";
+
 import { format, isAfter, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
