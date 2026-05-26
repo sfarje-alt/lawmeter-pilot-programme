@@ -53,11 +53,12 @@ function getNearestDeadline(a: PeruAlert): number {
   return futures.length ? Math.min(...futures) : Number.POSITIVE_INFINITY;
 }
 
-export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
+export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: MorningBriefPageProps) {
   const { alerts: allAlerts, loading: alertsLoading, error: alertsError, archiveAlert, unarchiveAlert, togglePinAlert } = useAlerts();
   const { sessions, isLoading: sessionsLoading } = usePeruSessions();
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const isRegional = config.jurisdictionMode === "regional";
 
   const upcomingSessions = useMemo<PeruSession[]>(() => {
     const now = Date.now();
