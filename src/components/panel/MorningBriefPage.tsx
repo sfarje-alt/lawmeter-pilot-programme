@@ -258,40 +258,42 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
         ))}
       </div>
 
-      {/* Snapshot regional */}
-      <Card className="bg-white/[0.02] border-white/10">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Globe2 className="h-4 w-4 text-primary" />
-            Snapshot regional
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {BETSSON_COUNTRIES.map((country) => {
-            const isPeru = country.code === "PE";
-            const isChile = country.code === "CL";
-            const value = isPeru ? metricValue(peruActiveCount) : 0;
-            const sub = isPeru
-              ? "alertas activas"
-              : isChile
-              ? "sin datos conectados"
-              : "en activación";
-            return (
-              <div
-                key={country.code}
-                className="rounded-lg border border-white/10 bg-white/[0.02] p-3 flex items-center gap-3"
-              >
-                <CountryFlag country={country.code} size={24} showName={false} />
-                <div className="min-w-0">
-                  <div className="text-xs text-muted-foreground truncate">{country.name}</div>
-                  <div className="text-lg font-semibold text-foreground leading-tight">{value}</div>
-                  <div className="text-[10px] text-muted-foreground/80 truncate">{sub}</div>
+      {/* Snapshot regional — only in regional mode */}
+      {isRegional && (
+        <Card className="bg-white/[0.02] border-white/10">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Globe2 className="h-4 w-4 text-primary" />
+              Snapshot regional
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {config.countries.map((country) => {
+              const isPrimary = country.code === config.primaryCountry;
+              const isActiveExtra = country.status === "active" && !isPrimary;
+              const value = isPrimary ? metricValue(peruActiveCount) : 0;
+              const sub = isPrimary
+                ? "alertas activas"
+                : isActiveExtra
+                ? "sin datos conectados"
+                : "en activación";
+              return (
+                <div
+                  key={country.code}
+                  className="rounded-lg border border-white/10 bg-white/[0.02] p-3 flex items-center gap-3"
+                >
+                  <CountryFlag country={country.code} size={24} showName={false} />
+                  <div className="min-w-0">
+                    <div className="text-xs text-muted-foreground truncate">{country.name}</div>
+                    <div className="text-lg font-semibold text-foreground leading-tight">{value}</div>
+                    <div className="text-[10px] text-muted-foreground/80 truncate">{sub}</div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
