@@ -266,7 +266,7 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-400" />
-              Top alertas por monitorear
+              Top alertas prioritarias
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
