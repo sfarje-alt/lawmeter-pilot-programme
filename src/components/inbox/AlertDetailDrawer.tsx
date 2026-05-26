@@ -221,12 +221,21 @@ export function AlertDetailDrawer({
                       {alert.reference_number}
                     </Badge>
                   )}
-                  {isArchived && archiveDaysRemaining !== null && (
-                    <Badge variant="outline" className="text-sm gap-1 bg-muted/50 text-muted-foreground border-border/50">
+                  {isArchived && archiveReasonLabel && (
+                    <Badge
+                      variant="outline"
+                      className="text-sm gap-1 bg-muted/50 text-muted-foreground border-border/50"
+                      title={
+                        archiveLastMovementIso
+                          ? `Último movimiento: ${format(new Date(archiveLastMovementIso), "dd 'de' MMMM, yyyy", { locale: es })}`
+                          : undefined
+                      }
+                    >
                       <Archive className="h-3.5 w-3.5" />
-                      Archivada · {archiveDaysRemaining}d restantes
+                      {archiveReasonLabel}
                     </Badge>
                   )}
+
                 </div>
                 <div className="flex items-center gap-2">
                   <TooltipProvider delayDuration={200}>
