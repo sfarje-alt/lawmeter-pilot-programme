@@ -297,7 +297,9 @@ function mapDbRowToAlert(
     is_pinned_for_publication: pinned.has(row.id) || !!ui.is_pinned_for_publication,
     client_commentaries: Array.isArray(ui.client_commentaries) ? ui.client_commentaries : [],
     primary_client_id: ui.primary_client_id ?? undefined,
-    archived_at: archivedMap[row.id] ?? null,
+    archived_at: archivedMap[row.id]?.archived_at ?? null,
+    archive_reason: archivedMap[row.id]?.reason ?? null,
+    archived_last_movement_at: archivedMap[row.id]?.last_movement_at ?? null,
     approval_probability: ui.approval_probability ?? undefined,
     attachments: attachmentsMap[row.id] ?? [],
 
