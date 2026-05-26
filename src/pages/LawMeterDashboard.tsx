@@ -118,7 +118,7 @@ export default function LawMeterDashboard() {
           </BetssonCountryScopeWrapper>
         );
       case "panel":
-        return <MorningBriefPage onNavigate={setActiveTab} />;
+        return <MorningBriefPage onNavigate={setActiveTab} config={panelConfig ?? undefined} />;
       case "upload-alerts":
         return (
           <UploadAlerts
