@@ -52,17 +52,36 @@ function getNearestDeadline(a: PeruAlert): number {
 
 export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
   const navigate = useNavigate();
-  const { allAlerts } = useInboxAlerts();
+  const { alerts: allAlerts, loading: alertsLoading, error: alertsError } = useAlerts();
+  const { sessions, isLoading: sessionsLoading } = usePeruSessions();
+
+  const upcomingSessions = useMemo<PeruSession[]>(() => {
+    const now = Date.now();
+    return sessions
+      .filter((s) => {
+        if (!s.scheduled_at) return false;
+        const t = new Date(s.scheduled_at).getTime();
+        return !isNaN(t) && t >= now;
+      })
+      .sort((a, b) => {
+        const ta = new Date(a.scheduled_at!).getTime();
+        const tb = new Date(b.scheduled_at!).getTime();
+        return ta - tb;
+      });
+  }, [sessions]);
 
   const stats = useMemo(() => {
     const now = Date.now();
     const dayAgo = now - 24 * 60 * 60 * 1000;
     const weekAhead = now + 7 * 24 * 60 * 60 * 1000;
 
-    const active = allAlerts.filter((a) => a.kanban_stage !== "archivado");
+    const active = allAlerts.filter((a) => a.kanban_stage !== "archivado" && !a.archived_at);
     const criticalUnreviewed = active.filter(
       (a) =>
-        (a.urgency_category === "alta" || a.impact_category === "alta") &&
+        (a.urgency_category === "alta" ||
+          a.impact_category === "alta" ||
+          (typeof a.impacto_score === "number" && a.impacto_score >= 70) ||
+          (typeof a.urgencia_score === "number" && a.urgencia_score >= 70)) &&
         a.status === "inbox",
     );
     const newLast24h = allAlerts.filter((a) => {
@@ -87,8 +106,10 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
 
   const topAlerts = useMemo(() => {
     return [...allAlerts]
-      .filter((a) => a.kanban_stage !== "archivado")
+      .filter((a) => a.kanban_stage !== "archivado" && !a.archived_at)
       .sort((a, b) => {
+        const pinDiff = (b.is_pinned_for_publication ? 1 : 0) - (a.is_pinned_for_publication ? 1 : 0);
+        if (pinDiff !== 0) return pinDiff;
         const scoreDiff = getAlertScore(b) - getAlertScore(a);
         if (scoreDiff !== 0) return scoreDiff;
         const urgDiff = getUrgencyRank(b) - getUrgencyRank(a);
@@ -106,12 +127,17 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
     navigate(`/?section=inbox&alertId=${alertId}&t=${Date.now()}`);
   };
 
+  const metricValue = (n: number): string | number => {
+    if (alertsLoading || alertsError) return PLACEHOLDER;
+    return n;
+  };
+
   const kpis: { label: string; value: string | number; icon: any }[] = [
-    { label: "Alertas activas", value: allAlerts.length === 0 ? PLACEHOLDER : stats.active, icon: InboxIcon },
-    { label: "Críticas sin revisar", value: allAlerts.length === 0 ? PLACEHOLDER : stats.criticalUnreviewed, icon: AlertTriangle },
-    { label: "Nuevas últimas 24h", value: allAlerts.length === 0 ? PLACEHOLDER : stats.newLast24h, icon: Clock },
-    { label: "Próximos vencimientos", value: allAlerts.length === 0 ? PLACEHOLDER : stats.upcomingDeadlines, icon: CalendarIcon },
-    { label: "Sesiones próximas", value: PENDING, icon: Video },
+    { label: "Alertas activas", value: metricValue(stats.active), icon: InboxIcon },
+    { label: "Críticas sin revisar", value: metricValue(stats.criticalUnreviewed), icon: AlertTriangle },
+    { label: "Nuevas últimas 24h", value: metricValue(stats.newLast24h), icon: Clock },
+    { label: "Próximos vencimientos", value: metricValue(stats.upcomingDeadlines), icon: CalendarIcon },
+    { label: "Sesiones próximas", value: sessionsLoading ? PLACEHOLDER : upcomingSessions.length, icon: Video },
     { label: "Países en activación", value: 3, icon: Globe2 },
   ];
 
