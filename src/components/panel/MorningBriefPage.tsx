@@ -143,8 +143,8 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
     return n;
   };
 
-  const activeCountries = BETSSON_COUNTRIES.filter((c) => c.status === "active");
-  const activatingCountries = BETSSON_COUNTRIES.filter((c) => c.status === "activating");
+  const activeCountries = config.countries.filter((c) => c.status === "active");
+  const activatingCountries = config.countries.filter((c) => c.status === "activating");
 
   const topAlert = topAlerts[0];
   const nextDeadline = useMemo(() => {
@@ -162,8 +162,12 @@ export function MorningBriefPage({ onNavigate, config = BETSSON_PANEL_CONFIG }: 
     { label: "Nuevas últimas 24h", value: metricValue(stats.newLast24h), icon: Clock },
     { label: "Próximos vencimientos", value: metricValue(stats.upcomingDeadlines), icon: CalendarIcon },
     { label: "Sesiones próximas", value: sessionsLoading ? PLACEHOLDER : upcomingSessions.length, icon: Video },
-    { label: "Países activos", value: activeCountries.length, icon: Globe2 },
-    { label: "Países en activación", value: activatingCountries.length, icon: Clock },
+    ...(isRegional
+      ? [
+          { label: "Países activos", value: activeCountries.length, icon: Globe2 },
+          { label: "Países en activación", value: activatingCountries.length, icon: Clock },
+        ]
+      : []),
   ];
 
   const peruActiveCount = stats.active;
