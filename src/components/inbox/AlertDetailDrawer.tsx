@@ -36,9 +36,9 @@ import {
   getTypeColor,
   IMPACT_LEVELS,
   ImpactLevel,
-  getArchiveDaysRemaining,
   getStateFamilyStyle,
 } from "@/data/peruAlertsMockData";
+import { getLastMovementDate } from "@/lib/alertClassification";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
