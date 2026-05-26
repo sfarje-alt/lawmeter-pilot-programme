@@ -25,11 +25,10 @@ import {
   getTypeLabel,
   getTypeColor,
   getImpactLevelInfo,
+  getArchiveDaysRemaining,
   getStateFamilyStyle,
   KeyDate,
 } from "@/data/peruAlertsMockData";
-import { getLastMovementDate } from "@/lib/alertClassification";
-
 import { format, isAfter, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -121,8 +120,7 @@ export function InboxAlertCard({
   const isBill = alert.legislation_type === "proyecto_de_ley";
   const isPinned = alert.is_pinned_for_publication;
   const isArchived = !!alert.archived_at;
-
-
+  const daysRemaining = getArchiveDaysRemaining(alert.archived_at);
 
   const hasCommentary = !!(alert.expert_commentary && alert.expert_commentary.trim());
   const hasAiScores =
@@ -215,13 +213,12 @@ export function InboxAlertCard({
             </span>
           )}
 
-          {isArchived && (
+          {isArchived && daysRemaining !== null && (
             <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border/50">
               <Archive className="h-3 w-3 mr-1" />
-              {alert.archive_reason === "auto_inactivity" ? "Archivada (auto)" : "Archivada"}
+              {daysRemaining}d restantes
             </Badge>
           )}
-
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {isPinned && !isArchived && hasCommentary && (
@@ -454,30 +451,12 @@ export function InboxAlertCard({
           </TooltipProvider>
         )}
 
-        {isArchived && alert.archived_at && (() => {
-          const reasonLabel =
-            alert.archive_reason === "auto_inactivity"
-              ? "Archivada automáticamente por inactividad"
-              : "Archivada manualmente";
-          const lastMovIso =
-            alert.archived_last_movement_at ||
-            getLastMovementDate(alert)?.toISOString() ||
-            null;
-          return (
-            <div className="flex flex-col items-end gap-0.5 ml-auto text-right">
-              <div className="flex items-center gap-1">
-                <Archive className="h-3 w-3" />
-                <span>{reasonLabel}</span>
-              </div>
-              {lastMovIso && (
-                <span className="text-[10px] text-muted-foreground">
-                  Último movimiento: {formatDate(lastMovIso)}
-                </span>
-              )}
-            </div>
-          );
-        })()}
-
+        {isArchived && alert.archived_at && (
+          <div className="flex items-center gap-1 ml-auto">
+            <Archive className="h-3 w-3" />
+            <span>Archivada {formatDate(alert.archived_at)}</span>
+          </div>
+        )}
       </div>
     </Card>
   );

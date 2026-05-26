@@ -36,9 +36,9 @@ import {
   getTypeColor,
   IMPACT_LEVELS,
   ImpactLevel,
+  getArchiveDaysRemaining,
   getStateFamilyStyle,
 } from "@/data/peruAlertsMockData";
-import { getLastMovementDate } from "@/lib/alertClassification";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -136,14 +136,7 @@ export function AlertDetailDrawer({
 
   const isBill = alert.legislation_type === "proyecto_de_ley";
   const isArchived = !!alert.archived_at;
-  const archiveReasonLabel = isArchived
-    ? alert.archive_reason === "auto_inactivity"
-      ? "Archivada automáticamente por inactividad"
-      : "Archivada manualmente"
-    : null;
-  const archiveLastMovementIso = isArchived
-    ? alert.archived_last_movement_at || getLastMovementDate(alert)?.toISOString() || null
-    : null;
+  const archiveDaysRemaining = getArchiveDaysRemaining(alert.archived_at);
 
   const displayDate = isBill ? alert.stage_date || alert.project_date : alert.publication_date;
   const formattedDate = displayDate
@@ -221,21 +214,12 @@ export function AlertDetailDrawer({
                       {alert.reference_number}
                     </Badge>
                   )}
-                  {isArchived && archiveReasonLabel && (
-                    <Badge
-                      variant="outline"
-                      className="text-sm gap-1 bg-muted/50 text-muted-foreground border-border/50"
-                      title={
-                        archiveLastMovementIso
-                          ? `Último movimiento: ${format(new Date(archiveLastMovementIso), "dd 'de' MMMM, yyyy", { locale: es })}`
-                          : undefined
-                      }
-                    >
+                  {isArchived && archiveDaysRemaining !== null && (
+                    <Badge variant="outline" className="text-sm gap-1 bg-muted/50 text-muted-foreground border-border/50">
                       <Archive className="h-3.5 w-3.5" />
-                      {archiveReasonLabel}
+                      Archivada · {archiveDaysRemaining}d restantes
                     </Badge>
                   )}
-
                 </div>
                 <div className="flex items-center gap-2">
                   <TooltipProvider delayDuration={200}>
