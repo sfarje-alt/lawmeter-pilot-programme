@@ -207,17 +207,10 @@ export interface AttachedFileMetaRef {
   dataUrl?: string;
 }
 
-/** Days an archived alert is kept before being purged automatically. */
-export const ARCHIVE_RETENTION_DAYS = 30;
+// Archive retention purge removed: alertas archivadas se conservan
+// indefinidamente. La lógica de auto-archivado por inactividad vive en
+// AlertsContext (no toca created_at).
 
-/** Returns days remaining before an archived alert is purged. */
-export function getArchiveDaysRemaining(archived_at: string | null | undefined): number | null {
-  if (!archived_at) return null;
-  const archivedDate = new Date(archived_at);
-  const purgeDate = new Date(archivedDate.getTime() + ARCHIVE_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-  const diffMs = purgeDate.getTime() - Date.now();
-  return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
-}
 
 /** Deterministic mock approval probability based on alert id (0-100). */
 export function getMockApprovalProbability(alertId: string): number {
