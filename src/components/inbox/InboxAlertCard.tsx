@@ -17,6 +17,7 @@ import {
   Sparkles,
   CalendarClock,
   ArrowUpRight,
+  PenLine,
 } from "lucide-react";
 import { AlertFeedbackPopover } from "@/components/inbox/feedback/AlertFeedbackPopover";
 
