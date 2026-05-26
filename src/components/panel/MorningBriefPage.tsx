@@ -377,6 +377,17 @@ export function MorningBriefPage({ onNavigate }: MorningBriefPageProps) {
   );
 }
 
+function ExecCard({ title, body }: { title: string; body: string }) {
+  return (
+    <Card className="bg-white/[0.02] border-white/10 h-full">
+      <CardContent className="p-4 space-y-2">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+        <p className="text-sm text-foreground/90 leading-relaxed">{body}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function TopAlertRow({
   alert,
   onOpen,
