@@ -21,6 +21,7 @@ export function ClientAlertCard({ alert, onClick, clientId }: ClientAlertCardPro
   // Get client-specific or shared commentary
   const clientCommentary = alert.client_commentaries?.find(c => c.clientId === clientId);
   const commentary = clientCommentary?.commentary || alert.expert_commentary;
+  const hasCommentary = !!(commentary && commentary.trim());
 
   // Get primary client name
   const primaryClient = alert.primary_client_id 
