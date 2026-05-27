@@ -1,0 +1,1 @@
+UPDATE auth.identities SET identity_data = jsonb_set(identity_data, '{email}', '"sergio.poves@nexlaw.net"'), updated_at = now() WHERE user_id = '779d6e26-c27e-4490-97d0-75b2635f204c' AND provider = 'email';
