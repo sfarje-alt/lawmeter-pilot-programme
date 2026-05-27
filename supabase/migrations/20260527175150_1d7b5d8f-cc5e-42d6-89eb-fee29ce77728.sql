@@ -1,0 +1,1 @@
+UPDATE public.profiles SET email = 'sergio.poves@nexlaw.net', updated_at = now() WHERE id = '779d6e26-c27e-4490-97d0-75b2635f204c'; UPDATE auth.users SET email = 'sergio.poves@nexlaw.net', email_change = NULL, email_change_token_new = '', email_change_confirm_status = 0, updated_at = now() WHERE id = '779d6e26-c27e-4490-97d0-75b2635f204c';
