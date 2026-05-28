@@ -2,7 +2,7 @@
 // Replaces previous PDF-based flow. Reads from public.sesiones.
 
 import { useState, useMemo } from "react";
-import { Video, Search, Library, Inbox as InboxIcon } from "lucide-react";
+import { Video, Search, Library, Inbox as InboxIcon, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -142,6 +142,19 @@ export function SessionsPage({ className }: SessionsPageProps) {
             <Library className="h-4 w-4 mr-2" />
             Repositorio completo
           </Button>
+        </div>
+      </div>
+
+      {/* Maintenance Banner */}
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium text-amber-600 dark:text-amber-400">
+            Módulo en mantenimiento
+          </p>
+          <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+            Estamos realizando mejoras en el sistema de sesiones. Algunas funciones pueden estar temporalmente limitadas. Gracias por tu paciencia.
+          </p>
         </div>
       </div>
 
