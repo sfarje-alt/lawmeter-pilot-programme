@@ -102,22 +102,30 @@ export function ReportsPage() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Cliente:</span>
-        <Select value={clientFilter} onValueChange={setClientFilter}>
-          <SelectTrigger className="w-[280px]">
-            <SelectValue placeholder="Todos los clientes" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los clientes</SelectItem>
-            {clients.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.client_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {isRestrictedToOwnClient ? (
+        selectedClient && (
+          <div className="text-sm text-muted-foreground">
+            Cliente: <span className="font-medium text-foreground">{selectedClient.client_name}</span>
+          </div>
+        )
+      ) : (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">Cliente:</span>
+          <Select value={clientFilter} onValueChange={setClientFilter}>
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Todos los clientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los clientes</SelectItem>
+              {clients.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.client_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <Tabs defaultValue="history" className="w-full">
         <TabsList>
