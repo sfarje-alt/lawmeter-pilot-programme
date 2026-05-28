@@ -145,6 +145,19 @@ export function SessionsPage({ className }: SessionsPageProps) {
         </div>
       </div>
 
+      {/* Maintenance Banner */}
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium text-amber-600 dark:text-amber-400">
+            Módulo en mantenimiento
+          </p>
+          <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+            Estamos realizando mejoras en el sistema de sesiones. Algunas funciones pueden estar temporalmente limitadas. Gracias por tu paciencia.
+          </p>
+        </div>
+      </div>
+
       {/* Counters */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="p-4">
