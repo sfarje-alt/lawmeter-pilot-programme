@@ -460,6 +460,60 @@ export type Database = {
           },
         ]
       }
+      client_email_recipients: {
+        Row: {
+          activo: boolean
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+          kind: string
+          nombre: string | null
+          notes: string | null
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          client_id: string
+          created_at?: string
+          email: string
+          id?: string
+          kind?: string
+          nombre?: string | null
+          notes?: string | null
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          client_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          kind?: string
+          nombre?: string | null
+          notes?: string | null
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_email_recipients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_email_recipients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_users: {
         Row: {
           area: string | null
@@ -897,57 +951,72 @@ export type Database = {
       }
       reports: {
         Row: {
-          alert_ids: string[] | null
+          archivos: Json
           client_id: string
+          cliente_nombre: string
+          cliente_slug: string
           created_at: string
-          created_by: string | null
-          detail_level: string | null
+          decisiones_requeridas: number
+          expert_comments_count: number
+          formatos: string[]
+          generated_at: string
           id: string
-          include_analytics: boolean | null
-          organization_id: string | null
-          pdf_url: string | null
-          period_end: string | null
-          period_start: string | null
-          report_type: string | null
-          sent_at: string | null
-          status: string
-          title: string
+          idioma: string
+          modelo: string
+          organization_id: string
+          paises: string[]
+          periodo_desde: string
+          periodo_hasta: string
+          pipelines: string[]
+          total_normas: number
+          total_pl: number
+          total_sesiones: number
           updated_at: string
         }
         Insert: {
-          alert_ids?: string[] | null
+          archivos?: Json
           client_id: string
+          cliente_nombre: string
+          cliente_slug: string
           created_at?: string
-          created_by?: string | null
-          detail_level?: string | null
+          decisiones_requeridas?: number
+          expert_comments_count?: number
+          formatos?: string[]
+          generated_at?: string
           id?: string
-          include_analytics?: boolean | null
-          organization_id?: string | null
-          pdf_url?: string | null
-          period_end?: string | null
-          period_start?: string | null
-          report_type?: string | null
-          sent_at?: string | null
-          status?: string
-          title: string
+          idioma?: string
+          modelo: string
+          organization_id: string
+          paises?: string[]
+          periodo_desde: string
+          periodo_hasta: string
+          pipelines?: string[]
+          total_normas?: number
+          total_pl?: number
+          total_sesiones?: number
           updated_at?: string
         }
         Update: {
-          alert_ids?: string[] | null
+          archivos?: Json
           client_id?: string
+          cliente_nombre?: string
+          cliente_slug?: string
           created_at?: string
-          created_by?: string | null
-          detail_level?: string | null
+          decisiones_requeridas?: number
+          expert_comments_count?: number
+          formatos?: string[]
+          generated_at?: string
           id?: string
-          include_analytics?: boolean | null
-          organization_id?: string | null
-          pdf_url?: string | null
-          period_end?: string | null
-          period_start?: string | null
-          report_type?: string | null
-          sent_at?: string | null
-          status?: string
-          title?: string
+          idioma?: string
+          modelo?: string
+          organization_id?: string
+          paises?: string[]
+          periodo_desde?: string
+          periodo_hasta?: string
+          pipelines?: string[]
+          total_normas?: number
+          total_pl?: number
+          total_sesiones?: number
           updated_at?: string
         }
         Relationships: [
@@ -956,13 +1025,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reports_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
