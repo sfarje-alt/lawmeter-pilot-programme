@@ -2,7 +2,7 @@
 // Replaces previous PDF-based flow. Reads from public.sesiones.
 
 import { useState, useMemo } from "react";
-import { Video, Search, Library, Inbox as InboxIcon } from "lucide-react";
+import { Video, Search, Library, Inbox as InboxIcon, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
