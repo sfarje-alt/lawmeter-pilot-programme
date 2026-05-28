@@ -51,9 +51,32 @@ function FormatChip({ archivo }: { archivo: ReportArchivo }) {
 }
 
 export function ReportsPage() {
-  const [clientFilter, setClientFilter] = useState<string>("all");
+  const { profile } = useAuth();
+  const userClientId = profile?.client_id ?? null;
+  const isRestrictedToOwnClient = !!userClientId;
+
+  const [clientFilter, setClientFilter] = useState<string>(
+    userClientId ?? "all"
+  );
   const [generateOpen, setGenerateOpen] = useState(false);
-  const { data: clients = [] } = useClients();
+
+  const { data: allClients = [] } = useClients();
+  // Restrict client list to the user's own client when profile.client_id is set
+  const clients = useMemo(
+    () =>
+      isRestrictedToOwnClient
+        ? allClients.filter((c) => c.id === userClientId)
+        : allClients,
+    [allClients, isRestrictedToOwnClient, userClientId]
+  );
+
+  // Keep filter synced if profile loads after first render
+  useEffect(() => {
+    if (isRestrictedToOwnClient && clientFilter !== userClientId) {
+      setClientFilter(userClientId);
+    }
+  }, [isRestrictedToOwnClient, userClientId, clientFilter]);
+
   const { data: reports = [], isLoading } = useReports(
     clientFilter === "all" ? null : clientFilter
   );
