@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, FileText, Mail, Send, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAuth } from "@/contexts/AuthContext";
 import { useReports, type ReportArchivo } from "@/hooks/useReports";
 import { RecipientsManager } from "./RecipientsManager";
 import { GenerateReportDialog } from "./GenerateReportDialog";
@@ -50,9 +51,32 @@ function FormatChip({ archivo }: { archivo: ReportArchivo }) {
 }
 
 export function ReportsPage() {
-  const [clientFilter, setClientFilter] = useState<string>("all");
+  const { profile } = useAuth();
+  const userClientId = profile?.client_id ?? null;
+  const isRestrictedToOwnClient = !!userClientId;
+
+  const [clientFilter, setClientFilter] = useState<string>(
+    userClientId ?? "all"
+  );
   const [generateOpen, setGenerateOpen] = useState(false);
-  const { data: clients = [] } = useClients();
+
+  const { data: allClients = [] } = useClients();
+  // Restrict client list to the user's own client when profile.client_id is set
+  const clients = useMemo(
+    () =>
+      isRestrictedToOwnClient
+        ? allClients.filter((c) => c.id === userClientId)
+        : allClients,
+    [allClients, isRestrictedToOwnClient, userClientId]
+  );
+
+  // Keep filter synced if profile loads after first render
+  useEffect(() => {
+    if (isRestrictedToOwnClient && clientFilter !== userClientId) {
+      setClientFilter(userClientId);
+    }
+  }, [isRestrictedToOwnClient, userClientId, clientFilter]);
+
   const { data: reports = [], isLoading } = useReports(
     clientFilter === "all" ? null : clientFilter
   );
@@ -78,22 +102,30 @@ export function ReportsPage() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Cliente:</span>
-        <Select value={clientFilter} onValueChange={setClientFilter}>
-          <SelectTrigger className="w-[280px]">
-            <SelectValue placeholder="Todos los clientes" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los clientes</SelectItem>
-            {clients.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.client_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {isRestrictedToOwnClient ? (
+        selectedClient && (
+          <div className="text-sm text-muted-foreground">
+            Cliente: <span className="font-medium text-foreground">{selectedClient.client_name}</span>
+          </div>
+        )
+      ) : (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">Cliente:</span>
+          <Select value={clientFilter} onValueChange={setClientFilter}>
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Todos los clientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los clientes</SelectItem>
+              {clients.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.client_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <Tabs defaultValue="history" className="w-full">
         <TabsList>
