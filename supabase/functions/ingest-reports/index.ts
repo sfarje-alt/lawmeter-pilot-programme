@@ -64,10 +64,13 @@ Deno.serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
-    // Upsert on (client_id, periodo_hasta, modelo) — fall back to plain insert if no constraint
+    // Upsert idempotente sobre la unique key real (reports_unique_key)
     const { data, error } = await sb
       .from("reports")
-      .upsert(row, { onConflict: "client_id,periodo_hasta,modelo" })
+      .upsert(row, {
+        onConflict: "organization_id,client_id,periodo_hasta,modelo",
+        ignoreDuplicates: false,
+      })
       .select()
       .single();
 
