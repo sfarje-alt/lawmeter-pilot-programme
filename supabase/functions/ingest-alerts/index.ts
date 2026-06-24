@@ -430,10 +430,27 @@ Deno.serve(async (req) => {
         updated++;
       }
     } catch (e) {
+      // Serialize PostgrestError-like objects properly (they are NOT Error instances,
+      // so String(e) returns "[object Object]"). Include message, code, details, hint.
+      const errObj = e as { message?: string; code?: string; details?: string; hint?: string };
+      const errorPayload = {
+        message: errObj?.message ?? (e instanceof Error ? e.message : String(e)),
+        code: errObj?.code ?? null,
+        details: errObj?.details ?? null,
+        hint: errObj?.hint ?? null,
+      };
+      console.error("[ingest-alerts] item failed", {
+        external_id: item.external_id ?? item.alerta_id,
+        tipo: body.tipo,
+        ...errorPayload,
+      });
       failed.push({
         alerta_id: item.alerta_id ?? item.external_id ?? "unknown",
-        error: e instanceof Error ? e.message : String(e),
-      });
+        error: errorPayload.message ?? "unknown_error",
+        code: errorPayload.code,
+        details: errorPayload.details,
+        hint: errorPayload.hint,
+      } as unknown as { alerta_id: string; error: string });
     }
   }
 
