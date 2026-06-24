@@ -1,0 +1,1 @@
+DELETE FROM public.alerts WHERE external_id IN ('bcp-probe-pl-1','bcp-probe-norma-1');
