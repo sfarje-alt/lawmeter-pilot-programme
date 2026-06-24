@@ -1,20 +1,23 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Building2, Globe, Users, FileText, Target,
-  Eye, CheckCircle2,
+  Eye, CheckCircle2, Info,
 } from "lucide-react";
 import { BEDSON_CLIENT_PROFILE } from "@/data/bedsonClientProfile";
 import { ISA_CLIENT_PROFILE } from "@/data/isaClientProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { ISA_ORG_ID, BETSSON_ORG_ID } from "@/lib/orgDataIsolation";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Vista de perfil read-only para el portal cliente.
  * Selecciona el perfil rígido correspondiente a la organización del usuario
- * autenticado (Betsson, ISA Energía, …). Por defecto cae a Betsson para no
- * romper organizaciones piloto previas.
+ * autenticado (Betsson, ISA Energía, …). Para organizaciones sin perfil
+ * rígido (ej. BCP en piloto), muestra un placeholder con el nombre real
+ * de la organización en vez de caer al perfil de Betsson.
  */
 export function ClientProfileView() {
   const { profile: authProfile } = useAuth();
@@ -24,7 +27,63 @@ export function ClientProfileView() {
       ? ISA_CLIENT_PROFILE
       : orgId === BETSSON_ORG_ID
         ? BEDSON_CLIENT_PROFILE
-        : BEDSON_CLIENT_PROFILE;
+        : null;
+
+  const [orgName, setOrgName] = useState<string | null>(null);
+  useEffect(() => {
+    if (profile || !orgId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("organizations")
+        .select("name")
+        .eq("id", orgId)
+        .maybeSingle();
+      if (!cancelled) setOrgName(data?.name ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [orgId, profile]);
+
+  if (!profile) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
+            <p className="text-muted-foreground">
+              Configuración de monitoreo definida por tu equipo legal
+            </p>
+          </div>
+          <Badge variant="outline" className="bg-green-500/10 border-green-500/30 text-green-500">
+            <Eye className="h-3 w-3 mr-1" />
+            Solo Lectura
+          </Badge>
+        </div>
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Building2 className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle>{orgName ?? "Organización"}</CardTitle>
+                <CardDescription>Perfil regulatorio aún no configurado</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg text-sm text-muted-foreground">
+              <Info className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                El perfil regulatorio detallado de <strong>{orgName ?? "esta organización"}</strong> aún
+                no fue cargado. El equipo de LawMeter lo completará durante el onboarding del piloto.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const Section = ({
     title,
