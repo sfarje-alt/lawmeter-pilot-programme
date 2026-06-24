@@ -1,0 +1,1 @@
+DELETE FROM public.alerts WHERE organization_id='b7e15500-0008-4000-8000-000000000001' AND (legislation_id ILIKE '%probe%' OR legislation_id ILIKE '%test%' OR legislation_id ILIKE '%smoketest%' OR legislation_title ILIKE '%probe%' OR legislation_title ILIKE '%smoketest%');
